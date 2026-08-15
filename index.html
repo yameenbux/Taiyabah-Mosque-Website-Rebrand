@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taiyabah Masjid, Bolton</title>
+<meta name="description" content="Taiyabah Masjid, Bolton — serving the community since 1967. Prayer times, the new build appeal, madrasah, and how to reach us. Get the free prayer times app.">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* exact tokens from the Taiyabah Masjid PWA (github.com/yameenbux/Taiyabah-Mosque-App) */
+    --brand-900:#3C0B2A;
+    --brand-800:#4B1136;
+    --brand-700:#5E1844;
+    --brand-600:#772157;
+    --gold:#C6A24C;
+    --gold-bright:#DCBB63;
+    --paper:#F5F1E8;
+    --card:#FCFAF3;
+    --ink:#261B22;
+    --muted:#6E616A;   /* darkened 1 step from app's #7C6E77 for AA at small sizes on paper */
+    --line:#E4DECF;
+    --danger:#B4532F;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(60,11,42,.06), 0 12px 30px -18px rgba(60,11,42,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink);
+    background:var(--paper);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{font-family:"Fraunces", Georgia, serif;}
+  .arabic{font-family:"Amiri", serif;}
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600;}
+  a{text-decoration:none;color:inherit;}
+  img,svg{display:block;max-width:100%;}
+  ul{list-style:none;}
+  button{font:inherit;}
+  .container{width:min(1120px,92%);margin:0 auto;}
+  .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--gold-bright);font-weight:600;margin-bottom:14px;
+  }
+  .eyebrow.on-light{color:var(--brand-700);}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 26px;border-radius:999px;font-weight:700;font-size:.92rem;
+    cursor:pointer;border:1.5px solid transparent;transition:.25s ease;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover{filter:brightness(1.06);transform:translateY(-2px);}
+  .btn-outline{border-color:rgba(243,239,227,.55);color:#F3EFE3;}
+  .btn-outline:hover{background:rgba(255,255,255,.1);transform:translateY(-2px);}
+  .btn-outline-dark{border-color:var(--brand-800);color:var(--brand-800);}
+  .btn-outline-dark:hover{background:var(--brand-800);color:#F3EFE3;}
+
+  section{position:relative;padding:96px 0;}
+  .section-head{max-width:640px;margin-bottom:48px;}
+  .section-head p{color:var(--muted);margin-top:14px;font-size:1.02rem;line-height:1.7;}
+  .section-head.on-dark p{color:rgba(243,239,227,.78);}
+  .section-head.on-dark h2{color:#F3EFE3;}
+
+  .rule{flex:1;height:1px;background:var(--line);}
+  .sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:18px;}
+  .sec-h h3{font-size:1.15rem;}
+  .sec-h .tag{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+  .reveal.visible{opacity:1;transform:translateY(0);}
+
+  /* girih star — exact motif from the app, used as a low-opacity watermark */
+  .girih{position:absolute;width:220px;height:220px;color:var(--gold);opacity:.07;pointer-events:none;}
+  .girih.tr{top:-40px;right:-40px;}
+  .girih.bl{bottom:-40px;left:-40px;}
+  .girih.small{width:90px;height:90px;opacity:.14;}
+
+  /* ---------- HEADER ---------- */
+  header{position:fixed;top:0;left:0;right:0;z-index:1000;transition:.3s ease;}
+  header .bar{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:14px 0;background:linear-gradient(180deg, var(--brand-900), var(--brand-800));
+    border-bottom:1px solid rgba(198,162,76,.25);
+  }
+  header.scrolled .bar{padding:10px 0;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand img{height:36px;width:auto;}
+  .brand .txt{line-height:1.25;}
+  .brand .txt strong{display:block;font-family:"Fraunces",serif;color:#F3EFE3;font-size:1.02rem;letter-spacing:.01em;}
+  .brand .txt span{display:block;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:#BBA9B4;}
+
+  .burger{
+    width:48px;height:48px;border-radius:50%;
+    background:rgba(255,255,255,.08);border:1px solid rgba(198,162,76,.35);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    cursor:pointer;position:relative;z-index:1200;
+  }
+  .burger span{width:20px;height:2px;background:var(--gold-bright);border-radius:2px;transition:.3s ease;}
+  .burger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
+  .burger.open span:nth-child(2){opacity:0;}
+  .burger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
+
+  /* ---------- BURGER STACK NAV ---------- */
+  .nav-overlay{position:fixed;inset:0;z-index:1100;background:rgba(20,4,14,.55);opacity:0;visibility:hidden;transition:.4s ease;}
+  .nav-overlay.open{opacity:1;visibility:visible;}
+  .nav-panel{
+    position:fixed;top:0;right:0;height:100%;width:min(400px,88vw);
+    background:linear-gradient(165deg,var(--brand-900),#280719 75%);
+    z-index:1150;padding:100px 34px 30px;
+    transform:translateX(100%);transition:transform .5s cubic-bezier(.77,0,.18,1);
+    display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(0,0,0,.35);overflow-y:auto;
+  }
+  .nav-panel.open{transform:translateX(0);}
+  .nav-app-cta{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.4);
+    border-radius:14px;padding:14px 16px;margin-bottom:22px;
+  }
+  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.85rem;font-family:"Fraunces",serif;}
+  .nav-app-cta span{display:block;color:rgba(243,239,227,.7);font-size:.72rem;margin-top:2px;}
+  .nav-app-cta .go{color:var(--gold-bright);font-size:1.2rem;}
+  .nav-stack{display:flex;flex-direction:column;}
+  .nav-stack li a{
+    display:flex;align-items:center;gap:14px;padding:14px 4px;color:#F3EFE3;
+    font-size:1.02rem;font-weight:500;border-bottom:1px solid rgba(255,255,255,.08);transition:.25s ease;
+  }
+  .nav-stack li a .num{font-size:.68rem;color:var(--gold-bright);font-weight:700;width:20px;}
+  .nav-stack li a:hover, .nav-stack li a.active{color:var(--gold-bright);padding-left:12px;}
+  .nav-panel .panel-foot{margin-top:auto;padding-top:22px;border-top:1px solid rgba(255,255,255,.12);}
+  .nav-panel .panel-foot p{color:rgba(243,239,227,.6);font-size:.8rem;margin-bottom:14px;line-height:1.5;}
+  .social-row{display:flex;gap:10px;}
+  .social-row a{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#F3EFE3;}
+  .social-row a svg{width:16px;height:16px;}
+  .social-row a:hover{background:var(--gold);color:var(--brand-900);}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100svh;display:flex;align-items:center;position:relative;overflow:hidden;
+    background:linear-gradient(180deg, var(--brand-900), var(--brand-800) 55%, var(--brand-900));
+    padding-top:120px;color:#F3EFE3;
+  }
+  .hero .container{position:relative;z-index:2;}
+  .salam{display:flex;align-items:baseline;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .salam .ar{font-size:1.7rem;color:var(--gold-bright);}
+  .salam .tr{font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:#A78F9E;}
+  .hero-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:50px;align-items:start;}
+  .hero h1{font-size:clamp(2.2rem,4.6vw,3.5rem);color:#F3EFE3;margin-bottom:20px;}
+  .hero h1 em{font-style:normal;color:var(--gold-bright);}
+  .hero p.lead{font-size:1.08rem;color:rgba(243,239,227,.82);max-width:520px;line-height:1.75;margin-bottom:30px;}
+  .hero-cta{display:flex;gap:14px;flex-wrap:wrap;}
+
+  .snapshot{
+    background:rgba(255,255,255,.05);border:1px solid rgba(198,162,76,.3);
+    border-radius:20px;padding:26px 24px;backdrop-filter:blur(6px);
+  }
+  .snapshot .sk{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:6px;}
+  .snapshot .sv{font-family:"Fraunces",serif;font-size:1.05rem;color:#F3EFE3;margin-bottom:16px;}
+  .snap-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.9rem;}
+  .snap-row:last-of-type{border-bottom:none;}
+  .snap-row .k{color:rgba(243,239,227,.75);}
+  .snap-row .v{color:#F3EFE3;font-weight:600;}
+  .snap-note{margin-top:14px;font-size:.76rem;color:rgba(243,239,227,.55);line-height:1.5;}
+
+  /* ---------- MARQUEE ---------- */
+  .marquee{background:linear-gradient(90deg,var(--gold),var(--gold-bright));color:var(--brand-900);padding:13px 0;overflow:hidden;white-space:nowrap;font-weight:700;}
+  .marquee div{display:inline-flex;animation:mq 30s linear infinite;}
+  .marquee span{padding:0 24px;font-size:.8rem;text-transform:uppercase;letter-spacing:.04em;}
+  @keyframes mq{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+  /* ---------- ABOUT ---------- */
+  .ab-hero-card{
+    background:linear-gradient(160deg,var(--brand-800),var(--brand-900));
+    color:#F3EFE3;border-radius:24px;padding:44px 36px;margin-bottom:44px;position:relative;overflow:hidden;
+  }
+  .ab-est{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
+  .ab-lead{font-family:"Fraunces",Georgia,serif;font-size:1.7rem;line-height:1.25;color:#F3EFE3;margin-bottom:12px;}
+  .ab-sub{color:rgba(243,239,227,.82);line-height:1.7;max-width:640px;}
+  .ab-sub b{color:var(--gold-bright);}
+
+  .ab-grid{display:grid;grid-template-columns:1.3fr .7fr;gap:26px;align-items:start;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;box-shadow:var(--shadow);}
+  .card p{color:var(--ink);line-height:1.75;font-size:.96rem;margin-bottom:12px;}
+  .card p:last-child{margin-bottom:0;}
+  .ab-list{display:grid;grid-template-columns:1fr 1fr;gap:10px 20px;}
+  .ab-list div{font-size:.92rem;padding:8px 0;border-bottom:1px dashed var(--line);}
+  .ab-note{display:block;font-size:.72rem;color:var(--muted);}
+  .ab-now{display:inline-block;margin-left:6px;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;
+    background:var(--brand-800);color:var(--gold-bright);padding:3px 8px;border-radius:99px;}
+  .ab-video{
+    display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;margin:20px 0;box-shadow:var(--shadow);
+  }
+  .ab-play{width:40px;height:40px;border-radius:50%;background:var(--brand-800);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .ab-play svg{width:16px;height:16px;}
+  .ab-v1{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:.95rem;}
+  .ab-v2{display:block;font-size:.78rem;color:var(--muted);}
+  .ab-plans{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0;}
+  .ab-plans span{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.82rem;color:var(--brand-800);font-weight:600;}
+
+  /* ---------- NEW BUILD / DONATE ---------- */
+  .newbuild{background:linear-gradient(180deg,var(--brand-800),var(--brand-900));color:#F3EFE3;}
+  .hadith-card{text-align:center;max-width:760px;margin:0 auto 60px;position:relative;padding:10px 10px 0;}
+  .h-ar{font-family:"Amiri",serif;font-size:1.5rem;color:var(--gold-bright);line-height:2;direction:rtl;margin-bottom:14px;}
+  .h-en{font-family:"Fraunces",Georgia,serif;font-size:1.2rem;line-height:1.6;color:#F3EFE3;margin-bottom:12px;}
+  .h-src{font-size:.78rem;color:rgba(243,239,227,.6);letter-spacing:.02em;}
+
+  .phase-card{
+    background:rgba(255,255,255,.05);border:1px solid rgba(198,162,76,.3);border-radius:20px;
+    padding:30px 28px;margin-bottom:40px;
+  }
+  .ph-tag{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
+  .ph-h{font-family:"Fraunces",Georgia,serif;font-size:1.5rem;color:#F3EFE3;margin-bottom:10px;}
+  .ph-p{color:rgba(243,239,227,.78);line-height:1.7;margin-bottom:18px;}
+  .needs{display:flex;flex-wrap:wrap;gap:8px;}
+  .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:7px 14px;font-size:.8rem;font-weight:600;}
+
+  .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .tier{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:rgba(255,255,255,.04);border:1.5px solid;border-radius:16px;padding:22px 10px;
+    transition:.25s ease;
+  }
+  .tier:hover{transform:translateY(-4px);background:rgba(255,255,255,.08);}
+  .t-bronze{border-color:#D3A47C;} .t-bronze .t-name{color:#E3B98F;}
+  .t-silver{border-color:#C4BFC2;} .t-silver .t-name{color:#DCD8DA;}
+  .t-gold{border-color:#D8BC72;}   .t-gold .t-name{color:var(--gold-bright);}
+  .t-plat{border-color:#B9A7CF;}  .t-plat .t-name{color:#D6C9E8;}
+  .t-amt{font-family:"Fraunces",serif;font-size:1.5rem;font-weight:700;color:#F3EFE3;}
+  .t-name{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;}
+
+  .donate-cta{
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));border-radius:16px;
+    padding:18px;text-align:center;margin-bottom:16px;transition:.25s ease;
+  }
+  .donate-cta:hover{filter:brightness(1.05);}
+  .dc-main{font-family:"Fraunces",serif;font-weight:700;color:var(--brand-900);font-size:1.05rem;}
+  .dc-sub{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-800);}
+  .dc-note{font-size:.82rem;color:rgba(243,239,227,.65);line-height:1.6;text-align:center;max-width:520px;margin:0 auto 40px;}
+  .dc-note b{color:var(--gold-bright);}
+
+  .bank-card{background:rgba(255,255,255,.05);border:1px solid rgba(198,162,76,.3);border-radius:16px;overflow:hidden;margin-bottom:14px;}
+  .bk{width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:inherit;
+    padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer;text-align:left;}
+  .bk:last-child{border-bottom:none;}
+  .bk-k{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(243,239,227,.6);}
+  .bk-v{font-size:.95rem;font-weight:600;color:#F3EFE3;}
+  .bk .copied{color:var(--gold-bright);font-size:.72rem;opacity:0;transition:.2s;}
+  .bk.copied-flash .copied{opacity:1;}
+  .copyall{width:100%;background:transparent;border:1.5px solid rgba(198,162,76,.4);color:var(--gold-bright);
+    border-radius:999px;padding:13px;font-weight:700;font-size:.85rem;cursor:pointer;margin-bottom:18px;}
+  .copyall:hover{background:rgba(198,162,76,.1);}
+  .dnote{font-size:.82rem;color:rgba(243,239,227,.6);line-height:1.6;text-align:center;}
+
+  /* ---------- PRAYER TIMES ---------- */
+  .prayer-cta{
+    display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    background:linear-gradient(120deg,var(--brand-800),var(--brand-900));color:#F3EFE3;
+    border-radius:22px;padding:34px 32px;margin-bottom:44px;
+  }
+  .prayer-cta h3{color:#F3EFE3;font-size:1.35rem;margin-bottom:8px;}
+  .prayer-cta p{color:rgba(243,239,227,.75);font-size:.92rem;max-width:440px;}
+  .table-wrap{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--line);}
+  table.pt{width:100%;border-collapse:collapse;background:var(--card);min-width:720px;}
+  table.pt th{background:var(--brand-900);color:#F3EFE3;padding:13px 12px;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;white-space:nowrap;}
+  table.pt td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:.88rem;white-space:nowrap;}
+  table.pt tr:last-child td{border-bottom:none;}
+  table.pt tr.today td{background:rgba(198,162,76,.14);font-weight:700;}
+  table.pt tr:hover td{background:rgba(198,162,76,.08);}
+  .pt-note{margin-top:16px;font-size:.84rem;color:var(--muted);background:#FBF3E3;border:1px solid #EAD6A0;padding:13px 16px;border-radius:12px;line-height:1.6;}
+  .jummah-note{margin-top:16px;display:flex;gap:12px;flex-wrap:wrap;}
+  .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:.85rem;}
+  .jummah-note .jc b{display:block;font-family:"Fraunces",serif;color:var(--brand-800);margin-bottom:4px;}
+
+  /* ---------- MADRASAH ---------- */
+  .madrasah-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px;}
+  .soon-list{display:flex;flex-direction:column;gap:10px;}
+  .soon-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:14px 18px;}
+  .soon-row span.t{font-weight:600;font-size:.92rem;}
+  .soon-tag{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);border:1px solid var(--line);
+    color:var(--muted);padding:4px 10px;border-radius:999px;}
+
+  /* ---------- APP SECTION ---------- */
+  .app-section{background:linear-gradient(180deg,var(--brand-900),#280719);color:#F3EFE3;}
+  .app-grid{display:grid;grid-template-columns:1fr .55fr;gap:50px;align-items:center;}
+  .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:28px 0 32px;}
+  .feat{background:rgba(255,255,255,.05);border:1px solid rgba(198,162,76,.25);border-radius:14px;padding:18px;}
+  .feat h4{color:#F3EFE3;font-size:.98rem;margin-bottom:6px;}
+  .feat p{color:rgba(243,239,227,.7);font-size:.82rem;line-height:1.55;}
+  .qr-card{background:var(--card);border-radius:20px;padding:24px;text-align:center;box-shadow:var(--shadow);}
+  .qr-card img{width:100%;max-width:220px;margin:0 auto 14px;border-radius:10px;}
+  .qr-card .u{font-size:.78rem;color:var(--muted);word-break:break-all;}
+  .steps{margin-top:24px;display:flex;flex-direction:column;gap:10px;}
+  .steps div{display:flex;gap:12px;align-items:flex-start;font-size:.88rem;color:rgba(243,239,227,.8);}
+  .steps .n{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:rgba(198,162,76,.2);color:var(--gold-bright);
+    display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;}
+
+  /* ---------- CONTACT ---------- */
+  .contact-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:44px;}
+  .contact-list li{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);}
+  .contact-list li .ic{width:40px;height:40px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .contact-list li .ic svg{width:18px;height:18px;}
+  .contact-list li strong{display:block;font-size:.92rem;margin-bottom:2px;}
+  .contact-list li span,.contact-list li a{color:var(--muted);font-size:.88rem;}
+  .contact-list li a:hover{color:var(--brand-800);}
+  .map-frame{border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%;min-height:340px;border:6px solid var(--card);}
+  .map-frame iframe{width:100%;height:100%;border:0;min-height:340px;}
+  .social-row-light{display:flex;gap:10px;margin-top:18px;}
+  .social-row-light a{width:38px;height:38px;border-radius:50%;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;}
+  .social-row-light a svg{width:16px;height:16px;}
+  .social-row-light a:hover{background:var(--gold);color:var(--brand-900);}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:var(--brand-900);color:rgba(243,239,227,.7);padding:56px 0 24px;}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:36px;margin-bottom:40px;}
+  footer h5{color:#F3EFE3;font-size:.88rem;margin-bottom:14px;letter-spacing:.04em;}
+  footer .foot-brand img{height:34px;margin-bottom:12px;}
+  footer .foot-brand p{font-size:.82rem;line-height:1.7;max-width:320px;}
+  footer ul li{margin-bottom:9px;font-size:.85rem;}
+  footer ul li a:hover{color:var(--gold-bright);}
+  .foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.76rem;}
+
+  .totop{
+    position:fixed;bottom:26px;right:26px;width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;
+    opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;box-shadow:var(--shadow);
+  }
+  .totop.show{opacity:1;visibility:visible;transform:translateY(0);}
+
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr;}
+    .ab-grid{grid-template-columns:1fr;}
+    .ab-list{grid-template-columns:1fr;}
+    .madrasah-grid{grid-template-columns:1fr;}
+    .app-grid{grid-template-columns:1fr;}
+    .contact-wrap{grid-template-columns:1fr;}
+    .tiers{grid-template-columns:1fr 1fr;}
+    .foot-grid{grid-template-columns:1fr 1fr;}
+    .feat-grid{grid-template-columns:1fr;}
+    section{padding:64px 0;}
+  }
+  @media (max-width:560px){
+    .tiers{grid-template-columns:1fr 1fr;}
+    .prayer-cta{flex-direction:column;align-items:flex-start;}
+    .foot-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <div class="bar container">
+    <a href="#home" class="brand">
+      <img src="assets/logo-cream.png" alt="Taiyabah Masjid">
+      <span class="txt"><strong>Taiyabah Masjid</strong><span>Bolton &middot; Est. 1967</span></span>
+    </a>
+    <button class="burger" id="burgerBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="nav-overlay" id="navOverlay"></div>
+<nav class="nav-panel" id="navPanel">
+  <a class="nav-app-cta" href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">
+    <span><strong>Open the prayer times app</strong><span>Live times &middot; Qibla &middot; alerts</span></span>
+    <span class="go">&rsaquo;</span>
+  </a>
+  <ul class="nav-stack">
+    <li><a href="#home" class="active"><span class="num">01</span> Home</a></li>
+    <li><a href="#about"><span class="num">02</span> About Us</a></li>
+    <li><a href="#newbuild"><span class="num">03</span> New Build &amp; Donate</a></li>
+    <li><a href="#prayer"><span class="num">04</span> Prayer Times</a></li>
+    <li><a href="#madrasah"><span class="num">05</span> Madrasah</a></li>
+    <li><a href="#getapp"><span class="num">06</span> Get the App</a></li>
+    <li><a href="#contact"><span class="num">07</span> Contact Us</a></li>
+  </ul>
+  <div class="panel-foot">
+    <p>31a Draycott Street, Bolton, BL1 8HD &middot; 01204 535 997</p>
+    <div class="social-row">
+      <a href="https://www.instagram.com/taiyabahmasjid/" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="https://twitter.com/TaiyabahMasjid" target="_blank" rel="noopener" aria-label="X">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.53 3h3.06l-6.69 7.64L21.75 21h-6.16l-4.83-6.3L5.24 21H2.18l7.15-8.17L2.25 3h6.32l4.36 5.77L17.53 3Zm-1.07 16.13h1.7L7.62 4.78H5.8l10.66 14.35Z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw" target="_blank" rel="noopener" aria-label="YouTube">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26.2 26.2 0 0 0 2 12a26.2 26.2 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26.2 26.2 0 0 0 22 12a26.2 26.2 0 0 0-.4-4.8ZM10.1 14.9V9.1l5.05 2.9-5.05 2.9Z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ================= HOME / HERO ================= -->
+<section class="hero" id="home">
+  <svg class="girih tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <svg class="girih bl" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <div class="container">
+    <div class="hero-grid">
+      <div class="reveal visible">
+        <div class="salam"><span class="ar arabic">السَّلَامُ عَلَيْكُمْ</span><span class="tr">As-salāmu ʿalaykum</span></div>
+        <div class="eyebrow">Bolton Central Islamic Society &middot; Charity 1041569</div>
+        <h1>Taiyabah Masjid — a home for <em>faith</em>, learning &amp; community since 1967.</h1>
+        <p class="lead">Salah, jamā&#703;ah times, Qibla direction and masjid alerts for the Taiyabah community, straight from the masjid's own timetable. This site is your front door — the free app is where you'll actually check times day to day.</p>
+        <div class="hero-cta">
+          <a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener" class="btn btn-gold">Open the Prayer Times App →</a>
+          <a href="#newbuild" class="btn btn-outline">Support the New Build</a>
+        </div>
+      </div>
+      <div class="snapshot reveal visible">
+        <div class="sk">Today's times &middot; <span id="snapDate">13 August 2026</span></div>
+        <div class="sv" id="snapHijri">30 Safar 1448 AH</div>
+        <div class="snap-row"><span class="k">Fajr</span><span class="v" id="s-fajr">04:05 begins &middot; 05:10 jamā&#703;ah</span></div>
+        <div class="snap-row"><span class="k">Zuhr</span><span class="v" id="s-zuhr">13:21 begins &middot; 13:45 jamā&#703;ah</span></div>
+        <div class="snap-row"><span class="k">Asr</span><span class="v" id="s-asr">18:21 begins &middot; 19:30 jamā&#703;ah</span></div>
+        <div class="snap-row"><span class="k">Maghrib</span><span class="v" id="s-maghrib">20:48</span></div>
+        <div class="snap-row"><span class="k">Isha</span><span class="v" id="s-isha">21:56 begins &middot; 22:15 jamā&#703;ah</span></div>
+        <p class="snap-note">A static snapshot for reference only — not live. For a real-time countdown to the next jamā&#703;ah, open the app.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee"><div id="marqueeTrack"></div></div>
+
+<!-- ================= ABOUT ================= -->
+<section id="about">
+  <div class="container">
+    <div class="ab-hero-card reveal">
+      <svg class="girih small tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+      <div class="ab-est">Established at the end of 1967</div>
+      <p class="ab-lead">One of the first masjids in Bolton.</p>
+      <p class="ab-sub">The name <b>Taiyabah</b> — from the Arabic <i>Tayyab</i>, meaning purity — was given by the late Hazrat Sheikh Moulana Mohammed Zakariyya Saheb, author of <i>Fazaail-e-Amaal</i>.</p>
+    </div>
+
+    <div class="ab-grid">
+      <div class="reveal">
+        <div class="sec-h"><h3>History</h3><span class="rule"></span></div>
+        <div class="card">
+          <p>The masjid was originally located in Canning Street, where Moulana Faruq Desai was appointed as its first Imam.</p>
+          <p>In February 1988, to accommodate the growing community, the present building on Blackburn Road was purchased — formerly a Congregational Sunday School. The first Imam in the new masjid was Qari Yakub Nanjee Saheb, followed by Qari Farook Saheb.</p>
+        </div>
+        <a class="ab-video" href="https://www.youtube.com/watch?v=N7wFXynmLHM" target="_blank" rel="noopener">
+          <span class="ab-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+          <span><span class="ab-v1">Watch the masjid's story</span><span class="ab-v2">History &amp; new build journey</span></span>
+        </a>
+
+        <div class="sec-h" style="margin-top:8px;"><h3>The future</h3><span class="rule"></span></div>
+        <div class="card">
+          <p>Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.</p>
+          <div class="ab-plans">
+            <span>Large prayer hall</span><span>Modern ablution areas</span><span>Integrated kitchen</span>
+            <span>Additional lecture rooms</span><span>Wi-Fi &amp; video streaming</span><span>Educational centre &amp; library</span>
+          </div>
+          <p>The masjid also intends to invest further in Islamic education, supporting the community in matters including marriage and burial practices, and to establish an Islamic educational and cultural centre and library.</p>
+        </div>
+      </div>
+
+      <div class="reveal">
+        <div class="sec-h"><h3>Founders</h3><span class="rule"></span></div>
+        <div class="card" style="margin-bottom:22px;">
+          <div class="ab-list" style="grid-template-columns:1fr;">
+            <div>Late Haji Ahmed Hakim</div>
+            <div>Late Haji Ibrahim Jamal</div>
+            <div>Late Haji Ismail Lekroo</div>
+            <div>Late Hafiz Adam Matadar</div>
+            <div>Late Haji Bashir Chadat</div>
+            <div>Haji Ismail Kekha</div>
+          </div>
+          <span class="ab-note" style="margin-top:8px;display:block;">Amongst others</span>
+        </div>
+
+        <div class="sec-h"><h3>Ulema</h3><span class="rule"></span></div>
+        <div class="card">
+          <div class="ab-list" style="grid-template-columns:1fr;">
+            <div>Moulana Ibrahim Kaba Saheb</div>
+            <div>Moulana Hashim Saheb</div>
+            <div>Qari Yakub Nanji Saheb</div>
+            <div>Qari Farooq Saheb</div>
+            <div>Moulana Mehboob Saheb <span class="ab-note">Chorley</span></div>
+            <div>Moulana Imran Suba Saheb</div>
+            <div>Mufti Faiyaz Saheb <span class="ab-now">Present Imam</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEW BUILD / DONATE ================= -->
+<section class="newbuild" id="newbuild">
+  <svg class="girih tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <div class="container">
+    <div class="hadith-card reveal">
+      <p class="h-ar arabic">مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ</p>
+      <p class="h-en">"Whoever builds a mosque for Allah, Allah will build for him a house like it in Paradise."</p>
+      <p class="h-src">Narrated by ʿUthmān ibn ʿAffān &middot; Ṣaḥīḥ al-Bukhārī 450 &middot; Ṣaḥīḥ Muslim 533</p>
+    </div>
+
+    <div class="section-head on-dark reveal">
+      <div class="eyebrow">New Build Appeal</div>
+      <h2>Where the build is now</h2>
+    </div>
+    <div class="phase-card reveal">
+      <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
+      <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
+      <p class="ph-p">Help make the masjid ready for salah, Qur'an and remembrance for generations to come.</p>
+      <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
+    </div>
+
+    <div class="reveal">
+      <div class="sec-h" style="border-color:rgba(255,255,255,.15);"><h3 style="color:#F3EFE3;">Give online</h3><span class="rule" style="background:rgba(255,255,255,.15);"></span><span class="tag" style="color:rgba(243,239,227,.6);">Apple &amp; Google Pay</span></div>
+      <div class="tiers">
+        <a class="tier t-bronze" href="https://www.taiyabahmasjid.com/product/bronze-donor/" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name">Bronze</span></a>
+        <a class="tier t-silver" href="https://www.taiyabahmasjid.com/product/silver-donor/" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name">Silver</span></a>
+        <a class="tier t-gold" href="https://www.taiyabahmasjid.com/product/gold-donor/" target="_blank" rel="noopener"><span class="t-amt">£1,000</span><span class="t-name">Gold</span></a>
+        <a class="tier t-plat" href="https://www.taiyabahmasjid.com/product/platinum-donor/" target="_blank" rel="noopener"><span class="t-amt">£5,000</span><span class="t-name">Platinum</span></a>
+      </div>
+      <a class="donate-cta" href="https://www.taiyabahmasjid.com/product/dome-donation/" target="_blank" rel="noopener">
+        <span class="dc-main">Give any other amount</span>
+        <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
+      </a>
+      <p class="dc-note">Opens the masjid's secure donation page. If you are a UK taxpayer, please add Gift Aid — it adds <b>25p to every £1</b> at no cost to you.</p>
+
+      <div class="sec-h" style="border-color:rgba(255,255,255,.15);"><h3 style="color:#F3EFE3;">Or transfer directly</h3><span class="rule" style="background:rgba(255,255,255,.15);"></span><span class="tag" style="color:rgba(243,239,227,.6);">Tap to copy</span></div>
+      <div class="bank-card">
+        <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
+        <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
+        <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
+        <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+      </div>
+      <button class="copyall" id="copyall">Copy all details</button>
+      <p class="dnote">Bolton Central Islamic Society &middot; Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRAYER TIMES ================= -->
+<section id="prayer">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow on-light">Salah</div>
+      <h2>Prayer times</h2>
+      <p>Times come from the masjid's official published Salah timetable — not calculated by this site and not sourced from a third party.</p>
+    </div>
+    <div class="prayer-cta reveal">
+      <div>
+        <h3>Want the live countdown?</h3>
+        <p>The app shows a real-time countdown to the next jamā&#703;ah, Qibla direction, and lets you browse any date in the year — offline, from your home screen.</p>
+      </div>
+      <a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener" class="btn btn-gold">Open the App →</a>
+    </div>
+
+    <div class="reveal">
+      <div class="sec-h"><h3>August 2026</h3><span class="rule"></span><span class="tag">Europe/London, BST</span></div>
+      <div class="table-wrap">
+        <table class="pt" id="ptTable">
+          <thead><tr><th>Date</th><th>Hijri</th><th>Fajr begins</th><th>Fajr jamā&#703;ah</th><th>Sunrise</th><th>Zuhr jamā&#703;ah</th><th>Asr jamā&#703;ah</th><th>Maghrib</th><th>Isha jamā&#703;ah</th></tr></thead>
+          <tbody id="ptBody"></tbody>
+        </table>
+      </div>
+      <div class="jummah-note" id="jummahNote"></div>
+      <p class="pt-note">This table is a static copy of the masjid's 2026 timetable for August — always confirm on the printed board at the masjid, or check the live app, before relying on a time.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MADRASAH ================= -->
+<section id="madrasah" style="background:var(--card);">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow on-light">Education</div>
+      <h2>Madrasah</h2>
+      <p>Islamic education for the community's children sits alongside regular bayaans, classes and community events at the masjid.</p>
+    </div>
+    <div class="madrasah-grid">
+      <div class="card reveal">
+        <h4 style="margin-bottom:10px;">Bayaans &amp; classes</h4>
+        <p>Regular talks and classes are held at the masjid, alongside community events. For the latest bayaans and videos, visit the masjid's video channel.</p>
+        <p><a href="https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw" target="_blank" rel="noopener" class="btn btn-outline-dark" style="margin-top:6px;">Watch on YouTube →</a></p>
+      </div>
+      <div class="reveal">
+        <div class="soon-list">
+          <div class="soon-row"><span class="t">Application form</span><span class="soon-tag">Coming soon</span></div>
+          <div class="soon-row"><span class="t">Parents portal</span><span class="soon-tag">Coming soon</span></div>
+          <div class="soon-row"><span class="t">Teachers portal</span><span class="soon-tag">Coming soon</span></div>
+        </div>
+        <p style="margin-top:14px;color:var(--muted);font-size:.9rem;line-height:1.7;">These digital portals are on the way. In the meantime, please <a href="#contact" style="color:var(--brand-800);font-weight:600;">get in touch</a> or call the masjid office for madrasah enquiries.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= GET THE APP ================= -->
+<section class="app-section" id="getapp">
+  <div class="container">
+    <div class="app-grid">
+      <div class="reveal">
+        <div class="eyebrow">Get the App</div>
+        <h2 style="color:#F3EFE3;">One URL. No app store. Works offline.</h2>
+        <p style="color:rgba(243,239,227,.78);line-height:1.75;margin-top:14px;max-width:560px;">
+          A lightweight progressive web app built for Taiyabah Masjid, giving the community direct access to the masjid's own prayer timetable rather than a third-party aggregator. It installs to your home screen like a normal app, works offline, and takes its times from the masjid's officially published Salah timetable.
+        </p>
+        <div class="feat-grid">
+          <div class="feat"><h4>Prayer times</h4><p>Begin and jamā&#703;ah times for all five prayers, live countdown to the next jamā&#703;ah, and both Jumu'ah times on Fridays.</p></div>
+          <div class="feat"><h4>Reminders</h4><p>Sūrah al-Kahf on Fridays, morning &amp; evening adhkār, voluntary fasts, and the masjid's observed Islamic calendar days.</p></div>
+          <div class="feat"><h4>Qibla</h4><p>Great-circle bearing to the Kaaba with a live compass, refined to your own location when permission is given.</p></div>
+          <div class="feat"><h4>Alerts</h4><p>Opt-in by category — jamā&#703;ah reminders, janāzah, announcements and events — so urgent notices stay urgent.</p></div>
+        </div>
+        <a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener" class="btn btn-gold">Open yameenbux.github.io/Taiyabah-Mosque-App →</a>
+      </div>
+      <div class="reveal">
+        <div class="qr-card">
+          <img src="assets/qr-app.png" alt="QR code to open the Taiyabah Masjid app">
+          <div class="u">yameenbux.github.io/Taiyabah-Mosque-App</div>
+        </div>
+        <div class="steps">
+          <div><span class="n">1</span><span>Open the link (or scan the QR) in Safari or Chrome.</span></div>
+          <div><span class="n">2</span><span>iPhone: tap Share, then "Add to Home Screen". Android: tap the menu, then "Install app" or "Add to Home screen".</span></div>
+          <div><span class="n">3</span><span>Open it from your home screen — Qibla, notifications and install all need an internet connection at least once.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section id="contact">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow on-light">Get in Touch</div>
+      <h2>Visit, call, or reach out online</h2>
+      <p>Bolton Central Islamic Society &middot; Registered charity 1041569.</p>
+    </div>
+    <div class="contact-wrap">
+      <div class="reveal">
+        <ul class="contact-list">
+          <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div><strong>Address</strong><span>31a Draycott Street, Bolton BL1 8HD</span></div></li>
+          <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></div><div><strong>Telephone</strong><a href="tel:01204535997">01204 535 997</a></div></li>
+          <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 6 10-6"/></svg></div><div><strong>Email</strong><a href="mailto:info@taiyabahmasjid.com">info@taiyabahmasjid.com</a></div></li>
+          <li><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 000 7M15.5 8.5a5 5 0 010 7M5.5 5.5a9 9 0 000 13M18.5 5.5a9 9 0 010 13"/></svg></div><div><strong>Radio frequency</strong><span class="tnum">454.1000 MHz</span></div></li>
+        </ul>
+        <div class="social-row-light">
+          <a href="https://www.instagram.com/taiyabahmasjid/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg></a>
+          <a href="https://twitter.com/TaiyabahMasjid" target="_blank" rel="noopener" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.53 3h3.06l-6.69 7.64L21.75 21h-6.16l-4.83-6.3L5.24 21H2.18l7.15-8.17L2.25 3h6.32l4.36 5.77L17.53 3Zm-1.07 16.13h1.7L7.62 4.78H5.8l10.66 14.35Z"/></svg></a>
+          <a href="https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw" target="_blank" rel="noopener" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.25 5 12 5 12 5s-6.25 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26.2 26.2 0 0 0 2 12a26.2 26.2 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.75 19 12 19 12 19s6.25 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26.2 26.2 0 0 0 22 12a26.2 26.2 0 0 0-.4-4.8ZM10.1 14.9V9.1l5.05 2.9-5.05 2.9Z"/></svg></a>
+        </div>
+      </div>
+      <div class="map-frame reveal">
+        <iframe src="https://www.google.com/maps?q=31a+Draycott+Street,+Bolton,+BL1+8HD&output=embed" loading="lazy" title="Taiyabah Masjid location"></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <img src="assets/logo-cream.png" alt="Taiyabah Masjid">
+        <p>Serving Bolton's Muslim community since 1967. Prayer times are the masjid's own; the Taiyabah Masjid name and logo belong to the charity.</p>
+      </div>
+      <div><h5>Explore</h5><ul>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#newbuild">New Build &amp; Donate</a></li>
+        <li><a href="#prayer">Prayer Times</a></li>
+        <li><a href="#madrasah">Madrasah</a></li>
+      </ul></div>
+      <div><h5>App</h5><ul>
+        <li><a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">Open the app</a></li>
+        <li><a href="#getapp">Install instructions</a></li>
+        <li><a href="https://github.com/yameenbux/Taiyabah-Mosque-App" target="_blank" rel="noopener">Source on GitHub</a></li>
+      </ul></div>
+      <div><h5>Contact</h5><ul>
+        <li>31a Draycott Street, Bolton, BL1 8HD</li>
+        <li><a href="tel:01204535997">01204 535 997</a></li>
+        <li><a href="mailto:info@taiyabahmasjid.com">info@taiyabahmasjid.com</a></li>
+      </ul></div>
+    </div>
+    <div class="foot-bottom">
+      <span>&copy; <span id="year"></span> Taiyabah Masjid Bolton, Bolton Central Islamic Society &middot; Charity 1041569.</span>
+      <span>Companion site to the Taiyabah Masjid app.</span>
+    </div>
+  </div>
+</footer>
+
+<div class="totop" id="toTop" aria-label="Back to top">↑</div>
+
+<script>
+  // ---- embedded August 2026 timetable (from the masjid's own 2026 dataset, same source the app uses) ----
+  const AUGUST_2026 = [{"d":1,"h":"18 Safar 1448 AH","fb":"03:39","fj":"05:00","sr":"05:25","zb":"13:21","zj":"13:30","ab":"18:36","aj":"19:45","mb":"21:11","ib":"22:14","ij":"22:30","ju":null},{"d":2,"h":"19 Safar 1448 AH","fb":"03:42","fj":"05:00","sr":"05:27","zb":"13:21","zj":"13:45","ab":"18:35","aj":"19:45","mb":"21:09","ib":"22:12","ij":"22:30","ju":null},{"d":3,"h":"20 Safar 1448 AH","fb":"03:44","fj":"05:00","sr":"05:29","zb":"13:21","zj":"13:45","ab":"18:34","aj":"19:45","mb":"21:08","ib":"22:11","ij":"22:30","ju":null},{"d":4,"h":"21 Safar 1448 AH","fb":"03:46","fj":"05:00","sr":"05:30","zb":"13:21","zj":"13:45","ab":"18:33","aj":"19:45","mb":"21:06","ib":"22:09","ij":"22:30","ju":null},{"d":5,"h":"22 Safar 1448 AH","fb":"03:47","fj":"05:00","sr":"05:32","zb":"13:21","zj":"13:45","ab":"18:31","aj":"19:45","mb":"21:04","ib":"22:07","ij":"22:30","ju":null},{"d":6,"h":"23 Safar 1448 AH","fb":"03:50","fj":"05:00","sr":"05:34","zb":"13:21","zj":"13:45","ab":"18:30","aj":"19:45","mb":"21:02","ib":"22:06","ij":"22:30","ju":null},{"d":7,"h":"24 Safar 1448 AH","fb":"03:52","fj":"05:10","sr":"05:35","zb":"13:21","zj":"13:30","ab":"18:29","aj":"19:30","mb":"21:00","ib":"22:04","ij":"22:15","ju":{"first":"13:30","second":"15:30"}},{"d":8,"h":"25 Safar 1448 AH","fb":"03:54","fj":"05:10","sr":"05:37","zb":"13:21","zj":"13:45","ab":"18:28","aj":"19:30","mb":"20:58","ib":"22:02","ij":"22:15","ju":null},{"d":9,"h":"26 Safar 1448 AH","fb":"03:56","fj":"05:10","sr":"05:39","zb":"13:21","zj":"13:45","ab":"18:26","aj":"19:30","mb":"20:56","ib":"22:00","ij":"22:15","ju":null},{"d":10,"h":"27 Safar 1448 AH","fb":"03:58","fj":"05:10","sr":"05:41","zb":"13:21","zj":"13:45","ab":"18:25","aj":"19:30","mb":"20:54","ib":"21:59","ij":"22:15","ju":null},{"d":11,"h":"28 Safar 1448 AH","fb":"04:00","fj":"05:10","sr":"05:42","zb":"13:21","zj":"13:45","ab":"18:24","aj":"19:30","mb":"20:52","ib":"21:58","ij":"22:15","ju":null},{"d":12,"h":"29 Safar 1448 AH","fb":"04:02","fj":"05:10","sr":"05:44","zb":"13:21","zj":"13:45","ab":"18:22","aj":"19:30","mb":"20:50","ib":"21:57","ij":"22:15","ju":null},{"d":13,"h":"30 Safar 1448 AH","fb":"04:05","fj":"05:10","sr":"05:46","zb":"13:21","zj":"13:45","ab":"18:21","aj":"19:30","mb":"20:48","ib":"21:56","ij":"22:15","ju":null},{"d":14,"h":"1 Rabi al-Awwal 1448 AH","fb":"04:06","fj":"05:20","sr":"05:48","zb":"13:21","zj":"13:30","ab":"18:19","aj":"19:15","mb":"20:46","ib":"21:55","ij":"22:15","ju":{"first":"13:30","second":"15:30"}},{"d":15,"h":"2 Rabi al-Awwal 1448 AH","fb":"04:08","fj":"05:20","sr":"05:49","zb":"13:21","zj":"13:45","ab":"18:18","aj":"19:15","mb":"20:43","ib":"21:54","ij":"22:15","ju":null},{"d":16,"h":"3 Rabi al-Awwal 1448 AH","fb":"04:10","fj":"05:20","sr":"05:51","zb":"13:21","zj":"13:45","ab":"18:16","aj":"19:15","mb":"20:41","ib":"21:53","ij":"22:15","ju":null},{"d":17,"h":"4 Rabi al-Awwal 1448 AH","fb":"04:13","fj":"05:20","sr":"05:53","zb":"13:21","zj":"13:45","ab":"18:15","aj":"19:15","mb":"20:39","ib":"21:51","ij":"22:15","ju":null},{"d":18,"h":"5 Rabi al-Awwal 1448 AH","fb":"04:14","fj":"05:20","sr":"05:55","zb":"13:20","zj":"13:45","ab":"18:13","aj":"19:15","mb":"20:37","ib":"21:48","ij":"22:15","ju":null},{"d":19,"h":"6 Rabi al-Awwal 1448 AH","fb":"04:17","fj":"05:20","sr":"05:56","zb":"13:20","zj":"13:45","ab":"18:12","aj":"19:15","mb":"20:35","ib":"21:46","ij":"22:15","ju":null},{"d":20,"h":"7 Rabi al-Awwal 1448 AH","fb":"04:19","fj":"05:20","sr":"05:58","zb":"13:20","zj":"13:45","ab":"18:10","aj":"19:15","mb":"20:32","ib":"21:44","ij":"22:15","ju":null},{"d":21,"h":"8 Rabi al-Awwal 1448 AH","fb":"04:21","fj":"05:30","sr":"06:00","zb":"13:20","zj":"13:30","ab":"18:08","aj":"18:45","mb":"20:30","ib":"21:43","ij":"22:00","ju":{"first":"13:30","second":"15:30"}},{"d":22,"h":"9 Rabi al-Awwal 1448 AH","fb":"04:23","fj":"05:30","sr":"06:02","zb":"13:19","zj":"13:45","ab":"18:07","aj":"18:45","mb":"20:28","ib":"21:40","ij":"22:00","ju":null},{"d":23,"h":"10 Rabi al-Awwal 1448 AH","fb":"04:24","fj":"05:30","sr":"06:03","zb":"13:19","zj":"13:45","ab":"18:05","aj":"18:45","mb":"20:26","ib":"21:38","ij":"22:00","ju":null},{"d":24,"h":"11 Rabi al-Awwal 1448 AH","fb":"04:25","fj":"05:30","sr":"06:05","zb":"13:19","zj":"13:45","ab":"18:04","aj":"18:45","mb":"20:23","ib":"21:36","ij":"22:00","ju":null},{"d":25,"h":"12 Rabi al-Awwal 1448 AH","fb":"04:26","fj":"05:30","sr":"06:07","zb":"13:19","zj":"13:45","ab":"18:02","aj":"18:45","mb":"20:21","ib":"21:35","ij":"22:00","ju":null},{"d":26,"h":"13 Rabi al-Awwal 1448 AH","fb":"04:27","fj":"05:30","sr":"06:09","zb":"13:18","zj":"13:45","ab":"18:00","aj":"18:45","mb":"20:19","ib":"21:32","ij":"22:00","ju":null},{"d":27,"h":"14 Rabi al-Awwal 1448 AH","fb":"04:28","fj":"05:30","sr":"06:10","zb":"13:18","zj":"13:45","ab":"17:58","aj":"18:45","mb":"20:17","ib":"21:30","ij":"22:00","ju":null},{"d":28,"h":"15 Rabi al-Awwal 1448 AH","fb":"04:29","fj":"05:45","sr":"06:12","zb":"13:18","zj":"13:30","ab":"17:57","aj":"18:45","mb":"20:14","ib":"21:28","ij":"21:45","ju":{"first":"13:30","second":"15:30"}},{"d":29,"h":"16 Rabi al-Awwal 1448 AH","fb":"04:30","fj":"05:45","sr":"06:14","zb":"13:18","zj":"13:45","ab":"17:55","aj":"18:45","mb":"20:12","ib":"21:26","ij":"21:45","ju":null},{"d":30,"h":"17 Rabi al-Awwal 1448 AH","fb":"04:31","fj":"05:45","sr":"06:16","zb":"13:17","zj":"13:45","ab":"17:53","aj":"18:45","mb":"20:09","ib":"21:24","ij":"21:45","ju":null},{"d":31,"h":"18 Rabi al-Awwal 1448 AH","fb":"04:31","fj":"05:45","sr":"06:17","zb":"13:17","zj":"13:45","ab":"17:51","aj":"18:45","mb":"20:07","ib":"21:22","ij":"21:45","ju":null}];
+  const TODAY_DAY = 13; // 13 Aug 2026
+
+  function renderSnapshot(){
+    const today = AUGUST_2026.find(d => d.d === TODAY_DAY);
+    if(!today) return;
+    document.getElementById('snapHijri').textContent = today.h;
+    document.getElementById('s-fajr').textContent = `${today.fb} begins · ${today.fj} jamāʿah`;
+    document.getElementById('s-zuhr').textContent = `${today.zb} begins · ${today.zj} jamāʿah`;
+    document.getElementById('s-asr').textContent = `${today.ab} begins · ${today.aj} jamāʿah`;
+    document.getElementById('s-maghrib').textContent = today.mb;
+    document.getElementById('s-isha').textContent = `${today.ib} begins · ${today.ij} jamāʿah`;
+  }
+
+  function renderTable(){
+    const tbody = document.getElementById('ptBody');
+    const rows = AUGUST_2026.map(d => {
+      const isToday = d.d === TODAY_DAY;
+      return `<tr class="${isToday ? 'today' : ''}"><td>${d.d} Aug${isToday ? ' · Today' : ''}</td><td>${d.h}</td><td>${d.fb}</td><td>${d.fj}</td><td>${d.sr}</td><td>${d.zj}</td><td>${d.aj}</td><td>${d.mb}</td><td>${d.ij}</td></tr>`;
+    }).join('');
+    tbody.innerHTML = rows;
+
+    const jummahDays = AUGUST_2026.filter(d => d.ju);
+    document.getElementById('jummahNote').innerHTML = jummahDays.map(d =>
+      `<div class="jc"><b>Fri ${d.d} Aug</b>1st Jumu'ah ${d.ju.first} &middot; 2nd Jumu'ah ${d.ju.second}</div>`
+    ).join('');
+  }
+
+  renderSnapshot();
+  renderTable();
+
+  // marquee — verified facts only
+  const mqItems = ["Est. 1967","New Build: Phase 3.3 — Internal Works", "Radio 454.1000 MHz","Registered Charity 1041569","Blackburn Road, Bolton since 1988"];
+  document.getElementById('marqueeTrack').innerHTML = [...mqItems, ...mqItems].map(t => `<span>${t}</span>`).join('');
+
+  // header scroll state
+  const header = document.getElementById('siteHeader');
+  const toTop = document.getElementById('toTop');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    header.classList.toggle('scrolled', y > 30);
+    toTop.classList.toggle('show', y > 500);
+  });
+  toTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+  // burger menu
+  const burgerBtn = document.getElementById('burgerBtn');
+  const navPanel = document.getElementById('navPanel');
+  const navOverlay = document.getElementById('navOverlay');
+  const navLinks = document.querySelectorAll('.nav-stack a');
+  function openMenu(){ burgerBtn.classList.add('open'); navPanel.classList.add('open'); navOverlay.classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeMenu(){ burgerBtn.classList.remove('open'); navPanel.classList.remove('open'); navOverlay.classList.remove('open'); document.body.style.overflow=''; }
+  burgerBtn.addEventListener('click', () => navPanel.classList.contains('open') ? closeMenu() : openMenu());
+  navOverlay.addEventListener('click', closeMenu);
+  navLinks.forEach(a => a.addEventListener('click', closeMenu));
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeMenu(); });
+
+  // reveal on scroll
+  const io = new IntersectionObserver(entries => entries.forEach(en => { if(en.isIntersecting){ en.target.classList.add('visible'); io.unobserve(en.target);} }), {threshold:.12});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  // active link tracking
+  const sections = document.querySelectorAll('section[id]');
+  const linkMap = {}; navLinks.forEach(a => linkMap[a.getAttribute('href').slice(1)] = a);
+  const navIo = new IntersectionObserver(entries => entries.forEach(en => {
+    const link = linkMap[en.target.id];
+    if(link && en.isIntersecting){ navLinks.forEach(l => l.classList.remove('active')); link.classList.add('active'); }
+  }), {rootMargin:'-40% 0px -50% 0px'});
+  sections.forEach(s => navIo.observe(s));
+
+  // copy-to-clipboard on bank details
+  document.querySelectorAll('.bk').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = btn.getAttribute('data-copy');
+      navigator.clipboard && navigator.clipboard.writeText(val).catch(()=>{});
+      btn.classList.add('copied-flash');
+      setTimeout(() => btn.classList.remove('copied-flash'), 1400);
+    });
+  });
+  document.getElementById('copyall').addEventListener('click', () => {
+    const all = ['Bolton Central Islamic Society (BCIS)','HSBC','Sort code: 40-04-15','Account number: 02320258'].join('\n');
+    navigator.clipboard && navigator.clipboard.writeText(all).catch(()=>{});
+    const btn = document.getElementById('copyall');
+    const orig = btn.textContent; btn.textContent = 'Copied ✓';
+    setTimeout(() => btn.textContent = orig, 1600);
+  });
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
