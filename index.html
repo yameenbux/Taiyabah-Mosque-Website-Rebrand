@@ -45,11 +45,11 @@
     --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:smooth;background:var(--brand-900);}
   body{
     font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
     font-weight:400;
-    color:var(--ink); background:var(--paper);
+    color:var(--ink); background:var(--brand-900);
     overflow-x:hidden; -webkit-font-smoothing:antialiased;
   }
   .display{font-family:"Fraunces", Georgia, serif;}
@@ -352,10 +352,14 @@
   .dc-note b{color:var(--brand-800);}
 
   .bank-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px;}
-  .bk{width:100%;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:inherit;padding:14px 17px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left;}
+  .bk{
+    width:100%;display:grid;grid-template-columns:180px 1fr auto;column-gap:16px;align-items:center;
+    background:none;border:none;color:inherit;padding:14px 17px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left;
+  }
   .bk:last-child{border-bottom:none;}
   .bk-k{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-  .bk-v{font-size:.92rem;font-weight:600;color:var(--ink);}
+  .bk-v{font-size:.92rem;font-weight:600;color:var(--ink);text-align:left;}
+  @media (max-width:480px){ .bk{grid-template-columns:110px 1fr auto;} }
   .bk .copied{color:var(--brand-800);font-size:.7rem;opacity:0;transition:.2s;}
   .bk.copied-flash .copied{opacity:1;}
   .copyall{width:100%;background:transparent;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:12px;font-weight:700;font-size:.82rem;cursor:pointer;margin-bottom:16px;}
