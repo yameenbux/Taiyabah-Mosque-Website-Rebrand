@@ -470,6 +470,22 @@
   .media-outro{text-align:center;margin-top:38px;}
   .media-outro p{color:var(--muted);font-size:.9rem;margin-bottom:14px;}
 
+  /* ---- Shop page: placeholder category tiles ---- */
+  .shop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 6px;}
+  .shop-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 14px;cursor:default;}
+  .shop-tile .sh-ic{width:48px;height:48px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .shop-tile .sh-ic svg{width:22px;height:22px;}
+  .shop-tile .sh-label{font-family:"Fraunces",serif;font-weight:600;font-size:.92rem;color:var(--ink);line-height:1.3;}
+
+  /* ---- Services page: tiles with real detail from the app ---- */
+  .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 6px;}
+  .service-tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;}
+  .service-tile .sv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .service-tile .sv-ic{width:40px;height:40px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .service-tile .sv-ic svg{width:19px;height:19px;}
+  .service-tile h4{font-size:1.02rem;color:var(--ink);margin-bottom:6px;}
+  .service-tile p{font-size:.86rem;color:var(--muted);line-height:1.6;}
+
   /* ---------- CONTACT ---------- */
   .contact-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;}
   .contact-list li{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid var(--line);}
@@ -515,6 +531,7 @@
 
   @media (max-width:980px){
     .media-grid{grid-template-columns:1fr 1fr;}
+    .shop-grid{grid-template-columns:1fr 1fr;}
     .hero h1{max-width:none;}
     .explore-grid{grid-template-columns:1fr 1fr;}
     .explore-item{border-right:none;border-bottom:1px solid var(--line);padding:18px 4px;}
@@ -534,6 +551,8 @@
   }
   @media (max-width:560px){
     .media-grid{grid-template-columns:1fr;}
+    .shop-grid{grid-template-columns:1fr 1fr;}
+    .service-grid{grid-template-columns:1fr;}
     .explore-grid{grid-template-columns:1fr;}
     .explore-item{border-bottom:1px solid var(--line);padding:16px 2px;}
     .explore-item:nth-child(odd),.explore-item:nth-child(even){padding-left:2px;padding-right:2px;}
@@ -1035,13 +1054,60 @@
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="cs-wrap">
+      <div class="cs-wrap" style="max-width:600px;">
         <span class="cs-badge">Coming soon</span>
-        <p class="cs-lead">We're putting together a shop for Islamic books, modest wear and community merchandise, with proceeds supporting the masjid. There's nothing to browse here just yet — check back soon, or get in touch if there's something specific you're after.</p>
-        <div class="cs-cta">
-          <a class="btn btn-gold" data-nav="contact">Get in touch</a>
-          <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
+        <p class="cs-lead">Here's a preview of the categories we're setting up — nothing is orderable yet, but this is the shape the shop will take. Proceeds will support the masjid.</p>
+      </div>
+      <div class="shop-grid">
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5c-1.6-1.1-4-1.6-7-1.2v13.4c3-.4 5.4.1 7 1.2 1.6-1.1 4-1.6 7-1.2V5.3c-3-.4-5.4.1-7 1.2z"/><path d="M12 6.5v13.4"/></svg></span>
+          <span class="sh-label">Books</span>
+          <span class="soon-tag">Coming soon</span>
         </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 3.6 0 0016 0"/><path d="M4 12v2a8 3.6 0 0016 0v-2"/><circle cx="9" cy="10.6" r="1.15" fill="currentColor" stroke="none"/><circle cx="12.5" cy="9.6" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="10.8" r="1.15" fill="currentColor" stroke="none"/></svg></span>
+          <span class="sh-label">Dates</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20C13 20 19 14 19 5c-9 0-14 5-14 15z"/><path d="M6 19 17 7"/></svg></span>
+          <span class="sh-label">Herbal Medicine</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3.5h8v3.2H8z"/><path d="M7 6.7h10l-1.1 13.8a1.5 1.5 0 01-1.5 1.4h-4.8a1.5 1.5 0 01-1.5-1.4L7 6.7z"/><path d="M12 10.5v6M9.5 13.2h5"/></svg></span>
+          <span class="sh-label">Honey</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5.5" y="5.5" width="13" height="13"/><path d="M5.5 9.5h13M9 5.5v13"/></svg></span>
+          <span class="sh-label">Ihram &amp; Hajj/Umrah Items</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c2.2 3.3 4.5 6.6 4.5 9.8a4.5 4.5 0 01-9 0c0-3.2 2.3-6.5 4.5-9.8z"/></svg></span>
+          <span class="sh-label">Oils</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5h4M11 3.5v3M9.3 8.5h5.4l1 3v7.5a1.5 1.5 0 01-1.5 1.5H9.8a1.5 1.5 0 01-1.5-1.5V11.5z"/></svg></span>
+          <span class="sh-label">Perfume</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.2" cy="8.7" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.2" cy="15.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="18.7" r="1.3" fill="currentColor" stroke="none"/><circle cx="6.8" cy="15.3" r="1.3" fill="currentColor" stroke="none"/><circle cx="6.8" cy="8.7" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+          <span class="sh-label">Prayer Accessories</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+        <div class="shop-tile">
+          <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6v3.4l2 3.2v8.4a2 2 0 01-2 2H9a2 2 0 01-2-2v-8.4l2-3.2z"/><path d="M7.5 15c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"/></svg></span>
+          <span class="sh-label">Zam Zam Water</span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+      </div>
+      <div class="cs-cta" style="margin-top:26px;">
+        <a class="btn btn-gold" data-nav="contact">Get in touch</a>
+        <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
       </div>
     </div>
   </section>
@@ -1083,14 +1149,42 @@
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="cs-wrap" style="max-width:560px;">
-        <p class="cs-lead" style="margin-bottom:22px;">These are the services the masjid is setting up — each is being built out properly rather than rushed, so for now they're listed here as what's coming. For anything urgent, please contact the office directly instead of waiting.</p>
+      <div class="cs-wrap" style="max-width:600px;">
+        <p class="cs-lead" style="margin-bottom:6px;">These are the services the masjid is setting up — each is being built out properly rather than rushed, so for now they're listed here as what's coming. For anything urgent, please contact the office directly instead of waiting.</p>
       </div>
-      <div class="soon-list" style="max-width:560px;margin:0 auto;">
-        <div class="soon-row"><span class="t">Hall / Room Hire</span><span class="soon-tag">Coming soon</span></div>
-        <div class="soon-row"><span class="t">Marriage / Death (Nikah &amp; Janāzah)</span><span class="soon-tag">Coming soon</span></div>
-        <div class="soon-row"><span class="t">Advice</span><span class="soon-tag">Coming soon</span></div>
-        <div class="soon-row"><span class="t">Education</span><span class="soon-tag">Coming soon</span></div>
+      <div class="service-grid">
+        <div class="service-tile">
+          <div class="sv-top">
+            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/></svg></span>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+          <h4>Hall / Room Hire</h4>
+          <p>Booking the masjid's hall and meeting rooms for community events, gatherings and classes.</p>
+        </div>
+        <div class="service-tile">
+          <div class="sv-top">
+            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-10-9.3C.5 8.1 2.1 4.5 5.6 4c2-.3 3.7.6 4.9 2.3.4.5 1.1 2.1 1.5 2.1s1.1-1.6 1.5-2.1C14.7 4.6 16.4 3.7 18.4 4c3.5.5 5.1 4.1 3.6 7.7C19 16.65 12 21 12 21z"/></svg></span>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+          <h4>Marriage / Death</h4>
+          <p>Guidance and arrangements for nikah ceremonies and janāzah (funeral) matters.</p>
+        </div>
+        <div class="service-tile">
+          <div class="sv-top">
+            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+          <h4>Advice</h4>
+          <p>General Islamic guidance and support from the masjid's imams and scholars.</p>
+        </div>
+        <div class="service-tile">
+          <div class="sv-top">
+            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span>
+            <span class="soon-tag">Coming soon</span>
+          </div>
+          <h4>Education</h4>
+          <p>Classes and learning for the wider community, alongside the madrasah's own programme.</p>
+        </div>
       </div>
       <div class="cs-cta" style="margin-top:28px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
