@@ -456,6 +456,20 @@
   .cs-wrap p.cs-lead{color:var(--muted);font-size:1.02rem;line-height:1.75;margin-bottom:28px;}
   .cs-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
 
+  /* ---- Media page: YouTube video grid ---- */
+  .media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .media-item{display:block;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-decoration:none;transition:.25s ease;box-shadow:0 6px 16px rgba(43,7,26,.06);}
+  .media-item:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(43,7,26,.14);}
+  .media-thumb-wrap{position:relative;aspect-ratio:16/9;background:#170410;overflow:hidden;}
+  .media-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .media-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:rgba(12,2,8,.72);display:flex;align-items:center;justify-content:center;color:#fff;transition:.2s ease;}
+  .media-play svg{width:18px;height:18px;margin-left:2px;}
+  .media-item:hover .media-play{background:var(--brand-900);}
+  .media-cap{padding:13px 15px;}
+  .media-cap .mt{font-size:.86rem;font-weight:600;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .media-outro{text-align:center;margin-top:38px;}
+  .media-outro p{color:var(--muted);font-size:.9rem;margin-bottom:14px;}
+
   /* ---------- CONTACT ---------- */
   .contact-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;}
   .contact-list li{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid var(--line);}
@@ -500,6 +514,7 @@
   }
 
   @media (max-width:980px){
+    .media-grid{grid-template-columns:1fr 1fr;}
     .hero h1{max-width:none;}
     .explore-grid{grid-template-columns:1fr 1fr;}
     .explore-item{border-right:none;border-bottom:1px solid var(--line);padding:18px 4px;}
@@ -518,6 +533,7 @@
     .app-promo-phones{height:420px;order:-1;}
   }
   @media (max-width:560px){
+    .media-grid{grid-template-columns:1fr;}
     .explore-grid{grid-template-columns:1fr;}
     .explore-item{border-bottom:1px solid var(--line);padding:16px 2px;}
     .explore-item:nth-child(odd),.explore-item:nth-child(even){padding-left:2px;padding-right:2px;}
@@ -1061,43 +1077,95 @@
     <div class="container">
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
-        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">A full list of services is on its way.</h1>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">What the masjid offers the community.</h1>
       </div>
     </div>
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="cs-wrap">
-        <span class="cs-badge">Coming soon</span>
-        <p class="cs-lead">Nikah, janāzah, counselling and other services the masjid offers will be listed here shortly. For anything urgent in the meantime, please contact the office directly rather than wait for this page.</p>
-        <div class="cs-cta">
-          <a class="btn btn-gold" data-nav="contact">Contact the office</a>
-          <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
-        </div>
+      <div class="cs-wrap" style="max-width:560px;">
+        <p class="cs-lead" style="margin-bottom:22px;">These are the services the masjid is setting up — each is being built out properly rather than rushed, so for now they're listed here as what's coming. For anything urgent, please contact the office directly instead of waiting.</p>
+      </div>
+      <div class="soon-list" style="max-width:560px;margin:0 auto;">
+        <div class="soon-row"><span class="t">Hall / Room Hire</span><span class="soon-tag">Coming soon</span></div>
+        <div class="soon-row"><span class="t">Marriage / Death (Nikah &amp; Janāzah)</span><span class="soon-tag">Coming soon</span></div>
+        <div class="soon-row"><span class="t">Advice</span><span class="soon-tag">Coming soon</span></div>
+        <div class="soon-row"><span class="t">Education</span><span class="soon-tag">Coming soon</span></div>
+      </div>
+      <div class="cs-cta" style="margin-top:28px;">
+        <a class="btn btn-gold" data-nav="contact">Contact the office</a>
+        <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
       </div>
     </div>
   </section>
 </div>
 
-<!-- ================= MEDIA (coming soon) ================= -->
+<!-- ================= MEDIA ================= -->
 <div class="page" data-page="media">
   <section class="page-masthead">
     <div class="container">
       <div class="section-head on-dark">
         <div class="eyebrow">Media</div>
-        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Photos, talks &amp; recordings, coming soon.</h1>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">From the masjid's YouTube channel.</h1>
+        <p>New build updates, talks and messages from the imams and scholars who've supported Taiyabah Masjid.</p>
       </div>
     </div>
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="cs-wrap">
-        <span class="cs-badge">Coming soon</span>
-        <p class="cs-lead">A gallery of photos, videos and recorded talks from the masjid is on the way. Until then, catch the live audio stream any time from the Home page.</p>
-        <div class="cs-cta">
-          <a class="btn btn-gold" href="https://taiyabahmbolton.radioca.st/;" target="_blank" rel="noopener">Listen live</a>
-          <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
-        </div>
+      <div class="media-grid">
+        <a class="media-item" href="https://www.youtube.com/watch?v=gC7H_60vPFU" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/gC7H_60vPFU/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Taiyabah Masjid Bolton New Build Update 2026</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=N7wFXynmLHM" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/N7wFXynmLHM/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Taiyabah Masjid Bolton — History &amp; New Build Journey Todate</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=BWofQ9Ux0k0" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/BWofQ9Ux0k0/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">New Taiyabah Masjid Bolton Plan Walkthrough</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=KpAiKZnd6-Q" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/KpAiKZnd6-Q/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">New Build First Phase Completion Time-Lapse, Ramadhan 2019</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=mjNi1DoEyR8" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/mjNi1DoEyR8/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Construction Update at Taiyabah Masjid Bolton (20 Dec 2018)</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=icwQ1K-AGhM" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/icwQ1K-AGhM/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Taiyabah Masjid December 2021 — Phase 2 Start Update</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=in_Gm496Wpc" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/in_Gm496Wpc/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Fundraiser 2022</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=6Z302cNuVL4" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/6Z302cNuVL4/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Message by Mufti Fayyaz Saheb, Imam of Taiyabah Masjid Bolton</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=hnrxkmeSmHs" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/hnrxkmeSmHs/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Qari Rashid Musa — Message for the New Build</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=k1GYXfiqzqE" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/k1GYXfiqzqE/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Qari Faruk Saheb Samni — Special Message for the New Build</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=K35Y-ROIzgk" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/K35Y-ROIzgk/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Prayer Mat Campaign Explained</div></div>
+        </a>
+        <a class="media-item" href="https://www.youtube.com/watch?v=nJo4-8i3yEI" target="_blank" rel="noopener">
+          <div class="media-thumb-wrap"><img src="https://i.ytimg.com/vi/nJo4-8i3yEI/hqdefault.jpg" alt="" loading="lazy"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-cap"><div class="mt">Beautiful Qur'an Recitation by Hafiz Naeem Dilip, Bolton</div></div>
+        </a>
+      </div>
+      <div class="media-outro">
+        <p>More talks, updates and recitations are posted regularly — subscribe to catch new uploads first.</p>
+        <a class="btn btn-gold" href="https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw" target="_blank" rel="noopener">Visit our YouTube channel →</a>
       </div>
     </div>
   </section>
