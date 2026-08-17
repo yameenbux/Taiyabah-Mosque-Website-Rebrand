@@ -477,14 +477,56 @@
   .shop-tile .sh-ic svg{width:22px;height:22px;}
   .shop-tile .sh-label{font-family:"Fraunces",serif;font-weight:600;font-size:.92rem;color:var(--ink);line-height:1.3;}
 
-  /* ---- Services page: tiles with real detail from the app ---- */
-  .service-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:8px 0 6px;}
-  .service-tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;}
-  .service-tile .sv-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px;}
-  .service-tile .sv-ic{width:40px;height:40px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .service-tile .sv-ic svg{width:19px;height:19px;}
-  .service-tile h4{font-size:1.02rem;color:var(--ink);margin-bottom:6px;}
-  .service-tile p{font-size:.86rem;color:var(--muted);line-height:1.6;}
+  /* ---- Services page: quick-nav tiles + full detail sections, mirroring the app ---- */
+  .svc-quicknav{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:28px 0 60px;}
+  .svc-qtile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 12px;text-decoration:none;cursor:pointer;transition:.2s ease;}
+  .svc-qtile:hover{transform:translateY(-2px);border-color:var(--gold);}
+  .svc-qtile.is-soon{cursor:default;}
+  .svc-qtile.is-soon:hover{transform:none;border-color:var(--line);}
+  .svc-qtile .sv-ic{width:42px;height:42px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;}
+  .svc-qtile .sv-ic svg{width:19px;height:19px;}
+  .svc-qtile .sv-label{font-family:"Fraunces",serif;font-weight:600;font-size:.84rem;color:var(--ink);line-height:1.3;}
+  .svc-qtile .sv-sub{font-size:.7rem;color:var(--muted);line-height:1.4;}
+
+  .svc-facts{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;}
+  .svc-fact{flex:1;text-align:center;padding:16px 8px;border-right:1px solid var(--line);}
+  .svc-fact:last-child{border-right:none;}
+  .svc-fact .k{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .svc-fact .v{font-size:1.5rem;font-weight:700;color:var(--brand-700);font-family:"Fraunces",serif;margin-top:2px;}
+
+  .svc-cta-row{display:flex;gap:14px;align-items:center;padding:15px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-decoration:none;margin-top:12px;}
+  .svc-cta-row .ic{width:38px;height:38px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .svc-cta-row .ic svg{width:18px;height:18px;}
+  .svc-cta-row .t{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .svc-cta-row .k{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .svc-cta-row .v{font-size:.96rem;font-weight:700;color:var(--ink);}
+  .svc-cta-row .go{margin-left:auto;color:var(--muted);flex-shrink:0;}
+
+  .svc-sub{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:16px;}
+  .svc-sub h4{font-size:1.02rem;color:var(--ink);margin-bottom:2px;}
+  .svc-sub .svc-ar{font-size:1.15rem;color:var(--gold);margin-bottom:4px;}
+  .svc-sub p{font-size:.88rem;color:var(--muted);line-height:1.7;}
+  .svc-sub p+p{margin-top:10px;}
+  .svc-sub .rule-mini{border:none;border-top:1px solid var(--line);margin:14px 0;}
+  .svc-sub .wl-ul{margin:8px 0 0 2px;padding-left:18px;}
+  .svc-sub .wl-ul li{font-size:.86rem;line-height:1.65;color:var(--muted);margin-bottom:5px;}
+
+  .svc-quote{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;}
+  .svc-quote .ar{font-size:1rem;line-height:2;color:#8A6A18;direction:rtl;text-align:right;}
+  .svc-quote .en{font-family:"Fraunces",Georgia,serif;font-size:.92rem;line-height:1.6;color:var(--ink);margin-top:8px;}
+  .svc-quote .src{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:#9A7A1E;margin-top:8px;}
+
+  .svc-notprovided{display:flex;align-items:center;gap:9px;margin:4px 0 12px;padding:11px 13px;border-radius:11px;background:#FBF0EB;border:1px solid #EBCDBF;font-size:.83rem;font-weight:600;color:#7C3A20;}
+  .svc-notprovided .dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;}
+
+  .svc-advisory{margin:12px 0;border-radius:14px;padding:15px 16px;background:#FBF0EB;border:1px solid #EBCDBF;}
+  .svc-advisory .h{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#7C3A20;margin-bottom:6px;}
+  .svc-advisory p{font-size:.82rem;line-height:1.6;color:#7C3A20;}
+
+  .svc-soon-note{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px;}
+  .svc-soon-note .tw{display:flex;flex-direction:column;gap:2px;}
+  .svc-soon-note .t{font-size:.88rem;font-weight:600;color:var(--ink);}
+  .svc-soon-note .d{font-size:.78rem;color:var(--muted);}
 
   /* ---------- CONTACT ---------- */
   .contact-wrap{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;}
@@ -532,6 +574,7 @@
   @media (max-width:980px){
     .media-grid{grid-template-columns:1fr 1fr;}
     .shop-grid{grid-template-columns:1fr 1fr;}
+    .svc-quicknav{grid-template-columns:repeat(3,1fr);}
     .hero h1{max-width:none;}
     .explore-grid{grid-template-columns:1fr 1fr;}
     .explore-item{border-right:none;border-bottom:1px solid var(--line);padding:18px 4px;}
@@ -552,7 +595,10 @@
   @media (max-width:560px){
     .media-grid{grid-template-columns:1fr;}
     .shop-grid{grid-template-columns:1fr 1fr;}
-    .service-grid{grid-template-columns:1fr;}
+    .svc-quicknav{grid-template-columns:1fr 1fr;}
+    .svc-facts{flex-direction:column;}
+    .svc-fact{border-right:none;border-bottom:1px solid var(--line);}
+    .svc-fact:last-child{border-bottom:none;}
     .explore-grid{grid-template-columns:1fr;}
     .explore-item{border-bottom:1px solid var(--line);padding:16px 2px;}
     .explore-item:nth-child(odd),.explore-item:nth-child(even){padding-left:2px;padding-right:2px;}
@@ -1137,56 +1183,170 @@
   </section>
 </div>
 
-<!-- ================= SERVICES (coming soon) ================= -->
+<!-- ================= SERVICES ================= -->
 <div class="page" data-page="services">
   <section class="page-masthead">
     <div class="container">
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">What the masjid offers the community.</h1>
+        <p>The same services available in the app, brought over here — real detail, not a placeholder list.</p>
       </div>
     </div>
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="cs-wrap" style="max-width:600px;">
-        <p class="cs-lead" style="margin-bottom:6px;">These are the services the masjid is setting up — each is being built out properly rather than rushed, so for now they're listed here as what's coming. For anything urgent, please contact the office directly instead of waiting.</p>
-      </div>
-      <div class="service-grid">
-        <div class="service-tile">
-          <div class="sv-top">
-            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/></svg></span>
-            <span class="soon-tag">Coming soon</span>
-          </div>
-          <h4>Hall / Room Hire</h4>
-          <p>Booking the masjid's hall and meeting rooms for community events, gatherings and classes.</p>
+
+      <div class="svc-quicknav">
+        <a class="svc-qtile" href="#svc-hallhire">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M4 21h16"/><path d="M10 21v-6h4v6"/></svg></span>
+          <span class="sv-label">Hall / Room Hire</span>
+          <span class="sv-sub">3 halls &middot; 2 kitchens</span>
+        </a>
+        <a class="svc-qtile" href="#svc-bmd">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="15.5" r="4.2"/><circle cx="15.5" cy="15.5" r="4.2"/><path d="M12 4.5c1.4 0 2.5 1 2.5 2.2S13.4 9 12 9s-2.5-1-2.5-2.3S10.6 4.5 12 4.5Z"/></svg></span>
+          <span class="sv-label">Birth, Marriage &amp; Death</span>
+          <span class="sv-sub">Nikāḥ, wills &amp; more</span>
+        </a>
+        <a class="svc-qtile" href="#svc-advice">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5Z"/></svg></span>
+          <span class="sv-label">Imams' Advice</span>
+          <span class="sv-sub">Book an appointment</span>
+        </a>
+        <div class="svc-qtile is-soon">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span>
+          <span class="sv-label">Education</span>
+          <span class="soon-tag">Coming soon</span>
         </div>
-        <div class="service-tile">
-          <div class="sv-top">
-            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-10-9.3C.5 8.1 2.1 4.5 5.6 4c2-.3 3.7.6 4.9 2.3.4.5 1.1 2.1 1.5 2.1s1.1-1.6 1.5-2.1C14.7 4.6 16.4 3.7 18.4 4c3.5.5 5.1 4.1 3.6 7.7C19 16.65 12 21 12 21z"/></svg></span>
-            <span class="soon-tag">Coming soon</span>
-          </div>
-          <h4>Marriage / Death</h4>
-          <p>Guidance and arrangements for nikah ceremonies and janāzah (funeral) matters.</p>
-        </div>
-        <div class="service-tile">
-          <div class="sv-top">
-            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg></span>
-            <span class="soon-tag">Coming soon</span>
-          </div>
-          <h4>Advice</h4>
-          <p>General Islamic guidance and support from the masjid's imams and scholars.</p>
-        </div>
-        <div class="service-tile">
-          <div class="sv-top">
-            <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span>
-            <span class="soon-tag">Coming soon</span>
-          </div>
-          <h4>Education</h4>
-          <p>Classes and learning for the wider community, alongside the madrasah's own programme.</p>
+        <div class="svc-qtile is-soon">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+          <span class="sv-label">Tours &amp; Visits</span>
+          <span class="soon-tag">Coming soon</span>
         </div>
       </div>
-      <div class="cs-cta" style="margin-top:28px;">
+
+      <div class="subsection" id="svc-hallhire">
+        <div class="subhead"><span class="idx">01</span><h3>Hall / Room Hire</h3><span class="rule"></span></div>
+        <div class="svc-facts">
+          <div class="svc-fact"><div class="k">Halls available</div><div class="v">3</div></div>
+          <div class="svc-fact"><div class="k">Kitchens available</div><div class="v">2</div></div>
+        </div>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;max-width:62ch;">Taiyabah Centre — a separate building owned by the masjid — offers three halls and two kitchens for hire, suitable for a range of community and family occasions. For availability, pricing and to discuss your requirements, please contact the masjid's main office directly.</p>
+        <a class="svc-cta-row" href="https://www.google.com/maps?q=Taiyabah+Centre,+Astley+Street,+Bolton+BL1+8EH" target="_blank" rel="noopener">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+          <span class="t"><span class="k">Taiyabah Centre &middot; get directions</span><span class="v">Astley Street, Bolton BL1 8EH</span></span>
+          <span class="go">&rsaquo;</span>
+        </a>
+        <a class="svc-cta-row" href="tel:01204535997">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+          <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
+          <span class="go">&rsaquo;</span>
+        </a>
+      </div>
+
+      <div class="subsection" id="svc-bmd">
+        <div class="subhead"><span class="idx">02</span><h3>Birth, Marriage &amp; Death</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;max-width:62ch;margin-bottom:18px;">Guidance and support from the masjid across life's most significant moments.</p>
+
+        <div class="svc-sub">
+          <div class="svc-ar arabic" lang="ar" dir="rtl">وِلَادَة</div>
+          <h4>Birth — Guidance for New Arrivals</h4>
+          <p>Congratulations on the arrival of your child. This covers guidance and services relevant to a newborn.</p>
+          <hr class="rule-mini">
+          <p style="font-weight:600;color:var(--ink);margin-bottom:2px;">Circumcision (Khitān)</p>
+          <div class="svc-notprovided"><span class="dot"></span>Taiyabah Masjid does not provide this service directly.</div>
+          <p>Circumcision can be arranged through the <strong>Bolton Council of Mosques (BCoM)</strong>, which runs a long-established weekly clinic performed by experienced NHS doctors.</p>
+          <div class="soon-list" style="margin-top:12px;">
+            <div class="soon-row"><span class="t">Age range</span><span style="font-weight:700;">2 weeks – 18 months</span></div>
+            <div class="soon-row"><span class="t">2 weeks – 6 months</span><span class="tnum" style="font-weight:700;">£180</span></div>
+            <div class="soon-row"><span class="t">6 – 12 months</span><span class="tnum" style="font-weight:700;">£250</span></div>
+            <div class="soon-row"><span class="t">12 – 18 months</span><span class="tnum" style="font-weight:700;">£300</span></div>
+          </div>
+          <p style="font-size:.78rem;margin-top:8px;">BCoM does not circumcise babies over 18 months old.</p>
+          <a class="svc-cta-row" href="tel:01204363680">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Call BCoM to book &middot; option 4</span><span class="v tnum">01204 363 680</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+          <p style="font-size:.78rem;margin-top:8px;">Office hours 9am–3pm &middot; admin@thebcom.org &middot; 1 Vicarage Street, Bolton BL3 5LE. A service of Bolton Council of Mosques, independent of Taiyabah Masjid.</p>
+        </div>
+
+        <div class="svc-sub">
+          <div class="svc-ar arabic" lang="ar" dir="rtl">نِكَاح</div>
+          <h4>Marriage — Nikāḥ</h4>
+          <p>For many couples, an Islamic ceremony carries a significance that a civil registration alone does not provide. Taiyabah Masjid is able to conduct this Nikāḥ on your behalf, in keeping with authentic Islamic practice — both parties giving their free and informed consent, and the groom presenting a dowry (mahr) to the bride as part of the contract.</p>
+          <div class="svc-advisory">
+            <div class="h">Please also register your marriage legally</div>
+            <p>A Nikāḥ performed at the masjid is not, by itself, a marriage recognised under UK law. We strongly encourage every couple to additionally complete a separate civil marriage — this protects both partners' legal rights, including around property and inheritance, should the need ever arise.</p>
+          </div>
+          <p>Requirements such as documentation, witnesses, available dates and any applicable fees vary and are best confirmed directly with the masjid.</p>
+          <a class="svc-cta-row" href="tel:01204535997">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+        </div>
+
+        <div class="svc-sub">
+          <div class="svc-ar arabic" lang="ar" dir="rtl">الوَصِيَّة</div>
+          <h4>The Importance of an Islamic Will</h4>
+          <div class="svc-quote">
+            <p class="ar arabic" lang="ar" dir="rtl">مَا حَقُّ امْرِئٍ مُسْلِمٍ لَهُ شَيْءٌ يُوصِي فِيهِ يَبِيتُ لَيْلَتَيْنِ إِلَّا وَوَصِيَّتُهُ مَكْتُوبَةٌ عِنْدَهُ</p>
+            <p class="en">"A Muslim who has something to leave behind should not let two nights pass without having his will written and kept ready."</p>
+            <p class="src">The Prophet ﷺ &middot; Ṣaḥīḥ al-Bukhārī &amp; Ṣaḥīḥ Muslim</p>
+          </div>
+          <div class="svc-quote">
+            <p class="ar arabic" lang="ar" dir="rtl">كُتِبَ عَلَيْكُمْ إِذَا حَضَرَ أَحَدَكُمُ الْمَوْتُ إِنْ تَرَكَ خَيْرًا الْوَصِيَّةُ</p>
+            <p class="en">"When death approaches one of you, and you leave behind good, it is prescribed that you make a bequest — a duty upon those mindful of Allah."</p>
+            <p class="src">Qur'an &middot; Sūrah al-Baqarah, 2:180</p>
+          </div>
+          <p style="font-weight:600;color:var(--ink);">Why it matters</p>
+          <p>When a Muslim passes away without having made their wishes clear, their estate is left to be settled according to the default rules of the country they lived in — which may not reflect Islamic guidance on how a person's wealth should be distributed. An Islamic will sets out, in your own words, while you are able to:</p>
+          <ul class="wl-ul">
+            <li>Who is entitled to benefit from your estate, and in what shares</li>
+            <li>How your property and other assets should be dealt with</li>
+            <li>Who you trust to carry this out on your behalf — your executors</li>
+            <li>Any funeral wishes you would like to be followed</li>
+          </ul>
+          <p style="font-weight:600;color:var(--ink);margin-top:14px;">Distributing your estate</p>
+          <p>Islamic inheritance follows fixed shares (Farā'iḍ) set out in the Qur'an for specific family members. A will does not override these shares, but it lets you address anything the fixed shares do not cover — for example, up to a third of your estate may be left to people or causes outside your Islamic heirs, such as a charitable gift. Because these calculations depend on your own family circumstances, they are best worked through individually with the imam or a solicitor experienced in Islamic wills.</p>
+          <div class="svc-advisory">
+            <div class="h">General information, not advice</div>
+            <p>This is a starting point, not legal, financial or religious advice for your own circumstances. UK inheritance tax and probate rules are detailed and change over time — please speak to a qualified solicitor to write your will, and to the imam for guidance on the Islamic shares that apply to your family.</p>
+          </div>
+          <a class="svc-cta-row" href="tel:01204535997">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Speak to the imam &middot; call the main office</span><span class="v tnum">01204 535 997</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+        </div>
+
+        <div class="svc-soon-note">
+          <span class="tw"><span class="t">Funeral Service</span><span class="d">Janāzah guidance and support</span></span>
+          <span class="soon-tag">Coming soon</span>
+        </div>
+      </div>
+
+      <div class="subsection" id="svc-advice">
+        <div class="subhead"><span class="idx">03</span><h3>Imams' Advice</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;max-width:62ch;margin-bottom:14px;">Many in the community turn to the masjid for guidance on matters affecting their day-to-day lives. Our imams are able to advise on a range of subjects, including marriage, bereavement, family matters, and general Islamic guidance. If you would like to arrange a time to speak with one of the imams, please contact the main office to make an appointment.</p>
+        <a class="svc-cta-row" href="tel:01204535997">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+          <span class="t"><span class="k">Call the main office to book</span><span class="v tnum">01204 535 997</span></span>
+          <span class="go">&rsaquo;</span>
+        </a>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Appointments are arranged through the office, so the imam can make time to see you properly rather than in passing.</p>
+      </div>
+
+      <div class="subsection" style="margin-bottom:0;">
+        <div class="subhead"><span class="idx">04</span><h3>Also on the way</h3><span class="rule"></span></div>
+        <div class="soon-list">
+          <div class="soon-row"><span class="t">Education</span><span class="soon-tag">Coming soon</span></div>
+          <div class="soon-row"><span class="t">Tours &amp; Visits</span><span class="soon-tag">Coming soon</span></div>
+        </div>
+      </div>
+
+      <div class="cs-cta" style="margin-top:36px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
         <a class="btn btn-ghost-light" data-nav="home">Back to Home</a>
       </div>
