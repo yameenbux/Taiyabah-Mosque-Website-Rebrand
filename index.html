@@ -39,7 +39,7 @@
     --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844; --brand-600:#772157;
     --gold:#C6A24C; --gold-bright:#DCBB63;
     --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
-    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
     --radius:14px;
     --measure:60ch;
     --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
@@ -475,6 +475,35 @@
   .ph-p{color:rgba(243,239,227,.78);line-height:1.7;margin-bottom:18px;}
   .needs{display:flex;flex-wrap:wrap;gap:8px;}
   .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:600;}
+
+  /* ---------- NEW BUILD: status + plan side by side ---------- */
+  .nb-status-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  @media (min-width:860px){
+    .nb-status-grid{grid-template-columns:1fr 1fr;align-items:stretch;}
+    .nb-status-grid .phase-card,.nb-status-grid .nb-plan-card{margin-bottom:0;display:flex;flex-direction:column;}
+    .nb-status-grid .needs,.nb-status-grid .plans-row{margin-top:auto;}
+  }
+  .nb-plan-tag{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  .nb-plan-card p{color:var(--muted);line-height:1.7;margin-bottom:0;}
+  .nb-plan-card .plans-row{margin-top:16px;}
+
+  /* ---------- NEW BUILD: journey timeline ---------- */
+  .nb-timeline{position:relative;padding-left:30px;}
+  .nb-timeline::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line);}
+  .nb-tl-item{position:relative;padding-bottom:26px;}
+  .nb-tl-item:last-child{padding-bottom:0;}
+  .nb-tl-dot{position:absolute;left:-30px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--card);border:2px solid var(--line);}
+  .nb-tl-item.nb-tl-done .nb-tl-dot{border-color:var(--success);background:var(--success);}
+  .nb-tl-item.nb-tl-active .nb-tl-dot{border-color:var(--gold);background:var(--gold-bright);box-shadow:0 0 0 4px rgba(198,162,76,.18);}
+  .nb-tl-date{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px;}
+  .nb-tl-body h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .nb-tl-body p{color:var(--muted);font-size:.87rem;line-height:1.6;max-width:62ch;}
+  .nb-tl-status{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;}
+  .nb-tl-status.done{background:rgba(63,122,70,.13);color:var(--success);border:1px solid rgba(63,122,70,.35);}
+  .nb-tl-status.active{background:rgba(198,162,76,.16);color:#8a6c1f;border:1px solid rgba(198,162,76,.45);}
+  .nb-tl-status.upcoming{background:var(--paper);color:var(--muted);border:1px solid var(--line);}
+  .nb-tl-note{margin-top:22px;font-size:.8rem;color:var(--muted);}
+  .nb-tl-note a{color:var(--brand-700);font-weight:600;}
 
   .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
   .tier{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1.5px solid;border-radius:14px;padding:20px 8px;transition:.2s ease;}
@@ -1102,24 +1131,78 @@
   <section class="nb-body">
     <div class="container">
       <div class="subsection">
-        <div class="subhead"><span class="idx">01</span><h3>Where the build is now</h3><span class="rule"></span></div>
-        <div class="phase-card">
-          <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
-          <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
-          <p class="ph-p">Help make the masjid ready for salah, Qur'an and remembrance for generations to come.</p>
-          <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
+        <div class="subhead"><span class="idx">01</span><h3>Where the build is now &amp; what's planned</h3><span class="rule"></span></div>
+        <div class="nb-status-grid">
+          <div class="phase-card">
+            <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
+            <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
+            <p class="ph-p">Help make the masjid ready for salah, Qur'an and remembrance for generations to come.</p>
+            <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
+          </div>
+          <div class="card nb-plan-card">
+            <div class="nb-plan-tag">What's planned</div>
+            <p>Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.</p>
+            <div class="plans-row">
+              <span>Large prayer hall</span><span>Modern ablution areas</span><span>Integrated kitchen</span>
+              <span>Additional lecture rooms</span><span>Wi-Fi &amp; video streaming</span><span>Educational centre &amp; library</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div class="subsection">
-        <div class="subhead"><span class="idx">02</span><h3>What's planned</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.</p>
-          <div class="plans-row">
-            <span>Large prayer hall</span><span>Modern ablution areas</span><span>Integrated kitchen</span>
-            <span>Additional lecture rooms</span><span>Wi-Fi &amp; video streaming</span><span>Educational centre &amp; library</span>
+        <div class="subhead"><span class="idx">02</span><h3>Our journey so far</h3><span class="rule"></span></div>
+        <div class="nb-timeline">
+          <div class="nb-tl-item">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">1967</div>
+              <h4>Taiyabah Masjid founded</h4>
+              <p>One of the first masjids established to serve Bolton's Muslim community.</p>
+            </div>
+          </div>
+          <div class="nb-tl-item nb-tl-done">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">2018 &ndash; Ramadhan 2019</div>
+              <h4>Phase 1 <span class="nb-tl-status done">Completed</span></h4>
+              <p>Construction of the new building got underway, with Phase 1 completed and marked with a site time-lapse shared with the community.</p>
+            </div>
+          </div>
+          <div class="nb-tl-item">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">December 2021</div>
+              <h4>Phase 2 begins</h4>
+              <p>Work on the next phase of the building got underway.</p>
+            </div>
+          </div>
+          <div class="nb-tl-item">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">2022</div>
+              <h4>Community fundraiser</h4>
+              <p>A dedicated fundraising campaign held to help carry the build forward.</p>
+            </div>
+          </div>
+          <div class="nb-tl-item nb-tl-active">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">Now &middot; Phase 3.3</div>
+              <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">In Progress</span></h4>
+              <p>The current appeal — tiling, carpets, heating, lighting, electrical and decor, to make the masjid ready for salah, Qur'an and remembrance.</p>
+            </div>
+          </div>
+          <div class="nb-tl-item nb-tl-upcoming">
+            <div class="nb-tl-dot"></div>
+            <div class="nb-tl-body">
+              <div class="nb-tl-date">What's next</div>
+              <h4>Full facilities complete <span class="nb-tl-status upcoming">Upcoming</span></h4>
+              <p>Large prayer hall, modern ablution areas, integrated kitchen, additional lecture rooms and an educational centre for the whole community.</p>
+            </div>
           </div>
         </div>
+        <p class="nb-tl-note">Dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
       </div>
 
       <div class="subsection" id="give">
