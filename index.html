@@ -312,38 +312,50 @@
 
   /* ---------- HOME: AT-A-GLANCE ROW (prayer / new build / quick links / donate) ---------- */
   .glance-row{background:var(--paper);padding:46px 0 0;}
-  .glance-grid{display:grid;grid-template-columns:1.15fr 1fr 1.15fr 1fr;gap:18px;align-items:stretch;}
-  .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;}
-  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
-  .glance-title{display:flex;align-items:center;gap:8px;font-family:"Fraunces",serif;font-weight:700;font-size:.86rem;color:var(--ink);text-transform:uppercase;letter-spacing:.06em;}
+  .glance-grid{display:grid;grid-template-columns:1.2fr 1.35fr 1fr;gap:18px;align-items:stretch;}
+  .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;}
+  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
+  .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line);}
+  .glance-title{display:flex;align-items:center;gap:8px;font-family:"Fraunces",serif;font-weight:700;font-size:.84rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
   .glance-title svg{width:15px;height:15px;color:var(--brand-800);flex-shrink:0;}
-  .glance-more{font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--brand-800);cursor:pointer;white-space:nowrap;}
+  .glance-more{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);cursor:pointer;white-space:nowrap;}
   .glance-more:hover{text-decoration:underline;}
-  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line);font-size:.84rem;}
+  .gp-table-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .gp-table-head .gp-cols{display:flex;gap:12px;}
+  .gp-col{width:46px;text-align:right;}
+  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem;}
   .gp-row:last-of-type{border-bottom:none;}
   .gp-row .gp-name{color:var(--ink);font-weight:600;}
-  .gp-row .gp-times{display:flex;gap:14px;color:var(--muted);font-variant-numeric:tabular-nums;}
-  .gp-row .gp-times b{color:var(--ink);font-weight:700;}
-  .gp-row.is-next{background:rgba(198,162,76,.14);margin:0 -8px;padding:7px 8px;border-radius:8px;border-bottom-color:transparent;}
+  .gp-row .gp-times{display:flex;gap:12px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .gp-row .gp-times span,.gp-row .gp-times b{width:46px;text-align:right;}
+  .gp-row .gp-times b{font-weight:700;}
+  .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -10px;padding:8px 10px;border-radius:8px;border-bottom-color:transparent;}
+  .gp-row.is-next .gp-times{color:var(--brand-900);}
   .gp-foot{margin-top:10px;font-size:.72rem;color:var(--muted);}
-  .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;justify-content:center;}
+  .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;align-items:center;text-align:center;justify-content:center;}
+  .glance-promo .gp-ic{width:40px;height:40px;border-radius:50%;background:rgba(60,11,42,.1);color:var(--brand-900);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
+  .glance-promo .gp-ic svg{width:18px;height:18px;}
   .glance-promo .fc-eyebrow{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.75;}
-  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.15rem;line-height:1.3;margin:8px 0 8px;}
-  .glance-promo p{font-size:.82rem;line-height:1.55;opacity:.85;margin-bottom:16px;}
-  .glance-promo .btn{align-self:flex-start;}
-  .gl-link{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer;}
+  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.2rem;line-height:1.3;margin:8px 0 6px;}
+  .glance-promo .gp-when{font-size:.76rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:10px;}
+  .glance-promo p{font-size:.83rem;line-height:1.55;opacity:.85;margin-bottom:16px;max-width:34ch;}
+  .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;}
+  .glance-promo .gp-where{margin-top:12px;font-size:.76rem;opacity:.85;}
+  .gl-link{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;}
   .gl-link:last-child{border-bottom:none;}
   .gl-ic{width:32px;height:32px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .gl-ic svg{width:14px;height:14px;}
   .gl-text{flex:1;min-width:0;}
-  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.86rem;color:var(--ink);}
-  .gl-text .s{font-size:.74rem;color:var(--muted);line-height:1.4;}
+  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.86rem;color:var(--ink);display:block;}
+  .gl-text .s{font-size:.74rem;color:var(--muted);line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .gl-arrow{color:var(--muted);flex-shrink:0;}
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
   .glance-donate .gd-ic{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
   .glance-donate .gd-ic svg{width:17px;height:17px;}
   .glance-donate h3{font-family:"Fraunces",serif;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;color:#F3EFE3;}
-  .glance-donate p{font-size:.82rem;color:rgba(243,239,227,.78);line-height:1.55;margin-bottom:16px;}
+  .glance-donate p{font-size:.82rem;color:rgba(243,239,227,.78);line-height:1.55;margin-bottom:16px;max-width:30ch;}
+  .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;font-size:.72rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
+  .glance-donate .gd-policy svg{flex-shrink:0;}
 
   /* ---- App promo (home page) ---- */
   .app-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:80px 0;position:relative;overflow:hidden;}
@@ -692,7 +704,7 @@
     .explore-item{border-right:none;border-bottom:1px solid var(--line);padding:18px 4px;}
     .explore-item:nth-child(odd){padding-right:16px;}
     .explore-item:nth-child(even){padding-left:16px;}
-    .glance-grid{grid-template-columns:1fr 1fr;}
+    .glance-grid{grid-template-columns:1fr;}
     .roll{grid-template-columns:1fr;}
     .app-grid{grid-template-columns:1fr;}
     .contact-wrap{grid-template-columns:1fr;}
@@ -883,24 +895,17 @@
     <div class="container">
       <div class="glance-grid">
         <div class="glance-card">
-          <div class="glance-head">
+          <div class="glance-head-stack">
             <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg> Prayer Times</span>
-            <span class="glance-more" data-nav="prayer">Full Timetable</span>
+            <span class="glance-more" data-nav="prayer">View Full Timetable →</span>
           </div>
-          <div class="gp-row" style="border-bottom:1px solid var(--line);"><span style="font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">Prayer</span><span class="gp-times" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;"><span style="width:52px;display:inline-block;">Begins</span><span style="width:52px;display:inline-block;">Jam&#703;at</span></span></div>
-          <div class="gp-row" id="gpRow-Fajr"><span class="gp-name">Fajr</span><span class="gp-times"><span style="width:52px;display:inline-block;" id="gp-fajr-b">—</span><b style="width:52px;display:inline-block;" id="gp-fajr-j">—</b></span></div>
-          <div class="gp-row" id="gpRow-Zuhr"><span class="gp-name">Zuhr</span><span class="gp-times"><span style="width:52px;display:inline-block;" id="gp-zuhr-b">—</span><b style="width:52px;display:inline-block;" id="gp-zuhr-j">—</b></span></div>
-          <div class="gp-row" id="gpRow-Asr"><span class="gp-name">Asr</span><span class="gp-times"><span style="width:52px;display:inline-block;" id="gp-asr-b">—</span><b style="width:52px;display:inline-block;" id="gp-asr-j">—</b></span></div>
-          <div class="gp-row" id="gpRow-Maghrib"><span class="gp-name">Maghrib</span><span class="gp-times"><span style="width:52px;display:inline-block;">—</span><b style="width:52px;display:inline-block;" id="gp-maghrib-j">—</b></span></div>
-          <div class="gp-row" id="gpRow-Isha"><span class="gp-name">Isha</span><span class="gp-times"><span style="width:52px;display:inline-block;" id="gp-isha-b">—</span><b style="width:52px;display:inline-block;" id="gp-isha-j">—</b></span></div>
+          <div class="gp-table-head"><span>Prayer</span><span class="gp-cols"><span class="gp-col">Begins</span><span class="gp-col">Jam&#703;at</span></span></div>
+          <div class="gp-row" id="gpRow-Fajr"><span class="gp-name">Fajr</span><span class="gp-times"><span id="gp-fajr-b">—</span><b id="gp-fajr-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Zuhr"><span class="gp-name">Zuhr</span><span class="gp-times"><span id="gp-zuhr-b">—</span><b id="gp-zuhr-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Asr"><span class="gp-name">Asr</span><span class="gp-times"><span id="gp-asr-b">—</span><b id="gp-asr-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Maghrib"><span class="gp-name">Maghrib</span><span class="gp-times"><span>—</span><b id="gp-maghrib-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Isha"><span class="gp-name">Isha</span><span class="gp-times"><span id="gp-isha-b">—</span><b id="gp-isha-j">—</b></span></div>
           <div class="gp-foot" id="gpDate">Loading today&rsquo;s times…</div>
-        </div>
-
-        <div class="glance-card glance-promo">
-          <div class="fc-eyebrow">The New Build</div>
-          <h3>A new home is rising on Blackburn Road.</h3>
-          <p>Help us complete the new prayer hall, ablution areas and educational centre.</p>
-          <a class="btn btn-gold" style="background:var(--brand-900);color:#F3EFE3;" data-nav="newbuild" data-scroll-to="give">See the Appeal →</a>
         </div>
 
         <div class="glance-card">
@@ -909,22 +914,22 @@
           </div>
           <a class="gl-link" data-nav="shop">
             <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg></span>
-            <span class="gl-text"><span class="n">Shop</span><br><span class="s">Books, oils, fragrances &amp; more — coming soon</span></span>
+            <span class="gl-text"><span class="n">Shop</span><span class="s">Books, oils, fragrances &amp; more</span></span>
             <span class="gl-arrow">›</span>
           </a>
           <a class="gl-link" data-nav="services">
             <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3.5h6v3.4l2 3.2v8.4a2 2 0 01-2 2H9a2 2 0 01-2-2v-8.4l2-3.2z"/><path d="M7.5 15c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"/></svg></span>
-            <span class="gl-text"><span class="n">Services</span><br><span class="s">Hall hire, funerals, marriage &amp; more</span></span>
+            <span class="gl-text"><span class="n">Services</span><span class="s">Hall hire, funerals &amp; marriage</span></span>
             <span class="gl-arrow">›</span>
           </a>
           <a class="gl-link" data-nav="madrasah">
             <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
-            <span class="gl-text"><span class="n">Madrasah</span><br><span class="s">Islamic education for our children</span></span>
+            <span class="gl-text"><span class="n">Madrasah</span><span class="s">Islamic education for children</span></span>
             <span class="gl-arrow">›</span>
           </a>
           <a class="gl-link" data-nav="contact">
             <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-            <span class="gl-text"><span class="n">Contact</span><br><span class="s">Get in touch with the masjid office</span></span>
+            <span class="gl-text"><span class="n">Contact</span><span class="s">Get in touch with the office</span></span>
             <span class="gl-arrow">›</span>
           </a>
         </div>
@@ -934,6 +939,7 @@
           <h3>Support Your Masjid</h3>
           <p>Your donation helps us maintain the masjid and build our new home on Blackburn Road.</p>
           <a class="btn btn-gold" data-nav="newbuild" data-scroll-to="give" style="align-self:center;">Donate Now</a>
+          <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 100% Donation Policy</span>
         </div>
       </div>
     </div>
