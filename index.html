@@ -505,6 +505,19 @@
   .nb-tl-note{margin-top:22px;font-size:.8rem;color:var(--muted);}
   .nb-tl-note a{color:var(--brand-700);font-weight:600;}
 
+  /* ---------- NEW BUILD: journey + give side by side ---------- */
+  .nb-journey-grid{display:grid;grid-template-columns:1fr;gap:28px;}
+  @media (min-width:900px){
+    .nb-journey-grid{grid-template-columns:1.15fr .85fr;gap:36px;align-items:start;}
+  }
+  .nb-give-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;}
+  .nb-give-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .nb-give-head h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.05rem;color:var(--ink);}
+  .nb-give-head .tag{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .nb-give-card .tiers{grid-template-columns:1fr 1fr;}
+  .nb-give-card .dc-note{margin-bottom:0;}
+  .nb-give-divider{height:1px;background:var(--line);margin:24px 0 20px;}
+
   .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
   .tier{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1.5px solid;border-radius:14px;padding:20px 8px;transition:.2s ease;}
   .tier:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
@@ -1151,85 +1164,81 @@
       </div>
 
       <div class="subsection">
-        <div class="subhead"><span class="idx">02</span><h3>Our journey so far</h3><span class="rule"></span></div>
-        <div class="nb-timeline">
-          <div class="nb-tl-item">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">1967</div>
-              <h4>Taiyabah Masjid founded</h4>
-              <p>One of the first masjids established to serve Bolton's Muslim community.</p>
+        <div class="subhead"><span class="idx">02</span><h3>Our journey so far &amp; how to give</h3><span class="rule"></span></div>
+        <div class="nb-journey-grid">
+          <div class="nb-journey-col">
+            <div class="nb-timeline">
+              <div class="nb-tl-item nb-tl-done">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">2018 &ndash; Ramadhan 2019</div>
+                  <h4>Phase 1 <span class="nb-tl-status done">Completed</span></h4>
+                  <p>Construction of the new building got underway, with Phase 1 completed and marked with a site time-lapse shared with the community.</p>
+                </div>
+              </div>
+              <div class="nb-tl-item nb-tl-done">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">December 2021</div>
+                  <h4>Phase 2 <span class="nb-tl-status done">Completed</span></h4>
+                  <p>The next phase of the building got underway and was carried through to completion.</p>
+                </div>
+              </div>
+              <div class="nb-tl-item nb-tl-done">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">2022</div>
+                  <h4>Community fundraiser <span class="nb-tl-status done">Completed</span></h4>
+                  <p>A dedicated fundraising campaign held to help carry the build forward.</p>
+                </div>
+              </div>
+              <div class="nb-tl-item nb-tl-active">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">Now &middot; Phase 3.3</div>
+                  <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">In Progress</span></h4>
+                  <p>The current appeal — tiling, carpets, heating, lighting, electrical and decor, to make the masjid ready for salah, Qur'an and remembrance.</p>
+                </div>
+              </div>
+              <div class="nb-tl-item nb-tl-upcoming">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">What's next</div>
+                  <h4>Full facilities complete <span class="nb-tl-status upcoming">Upcoming</span></h4>
+                  <p>Large prayer hall, modern ablution areas, integrated kitchen, additional lecture rooms and an educational centre for the whole community.</p>
+                </div>
+              </div>
             </div>
+            <p class="nb-tl-note">Dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
           </div>
-          <div class="nb-tl-item nb-tl-done">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">2018 &ndash; Ramadhan 2019</div>
-              <h4>Phase 1 <span class="nb-tl-status done">Completed</span></h4>
-              <p>Construction of the new building got underway, with Phase 1 completed and marked with a site time-lapse shared with the community.</p>
-            </div>
-          </div>
-          <div class="nb-tl-item">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">December 2021</div>
-              <h4>Phase 2 begins</h4>
-              <p>Work on the next phase of the building got underway.</p>
-            </div>
-          </div>
-          <div class="nb-tl-item">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">2022</div>
-              <h4>Community fundraiser</h4>
-              <p>A dedicated fundraising campaign held to help carry the build forward.</p>
-            </div>
-          </div>
-          <div class="nb-tl-item nb-tl-active">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">Now &middot; Phase 3.3</div>
-              <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">In Progress</span></h4>
-              <p>The current appeal — tiling, carpets, heating, lighting, electrical and decor, to make the masjid ready for salah, Qur'an and remembrance.</p>
-            </div>
-          </div>
-          <div class="nb-tl-item nb-tl-upcoming">
-            <div class="nb-tl-dot"></div>
-            <div class="nb-tl-body">
-              <div class="nb-tl-date">What's next</div>
-              <h4>Full facilities complete <span class="nb-tl-status upcoming">Upcoming</span></h4>
-              <p>Large prayer hall, modern ablution areas, integrated kitchen, additional lecture rooms and an educational centre for the whole community.</p>
-            </div>
-          </div>
-        </div>
-        <p class="nb-tl-note">Dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
-      </div>
 
-      <div class="subsection" id="give">
-        <div class="subhead"><span class="idx">03</span><h3>Give online</h3><span class="rule"></span><span class="tag">Apple &amp; Google Pay</span></div>
-        <div class="tiers">
-          <a class="tier t-bronze" href="https://www.taiyabahmasjid.com/product/bronze-donor/" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name">Bronze</span></a>
-          <a class="tier t-silver" href="https://www.taiyabahmasjid.com/product/silver-donor/" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name">Silver</span></a>
-          <a class="tier t-gold" href="https://www.taiyabahmasjid.com/product/gold-donor/" target="_blank" rel="noopener"><span class="t-amt">£1,000</span><span class="t-name">Gold</span></a>
-          <a class="tier t-plat" href="https://www.taiyabahmasjid.com/product/platinum-donor/" target="_blank" rel="noopener"><span class="t-amt">£5,000</span><span class="t-name">Platinum</span></a>
-        </div>
-        <a class="donate-cta" href="https://www.taiyabahmasjid.com/product/dome-donation/" target="_blank" rel="noopener">
-          <span class="dc-main">Give any other amount</span>
-          <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
-        </a>
-        <p class="dc-note">Opens the masjid's secure donation page. If you are a UK taxpayer, please add Gift Aid — it adds <b>25p to every £1</b> at no cost to you.</p>
-      </div>
+          <div class="nb-journey-col nb-give-card" id="give">
+            <div class="nb-give-head"><h4>Give online</h4><span class="tag">Apple &amp; Google Pay</span></div>
+            <div class="tiers">
+              <a class="tier t-bronze" href="https://www.taiyabahmasjid.com/product/bronze-donor/" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name">Bronze</span></a>
+              <a class="tier t-silver" href="https://www.taiyabahmasjid.com/product/silver-donor/" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name">Silver</span></a>
+              <a class="tier t-gold" href="https://www.taiyabahmasjid.com/product/gold-donor/" target="_blank" rel="noopener"><span class="t-amt">£1,000</span><span class="t-name">Gold</span></a>
+              <a class="tier t-plat" href="https://www.taiyabahmasjid.com/product/platinum-donor/" target="_blank" rel="noopener"><span class="t-amt">£5,000</span><span class="t-name">Platinum</span></a>
+            </div>
+            <a class="donate-cta" href="https://www.taiyabahmasjid.com/product/dome-donation/" target="_blank" rel="noopener">
+              <span class="dc-main">Give any other amount</span>
+              <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
+            </a>
+            <p class="dc-note">Opens the masjid's secure donation page. If you are a UK taxpayer, please add Gift Aid — it adds <b>25p to every £1</b> at no cost to you.</p>
 
-      <div class="subsection">
-        <div class="subhead"><span class="idx">04</span><h3>Or transfer directly</h3><span class="rule"></span><span class="tag">Tap to copy</span></div>
-        <div class="bank-card">
-          <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+            <div class="nb-give-divider"></div>
+
+            <div class="nb-give-head"><h4>Or transfer directly</h4><span class="tag">Tap to copy</span></div>
+            <div class="bank-card">
+              <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
+              <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
+              <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
+              <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+            </div>
+            <button class="copyall" id="copyall">Copy all details</button>
+            <p class="dnote">Bolton Central Islamic Society &middot; Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.</p>
+          </div>
         </div>
-        <button class="copyall" id="copyall">Copy all details</button>
-        <p class="dnote">Bolton Central Islamic Society &middot; Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.</p>
       </div>
     </div>
   </section>
