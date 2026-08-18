@@ -311,52 +311,51 @@
   .ei-sub{font-size:.79rem;color:var(--muted);line-height:1.55;}
 
   /* ---------- HOME: AT-A-GLANCE ROW (prayer / new build / quick links / donate) ---------- */
-  .glance-row{background:var(--paper);padding:46px 0 0;}
-  .glance-grid{display:grid;grid-template-columns:1fr 1.1fr 1.1fr .85fr;gap:18px;align-items:stretch;}
-  .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;}
-  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;}
-  .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:5px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line);}
-  .glance-title{display:flex;align-items:center;gap:8px;font-family:"Fraunces",serif;font-weight:700;font-size:.84rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
-  .glance-title svg{width:15px;height:15px;color:var(--brand-800);flex-shrink:0;}
-  .glance-more{font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);cursor:pointer;white-space:nowrap;}
+  .glance-row{background:var(--paper);padding:56px 0 68px;}
+  .glance-grid{display:grid;grid-template-columns:1fr 1.05fr 1.05fr .85fr;gap:14px;align-items:stretch;}
+  .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px;display:flex;flex-direction:column;}
+  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
+  .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces",serif;font-weight:700;font-size:.8rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+  .glance-title svg{width:14px;height:14px;color:var(--brand-800);flex-shrink:0;}
+  .glance-more{font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);cursor:pointer;white-space:nowrap;}
   .glance-more:hover{text-decoration:underline;}
-  .gp-table-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .gp-table-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;font-size:.63rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
   .gp-table-head .gp-cols{display:flex;gap:12px;}
   .gp-col{width:46px;text-align:right;}
-  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem;}
+  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:.8rem;}
   .gp-row:last-of-type{border-bottom:none;}
   .gp-row .gp-name{color:var(--ink);font-weight:600;}
   .gp-row .gp-times{display:flex;gap:12px;color:var(--ink);font-variant-numeric:tabular-nums;}
   .gp-row .gp-times span,.gp-row .gp-times b{width:46px;text-align:right;}
   .gp-row .gp-times b{font-weight:700;}
-  .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -10px;padding:8px 10px;border-radius:8px;border-bottom-color:transparent;}
+  .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -8px;padding:5px 8px;border-radius:7px;border-bottom-color:transparent;}
   .gp-row.is-next .gp-times{color:var(--brand-900);}
-  .gp-foot{margin-top:10px;font-size:.72rem;color:var(--muted);}
+  .gp-foot{margin-top:6px;font-size:.68rem;color:var(--muted);}
   .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;align-items:center;text-align:center;justify-content:center;}
-  .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 13px;border-radius:999px;margin-bottom:14px;}
-  .glance-promo .gp-ic{width:40px;height:40px;border-radius:50%;background:rgba(60,11,42,.1);color:var(--brand-900);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
-  .glance-promo .gp-ic svg{width:18px;height:18px;}
-  .glance-promo .fc-eyebrow{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;font-weight:700;opacity:.75;}
-  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.15rem;line-height:1.3;margin:8px 0 6px;}
-  .glance-promo .gp-when{font-size:.76rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:10px;}
-  .glance-promo p{font-size:.82rem;line-height:1.55;opacity:.85;margin-bottom:16px;max-width:32ch;}
-  .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;}
-  .glance-promo .gp-where{margin-top:14px;display:flex;align-items:center;gap:5px;font-size:.76rem;font-weight:600;opacity:.9;}
-  .glance-promo .gp-live{margin-top:6px;font-size:.7rem;opacity:.75;}
-  .gl-link{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);cursor:pointer;}
+  .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.58rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:9px;}
+  .glance-promo .fc-eyebrow{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.75;}
+  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.02rem;line-height:1.25;margin:5px 0 4px;}
+  .glance-promo .gp-when{font-size:.7rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:7px;}
+  .glance-promo p{font-size:.76rem;line-height:1.4;opacity:.85;margin-bottom:11px;max-width:30ch;}
+  .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.82rem;}
+  .glance-promo .gp-where{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;opacity:.9;}
+  .glance-promo .gp-live{margin-top:3px;font-size:.65rem;opacity:.75;}
+  .gl-link{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;}
   .gl-link:last-child{border-bottom:none;}
-  .gl-ic{width:32px;height:32px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .gl-ic svg{width:14px;height:14px;}
+  .gl-ic{width:28px;height:28px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .gl-ic svg{width:13px;height:13px;}
   .gl-text{flex:1;min-width:0;}
-  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.86rem;color:var(--ink);display:block;}
-  .gl-text .s{font-size:.74rem;color:var(--muted);line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.82rem;color:var(--ink);display:block;}
+  .gl-text .s{font-size:.71rem;color:var(--muted);line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .gl-arrow{color:var(--muted);flex-shrink:0;}
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
-  .glance-donate .gd-ic{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;}
-  .glance-donate .gd-ic svg{width:17px;height:17px;}
-  .glance-donate h3{font-family:"Fraunces",serif;font-size:1.05rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:8px;color:#F3EFE3;}
-  .glance-donate p{font-size:.82rem;color:rgba(243,239,227,.78);line-height:1.55;margin-bottom:16px;max-width:30ch;}
-  .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;font-size:.72rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
+  .glance-donate .gd-ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
+  .glance-donate .gd-ic svg{width:14px;height:14px;}
+  .glance-donate h3{font-family:"Fraunces",serif;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;color:#F3EFE3;}
+  .glance-donate p{font-size:.78rem;color:rgba(243,239,227,.78);line-height:1.45;margin-bottom:11px;max-width:26ch;}
+  .glance-donate .btn{padding:9px 20px;font-size:.82rem;}
+  .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.68rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
   .glance-donate .gd-policy svg{flex-shrink:0;}
 
   /* ---- App promo (home page) ---- */
@@ -717,6 +716,7 @@
     .foot-grid{grid-template-columns:1fr 1fr;}
     .feat-grid{grid-template-columns:1fr;}
     section{padding:64px 0;}
+    .glance-row{padding:44px 0 56px;}
     .banner{min-height:440px;}
     .app-promo-grid{grid-template-columns:1fr;gap:44px;}
     .app-promo-phones{height:420px;order:-1;}
@@ -915,14 +915,13 @@
 
         <div class="glance-card glance-promo">
           <span class="gp-notmiss">Not to be Missed</span>
-          <div class="gp-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
           <div class="fc-eyebrow">Community Event</div>
           <h3>3rd International Quraan Competition</h3>
           <div class="gp-when">26&ndash;30 August 2026</div>
-          <p>Contestants of all ages &mdash; from young children to adults &mdash; reciting the Qur&rsquo;an from memory. Open to sisters, with segregated facilities available. Hosted by Habib Ul Quraan.</p>
-          <a class="btn btn-gold" href="https://habibulquraan.co.uk" target="_blank" rel="noopener">More Info &amp; Registration →</a>
-          <div class="gp-where"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Zakariyya Jaam&rsquo;e Masjid, Bolton</div>
-          <div class="gp-live">Watch live on YouTube &middot; @habibulquraan</div>
+          <p>Contestants of all ages recite the Qur&rsquo;an from memory. Sisters welcome, with segregated facilities.</p>
+          <a class="btn btn-gold" href="https://habibulquraan.co.uk" target="_blank" rel="noopener">More Info →</a>
+          <div class="gp-where"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Zakariyya Jaam&rsquo;e Masjid</div>
+          <div class="gp-live">Hosted by Habib Ul Quraan &middot; live @habibulquraan</div>
         </div>
 
         <div class="glance-card">
@@ -954,7 +953,7 @@
         <div class="glance-card glance-donate">
           <div class="gd-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.35-10-9.3C.5 8.1 2.1 4.5 5.6 4c2-.3 3.7.6 4.9 2.3.4.5 1.1 2.1 1.5 2.1s1.1-1.6 1.5-2.1C14.7 4.6 16.4 3.7 18.4 4c3.5.5 5.1 4.1 3.6 7.7C19 16.65 12 21 12 21z"/></svg></div>
           <h3>Support Your Masjid</h3>
-          <p>Your donation helps us maintain the masjid and build our new home on Blackburn Road.</p>
+          <p>Helping us maintain the masjid and build our new home.</p>
           <a class="btn btn-gold" data-nav="newbuild" data-scroll-to="give" style="align-self:center;">Donate Now</a>
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 100% Donation Policy</span>
         </div>
