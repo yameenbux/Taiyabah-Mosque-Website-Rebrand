@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Madrasah Portal — Taiyabah Masjid</title>
+<link rel="icon" href="../assets/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
+    --gold:#C6A24C; --gold-bright:#DCBB63;
+    --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:940px){ .shell{grid-template-columns:1.03fr 1fr;} }
+
+  /* ---- brand panel ---- */
+  .brand{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    padding:46px 0 44px;display:flex;flex-direction:column;justify-content:center;
+  }
+  @media (min-width:940px){ .brand{padding:64px 0;} }
+  .brand::after{
+    content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
+    border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
+  }
+  .brand-inner{position:relative;z-index:2;width:min(470px,86%);margin:0 auto;}
+  @media (min-width:940px){ .brand-inner{margin:0 auto 0 max(6vw,32px);} }
+  .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:.72rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
+  .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
+  .brand p{color:rgba(243,239,227,.82);font-size:.94rem;line-height:1.65;max-width:44ch;}
+  .brand .back{
+    display:inline-flex;align-items:center;gap:6px;margin-top:26px;
+    color:rgba(243,239,227,.66);font-size:.82rem;font-weight:600;text-decoration:none;
+  }
+  .brand .back:hover{color:#F3EFE3;}
+
+  /* ---- form side ---- */
+  .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
+  @media (min-width:940px){ .panel{padding:64px 0;} }
+  .card{
+    width:min(420px,86%);background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
+  }
+  .card h2{font-size:1.4rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.87rem;line-height:1.55;margin-bottom:22px;}
+
+  form{display:flex;flex-direction:column;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  input[type=email],input[type=password],input[type=text]{
+    font-family:inherit;font-size:.92rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
+  }
+  input::placeholder{color:#A99CA4;}
+  input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .pw{position:relative;display:flex;}
+  .pw input{padding-right:62px;}
+  .pw button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.72rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
+    padding:6px 8px;border-radius:6px;
+  }
+  .pw button:hover{background:var(--paper);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:.9rem;
+    cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
+  .btn-ghost{background:none;border-color:var(--line);color:var(--brand-800);}
+  .btn-ghost:hover{border-color:var(--brand-800);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .err{
+    background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
+    border-radius:9px;padding:11px 13px;font-size:.83rem;line-height:1.5;
+  }
+  .note{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.8rem;line-height:1.6;color:var(--muted);text-align:center;
+  }
+
+  /* ---- MFA ---- */
+  .code-input{
+    font-size:1.5rem !important;letter-spacing:.42em;text-align:center;
+    font-variant-numeric:tabular-nums;font-weight:700;padding:14px 13px !important;
+  }
+  .qr{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:4px;
+  }
+  .qr img{width:172px;height:172px;display:block;}
+  .secret{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;
+    letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
+    background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+  }
+  .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .steps li{font-size:.84rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li::before{
+    content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold);
+  }
+
+  /* ---- signed in ---- */
+  .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(160deg,var(--brand-800),var(--brand-600,#772157));
+    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces",serif;font-weight:700;font-size:1.05rem;
+  }
+  .who-t{min-width:0;}
+  .who-t strong{display:block;font-size:1rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.82rem;color:var(--muted);word-break:break-all;}
+  .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+  .role-chip{
+    font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
+  }
+  .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+  .status{
+    background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    padding:15px 16px;font-size:.85rem;line-height:1.6;color:var(--muted);margin-bottom:18px;
+  }
+  .status b{color:var(--ink);}
+
+  /* ---- loading ---- */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+  .loading p{font-size:.85rem;color:var(--muted);}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand">
+    <div class="brand-inner">
+      <img class="logo" src="../assets/logo-cream.png" alt="Taiyabah Masjid">
+      <div class="eyebrow">Madrasah</div>
+      <h1>Madrasah Portal</h1>
+      <p>Sign in to reach your madrasah account. Access depends on your role — parents, teaching staff and administrators each see different things.</p>
+      <a class="back" href="../index.html#madrasah">&larr; Back to the masjid website</a>
+    </div>
+  </div>
+
+  <div class="panel">
+
+    <!-- loading -->
+    <div class="card" id="view-loading">
+      <div class="loading">
+        <div class="spinner" role="status" aria-label="Checking your session"></div>
+        <p>Checking your session…</p>
+      </div>
+    </div>
+
+    <!-- sign in -->
+    <div class="card" id="view-signin" hidden>
+      <h2>Sign in</h2>
+      <p class="sub">Use the email address the madrasah office holds for you.</p>
+      <div class="err" id="signin-error" hidden></div>
+      <form id="signin-form" novalidate>
+        <div class="field">
+          <label for="signin-email">Email address</label>
+          <input type="email" id="signin-email" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="signin-password">Password</label>
+          <div class="pw">
+            <input type="password" id="signin-password" autocomplete="current-password" required placeholder="••••••••">
+            <button type="button" id="pw-toggle" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gold" id="signin-submit">Sign in</button>
+      </form>
+      <p class="note">Accounts are issued by the madrasah. If you can't get in, contact the masjid office on 01204 535 997.</p>
+    </div>
+
+    <!-- MFA: verify -->
+    <div class="card" id="view-mfa" hidden>
+      <h2>Two-step verification</h2>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+      <div class="err" id="mfa-error" hidden></div>
+      <form id="mfa-form" novalidate>
+        <div class="field">
+          <label for="mfa-code">Verification code</label>
+          <input type="text" id="mfa-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="mfa-submit">Verify</button>
+      </form>
+      <p class="note">Codes refresh every 30 seconds. If yours keeps failing, check your phone's clock is set automatically.</p>
+    </div>
+
+    <!-- MFA: enrol -->
+    <div class="card" id="view-enrol" hidden>
+      <h2>Set up two-step verification</h2>
+      <p class="sub">Your account reaches pupil records, so it needs a second factor before you can continue.</p>
+      <div class="err" id="enrol-error" hidden></div>
+
+      <ul class="steps">
+        <li>Install an authenticator app — Google Authenticator, Microsoft Authenticator or Authy.</li>
+        <li>Scan the square below with it.</li>
+        <li>Enter the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="enrol-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="enrol-secret"></div>
+      </div>
+      <p class="sub" style="margin:0 0 4px;font-size:.8rem;">Can't scan it? Type the code above into your app by hand.</p>
+
+      <form id="enrol-form" novalidate>
+        <div class="field">
+          <label for="enrol-code">Code from your app</label>
+          <input type="text" id="enrol-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="enrol-submit">Confirm and finish setup</button>
+      </form>
+      <p class="note">Keep the app installed — you'll need it every time you sign in.</p>
+    </div>
+
+    <!-- signed in -->
+    <div class="card" id="view-app" hidden>
+      <div class="who">
+        <div class="avatar" aria-hidden="true">✓</div>
+        <div class="who-t">
+          <strong id="app-name">—</strong>
+          <span id="app-email">—</span>
+        </div>
+      </div>
+
+      <div class="roles" id="app-roles"></div>
+
+      <div class="err" id="app-norole" hidden>
+        Your account is active but has no role assigned yet, so there's nothing to show.
+        Ask the madrasah administrator to set your access.
+      </div>
+
+      <div class="status">
+        <b>You're signed in.</b> Authentication, two-step verification and role checks
+        are all working. The madrasah features — registers, pupil records and reports —
+        are still being built, and no pupil data is held in this system yet.
+      </div>
+
+      <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="vendor/supabase-2.112.4.js"></script>
+<script src="config.js"></script>
+<script>
+  document.getElementById('pw-toggle').addEventListener('click', function(){
+    var i = document.getElementById('signin-password');
+    var showing = i.type === 'text';
+    i.type = showing ? 'password' : 'text';
+    this.textContent = showing ? 'Show' : 'Hide';
+    this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
