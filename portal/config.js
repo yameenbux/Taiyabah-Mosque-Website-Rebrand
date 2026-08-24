@@ -14,7 +14,7 @@
 
 window.TAIYABAH_CONFIG = {
   // e.g. "https://abcdefghijklmnop.supabase.co"
-  SUPABASE_URL: "https://phenbhmobxwyvdeshvqw.supabase.co/rest/v1/",
+  SUPABASE_URL: "https://phenbhmobxwyvdeshvqw.supabase.co",
 
   // the "anon" / "publishable" key — long string starting sb_publishable_ or eyJ...
   SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO",
