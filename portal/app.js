@@ -67,9 +67,15 @@
         sb.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
         sb.from("user_roles").select("role").eq("user_id", user.id)
       ]).then(function (out) {
+        // Surface failures. Previously a blocked or errored query looked
+        // identical to an empty result, which reported "no role assigned"
+        // when the real problem was something else entirely.
+        var errs = [];
+        if (out[0].error) errs.push("profiles — " + out[0].error.message);
+        if (out[1].error) errs.push("user_roles — " + out[1].error.message);
         var profile = out[0].data || {};
         var roles = (out[1].data || []).map(function (r) { return r.role; });
-        return { user: user, profile: profile, roles: roles };
+        return { user: user, profile: profile, roles: roles, errors: errs };
       });
     });
   }
@@ -90,20 +96,32 @@
       wrap.appendChild(chip);
     });
 
+    var failed = identity.errors && identity.errors.length > 0;
+    if (failed) {
+      var box = el("app-error");
+      box.textContent = "Couldn't read your account details. " + identity.errors.join(" · ");
+      box.hidden = false;
+    } else {
+      el("app-error").hidden = true;
+    }
+
     // Someone authenticated but with no role should be told plainly, not
-    // shown an empty dashboard they'll assume is broken.
-    el("app-norole").hidden = identity.roles.length > 0;
+    // shown an empty dashboard they'll assume is broken. Don't claim "no role"
+    // when the truth is that the lookup failed.
+    el("app-norole").hidden = identity.roles.length > 0 || failed;
     show("view-app");
   }
 
   // Decides where to send someone once their password has been accepted.
   function routeAfterPassword() {
     return sb.auth.mfa.getAuthenticatorAssuranceLevel().then(function (res) {
+      if (res.error) throw new Error("Couldn't check two-step status: " + res.error.message);
       var data = res.data || {};
       if (data.nextLevel === "aal2" && data.nextLevel !== data.currentLevel) {
         return startChallenge();           // factor exists, needs verifying
       }
       return sb.auth.mfa.listFactors().then(function (list) {
+        if (list.error) throw new Error("Couldn't list authenticators: " + list.error.message);
         var verified = ((list.data || {}).totp) || [];
         if (verified.length === 0) return startEnrolment();  // no factor yet
         return loadIdentity().then(renderApp);
