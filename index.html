@@ -672,6 +672,16 @@
   .hh-agree span{font-size:.81rem;line-height:1.55;color:rgba(243,239,227,.85);}
   .hh-agree a{color:var(--gold-bright);font-weight:600;text-decoration:underline;text-underline-offset:2px;}
 
+  .hh-tc-prompt{
+    display:flex;gap:10px;align-items:flex-start;margin-top:14px;
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:9px;padding:12px 14px;
+    font-size:.83rem;line-height:1.65;color:var(--muted);
+  }
+  .hh-tc-prompt svg{width:15px;height:15px;flex-shrink:0;margin-top:2px;color:var(--gold);}
+  .hh-tc-link{color:var(--brand-700);font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
+  .hh-tc-link:hover{color:var(--brand-800);}
+
   .hh-terms{margin-top:52px;}
   .hh-terms-grid{display:grid;grid-template-columns:1fr;gap:14px;}
   @media (min-width:760px){ .hh-terms-grid{grid-template-columns:1fr 1fr;} }
@@ -2029,6 +2039,11 @@
 
           <p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-top:16px;">For pricing, or to discuss anything the calendar doesn't cover, the office is the quickest route.</p>
 
+          <p class="hh-tc-prompt">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h8l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1v-16a1 1 0 011-1z"/><path d="M15 3.5v4h4"/><path d="M9 13h6M9 16.5h4"/></svg>
+            <span>Please read the <a href="#hire-terms" class="hh-tc-link">terms and conditions of hire</a> below before booking. Making a booking is taken as your agreement to them.</span>
+          </p>
+
           <div class="cs-cta" style="margin-top:20px;justify-content:flex-start;">
             <a class="btn btn-gold" data-nav="contact">Contact the office</a>
             <a class="btn btn-ghost-light" data-nav="services">All Services</a>
@@ -2881,11 +2896,17 @@
       renderPanel();
       document.getElementById('hhAgree').checked = agreed;
     });
-    document.getElementById('hhTermsLink').addEventListener('click', function(e){
-      e.preventDefault();
-      var t = document.getElementById('hire-terms');
-      if(t) t.scrollIntoView({ behavior:'smooth', block:'start' });
-    });
+    // Both routes to the terms behave the same way.
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#hhTermsLink, .hh-tc-link'),
+      function(link){
+        link.addEventListener('click', function(e){
+          e.preventDefault();
+          var t = document.getElementById('hire-terms');
+          if(t) t.scrollIntoView({ behavior:'smooth', block:'start' });
+        });
+      }
+    );
     document.getElementById('hhHalls').addEventListener('click', function(e){
       var b = e.target.closest('.hh-hall');
       if(!b) return;
