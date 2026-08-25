@@ -71,7 +71,8 @@ Parents and Teachers tiles now link out to `/portal/`.
 **Articles** — short reads, starting with "What Is Islam?".
 
 **Services** — hall/room hire, birth/marriage/death, and imams' advice, each
-with a detail page. Education and tours are marked coming soon.
+with a detail page. Education and tours are marked coming soon. Hall hire also
+carries the availability calendar and booking flow — see below.
 
 **Media** — the masjid's YouTube videos.
 
@@ -80,6 +81,58 @@ with a detail page. Education and tours are marked coming soon.
 **Contact** — address, phone, email, live radio stream, socials, map.
 
 **Get the app** — QR code and install steps for the prayer times app.
+
+---
+
+## Hall hire booking (Taiyabah Centre)
+
+Lives on the Hall Hire service page. Calendar and booking panel on the left,
+venue details and terms prompt on the right, terms of hire full width below.
+
+**How it works.** Pick a date, tick the terms box, choose a slot, fill in the
+form, see the price. Two slots per day per hall: **morning 9:00am–4:00pm** and
+**evening 5:00pm–11:00pm**. The 4–5pm hour is deliberately unbookable
+changeover time. Bookings open **12 months ahead** — the month arrow stops at
+the horizon and later days are disabled, so nobody can request a date the
+masjid will not honour.
+
+**Nothing is connected yet.** No booking data exists, so every future day
+renders "not published" and the slot buttons say **Ask**, never **Book**. A
+button offering to book a slot we cannot confirm is free is a promise the
+masjid would have to break. A "Preview with sample data" toggle shows how real
+availability will look, off by default, with a loud red banner when on.
+
+**Terms are a gate, not a notice.** Six terms of hire are listed on the page,
+and the Book button stays disabled until the "I have read and agree" box is
+ticked. Taken slots stay disabled regardless. When bookings go live, **store
+that tick with a timestamp against the booking** — it is what answers "nobody
+told me about the cleaning charge" six months later.
+
+### ⚠ Pricing must move server-side before it is real
+
+Pricing depends on whether the customer is a masjid member, and the customer
+should only ever see the figure that applies to them. The UI does that
+correctly — one number is rendered, never a comparison.
+
+**But the calculation currently happens in the browser, so both rates are
+readable in the page source.** That is acceptable only because the numbers are
+placeholders. Before real pricing goes in, `priceFor()` must be replaced with a
+server-side call (a Postgres function or edge function) so the browser is told
+one figure and never sees the other. There is a warning comment on the
+`PRICING` object saying the same thing.
+
+Also unresolved: **nothing verifies the membership answer.** Anyone can tick
+"Yes" and get the member rate. Either the office checks each booking against
+the membership list, or the form should ask for a membership number instead.
+
+### Gaps the masjid still needs to decide
+
+- Real pricing (placeholders in the `PRICING` object).
+- **Cancellation and refund policy** — payment is taken in full upfront and
+  there is currently no stated position on cancellations. This will come up.
+- **Damage and breakages** beyond the cleaning charge.
+- Whether an online request confirms automatically or waits for approval.
+  Approval is strongly advised: a double-booked walimah is not recoverable.
 
 ---
 
@@ -141,6 +194,14 @@ Most mastheads use one pattern: a photo background with a dark gradient scrim
 so the heading stays readable. New sub-pages should follow it — see any
 `.pm-photo` or `.svc-hero-banner` section in `index_template.html`.
 
+The footer carries a **YSB Designs** credit linking to `ysbdesigns.uk`. It sits
+in the shared footer, so one edit covers every page; the portal has its own
+copy in the brand panel because it has no footer.
+
+External images degrade gracefully: YouTube thumbnails on the Media page fall
+back to the brand gradient and play icon if `i.ytimg.com` is unreachable, which
+happens on networks that block YouTube.
+
 ---
 
 ## For anyone maintaining this
@@ -148,6 +209,18 @@ so the heading stays readable. New sub-pages should follow it — see any
 Static files on GitHub Pages, no server. The public site is generated: edit
 `index_template.html`, run `python3 build.py`, never edit the root
 `index.html` directly. The portal has no build step — edit its files directly.
+
+**Always run the structure check before building:**
+
+```bash
+python3 verify_structure.py && python3 build.py
+```
+
+It catches unbalanced `<div>`s per page, dead `data-nav` targets, broken
+anchors and scroll targets, duplicate IDs, and template placeholders missing
+from `build.py` — all without a browser. It exists because a single missing
+`</div>` once broke seven pages, and it has been verified to catch exactly that
+case.
 
 ### Keys and secrets
 
@@ -175,6 +248,42 @@ Static files on GitHub Pages, no server. The public site is generated: edit
   suite granted table privileges itself while asserting Supabase did so
   automatically. Twelve tests passed against a database configured differently
   from production. Reproduce failures against a realistic environment first.
+- **One missing `</div>` silently broke seven pages.** An unclosed page div on
+  Hall Hire meant every page after it — Birth/Marriage/Death, Birth, Marriage,
+  Islamic Will, Imams' Advice, Media and Contact — became *children* of Hall
+  Hire, so they had nowhere to render. Clicking them changed the nav highlight
+  and the URL and showed nothing. Every page div must close before the next
+  one opens; `verify_structure.py` now checks this.
+- **Test what a person can see, not what the DOM contains.** Three separate
+  bugs slipped through because tests asked the wrong question. Navigation was
+  tested by calling `showPage()` directly, so it passed while the click
+  handlers were dead. The terms block was checked with `text_content`, which
+  reads hidden nodes, so it passed while sitting on the wrong page entirely.
+  The nested pages passed a content check because a swallowed page still
+  returns text. Assert **visibility and rendered height**, and click real
+  links.
+- **A page widget must never break the whole site.** A dead reference in the
+  hall hire calendar threw on load, which stopped the rest of that script block
+  running — and the site's navigation binding lives in it. Every page-specific
+  widget is now wrapped in `try/catch` so it fails alone.
+
+### Testing
+
+Playwright suites live outside the repo but are worth recreating if lost. What
+matters is what they assert:
+
+- **Full-site audit** — every page loaded and measured for rendered height,
+  visible text, broken images and JS errors; page-nesting check; every internal
+  link clicked for real; `rel="noopener"` on external links; static pass for
+  dead nav targets, orphan pages, duplicate IDs and broken anchors.
+- **Navigation** — clicks all nine top-level links plus a sub-page and back
+  link, and fails on any uncaught exception.
+- **Hall hire** — layout, two slots and their times, 12-month horizon, terms
+  gate, form validation, membership pricing, and that no availability is
+  asserted while unpublished.
+
+Always attach a `pageerror` listener. Console-message listeners do **not**
+catch uncaught exceptions, which is how the navigation break went unnoticed.
 
 ### Content
 
@@ -211,6 +320,12 @@ Static files on GitHub Pages, no server. The public site is generated: edit
 A madrasah roll inherently reveals religious belief, which makes it **special
 category data under UK GDPR Article 9** — the same tier as health records —
 before a single report is attached to it.
+
+**The hall hire form is also Article 9 data.** "Are you a member of the
+masjid?" answered Yes discloses religious affiliation. It is legitimate to ask,
+and the non-profit religious body condition covers it, but it is not the
+ordinary contact form it looks like and belongs in the DPIA. That form also
+collects name, address and phone number.
 
 Staff accounts process no child's data, which is why the work so far has
 stopped short of pupil tables. **A Data Protection Impact Assessment must be
