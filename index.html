@@ -682,6 +682,69 @@
   .hh-tc-link{color:var(--brand-700);font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
   .hh-tc-link:hover{color:var(--brand-800);}
 
+  /* ---- Hall hire: booking form ---- */
+  .hh-form-head{
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+    padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid rgba(243,239,227,.16);
+  }
+  .hf-slot{font-family:"Fraunces",serif;font-size:1.02rem;color:#F3EFE3;margin-bottom:2px;}
+  .hf-when{font-size:.8rem;color:rgba(243,239,227,.65);}
+  .hf-back{
+    background:none;border:1px solid rgba(243,239,227,.3);color:rgba(243,239,227,.8);
+    font-family:inherit;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    border-radius:999px;padding:6px 13px;cursor:pointer;flex-shrink:0;
+  }
+  .hf-back:hover{border-color:var(--gold);color:var(--gold-bright);}
+
+  .hh-form form{display:flex;flex-direction:column;gap:14px;}
+  .hf-row{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media (min-width:520px){ .hf-row{grid-template-columns:1fr 1fr;} }
+  .hf-field{display:flex;flex-direction:column;gap:6px;border:none;padding:0;margin:0;min-width:0;}
+  .hf-field label,.hf-field legend{
+    font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(243,239,227,.72);padding:0;
+  }
+  .hf-field input[type=text],.hf-field input[type=tel],.hf-field textarea{
+    font-family:inherit;font-size:.92rem;color:#F3EFE3;width:100%;
+    background:rgba(255,255,255,.06);border:1px solid rgba(243,239,227,.2);
+    border-radius:9px;padding:11px 13px;transition:.18s ease;
+  }
+  .hf-field textarea{resize:vertical;min-height:74px;line-height:1.5;}
+  .hf-field input::placeholder,.hf-field textarea::placeholder{color:rgba(243,239,227,.35);}
+  .hf-field input:focus,.hf-field textarea:focus{
+    outline:none;border-color:var(--gold);background:rgba(255,255,255,.1);
+    box-shadow:0 0 0 3px rgba(198,162,76,.2);
+  }
+  .hf-field.has-err input,.hf-field.has-err textarea{border-color:#E8896B;}
+  .hf-hint{font-size:.74rem;color:rgba(243,239,227,.5);line-height:1.5;}
+  .hf-err{display:none;font-size:.75rem;color:#F0A88E;line-height:1.45;}
+  .hf-field.has-err .hf-err{display:block;}
+  .hf-radios{display:flex;gap:10px;margin-top:2px;}
+  .hf-radios label{
+    display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;
+    background:rgba(255,255,255,.06);border:1px solid rgba(243,239,227,.2);
+    border-radius:9px;padding:11px 14px;
+    font-size:.88rem;font-weight:600;letter-spacing:0;text-transform:none;color:#F3EFE3;
+  }
+  .hf-radios label:hover{border-color:var(--gold);}
+  .hf-radios input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer;}
+
+  .hf-price{
+    display:flex;align-items:center;flex-wrap:wrap;gap:10px;
+    background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.5);
+    border-radius:10px;padding:14px 16px;margin:16px 0;
+  }
+  .hp-label{font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(243,239,227,.75);}
+  .hp-val{font-family:"Fraunces",serif;font-size:1.5rem;font-weight:700;color:var(--gold-bright);margin-left:auto;}
+  .hp-badge{
+    width:100%;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:#F0A88E;
+  }
+  .hf-summary{display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .hf-sum-row{display:flex;justify-content:space-between;gap:14px;font-size:.85rem;}
+  .hf-sum-row .k{color:rgba(243,239,227,.6);}
+  .hf-sum-row .v{color:#F3EFE3;font-weight:600;text-align:right;}
+
   .hh-terms{margin-top:52px;}
   .hh-terms-grid{display:grid;grid-template-columns:1fr;gap:14px;}
   @media (min-width:760px){ .hh-terms-grid{grid-template-columns:1fr 1fr;} }
@@ -2005,6 +2068,75 @@
             </label>
             <div class="hh-sessions" id="hhSessions"></div>
             <div class="hh-booked-msg" id="hhBookMsg" style="display:none;"></div>
+
+            <div class="hh-form" id="hhForm" style="display:none;">
+              <div class="hh-form-head">
+                <div>
+                  <div class="hf-slot" id="hfSlot">&nbsp;</div>
+                  <div class="hf-when" id="hfWhen">&nbsp;</div>
+                </div>
+                <button type="button" class="hf-back" id="hfBack">Change</button>
+              </div>
+
+              <form id="hhBookForm" novalidate autocomplete="on">
+                <div class="hf-row">
+                  <div class="hf-field" id="wrapFirst">
+                    <label for="hfFirst">First name</label>
+                    <input type="text" id="hfFirst" name="given-name" autocomplete="given-name" placeholder="First name">
+                    <span class="hf-err">Please enter your first name.</span>
+                  </div>
+                  <div class="hf-field" id="wrapLast">
+                    <label for="hfLast">Surname</label>
+                    <input type="text" id="hfLast" name="family-name" autocomplete="family-name" placeholder="Surname">
+                    <span class="hf-err">Please enter your surname.</span>
+                  </div>
+                </div>
+
+                <div class="hf-field" id="wrapAddr">
+                  <label for="hfAddr">Address</label>
+                  <textarea id="hfAddr" name="street-address" autocomplete="street-address" placeholder="House number, street, town and postcode"></textarea>
+                  <span class="hf-err">Please enter your full address, including postcode.</span>
+                </div>
+
+                <div class="hf-field" id="wrapPhone">
+                  <label for="hfPhone">Contact number</label>
+                  <input type="tel" id="hfPhone" name="tel" autocomplete="tel" placeholder="07000 000000">
+                  <span class="hf-hint">This must be a number we can actually reach you on &mdash; the caretaker will call you before the day to arrange access.</span>
+                  <span class="hf-err">Please enter a valid UK phone number.</span>
+                </div>
+
+                <fieldset class="hf-field" id="wrapMember">
+                  <legend>Are you a member of the masjid?</legend>
+                  <div class="hf-radios">
+                    <label><input type="radio" name="hfMember" value="yes"> Yes</label>
+                    <label><input type="radio" name="hfMember" value="no"> No</label>
+                  </div>
+                  <span class="hf-err">Please let us know so we can confirm the right rate.</span>
+                </fieldset>
+
+                <button type="submit" class="btn btn-gold" style="width:auto;">Continue to payment</button>
+              </form>
+            </div>
+
+            <div class="hh-done" id="hhDone" style="display:none;">
+              <div class="hf-summary">
+                <div class="hf-sum-row"><span class="k">Name</span><span class="v" id="dnName">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Date</span><span class="v" id="dnDate">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Slot</span><span class="v" id="dnSlot">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Hall</span><span class="v" id="dnHall">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Contact</span><span class="v" id="dnPhone">&nbsp;</span></div>
+              </div>
+
+              <div class="hf-price">
+                <span class="hp-label">Total to pay</span>
+                <span class="hp-val" id="dnPrice">&pound;&mdash;</span>
+                <span class="hp-badge">Placeholder &mdash; the masjid has not confirmed pricing yet</span>
+              </div>
+
+              <div class="hh-booked-msg" style="display:block;">Payment isn't connected yet, so nothing has been taken and this date is not reserved. To confirm this booking, please call the office on 01204&nbsp;535&nbsp;997.</div>
+
+              <button type="button" class="hf-back" id="dnBack" style="margin-top:4px;">Start again</button>
+            </div>
             <p class="hh-p-foot" id="hhPanelFoot" style="display:none;">Prefer to speak to someone? Call the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
           </div>
         </div>
@@ -2818,7 +2950,12 @@
         btn.className = 'hs-act';
         btn.textContent = label;
         btn.disabled = blocked;
-        btn.addEventListener('click', function(){ requestSlot(row.s, row.free); });
+        (function(sess, isFree){
+          btn.addEventListener('click', function(){
+            if(isFree === true) openForm(sess);   // a real booking attempt
+            else requestSlot(sess, isFree);        // just an enquiry
+          });
+        })(row.s, row.free);
         d.appendChild(btn);
         wrap.appendChild(d);
       });
@@ -2826,6 +2963,83 @@
       if(foot) foot.style.display = '';
       var agreeWrap = document.getElementById('hhAgreeWrap');
       if(agreeWrap) agreeWrap.style.display = '';
+    }
+
+    /* ------------------------------------------------------------------
+       PLACEHOLDER RATES — NOT THE MASJID'S REAL PRICING.
+
+       !! KNOWN LIMITATION — READ BEFORE PUTTING REAL PRICES HERE !!
+       Anything in this file is readable by anyone via View Source. These
+       figures are therefore public, and so is the fact that two bands
+       exist. That is acceptable only while they are placeholders.
+
+       Before real pricing goes live the calculation MUST move server-side
+       (a Postgres function or edge function behind Supabase) so the browser
+       is told one figure and never sees the other. The UI below is already
+       written that way — it renders a single number and never compares —
+       so only priceFor() needs replacing with a server call.
+    ------------------------------------------------------------------ */
+    var PRICING = {
+      member:    { morning: 100, evening: 120 },
+      nonmember: { morning: 150, evening: 180 }
+    };
+    function priceFor(sessionKey, isMember){
+      var band = PRICING[isMember ? 'member' : 'nonmember'];
+      var amount = band && band[sessionKey];
+      return typeof amount === 'number' ? amount : null;
+    }
+    function money(n){
+      return n === null ? '\u00A3\u2014' : '\u00A3' + n.toFixed(2);
+    }
+
+    var pendingSlot = null;
+
+    function showPanelView(which){
+      var slots  = document.getElementById('hhSessions');
+      var agree  = document.getElementById('hhAgreeWrap');
+      var msg    = document.getElementById('hhBookMsg');
+      var form   = document.getElementById('hhForm');
+      var done   = document.getElementById('hhDone');
+      var foot   = document.getElementById('hhPanelFoot');
+      var dEl    = document.getElementById('hhPanelDate');
+      var sEl    = document.getElementById('hhPanelSub');
+      if(slots) slots.style.display = which === 'slots' ? '' : 'none';
+      if(agree) agree.style.display = which === 'slots' ? '' : 'none';
+      if(msg && which !== 'slots') msg.style.display = 'none';
+      if(form) form.style.display = which === 'form' ? '' : 'none';
+      if(done) done.style.display = which === 'done' ? '' : 'none';
+      if(foot) foot.style.display = which === 'slots' ? '' : 'none';
+      if(dEl) dEl.style.display = which === 'slots' ? '' : 'none';
+      if(sEl) sEl.style.display = which === 'slots' ? '' : 'none';
+    }
+
+    function openForm(session){
+      pendingSlot = session;
+      document.getElementById('hfSlot').textContent =
+        session.label + ' slot \u00B7 ' + session.time;
+      document.getElementById('hfWhen').textContent =
+        selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+        + ' \u00B7 ' + (hall === 'any' ? 'any available hall' : 'Hall ' + hall);
+      clearErrors();
+      showPanelView('form');
+      document.getElementById('hfFirst').focus();
+    }
+
+    function clearErrors(){
+      ['wrapFirst','wrapLast','wrapAddr','wrapPhone','wrapMember'].forEach(function(id){
+        var w = document.getElementById(id);
+        if(w) w.classList.remove('has-err');
+      });
+    }
+
+    // Deliberately permissive: accepts spaces, dashes and +44, and only
+    // rejects things that cannot be a UK number. A booking form is the wrong
+    // place to argue with someone about their own phone number.
+    function validPhone(v){
+      var digits = String(v).replace(/[^0-9+]/g, '');
+      if(digits.indexOf('+44') === 0) digits = '0' + digits.slice(3);
+      digits = digits.replace(/\D/g, '');
+      return digits.length >= 10 && digits.length <= 11 && digits.charAt(0) === '0';
     }
 
     function requestSlot(session, free){
@@ -2876,7 +3090,9 @@
         btn.setAttribute('aria-label', d.toLocaleDateString('en-GB',
           { weekday:'long', day:'numeric', month:'long' }));
         (function(dd){
-          btn.addEventListener('click', function(){ selected = dd; render(); renderPanel(); });
+          btn.addEventListener('click', function(){
+            selected = dd; render(); renderPanel(); showPanelView('slots');
+          });
         })(d);
         grid.appendChild(btn);
       }
@@ -2891,6 +3107,51 @@
     document.getElementById('hhSample').addEventListener('change', function(e){
       sample = e.target.checked; render(); renderPanel();
     });
+    document.getElementById('hfBack').addEventListener('click', function(){
+      showPanelView('slots');
+    });
+    document.getElementById('dnBack').addEventListener('click', function(){
+      document.getElementById('hhBookForm').reset();
+      showPanelView('slots');
+    });
+
+    document.getElementById('hhBookForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      clearErrors();
+
+      var first = document.getElementById('hfFirst').value.trim();
+      var last  = document.getElementById('hfLast').value.trim();
+      var addr  = document.getElementById('hfAddr').value.trim();
+      var phone = document.getElementById('hfPhone').value.trim();
+      var memEl = document.querySelector('input[name="hfMember"]:checked');
+
+      var bad = null;
+      if(!memEl){ document.getElementById('wrapMember').classList.add('has-err'); bad = bad || 'wrapMember'; }
+      if(!validPhone(phone)){ document.getElementById('wrapPhone').classList.add('has-err'); bad = 'wrapPhone'; }
+      if(addr.length < 8){ document.getElementById('wrapAddr').classList.add('has-err'); bad = 'wrapAddr'; }
+      if(last.length < 2){ document.getElementById('wrapLast').classList.add('has-err'); bad = 'wrapLast'; }
+      if(first.length < 2){ document.getElementById('wrapFirst').classList.add('has-err'); bad = 'wrapFirst'; }
+      if(bad){
+        var f = document.getElementById(bad).querySelector('input, textarea');
+        if(f) f.focus();
+        return;
+      }
+
+      var isMember = memEl.value === 'yes';
+      document.getElementById('dnName').textContent  = first + ' ' + last;
+      document.getElementById('dnDate').textContent  =
+        selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      document.getElementById('dnSlot').textContent  = pendingSlot.label + ' \u00B7 ' + pendingSlot.time;
+      document.getElementById('dnHall').textContent  = (hall === 'any' ? 'Any available hall' : 'Hall ' + hall);
+      document.getElementById('dnPhone').textContent = phone;
+      // Only the applicable figure is rendered. Note this hides the other
+      // band from the *rendered page*, not from the source — see the
+      // limitation noted on PRICING above.
+      document.getElementById('dnPrice').textContent = money(priceFor(pendingSlot.key, isMember));
+
+      showPanelView('done');
+    });
+
     document.getElementById('hhAgree').addEventListener('change', function(e){
       agreed = e.target.checked;
       renderPanel();
