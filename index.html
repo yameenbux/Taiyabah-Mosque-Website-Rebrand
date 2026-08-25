@@ -658,6 +658,96 @@
   .pl-admin-link:hover{color:var(--brand-800);border-color:var(--brand-800);}
   .pl-admin-link svg{width:12px;height:12px;}
 
+  /* ---- Hall hire: availability calendar ---- */
+  .hh-notice{
+    max-width:640px;display:flex;gap:11px;align-items:flex-start;
+    background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.45);
+    border-radius:10px;padding:14px 16px;margin-bottom:20px;
+    font-size:.87rem;line-height:1.6;color:var(--brand-800);
+  }
+  .hh-notice svg{width:16px;height:16px;flex-shrink:0;margin-top:2px;color:var(--gold);}
+  .hh-notice b{font-weight:700;}
+
+  .hh-controls{max-width:640px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .hh-halls{display:flex;flex-wrap:wrap;gap:7px;}
+  .hh-hall{
+    font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;
+    background:var(--card);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:7px 14px;transition:.18s ease;
+  }
+  .hh-hall:hover{border-color:var(--gold);color:var(--brand-800);}
+  .hh-hall.is-on{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+  .hh-sample{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);cursor:pointer;}
+  .hh-sample input{width:15px;height:15px;accent-color:var(--brand-800);cursor:pointer;}
+
+  .hh-cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;max-width:640px;}
+  .hh-sample-banner{
+    display:none;background:var(--danger);color:#fff;border-radius:8px;
+    padding:8px 12px;margin-bottom:14px;text-align:center;
+    font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  }
+  .hh-sample-banner.on{display:block;}
+
+  .hh-cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .hh-month{font-family:"Fraunces",serif;font-weight:600;font-size:1.05rem;color:var(--ink);}
+  .hh-nav{
+    width:34px;height:34px;border-radius:50%;cursor:pointer;
+    background:var(--paper);border:1px solid var(--line);color:var(--brand-800);
+    display:flex;align-items:center;justify-content:center;font-family:inherit;transition:.18s ease;
+  }
+  .hh-nav:hover:not(:disabled){border-color:var(--brand-800);}
+  .hh-nav:disabled{opacity:.35;cursor:not-allowed;}
+  .hh-nav svg{width:15px;height:15px;}
+
+  .hh-weekdays,.hh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
+  .hh-weekdays{margin-bottom:6px;}
+  .hh-weekdays span{
+    text-align:center;font-size:.64rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);padding:4px 0;
+  }
+  .hh-day{
+    position:relative;min-height:54px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:var(--paper);border:1px solid var(--line);border-radius:8px;
+    font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink);
+    cursor:pointer;transition:.15s ease;padding:0;
+  }
+  .hh-day:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);}
+  .hh-day:disabled{opacity:.3;cursor:default;}
+  .hh-day.is-blank{background:none;border:none;cursor:default;}
+  .hh-day.is-today{border-color:var(--brand-800);border-width:2px;}
+  .hh-day.is-sel{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+  .hh-day .dot{width:5px;height:5px;border-radius:50%;background:transparent;}
+  .hh-day.s-available .dot{background:var(--success);}
+  .hh-day.s-limited   .dot{background:var(--gold);}
+  .hh-day.s-booked    .dot{background:var(--danger);}
+  .hh-day.s-booked{color:var(--muted);}
+
+  .hh-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .hh-legend span{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);}
+  .hh-legend i{width:7px;height:7px;border-radius:50%;display:block;}
+
+  .hh-panel{
+    max-width:640px;background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
+    padding:22px 24px;margin-top:16px;
+  }
+  .hh-panel h4{font-family:"Fraunces",serif;font-size:1.05rem;color:#F3EFE3;margin-bottom:4px;}
+  .hh-panel .hh-p-sub{font-size:.82rem;color:rgba(243,239,227,.7);margin-bottom:16px;}
+  .hh-sessions{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+  .hh-session{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(243,239,227,.14);
+    border-radius:9px;padding:11px 14px;font-size:.85rem;
+  }
+  .hh-session .hs-t{color:rgba(243,239,227,.9);font-weight:600;}
+  .hh-session .hs-v{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-bright);}
+  .hh-panel .btn{width:auto;}
+  @media (max-width:520px){
+    .hh-cal{padding:13px;}
+    .hh-day{min-height:42px;font-size:.78rem;}
+    .hh-controls{flex-direction:column;align-items:flex-start;}
+  }
+
   /* ---- Articles: listing grid + individual article prose ---- */
   .articles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;}
   .article-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;text-decoration:none;color:inherit;transition:.2s ease;box-shadow:var(--shadow);}
@@ -1803,6 +1893,49 @@
           <span class="go">&rsaquo;</span>
         </a>
       </div>
+      <div class="subsection" id="hall-availability" style="margin-top:40px;">
+        <div class="subhead"><span class="idx">01</span><h3>Check availability</h3><span class="rule"></span></div>
+
+        <div class="hh-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <span><b>Live availability isn't published yet.</b> The calendar below shows how bookings will be displayed once the masjid's diary is online. Until then, no day here reflects real availability &mdash; please call the office on <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a> to check a date.</span>
+        </div>
+
+        <div class="hh-controls">
+          <div class="hh-halls" id="hhHalls">
+            <button type="button" class="hh-hall is-on" data-hall="any">Any hall</button>
+            <button type="button" class="hh-hall" data-hall="1">Hall 1</button>
+            <button type="button" class="hh-hall" data-hall="2">Hall 2</button>
+            <button type="button" class="hh-hall" data-hall="3">Hall 3</button>
+          </div>
+          <label class="hh-sample"><input type="checkbox" id="hhSample"> Preview with sample data</label>
+        </div>
+
+        <div class="hh-cal">
+          <div class="hh-sample-banner" id="hhBanner">Sample data &mdash; not real availability</div>
+          <div class="hh-cal-head">
+            <button type="button" class="hh-nav" id="hhPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div class="hh-month" id="hhMonth">&nbsp;</div>
+            <button type="button" class="hh-nav" id="hhNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+          <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="hh-grid" id="hhGrid"></div>
+          <div class="hh-legend">
+            <span><i style="background:var(--success);"></i>Available</span>
+            <span><i style="background:var(--gold);"></i>Some sessions left</span>
+            <span><i style="background:var(--danger);"></i>Fully booked</span>
+            <span><i style="background:var(--line);"></i>Not published</span>
+          </div>
+        </div>
+
+        <div class="hh-panel" id="hhPanel">
+          <h4 id="hhPanelDate">Select a date</h4>
+          <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the sessions available for hire.</p>
+          <div class="hh-sessions" id="hhSessions"></div>
+          <a class="btn btn-gold" data-nav="contact" id="hhEnquire" style="display:none;">Enquire about this date</a>
+        </div>
+      </div>
+
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
         <a class="btn btn-ghost-light" data-nav="services">All Services</a>
@@ -2408,6 +2541,149 @@
     'svc-advice': "Imams' Advice",
     'article-what-is-islam': 'What Is Islam?',
   };
+
+
+  /* ---------- Hall hire availability calendar ----------------------------
+     No real booking data exists yet, so every future day renders in the
+     neutral "not published" state. Nothing here asserts that a date is free.
+
+     The sample toggle exists so the masjid can see how real bookings will
+     look; it is off by default and paints a loud banner when on.
+
+     Sessions are the unit of hire (morning / afternoon / evening), which is
+     the shape the real diary will need. Availability is per hall, hence the
+     hall filter — "any" means at least one hall free.
+  ------------------------------------------------------------------------ */
+  (function(){
+    var grid = document.getElementById('hhGrid');
+    if(!grid) return;
+
+    var SESSIONS = [
+      { key:'morning',   label:'Morning',   time:'9:00 – 13:00' },
+      { key:'afternoon', label:'Afternoon', time:'13:00 – 17:00' },
+      { key:'evening',   label:'Evening',   time:'17:00 – 22:00' }
+    ];
+    var MONTHS = ["January","February","March","April","May","June",
+                  "July","August","September","October","November","December"];
+
+    var view = new Date(); view.setDate(1); view.setHours(0,0,0,0);
+    var firstAllowed = new Date(view);
+    var selected = null;
+    var hall = 'any';
+    var sample = false;
+
+    function midnight(d){ var x = new Date(d); x.setHours(0,0,0,0); return x; }
+    function key(d){
+      return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
+           + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    // Deterministic pseudo-availability for the preview only. Derived from the
+    // date so it stays stable while clicking around, and never persisted.
+    function sampleState(d){
+      var seed = (d.getFullYear()*372 + d.getMonth()*31 + d.getDate()) * 2654435761 % 97;
+      if(d.getDay() === 6 || d.getDay() === 0) return seed % 5 < 3 ? 'booked' : 'limited';
+      if(seed % 7 === 0) return 'booked';
+      if(seed % 3 === 0) return 'limited';
+      return 'available';
+    }
+    function stateFor(d){ return sample ? sampleState(d) : 'unknown'; }
+
+    function sessionsFor(d){
+      var st = stateFor(d);
+      if(st === 'unknown') return SESSIONS.map(function(s){ return {s:s, v:'Enquire'}; });
+      if(st === 'booked')  return SESSIONS.map(function(s){ return {s:s, v:'Booked'}; });
+      if(st === 'available') return SESSIONS.map(function(s){ return {s:s, v:'Available'}; });
+      return SESSIONS.map(function(s,i){ return {s:s, v: i === 1 ? 'Booked' : 'Available'}; });
+    }
+
+    function renderPanel(){
+      var dEl = document.getElementById('hhPanelDate');
+      var sEl = document.getElementById('hhPanelSub');
+      var wrap = document.getElementById('hhSessions');
+      var cta  = document.getElementById('hhEnquire');
+      wrap.innerHTML = '';
+      if(!selected){
+        dEl.textContent = 'Select a date';
+        sEl.textContent = 'Choose a day above to see the sessions available for hire.';
+        cta.style.display = 'none';
+        return;
+      }
+      dEl.textContent = selected.toLocaleDateString('en-GB',
+        { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+      sEl.textContent = sample
+        ? ('Sample availability for ' + (hall === 'any' ? 'any hall' : 'Hall ' + hall) + '.')
+        : ('Availability for this date has not been published. Call the office to check ' +
+           (hall === 'any' ? 'any hall' : 'Hall ' + hall) + '.');
+      sessionsFor(selected).forEach(function(row){
+        var d = document.createElement('div');
+        d.className = 'hh-session';
+        d.innerHTML = '<span class="hs-t">' + row.s.label +
+                      ' <span style="font-weight:400;opacity:.65;">' + row.s.time + '</span></span>' +
+                      '<span class="hs-v">' + row.v + '</span>';
+        wrap.appendChild(d);
+      });
+      cta.style.display = '';
+    }
+
+    function render(){
+      var today = midnight(new Date());
+      document.getElementById('hhMonth').textContent = MONTHS[view.getMonth()] + ' ' + view.getFullYear();
+      document.getElementById('hhPrev').disabled =
+        (view.getFullYear() === firstAllowed.getFullYear() && view.getMonth() === firstAllowed.getMonth());
+      document.getElementById('hhBanner').classList.toggle('on', sample);
+
+      grid.innerHTML = '';
+      // Monday-first: JS getDay() gives Sunday=0, so shift.
+      var lead = (new Date(view.getFullYear(), view.getMonth(), 1).getDay() + 6) % 7;
+      var days = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+
+      for(var i=0;i<lead;i++){
+        var b = document.createElement('div');
+        b.className = 'hh-day is-blank';
+        grid.appendChild(b);
+      }
+      for(var day=1; day<=days; day++){
+        var d = new Date(view.getFullYear(), view.getMonth(), day);
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hh-day';
+        var past = d < today;
+        if(past) btn.disabled = true;
+        else btn.classList.add('s-' + stateFor(d));
+        if(d.getTime() === today.getTime()) btn.classList.add('is-today');
+        if(selected && key(d) === key(selected)) btn.classList.add('is-sel');
+        btn.innerHTML = '<span class="d">' + day + '</span><span class="dot"></span>';
+        btn.setAttribute('aria-label', d.toLocaleDateString('en-GB',
+          { weekday:'long', day:'numeric', month:'long' }));
+        (function(dd){
+          btn.addEventListener('click', function(){ selected = dd; render(); renderPanel(); });
+        })(d);
+        grid.appendChild(btn);
+      }
+    }
+
+    document.getElementById('hhPrev').addEventListener('click', function(){
+      view.setMonth(view.getMonth()-1); render();
+    });
+    document.getElementById('hhNext').addEventListener('click', function(){
+      view.setMonth(view.getMonth()+1); render();
+    });
+    document.getElementById('hhSample').addEventListener('change', function(e){
+      sample = e.target.checked; render(); renderPanel();
+    });
+    document.getElementById('hhHalls').addEventListener('click', function(e){
+      var b = e.target.closest('.hh-hall');
+      if(!b) return;
+      hall = b.dataset.hall;
+      Array.prototype.forEach.call(this.querySelectorAll('.hh-hall'), function(x){
+        x.classList.toggle('is-on', x === b);
+      });
+      render(); renderPanel();
+    });
+
+    render(); renderPanel();
+  })();
 
   function showPage(name, opts){
     opts = opts || {};
