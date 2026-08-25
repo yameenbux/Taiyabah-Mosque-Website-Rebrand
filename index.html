@@ -659,6 +659,40 @@
   .pl-admin-link svg{width:12px;height:12px;}
 
   /* ---- Hall hire: availability calendar ---- */
+  .hh-horizon{
+    font-size:.78rem;line-height:1.55;color:var(--muted);
+    margin-top:10px;text-align:center;
+  }
+  .hh-agree{
+    display:flex;gap:10px;align-items:flex-start;margin:2px 0 14px;
+    background:rgba(255,255,255,.05);border:1px solid rgba(243,239,227,.16);
+    border-radius:9px;padding:12px 14px;cursor:pointer;
+  }
+  .hh-agree input{width:16px;height:16px;flex-shrink:0;margin-top:1px;accent-color:var(--gold);cursor:pointer;}
+  .hh-agree span{font-size:.81rem;line-height:1.55;color:rgba(243,239,227,.85);}
+  .hh-agree a{color:var(--gold-bright);font-weight:600;text-decoration:underline;text-underline-offset:2px;}
+
+  .hh-terms{margin-top:52px;}
+  .hh-terms-grid{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media (min-width:760px){ .hh-terms-grid{grid-template-columns:1fr 1fr;} }
+  .hh-term{
+    display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+  }
+  .hh-term .ht-n{
+    width:30px;height:30px;border-radius:50%;background:var(--brand-900);
+    color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.85rem;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .hh-term h4{font-family:"Fraunces",serif;font-weight:600;font-size:.98rem;color:var(--ink);margin-bottom:5px;line-height:1.3;}
+  .hh-term p{font-size:.86rem;line-height:1.65;color:var(--muted);}
+  .hh-terms-foot{
+    margin-top:18px;padding:14px 16px;border-radius:10px;
+    background:var(--paper);border:1px solid var(--line);
+    font-size:.83rem;line-height:1.65;color:var(--muted);
+  }
+  .hh-terms-foot b{color:var(--ink);}
+
   .hh-layout{display:grid;grid-template-columns:1fr;gap:34px;align-items:start;}
   @media (min-width:980px){
     .hh-layout{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;}
@@ -1144,6 +1178,7 @@
           </ul>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -1948,11 +1983,16 @@
               <span><i style="background:var(--danger);"></i>Fully booked</span>
               <span><i style="background:var(--line);"></i>Not published</span>
             </div>
+            <p class="hh-horizon">Bookings can only be made up to 12 months in advance.</p>
           </div>
 
           <div class="hh-panel" id="hhPanel">
             <h4 id="hhPanelDate">Select a date</h4>
             <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the two hire slots.</p>
+            <label class="hh-agree" id="hhAgreeWrap" style="display:none;">
+              <input type="checkbox" id="hhAgree">
+              <span>I have read and agree to the <a href="#hire-terms" id="hhTermsLink">terms of hire</a>, including use of the venue in accordance with Islamic rulings.</span>
+            </label>
             <div class="hh-sessions" id="hhSessions"></div>
             <div class="hh-booked-msg" id="hhBookMsg" style="display:none;"></div>
             <p class="hh-p-foot" id="hhPanelFoot" style="display:none;">Prefer to speak to someone? Call the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
@@ -1996,6 +2036,64 @@
         </div>
 
       </div>
+
+      <div class="hh-terms" id="hire-terms">
+        <div class="subhead"><span class="idx">03</span><h3>Terms of hire</h3><span class="rule"></span></div>
+        <div class="hh-terms-grid">
+
+          <div class="hh-term">
+            <div class="ht-n">1</div>
+            <div>
+              <h4>Use in accordance with Islamic rulings</h4>
+              <p>Any hire agreement is subject to the venue being used in accordance with Islamic rulings. This includes, but is not limited to, no music being played on the premises. Agreeing to this is a condition of booking.</p>
+            </div>
+          </div>
+
+          <div class="hh-term">
+            <div class="ht-n">2</div>
+            <div>
+              <h4>Payment in full at the time of booking</h4>
+              <p>A booking is only confirmed once payment has been made in full. Dates are not held or reserved before payment is received.</p>
+            </div>
+          </div>
+
+          <div class="hh-term">
+            <div class="ht-n">3</div>
+            <div>
+              <h4>Waste disposal and cleanliness</h4>
+              <p>The person hiring the venue is responsible for waste disposal and for leaving the hall and kitchen clean. This responsibility rests with the hirer, not with the masjid or the caretaker.</p>
+            </div>
+          </div>
+
+          <div class="hh-term">
+            <div class="ht-n">4</div>
+            <div>
+              <h4>Cleaning and waste removal charges</h4>
+              <p>A cleaning charge will be applied to any booking where the venue or kitchen has been left in a mess. A separate charge will be applied for the removal of any waste left behind.</p>
+            </div>
+          </div>
+
+          <div class="hh-term">
+            <div class="ht-n">5</div>
+            <div>
+              <h4>Access on the day</h4>
+              <p>A caretaker will be in touch before the day of your booking to arrange access to the venue. Please make sure the contact details you give us are ones you can be reached on.</p>
+            </div>
+          </div>
+
+          <div class="hh-term">
+            <div class="ht-n">6</div>
+            <div>
+              <h4>How far ahead you can book</h4>
+              <p>Bookings can be made up to 12 months in advance. Dates beyond that are not available to book and cannot be provisionally held.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="hh-terms-foot"><b>Questions about any of this?</b> The masjid office will talk through anything the terms don't cover &mdash; pricing, larger events, or particular requirements for your occasion. Call <a href="tel:01204535997" style="color:var(--brand-700);font-weight:700;">01204&nbsp;535&nbsp;997</a>.</p>
+      </div>
+
     </div>
   </section>
 <!-- ================= SERVICES: BIRTH, MARRIAGE & DEATH (hub) ================= -->
@@ -2627,6 +2725,14 @@
     var selected = null;
     var hall = 'any';
     var sample = false;
+    var agreed = false;
+
+    // Bookings open 12 months out. Anything beyond is neither bookable nor
+    // reachable — the month arrows stop rather than letting people wander into
+    // dates the masjid will not honour.
+    var todayRef = new Date(); todayRef.setHours(0,0,0,0);
+    var maxDate = new Date(todayRef.getFullYear() + 1, todayRef.getMonth(), todayRef.getDate());
+    var lastAllowedMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
 
     function midnight(d){ var x = new Date(d); x.setHours(0,0,0,0); return x; }
     function key(d){
@@ -2667,6 +2773,8 @@
         dEl.textContent = 'Select a date';
         sEl.textContent = 'Choose a day above to see the two hire slots.';
         if(foot) foot.style.display = 'none';
+        var aw = document.getElementById('hhAgreeWrap');
+        if(aw) aw.style.display = 'none';
         return;
       }
       var hallLabel = (hall === 'any' ? 'any hall' : 'Hall ' + hall);
@@ -2683,6 +2791,9 @@
         // rather than claims. Never offer to book a slot we cannot confirm.
         var label = row.free === true ? 'Book' : (row.free === false ? 'Booked' : 'Ask');
         var state = row.free === true ? 'Available' : (row.free === false ? 'Booked' : 'Not published');
+        // Terms must be accepted before a slot can be booked. Asking a
+        // question about a date is not a booking, so it stays open.
+        var blocked = (row.free === false) || (row.free === true && !agreed);
         d.innerHTML =
           '<span class="hs-t">' + row.s.label +
           ' <span style="font-weight:400;opacity:.6;">' + row.s.time + '</span>' +
@@ -2691,19 +2802,21 @@
         btn.type = 'button';
         btn.className = 'hs-act';
         btn.textContent = label;
-        btn.disabled = (row.free === false);
+        btn.disabled = blocked;
         btn.addEventListener('click', function(){ requestSlot(row.s, row.free); });
         d.appendChild(btn);
         wrap.appendChild(d);
       });
 
       if(foot) foot.style.display = '';
+      var agreeWrap = document.getElementById('hhAgreeWrap');
+      if(agreeWrap) agreeWrap.style.display = '';
     }
 
     function requestSlot(session, free){
       var msg = document.getElementById('hhBookMsg');
       if(!msg) return;
-      msg.textContent = 'Online booking isn\'t connected yet, so this hasn\'t been reserved. '
+      msg.textContent = 'Online booking isn\'t connected yet, so this hasn\'t been reserved and no payment has been taken. '
         + 'To hold the ' + session.label.toLowerCase() + ' slot ('  + session.time + ') on '
         + selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' })
         + ', please call the office on 01204 535 997.';
@@ -2715,6 +2828,8 @@
       document.getElementById('hhMonth').textContent = MONTHS[view.getMonth()] + ' ' + view.getFullYear();
       document.getElementById('hhPrev').disabled =
         (view.getFullYear() === firstAllowed.getFullYear() && view.getMonth() === firstAllowed.getMonth());
+      document.getElementById('hhNext').disabled =
+        (view.getFullYear() === lastAllowedMonth.getFullYear() && view.getMonth() === lastAllowedMonth.getMonth());
       document.getElementById('hhBanner').classList.toggle('on', sample);
 
       grid.innerHTML = '';
@@ -2733,8 +2848,13 @@
         btn.type = 'button';
         btn.className = 'hh-day';
         var past = d < today;
-        if(past) btn.disabled = true;
-        else btn.classList.add('s-' + stateFor(d));
+        var beyond = d > maxDate;
+        if(past || beyond){
+          btn.disabled = true;
+          if(beyond) btn.title = 'Bookings open 12 months in advance';
+        } else {
+          btn.classList.add('s-' + stateFor(d));
+        }
         if(d.getTime() === today.getTime()) btn.classList.add('is-today');
         if(selected && key(d) === key(selected)) btn.classList.add('is-sel');
         btn.innerHTML = '<span class="d">' + day + '</span><span class="dot"></span>';
@@ -2755,6 +2875,16 @@
     });
     document.getElementById('hhSample').addEventListener('change', function(e){
       sample = e.target.checked; render(); renderPanel();
+    });
+    document.getElementById('hhAgree').addEventListener('change', function(e){
+      agreed = e.target.checked;
+      renderPanel();
+      document.getElementById('hhAgree').checked = agreed;
+    });
+    document.getElementById('hhTermsLink').addEventListener('click', function(e){
+      e.preventDefault();
+      var t = document.getElementById('hire-terms');
+      if(t) t.scrollIntoView({ behavior:'smooth', block:'start' });
     });
     document.getElementById('hhHalls').addEventListener('click', function(e){
       var b = e.target.closest('.hh-hall');
