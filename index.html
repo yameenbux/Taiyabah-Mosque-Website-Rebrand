@@ -1036,6 +1036,11 @@
   footer ul li a:hover{color:var(--gold-bright);}
   footer ul li a[data-nav]{cursor:pointer;}
   .foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.74rem;}
+  .foot-credit a{
+    color:var(--gold-bright);font-weight:600;
+    border-bottom:1px solid rgba(220,187,99,.35);padding-bottom:1px;transition:.2s ease;
+  }
+  .foot-credit a:hover{border-color:var(--gold-bright);}
 
   .totop{position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;box-shadow:var(--shadow);}
   .totop.show{opacity:1;visibility:visible;transform:translateY(0);}
@@ -2613,7 +2618,7 @@
     </div>
     <div class="foot-bottom">
       <span>© <span id="year"></span> Taiyabah Masjid Bolton, Bolton Central Islamic Society &middot; Charity 1041569.</span>
-      <span>Companion site to the Taiyabah Masjid app.</span>
+      <span class="foot-credit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a> &middot; companion site to the Taiyabah Masjid app.</span>
     </div>
   </div>
 </footer>
