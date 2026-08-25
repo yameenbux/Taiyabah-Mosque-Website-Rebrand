@@ -1954,6 +1954,7 @@
             <h4 id="hhPanelDate">Select a date</h4>
             <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the two hire slots.</p>
             <div class="hh-sessions" id="hhSessions"></div>
+            <div class="hh-booked-msg" id="hhBookMsg" style="display:none;"></div>
             <p class="hh-p-foot" id="hhPanelFoot" style="display:none;">Prefer to speak to someone? Call the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
           </div>
         </div>
@@ -2608,6 +2609,7 @@
      hall filter — "any" means at least one hall free.
   ------------------------------------------------------------------------ */
   (function(){
+   try {
     var grid = document.getElementById('hhGrid');
     if(!grid) return;
 
@@ -2657,12 +2659,14 @@
       var dEl = document.getElementById('hhPanelDate');
       var sEl = document.getElementById('hhPanelSub');
       var wrap = document.getElementById('hhSessions');
-      var cta  = document.getElementById('hhEnquire');
+      var foot = document.getElementById('hhPanelFoot');
+      var msgBox = document.getElementById('hhBookMsg');
       wrap.innerHTML = '';
+      if(msgBox) msgBox.style.display = 'none';
       if(!selected){
         dEl.textContent = 'Select a date';
-        sEl.textContent = 'Choose a day above to see the sessions available for hire.';
-        cta.style.display = 'none';
+        sEl.textContent = 'Choose a day above to see the two hire slots.';
+        if(foot) foot.style.display = 'none';
         return;
       }
       var hallLabel = (hall === 'any' ? 'any hall' : 'Hall ' + hall);
@@ -2693,15 +2697,7 @@
         wrap.appendChild(d);
       });
 
-      // Booking isn't wired to anything yet, so say so rather than pretending.
-      var msg = document.createElement('div');
-      msg.className = 'hh-booked-msg';
-      msg.id = 'hhBookMsg';
-      msg.style.display = 'none';
-      wrap.parentNode.insertBefore(msg, wrap.nextSibling);
-
-      document.getElementById('hhPanelFoot').style.display = '';
-      cta.style.display = 'none';
+      if(foot) foot.style.display = '';
     }
 
     function requestSlot(session, free){
@@ -2771,6 +2767,13 @@
     });
 
     render(); renderPanel();
+   } catch(err){
+    // A page-specific widget must never break site navigation. Fail quietly,
+    // leave the phone number visible, and let the rest of the site work.
+    if(window.console && console.warn) console.warn('Hall hire calendar unavailable:', err);
+    var cal = document.querySelector('.hh-cal');
+    if(cal) cal.style.display = 'none';
+   }
   })();
 
   function showPage(name, opts){
