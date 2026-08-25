@@ -55,6 +55,9 @@
     color:rgba(243,239,227,.66);font-size:.82rem;font-weight:600;text-decoration:none;
   }
   .brand .back:hover{color:#F3EFE3;}
+  .pcredit{margin-top:22px;font-size:.72rem;color:rgba(243,239,227,.45);}
+  .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
+  .pcredit a:hover{color:var(--gold-bright);}
 
   /* ---- form side ---- */
   .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
@@ -152,6 +155,17 @@
   }
   .status b{color:var(--ink);}
 
+  .diag{margin-bottom:18px;border:1px solid var(--line);border-radius:10px;background:var(--paper);}
+  .diag summary{
+    cursor:pointer;padding:11px 14px;font-size:.78rem;font-weight:700;
+    letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  }
+  .diag summary:hover{color:var(--ink);}
+  .diag pre{
+    margin:0;padding:0 14px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:.72rem;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;
+  }
+
   /* ---- loading ---- */
   .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
   .spinner{
@@ -174,6 +188,7 @@
       <h1>Madrasah Portal</h1>
       <p>Sign in to reach your madrasah account. Access depends on your role — parents, teaching staff and administrators each see different things.</p>
       <a class="back" href="../index.html#madrasah">&larr; Back to the masjid website</a>
+      <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
     </div>
   </div>
 
@@ -278,6 +293,11 @@
         are all working. The madrasah features — registers, pupil records and reports —
         are still being built, and no pupil data is held in this system yet.
       </div>
+
+      <details class="diag" id="app-diag">
+        <summary>Diagnostics</summary>
+        <pre id="app-diag-out">running…</pre>
+      </details>
 
       <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
     </div>
