@@ -659,8 +659,26 @@
   .pl-admin-link svg{width:12px;height:12px;}
 
   /* ---- Hall hire: availability calendar ---- */
+  .hh-layout{display:grid;grid-template-columns:1fr;gap:34px;align-items:start;}
+  @media (min-width:980px){
+    .hh-layout{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;}
+  }
+  .hh-left,.hh-right{min-width:0;}
+  .hh-slots-info{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;margin-bottom:16px;
+  }
+  .hh-slot-line{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:7px 0;border-bottom:1px solid var(--line);
+  }
+  .hh-slot-line:last-of-type{border-bottom:none;}
+  .hh-slot-line .hs-name{font-size:.86rem;font-weight:700;color:var(--ink);}
+  .hh-slot-line .hs-time{font-size:.86rem;color:var(--brand-700);font-weight:600;}
+  .hh-slot-note{font-size:.78rem;line-height:1.55;color:var(--muted);margin-top:9px;}
+
   .hh-notice{
-    max-width:640px;display:flex;gap:11px;align-items:flex-start;
+    display:flex;gap:11px;align-items:flex-start;
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.45);
     border-radius:10px;padding:14px 16px;margin-bottom:20px;
     font-size:.87rem;line-height:1.6;color:var(--brand-800);
@@ -668,7 +686,7 @@
   .hh-notice svg{width:16px;height:16px;flex-shrink:0;margin-top:2px;color:var(--gold);}
   .hh-notice b{font-weight:700;}
 
-  .hh-controls{max-width:640px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .hh-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .hh-halls{display:flex;flex-wrap:wrap;gap:7px;}
   .hh-hall{
     font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;
@@ -680,7 +698,7 @@
   .hh-sample{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);cursor:pointer;}
   .hh-sample input{width:15px;height:15px;accent-color:var(--brand-800);cursor:pointer;}
 
-  .hh-cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;max-width:640px;}
+  .hh-cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
   .hh-sample-banner{
     display:none;background:var(--danger);color:#fff;border-radius:8px;
     padding:8px 12px;margin-bottom:14px;text-align:center;
@@ -728,7 +746,7 @@
   .hh-legend i{width:7px;height:7px;border-radius:50%;display:block;}
 
   .hh-panel{
-    max-width:640px;background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
+    background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
     padding:22px 24px;margin-top:16px;
   }
   .hh-panel h4{font-family:"Fraunces",serif;font-size:1.05rem;color:#F3EFE3;margin-bottom:4px;}
@@ -741,6 +759,24 @@
   }
   .hh-session .hs-t{color:rgba(243,239,227,.9);font-weight:600;}
   .hh-session .hs-v{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-bright);}
+  .hh-session .hs-act{
+    font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.05em;
+    text-transform:uppercase;cursor:pointer;white-space:nowrap;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+    color:var(--brand-900);border:none;border-radius:999px;padding:7px 15px;transition:.18s ease;
+  }
+  .hh-session .hs-act:hover:not(:disabled){filter:brightness(1.06);}
+  .hh-session .hs-act:disabled{
+    background:none;border:1px solid rgba(243,239,227,.22);
+    color:rgba(243,239,227,.45);cursor:not-allowed;
+  }
+  .hh-p-foot{font-size:.8rem;color:rgba(243,239,227,.65);line-height:1.6;margin-top:2px;}
+  .hh-p-foot a{color:var(--gold-bright);font-weight:600;}
+  .hh-booked-msg{
+    background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.45);
+    border-radius:9px;padding:11px 13px;margin-bottom:14px;
+    font-size:.82rem;line-height:1.55;color:var(--gold-bright);
+  }
   .hh-panel .btn{width:auto;}
   @media (max-width:520px){
     .hh-cal{padding:13px;}
@@ -1876,74 +1912,91 @@
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="svc-detail-facts">
-        <div class="svc-facts">
-          <div class="svc-fact"><div class="k">Halls available</div><div class="v">3</div></div>
-          <div class="svc-fact"><div class="k">Kitchens available</div><div class="v">2</div></div>
-        </div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Taiyabah Centre — a separate building owned by the masjid — offers three halls and two kitchens for hire, suitable for a range of community and family occasions. For availability, pricing and to discuss your requirements, please contact the masjid's main office directly.</p>
-        <a class="svc-cta-row" href="https://www.google.com/maps?q=Taiyabah+Centre,+Astley+Street,+Bolton+BL1+8EH" target="_blank" rel="noopener">
-          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
-          <span class="t"><span class="k">Taiyabah Centre &middot; get directions</span><span class="v">Astley Street, Bolton BL1 8EH</span></span>
-          <span class="go">&rsaquo;</span>
-        </a>
-        <a class="svc-cta-row" href="tel:01204535997">
-          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
-          <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
-          <span class="go">&rsaquo;</span>
-        </a>
-      </div>
-      <div class="subsection" id="hall-availability" style="margin-top:40px;">
-        <div class="subhead"><span class="idx">01</span><h3>Check availability</h3><span class="rule"></span></div>
+      <div class="hh-layout">
 
-        <div class="hh-notice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-          <span><b>Live availability isn't published yet.</b> The calendar below shows how bookings will be displayed once the masjid's diary is online. Until then, no day here reflects real availability &mdash; please call the office on <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a> to check a date.</span>
-        </div>
+        <!-- LEFT: availability + booking -->
+        <div class="hh-left">
+          <div class="subhead" style="margin-bottom:16px;"><span class="idx">01</span><h3>Check availability &amp; book</h3><span class="rule"></span></div>
 
-        <div class="hh-controls">
-          <div class="hh-halls" id="hhHalls">
-            <button type="button" class="hh-hall is-on" data-hall="any">Any hall</button>
-            <button type="button" class="hh-hall" data-hall="1">Hall 1</button>
-            <button type="button" class="hh-hall" data-hall="2">Hall 2</button>
-            <button type="button" class="hh-hall" data-hall="3">Hall 3</button>
+          <div class="hh-notice">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+            <span><b>Online booking isn't live yet.</b> The calendar shows how availability and booking will work once the masjid's diary is online. No date here reflects real availability &mdash; please call <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a> to check and book.</span>
           </div>
-          <label class="hh-sample"><input type="checkbox" id="hhSample"> Preview with sample data</label>
-        </div>
 
-        <div class="hh-cal">
-          <div class="hh-sample-banner" id="hhBanner">Sample data &mdash; not real availability</div>
-          <div class="hh-cal-head">
-            <button type="button" class="hh-nav" id="hhPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-            <div class="hh-month" id="hhMonth">&nbsp;</div>
-            <button type="button" class="hh-nav" id="hhNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          <div class="hh-controls">
+            <div class="hh-halls" id="hhHalls">
+              <button type="button" class="hh-hall is-on" data-hall="any">Any hall</button>
+              <button type="button" class="hh-hall" data-hall="1">Hall 1</button>
+              <button type="button" class="hh-hall" data-hall="2">Hall 2</button>
+              <button type="button" class="hh-hall" data-hall="3">Hall 3</button>
+            </div>
+            <label class="hh-sample"><input type="checkbox" id="hhSample"> Preview with sample data</label>
           </div>
-          <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-          <div class="hh-grid" id="hhGrid"></div>
-          <div class="hh-legend">
-            <span><i style="background:var(--success);"></i>Available</span>
-            <span><i style="background:var(--gold);"></i>Some sessions left</span>
-            <span><i style="background:var(--danger);"></i>Fully booked</span>
-            <span><i style="background:var(--line);"></i>Not published</span>
+
+          <div class="hh-cal">
+            <div class="hh-sample-banner" id="hhBanner">Sample data &mdash; not real availability</div>
+            <div class="hh-cal-head">
+              <button type="button" class="hh-nav" id="hhPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <div class="hh-month" id="hhMonth">&nbsp;</div>
+              <button type="button" class="hh-nav" id="hhNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+            </div>
+            <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+            <div class="hh-grid" id="hhGrid"></div>
+            <div class="hh-legend">
+              <span><i style="background:var(--success);"></i>Both slots free</span>
+              <span><i style="background:var(--gold);"></i>One slot left</span>
+              <span><i style="background:var(--danger);"></i>Fully booked</span>
+              <span><i style="background:var(--line);"></i>Not published</span>
+            </div>
+          </div>
+
+          <div class="hh-panel" id="hhPanel">
+            <h4 id="hhPanelDate">Select a date</h4>
+            <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the two hire slots.</p>
+            <div class="hh-sessions" id="hhSessions"></div>
+            <p class="hh-p-foot" id="hhPanelFoot" style="display:none;">Prefer to speak to someone? Call the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
           </div>
         </div>
 
-        <div class="hh-panel" id="hhPanel">
-          <h4 id="hhPanelDate">Select a date</h4>
-          <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the sessions available for hire.</p>
-          <div class="hh-sessions" id="hhSessions"></div>
-          <a class="btn btn-gold" data-nav="contact" id="hhEnquire" style="display:none;">Enquire about this date</a>
-        </div>
-      </div>
+        <!-- RIGHT: the venue -->
+        <div class="hh-right">
+          <div class="subhead" style="margin-bottom:16px;"><span class="idx">02</span><h3>The venue</h3><span class="rule"></span></div>
 
-      <div class="cs-cta" style="margin-top:32px;">
-        <a class="btn btn-gold" data-nav="contact">Contact the office</a>
-        <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+          <div class="svc-facts" style="margin-bottom:16px;">
+            <div class="svc-fact"><div class="k">Halls available</div><div class="v">3</div></div>
+            <div class="svc-fact"><div class="k">Kitchens available</div><div class="v">2</div></div>
+          </div>
+
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-bottom:16px;">Taiyabah Centre &mdash; a separate building owned by the masjid &mdash; offers three halls and two kitchens for hire, suitable for a range of community and family occasions.</p>
+
+          <div class="hh-slots-info">
+            <div class="hh-slot-line"><span class="hs-name">Morning slot</span><span class="hs-time tnum">9:00 am &ndash; 4:00 pm</span></div>
+            <div class="hh-slot-line"><span class="hs-name">Evening slot</span><span class="hs-time tnum">5:00 pm &ndash; 11:00 pm</span></div>
+            <p class="hh-slot-note">Each hall is hired by the slot. The hour between four and five is kept clear for changeover.</p>
+          </div>
+
+          <a class="svc-cta-row" href="https://www.google.com/maps?q=Taiyabah+Centre,+Astley+Street,+Bolton+BL1+8EH" target="_blank" rel="noopener">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <span class="t"><span class="k">Taiyabah Centre &middot; get directions</span><span class="v">Astley Street, Bolton BL1 8EH</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+          <a class="svc-cta-row" href="tel:01204535997">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+
+          <p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-top:16px;">For pricing, or to discuss anything the calendar doesn't cover, the office is the quickest route.</p>
+
+          <div class="cs-cta" style="margin-top:20px;justify-content:flex-start;">
+            <a class="btn btn-gold" data-nav="contact">Contact the office</a>
+            <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
-</div>
-
 <!-- ================= SERVICES: BIRTH, MARRIAGE & DEATH (hub) ================= -->
 <div class="page" data-page="svc-bmd">
   <section class="page-masthead">
@@ -2558,10 +2611,11 @@
     var grid = document.getElementById('hhGrid');
     if(!grid) return;
 
+    // Two slots, not three. The 16:00–17:00 gap is deliberate changeover time
+    // and is not bookable.
     var SESSIONS = [
-      { key:'morning',   label:'Morning',   time:'9:00 – 13:00' },
-      { key:'afternoon', label:'Afternoon', time:'13:00 – 17:00' },
-      { key:'evening',   label:'Evening',   time:'17:00 – 22:00' }
+      { key:'morning', label:'Morning', time:'9:00 am – 4:00 pm' },
+      { key:'evening', label:'Evening', time:'5:00 pm – 11:00 pm' }
     ];
     var MONTHS = ["January","February","March","April","May","June",
                   "July","August","September","October","November","December"];
@@ -2589,12 +2643,14 @@
     }
     function stateFor(d){ return sample ? sampleState(d) : 'unknown'; }
 
+    // With two slots: 'limited' means exactly one of them is gone.
     function sessionsFor(d){
       var st = stateFor(d);
-      if(st === 'unknown') return SESSIONS.map(function(s){ return {s:s, v:'Enquire'}; });
-      if(st === 'booked')  return SESSIONS.map(function(s){ return {s:s, v:'Booked'}; });
-      if(st === 'available') return SESSIONS.map(function(s){ return {s:s, v:'Available'}; });
-      return SESSIONS.map(function(s,i){ return {s:s, v: i === 1 ? 'Booked' : 'Available'}; });
+      if(st === 'unknown')   return SESSIONS.map(function(s){ return {s:s, free:null}; });
+      if(st === 'booked')    return SESSIONS.map(function(s){ return {s:s, free:false}; });
+      if(st === 'available') return SESSIONS.map(function(s){ return {s:s, free:true}; });
+      var seed = (d.getFullYear() + d.getMonth() + d.getDate()) % 2;
+      return SESSIONS.map(function(s,i){ return {s:s, free: i !== seed}; });
     }
 
     function renderPanel(){
@@ -2609,21 +2665,53 @@
         cta.style.display = 'none';
         return;
       }
+      var hallLabel = (hall === 'any' ? 'any hall' : 'Hall ' + hall);
       dEl.textContent = selected.toLocaleDateString('en-GB',
         { weekday:'long', day:'numeric', month:'long', year:'numeric' });
       sEl.textContent = sample
-        ? ('Sample availability for ' + (hall === 'any' ? 'any hall' : 'Hall ' + hall) + '.')
-        : ('Availability for this date has not been published. Call the office to check ' +
-           (hall === 'any' ? 'any hall' : 'Hall ' + hall) + '.');
+        ? ('Sample availability for ' + hallLabel + '.')
+        : ('Availability for this date has not been published yet. You can still ask the office about ' + hallLabel + '.');
+
       sessionsFor(selected).forEach(function(row){
         var d = document.createElement('div');
         d.className = 'hh-session';
-        d.innerHTML = '<span class="hs-t">' + row.s.label +
-                      ' <span style="font-weight:400;opacity:.65;">' + row.s.time + '</span></span>' +
-                      '<span class="hs-v">' + row.v + '</span>';
+        // free === null means we genuinely do not know, so the button asks
+        // rather than claims. Never offer to book a slot we cannot confirm.
+        var label = row.free === true ? 'Book' : (row.free === false ? 'Booked' : 'Ask');
+        var state = row.free === true ? 'Available' : (row.free === false ? 'Booked' : 'Not published');
+        d.innerHTML =
+          '<span class="hs-t">' + row.s.label +
+          ' <span style="font-weight:400;opacity:.6;">' + row.s.time + '</span>' +
+          '<span style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-bright);margin-top:2px;">' + state + '</span></span>';
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'hs-act';
+        btn.textContent = label;
+        btn.disabled = (row.free === false);
+        btn.addEventListener('click', function(){ requestSlot(row.s, row.free); });
+        d.appendChild(btn);
         wrap.appendChild(d);
       });
-      cta.style.display = '';
+
+      // Booking isn't wired to anything yet, so say so rather than pretending.
+      var msg = document.createElement('div');
+      msg.className = 'hh-booked-msg';
+      msg.id = 'hhBookMsg';
+      msg.style.display = 'none';
+      wrap.parentNode.insertBefore(msg, wrap.nextSibling);
+
+      document.getElementById('hhPanelFoot').style.display = '';
+      cta.style.display = 'none';
+    }
+
+    function requestSlot(session, free){
+      var msg = document.getElementById('hhBookMsg');
+      if(!msg) return;
+      msg.textContent = 'Online booking isn\'t connected yet, so this hasn\'t been reserved. '
+        + 'To hold the ' + session.label.toLowerCase() + ' slot ('  + session.time + ') on '
+        + selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' })
+        + ', please call the office on 01204 535 997.';
+      msg.style.display = '';
     }
 
     function render(){
