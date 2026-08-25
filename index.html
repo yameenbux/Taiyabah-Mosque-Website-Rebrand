@@ -618,6 +618,8 @@
   .media-item:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(43,7,26,.14);}
   .media-thumb-wrap{position:relative;aspect-ratio:16/9;background:#170410;overflow:hidden;}
   .media-thumb-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .media-thumb-wrap.no-thumb img{display:none;}
+  .media-thumb-wrap.no-thumb{background:linear-gradient(160deg,var(--brand-800),var(--brand-900));}
   .media-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50px;height:50px;border-radius:50%;background:rgba(12,2,8,.72);display:flex;align-items:center;justify-content:center;color:#fff;transition:.2s ease;}
   .media-play svg{width:18px;height:18px;margin-left:2px;}
   .media-item:hover .media-play{background:var(--brand-900);}
@@ -2248,6 +2250,8 @@
 
     </div>
   </section>
+</div>
+
 <!-- ================= SERVICES: BIRTH, MARRIAGE & DEATH (hub) ================= -->
 <div class="page" data-page="svc-bmd">
   <section class="page-masthead">
@@ -3191,6 +3195,26 @@
     var cal = document.querySelector('.hh-cal');
     if(cal) cal.style.display = 'none';
    }
+  })();
+
+  /* YouTube thumbnails come from i.ytimg.com. If a visitor's network blocks
+     YouTube, hide the failed image so the tile falls back to its brand
+     background and play icon rather than showing a broken-image glyph. */
+  (function(){
+    try {
+      var imgs = document.querySelectorAll('.media-thumb-wrap img');
+      Array.prototype.forEach.call(imgs, function(img){
+        function fail(){
+          var wrap = img.parentNode;
+          if(wrap && wrap.classList) wrap.classList.add('no-thumb');
+        }
+        img.addEventListener('error', fail);
+        // may already have failed before this ran
+        if(img.complete && img.naturalWidth === 0) fail();
+      });
+    } catch(e){
+      if(window.console && console.warn) console.warn('thumbnail fallback unavailable:', e);
+    }
   })();
 
   function showPage(name, opts){
