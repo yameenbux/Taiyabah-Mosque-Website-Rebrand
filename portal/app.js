@@ -80,6 +80,250 @@
     });
   }
 
+  /* =========================================================================
+     HALL BOOKINGS
+
+     Requests submitted through the public website land in `hall_bookings`.
+     This panel is where the office works through them: ring the enquirer,
+     agree the date and the fee, then record the outcome.
+
+     What the database will and will not allow (migration 004):
+       - only `hall_office` and `admin` can read a booking at all
+       - the office may change status, notes and handled_at, and NOTHING else.
+         It cannot quietly edit somebody's name, address or requested date. If
+         those are wrong the booking is declined and re-entered, so the record
+         always shows what the person actually asked for.
+       - nobody can delete. A request is closed by moving its status, which
+         leaves a trail.
+
+     The panel is hidden from people without the role, but that is a courtesy,
+     not a control — RLS is what actually stops a parent reading these.
+     ======================================================================= */
+  var bookings = (function () {
+    var SLOTS = { morning: "Morning · 9:00am – 4:00pm", evening: "Evening · 5:00pm – 11:00pm" };
+    var rows = [];
+    var filter = "new";
+    var query = "";
+    var mounted = false;
+
+    function canSee(identity) {
+      return identity.roles.indexOf("hall_office") !== -1 ||
+             identity.roles.indexOf("admin") !== -1;
+    }
+
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function todayISO() {
+      var d = new Date();
+      return d.getFullYear() + "-" +
+             String(d.getMonth() + 1).padStart(2, "0") + "-" +
+             String(d.getDate()).padStart(2, "0");
+    }
+
+    function longDate(iso) {
+      // Parse as parts, not Date(string) — that treats a bare date as UTC and
+      // can show the wrong day to anyone west of Greenwich.
+      var p = String(iso).split("-");
+      var d = new Date(+p[0], +p[1] - 1, +p[2]);
+      return d.toLocaleDateString("en-GB",
+        { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    }
+
+    function ago(ts) {
+      var mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+      if (mins < 2) return "just now";
+      if (mins < 60) return mins + " minutes ago";
+      var hrs = Math.floor(mins / 60);
+      if (hrs < 24) return hrs === 1 ? "an hour ago" : hrs + " hours ago";
+      var days = Math.floor(hrs / 24);
+      return days === 1 ? "yesterday" : days + " days ago";
+    }
+
+    function setError(msg) {
+      var box = el("bk-error");
+      if (!box) return;
+      if (!msg) { box.hidden = true; box.textContent = ""; return; }
+      box.textContent = msg;
+      box.hidden = false;
+    }
+
+    function load() {
+      return sb.from("hall_bookings")
+        .select("id,created_at,booking_date,session_slot,hall,first_name,last_name,address,phone,status,office_notes,handled_at")
+        .order("booking_date", { ascending: true })
+        .then(function (res) {
+          if (res.error) {
+            // Say what actually went wrong. A silent empty list reads as
+            // "no bookings" and the office stops checking.
+            setError("Couldn't load bookings — " + res.error.message);
+            rows = [];
+            return;
+          }
+          setError(null);
+          rows = res.data || [];
+        });
+    }
+
+    function visible() {
+      var today = todayISO();
+      var out = rows.filter(function (r) {
+        if (filter === "new")      return r.status === "new";
+        if (filter === "upcoming") return r.status === "confirmed" && r.booking_date >= today;
+        return true;
+      });
+      if (query) {
+        var q = query.toLowerCase();
+        var digits = q.replace(/\D/g, "");
+        out = out.filter(function (r) {
+          var name = (r.first_name + " " + r.last_name).toLowerCase();
+          var phone = String(r.phone).replace(/\D/g, "");
+          return name.indexOf(q) !== -1 || (digits.length >= 3 && phone.indexOf(digits) !== -1);
+        });
+      }
+      // Newest requests first when triaging; soonest first when looking ahead.
+      if (filter === "new") {
+        out.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+      }
+      return out;
+    }
+
+    function counts() {
+      var today = todayISO();
+      el("bk-n-new").textContent = rows.filter(function (r) { return r.status === "new"; }).length;
+      el("bk-n-up").textContent  = rows.filter(function (r) {
+        return r.status === "confirmed" && r.booking_date >= today;
+      }).length;
+    }
+
+    function emptyLine() {
+      if (query) return "Nothing matches “" + esc(query) + "”.";
+      if (filter === "new")      return "No new requests. Anything that comes in from the website will appear here.";
+      if (filter === "upcoming") return "No confirmed bookings coming up.";
+      return "No bookings yet.";
+    }
+
+    function render() {
+      counts();
+      var list = el("bk-list");
+      var items = visible();
+      if (!items.length) {
+        list.innerHTML = '<div class="bk-empty">' + emptyLine() + "</div>";
+        return;
+      }
+      list.innerHTML = items.map(function (r) {
+        var isOpen = r.status === "new";
+        var hall = r.hall === "any" ? "Any available hall" : "Hall " + esc(r.hall);
+        return '' +
+          '<article class="bk-item s-' + esc(r.status) + '" data-id="' + esc(r.id) + '">' +
+            '<div class="bk-when">' +
+              '<span class="d">' + esc(longDate(r.booking_date)) + '</span>' +
+              '<span class="s">' + esc(SLOTS[r.session_slot] || r.session_slot) + ' · ' + hall + '</span>' +
+              '<span class="bk-pill p-' + esc(r.status) + '">' + esc(r.status) + '</span>' +
+            '</div>' +
+            '<div class="bk-who">' +
+              '<span class="nm">' + esc(r.first_name) + " " + esc(r.last_name) + '</span>' +
+              '<a href="tel:' + esc(String(r.phone).replace(/\s/g, "")) + '">' + esc(r.phone) + '</a>' +
+            '</div>' +
+            '<div class="bk-addr">' + esc(r.address) + '</div>' +
+            '<div class="bk-meta">Requested ' + esc(ago(r.created_at)) +
+              (r.handled_at ? ' · decided ' + esc(ago(r.handled_at)) : '') + '</div>' +
+            '<textarea class="bk-notes" data-notes rows="1" placeholder="Notes — what was agreed, fee quoted, who called">' +
+              esc(r.office_notes || "") + '</textarea>' +
+            '<div class="bk-acts">' +
+              (isOpen
+                ? '<button type="button" class="bk-btn go" data-act="confirmed">Confirm</button>' +
+                  '<button type="button" class="bk-btn no" data-act="declined">Decline</button>'
+                : '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
+                  (r.status === "confirmed"
+                    ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel booking</button>'
+                    : '<button type="button" class="bk-btn" data-act="new">Reopen</button>')) +
+              '<span class="bk-said" data-said></span>' +
+            '</div>' +
+          '</article>';
+      }).join("");
+    }
+
+    // Writes only the three columns the office is allowed to touch.
+    function apply(id, item, act) {
+      var notes = item.querySelector("[data-notes]").value.trim();
+      var said  = item.querySelector("[data-said]");
+      var btns  = item.querySelectorAll(".bk-btn");
+      Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
+      said.textContent = "Saving…";
+
+      var patch = { office_notes: notes || null };
+      if (act !== "save") {
+        patch.status = act;
+        patch.handled_at = act === "new" ? null : new Date().toISOString();
+      }
+
+      return sb.from("hall_bookings").update(patch).eq("id", id)
+        .then(function (res) {
+          if (res.error) {
+            said.textContent = "";
+            setError("Couldn't save that — " + res.error.message + ". Nothing was changed.");
+            Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+            return;
+          }
+          setError(null);
+          return load().then(render);
+        })
+        .catch(function (e) {
+          said.textContent = "";
+          setError("Couldn't reach the database — " + (e && e.message) + ". Nothing was changed.");
+          Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+        });
+    }
+
+    function wire() {
+      el("bk-tabs").addEventListener("click", function (e) {
+        var tab = e.target.closest(".bk-tab");
+        if (!tab) return;
+        filter = tab.dataset.filter;
+        Array.prototype.forEach.call(this.querySelectorAll(".bk-tab"), function (t) {
+          t.classList.toggle("on", t === tab);
+        });
+        render();
+      });
+
+      var search = el("bk-search");
+      var t;
+      search.addEventListener("input", function () {
+        clearTimeout(t);
+        var v = this.value.trim();
+        t = setTimeout(function () { query = v; render(); }, 150);
+      });
+
+      el("bk-list").addEventListener("click", function (e) {
+        var btn = e.target.closest(".bk-btn");
+        if (!btn) return;
+        var item = btn.closest(".bk-item");
+        apply(item.dataset.id, item, btn.dataset.act);
+      });
+    }
+
+    function mount(identity) {
+      if (!canSee(identity)) return;
+      var panel = el("bk-panel");
+      if (!panel) return;
+      panel.hidden = false;
+      var card = el("view-app");
+      if (card) card.classList.add("is-wide");
+      el("app-status").innerHTML =
+        "<b>You're signed in.</b> Hall hire requests from the website are below. " +
+        "The madrasah features — registers, pupil records and reports — are still " +
+        "being built, and no pupil data is held in this system yet.";
+      if (!mounted) { wire(); mounted = true; }
+      load().then(render);
+    }
+
+    return { mount: mount };
+  })();
+
   function renderApp(identity) {
     var name = identity.profile.full_name || identity.user.email;
     var roles = identity.roles.length ? identity.roles : ["no role assigned"];
@@ -110,6 +354,11 @@
     // when the truth is that the lookup failed.
     el("app-norole").hidden = identity.roles.length > 0 || failed;
     show("view-app");
+
+    // A panel that fails to load must never take the sign-in shell with it.
+    try { bookings.mount(identity); } catch (e) {
+      if (window.console) console.warn("bookings panel unavailable:", e);
+    }
   }
 
   // Decides where to send someone once their password has been accepted.
