@@ -601,7 +601,7 @@
   .feat p{color:rgba(243,239,227,.65);font-size:.79rem;line-height:1.55;}
   .qr-card{background:var(--card);border-radius:16px;padding:22px;text-align:center;}
   .qr-card img{width:100%;max-width:190px;margin:0 auto 12px;border-radius:8px;}
-  .qr-card .u{font-size:.74rem;color:var(--muted);word-break:break-all;}
+  .qr-card .u{font-size:.74rem;color:var(--muted);letter-spacing:.02em;}
   .steps{margin-top:22px;display:flex;flex-direction:column;gap:9px;}
   .steps div{display:flex;gap:11px;align-items:flex-start;font-size:.85rem;color:rgba(243,239,227,.78);}
   .steps .n{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(198,162,76,.18);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;}
@@ -1742,7 +1742,7 @@
         <div>
           <div class="qr-card">
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyCAIAAABnRsZeAAAHsUlEQVR4nO3cO25muRVGUcuoCXg0Tj10pz2aDpQJCpw2YICwm/s0ea/WSgv/W7XB4AM/vr8+/wbQ+fvpNwC8jawAMVkBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFiv3Ye/K9//LN6H5f49++/Lf51/Xl3Hrs2967Wnvj7+q4qO9+G0woQkxUgJitATFaAmKwAMVkBYrICxGQFiMkKENta2a7trPTmzK0h37fgnHvPp7awa3Ov+9P+LzitADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrACxwZXt2tzCb27ROHdb7dxNt3NO3ey748539cT/C2tOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitA7NjK9olO3XV6ar+79sTPe+edsu/jtALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxKxs/w8729C5TeqOJ65O79wc80dOK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitA7NjK9on7zrVTn+iJt7feecPuqQ3unb/RDqcVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSA2uLJ9372hO3tWj73/sXPe939hzWkFiMkKEJMVICYrQExWgJisADFZAWKyAsRkBYh9fH99nn4Pj3HnVvLO5ejcnbKnbqt9342zc5xWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoDY1l22c3eOrs09887r7ph7z6fudn3iJ3riMvjU/7I1pxUgJitATFaAmKwAMVkBYrICxGQFiMkKEJMVILa1sl17342kpxarc8vRO7/J93nfBnfNaQWIyQoQkxUgJitATFaAmKwAMVkBYrICxGQFiH18f30OPfWpJeXOsvCn3ZJ75wZ3zqlf8Imv6y5b4CKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFij1zZzu1od7zvftafdt/wnYvkU3/PO5xWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoDYr50Hn1o07rhzhXnnVpI/mvv137fPdloBYrICxGQFiMkKEJMVICYrQExWgJisADFZAWJbK9u1O3elO697akd7572wO+5cFc/dVnvqdU/9H3RaAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFigyvb991H+z5z+925TeqpZ75zC3vn37PTChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQG1zZru2sA+d2h3feR7t26ttYu/Ne2J3Hnvo25r6rOU4rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0Ds2Mr21GL11GZx7vOeukV155nnzG1h+d85rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAMXfZ/kXu/Lxz+925he6pvfKp23nXTt2/u+a0AsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEPr6/Pv/0g+9cFq6dWnCeeub3/UZzrztn7hPd+V05rQAxWQFisgLEZAWIyQoQkxUgJitATFaAmKwAsa2V7dqpZeH7dpY77txonvoF536FO78Nd9kCLyErQExWgJisADFZAWKyAsRkBYjJChCTFSA2uLJde9+ycO3UynbHqV/hlFP77Du/Kytb4CKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFiv3YefOdNqHOvu7azG37iN7nj1M2vO5937jd64rex5rQCxGQFiMkKEJMVICYrQExWgJisADFZAWKyAsSO3WW7dud28NRSdu7bmHvsKad+/bVT3+Sp9bbTChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQ27rLdm1uWXjqmU/d/Po+c7/gE2/2Xbvzu1pzWgFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYlt32f60G2dPufO22lP3pK7d+Te54847g9ecVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2NbK9qe5cxl853L0p32iHXN75bl7cNecVoCYrAAxWQFisgLEZAWIyQoQkxUgJitATFaA2K+dB9959+eOud3hnavTJ96TunZqoTu3Zz312B1OK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUgJitAbGtlu3bngvOJ99HOeeK7mnvsjjtvul1zly3wGLICxGQFiMkKEJMVICYrQExWgJisADFZAWKDK9u1J24H77yP9pRTC92dZ37ffvfOnbTTChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQO7ayfaK5jeap/e4Tb2B94j77zi3s3LtyWgFisgLEZAWIyQoQkxUgJitATFaAmKwAMVkBYla2f5GdzeKdO9q1J+6Gf9ptxHN/G04rQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0Ds2Mr21Ppzx9zOcmffObcrvdMT/3LWdn6FU6viNacVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSD28f31+acf/MSN5tqpG1jnPPFdrc2951P73Ttv9t3htALEZAWIyQoQkxUgJitATFaAmKwAMVkBYrICxLZWtgD/zWkFiMkKEJMVICYrQExWgJisADFZAWKyAsRkBYjJChCTFSAmK0BMVoCYrAAxWQFisgLEZAWIyQoQkxUg9h9TIOghs0mi2QAAAABJRU5ErkJggg==" alt="QR code to open the Taiyabah Masjid app">
-            <div class="u">yameenbux.github.io/Taiyabah-Mosque-App</div>
+            <div class="u">Scan to open the app</div>
           </div>
           <div class="steps">
             <div><span class="n">1</span><span>Open the link (or scan the QR) in Safari or Chrome.</span></div>
@@ -2613,7 +2613,6 @@
       <div><h5>App</h5><ul>
         <li><a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">Open the app</a></li>
         <li><a data-nav="getapp">Install instructions</a></li>
-        <li><a href="https://github.com/yameenbux/Taiyabah-Mosque-App" target="_blank" rel="noopener">Source on GitHub</a></li>
       </ul></div>
       <div><h5>Contact</h5><ul>
         <li>31a Draycott Street, Bolton, BL1 8HD</li>
