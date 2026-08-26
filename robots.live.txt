@@ -1,0 +1,5 @@
+# Rename this file to robots.txt once taiyabahmasjid.com points at this site.
+User-agent: *
+Allow: /
+
+Sitemap: https://www.taiyabahmasjid.com/sitemap.xml

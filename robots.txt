@@ -1,0 +1,16 @@
+# ---------------------------------------------------------------------------
+# STAGING — this file blocks all search engines.
+#
+# The site is not live yet. Until the taiyabahmasjid.com domain is pointed at
+# it, this build sits at a temporary address. Without this file Google would
+# index the temporary address, and after the domain moves you would have the
+# same content indexed twice, competing with itself.
+#
+# ON LAUNCH DAY, AFTER THE DOMAIN HAS BEEN POINTED HERE:
+#   delete this file and rename robots.live.txt to robots.txt
+#
+# Nothing else needs changing. If you forget, the new site will not appear in
+# Google at all.
+# ---------------------------------------------------------------------------
+User-agent: *
+Disallow: /
