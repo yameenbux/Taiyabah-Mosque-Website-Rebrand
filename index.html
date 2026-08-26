@@ -3057,6 +3057,71 @@ window.TAIYABAH_PUBLIC = {
 
     // Deterministic pseudo-availability for the preview only. Derived from the
     // date so it stays stable while clicking around, and never persisted.
+    /* ---------------------------------------------------------------------
+       Real availability.
+
+       Read from the hall_availability view, which holds nothing but a date,
+       a slot and a hall number for bookings the office has CONFIRMED. A
+       request nobody has agreed to yet does not block anyone else's date.
+
+       Until this has loaded — and if it fails to load at all — every day
+       stays 'unknown'. The calendar must never claim a date is free when it
+       has no way of knowing.
+    --------------------------------------------------------------------- */
+    var taken = null;                    // null = we do not know yet
+    var HALL_COUNT = 3;
+
+    function iso(d){
+      return d.getFullYear() + '-' +
+             String(d.getMonth()+1).padStart(2,'0') + '-' +
+             String(d.getDate()).padStart(2,'0');
+    }
+
+    function loadAvailability(){
+      var cfg = window.TAIYABAH_PUBLIC || {};
+      if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+         cfg.SUPABASE_URL.indexOf('PASTE_') !== -1) return;
+
+      var base = String(cfg.SUPABASE_URL).trim()
+                   .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
+
+      fetch(base + '/rest/v1/hall_availability?select=booking_date,session_slot,hall', {
+        headers: {
+          'apikey': cfg.SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
+        }
+      }).then(function(res){
+        if(!res.ok) throw new Error('availability ' + res.status);
+        return res.json();
+      }).then(function(data){
+        var map = {};
+        (data || []).forEach(function(r){
+          var key = r.booking_date + '|' + r.session_slot;
+          if(!map[key]) map[key] = { specific: {}, any: 0 };
+          if(r.hall === 'any') map[key].any += 1;
+          else map[key].specific[r.hall] = true;
+        });
+        taken = map;
+        render(); renderPanel();
+      }).catch(function(err){
+        // Leave everything 'unknown' and leave the phone number on screen.
+        if(window.console && console.warn) console.warn('Availability unavailable:', err);
+      });
+    }
+
+    // How many of the three halls are gone for this date and slot, and is the
+    // one the visitor picked among them?
+    function slotFree(d, slotKey){
+      if(taken === null) return null;                    // not known yet
+      var e = taken[iso(d) + '|' + slotKey];
+      if(!e) return true;                                 // nothing booked
+      var specific = Object.keys(e.specific).length;
+      var used = specific + e.any;
+      if(used >= HALL_COUNT) return false;                // every hall gone
+      if(hall !== 'any' && e.specific[hall]) return false; // their hall is gone
+      return true;
+    }
+
     function sampleState(d){
       var seed = (d.getFullYear()*372 + d.getMonth()*31 + d.getDate()) * 2654435761 % 97;
       if(d.getDay() === 6 || d.getDay() === 0) return seed % 5 < 3 ? 'booked' : 'limited';
@@ -3064,10 +3129,21 @@ window.TAIYABAH_PUBLIC = {
       if(seed % 3 === 0) return 'limited';
       return 'available';
     }
-    function stateFor(d){ return sample ? sampleState(d) : 'unknown'; }
+    function stateFor(d){
+      if(sample) return sampleState(d);
+      if(taken === null) return 'unknown';
+      var free = SESSIONS.map(function(s){ return slotFree(d, s.key); });
+      if(free.every(function(f){ return f === false; })) return 'booked';
+      if(free.some(function(f){ return f === false; }))  return 'limited';
+      return 'available';
+    }
 
     // With two slots: 'limited' means exactly one of them is gone.
     function sessionsFor(d){
+      // Real data knows which slot is which; only the sample needs guessing.
+      if(!sample && taken !== null){
+        return SESSIONS.map(function(s){ return {s:s, free: slotFree(d, s.key)}; });
+      }
       var st = stateFor(d);
       if(st === 'unknown')   return SESSIONS.map(function(s){ return {s:s, free:null}; });
       if(st === 'booked')    return SESSIONS.map(function(s){ return {s:s, free:false}; });
@@ -3442,6 +3518,7 @@ window.TAIYABAH_PUBLIC = {
     });
 
     render(); renderPanel();
+    loadAvailability();
    } catch(err){
     // A page-specific widget must never break site navigation. Fail quietly,
     // leave the phone number visible, and let the rest of the site work.
