@@ -51,7 +51,16 @@
     return;
   }
 
-  var sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, {
+  // The Supabase dashboard shows the project URL with /rest/v1/ on the end.
+  // Pasting it verbatim has broken this twice, and the resulting error
+  // ("Invalid path specified in request URL") gives no clue why. Normalise to
+  // the bare origin so either form works.
+  var apiUrl = String(cfg.SUPABASE_URL || "")
+                 .trim()
+                 .replace(/\/+$/, "")
+                 .replace(/\/rest\/v1$/, "");
+
+  var sb = window.supabase.createClient(apiUrl, cfg.SUPABASE_ANON_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
 

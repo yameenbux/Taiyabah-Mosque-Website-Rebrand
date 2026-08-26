@@ -1,21 +1,22 @@
 /* ---------------------------------------------------------------------------
-   Taiyabah Madrasah Portal — connection settings
+   Taiyabah Masjid — portal connection settings
 
-   Fill in the two values below from:
-     Supabase Dashboard -> Project Settings -> API
+   BOTH VALUES BELOW ARE SAFE TO PUBLISH. The anon (publishable) key is
+   designed to be visible in the browser; Row Level Security in Postgres is
+   what actually protects the data. This key can only do what the policies
+   allow — it cannot read a hall booking, a profile or a role without a
+   signed-in session that passes those policies.
 
-   BOTH OF THESE ARE SAFE TO PUBLISH. The anon key is designed to be visible
-   in the browser; Row Level Security is what actually protects the data.
+   NEVER put the service_role / secret key in this file, or anywhere else that
+   reaches a browser. It bypasses RLS entirely and would expose every record.
+   If GitHub's secret scanning ever blocks a push, do NOT click "Allow secret" —
+   cancel, take the key out, and rotate it in Supabase.
 
-   NEVER put the service_role key in this file, or anywhere else in /portal/.
-   It bypasses RLS entirely and would expose every record to anyone who
-   viewed the page source.
+   The URL must be the bare project origin. The Supabase dashboard displays it
+   with /rest/v1/ on the end; pasting that verbatim has broken this twice.
 --------------------------------------------------------------------------- */
 
 window.TAIYABAH_CONFIG = {
-  // e.g. "https://abcdefghijklmnop.supabase.co"
-  SUPABASE_URL: "https://phenbhmobxwyvdeshvqw.supabase.co",
-
-  // the "anon" / "publishable" key — long string starting sb_publishable_ or eyJ...
-  SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO",
+  SUPABASE_URL:      "https://phenbhmobxwyvdeshvqw.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
 };
