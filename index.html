@@ -9,6 +9,39 @@
 <!-- Canonical address. Set now so that when the domain is pointed here, search
      engines credit the masjid's own domain rather than the staging address. -->
 <link rel="canonical" href="https://www.taiyabahmasjid.com/">
+
+<!-- ---------------------------------------------------------------------------
+     Link preview cards.
+
+     When somebody pastes this address into WhatsApp, Facebook, iMessage, Slack
+     or anywhere else, the app fetches the page and reads these tags to build
+     the preview card. Without them the link renders as plain blue text.
+
+     og:image MUST be an absolute, publicly reachable URL. A data: URI will not
+     work — the crawler fetches it separately from the page, so it cannot be
+     inlined like everything else on this site.
+
+     NOTE: crawlers obey robots.txt, which currently blocks everything while the
+     site is on a staging address. Previews will start working when robots.txt
+     is swapped on launch day, not before.
+---------------------------------------------------------------------------- -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Taiyabah Masjid">
+<meta property="og:locale" content="en_GB">
+<meta property="og:url" content="https://www.taiyabahmasjid.com/">
+<meta property="og:title" content="Taiyabah Masjid, Bolton">
+<meta property="og:description" content="Serving Bolton's Muslim community since 1967. Prayer times, the new build appeal, the madrasah, hall hire and how to reach us.">
+<meta property="og:image" content="https://www.taiyabahmasjid.com/og-image.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The Taiyabah Masjid logo — Bolton, established 1967">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Taiyabah Masjid, Bolton">
+<meta name="twitter:description" content="Serving Bolton's Muslim community since 1967. Prayer times, the new build appeal, the madrasah, hall hire and how to reach us.">
+<meta name="twitter:image" content="https://www.taiyabahmasjid.com/og-image.jpg">
+<meta name="twitter:image:alt" content="The Taiyabah Masjid logo — Bolton, established 1967">
 <script>
 /* ---------------------------------------------------------------------------
    Connection settings for the hall hire form.
