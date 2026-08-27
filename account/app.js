@@ -98,8 +98,24 @@
         if (m.indexOf("already registered") !== -1 || m.indexOf("already been registered") !== -1) {
           setError("register-error",
             "An account already exists with this email address. Sign in instead, or use the forgotten-password link.");
+        } else if (m.indexOf("signups not allowed") !== -1 || m.indexOf("signup is disabled") !== -1) {
+          // A configuration problem at our end, not the customer's. Never show
+          // them the raw wording — "not allowed for this instance" reads as if
+          // they have been refused.
+          setError("register-error",
+            "New accounts aren't switched on yet. Please try again shortly, or call the masjid office on 01204 535 997.");
+          if (window.console) console.error(
+            "Sign-ups are disabled for this Supabase project. Turn on " +
+            "'Allow new users to sign up' under Authentication -> Providers -> Email.");
+        } else if (m.indexOf("password") !== -1 && m.indexOf("weak") !== -1) {
+          setError("register-error", "Please choose a stronger password.");
+        } else if (m.indexOf("rate limit") !== -1 || m.indexOf("too many") !== -1) {
+          setError("register-error",
+            "Too many attempts just now. Please wait a few minutes and try again.");
         } else {
-          setError("register-error", res.error.message || "We couldn't create the account. Please try again.");
+          setError("register-error",
+            "We couldn't create the account just now. Please try again, or call the masjid office on 01204 535 997.");
+          if (window.console) console.warn("sign-up failed:", res.error.message);
         }
         return;
       }
