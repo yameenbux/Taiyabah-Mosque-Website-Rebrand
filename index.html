@@ -416,6 +416,16 @@ window.TAIYABAH_PUBLIC = {
   .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.82rem;}
   .glance-promo .gp-where{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;opacity:.9;}
   .glance-promo .gp-live{margin-top:3px;font-size:.65rem;opacity:.75;}
+  /* WhatsApp tile. The QR is a real, decoded-and-checked image rather than a
+     picture of one, and it links to the same address it encodes, so tapping and
+     scanning cannot drift apart. Rendered at 122px; verified readable at 120. */
+  .glance-wa .gp-notmiss{background:var(--brand-900);color:#F3EFE3;gap:5px;}
+  .glance-wa .gp-notmiss svg{width:11px;height:11px;}
+  .glance-wa .gp-qr{display:block;background:#fff;padding:8px;border-radius:10px;
+    margin:4px 0 8px;line-height:0;box-shadow:0 3px 10px rgba(43,7,26,.20);transition:.2s ease;}
+  .glance-wa .gp-qr:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(43,7,26,.26);}
+  .glance-wa .gp-qr img{width:122px;height:122px;display:block;}
+  .glance-wa .gp-when{margin-bottom:9px;}
   .gl-link{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;}
   .gl-link:last-child{border-bottom:none;}
   .gl-ic{width:28px;height:28px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -691,16 +701,26 @@ window.TAIYABAH_PUBLIC = {
   .media-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
   .media-item{display:block;border-radius:12px;overflow:hidden;background:var(--card);border:1px solid var(--line);text-decoration:none;transition:.25s ease;box-shadow:0 6px 16px rgba(43,7,26,.06);}
   .media-item:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(43,7,26,.14);}
-  /* Video cards carry no thumbnail image. YouTube's thumbnail host would
-     receive every visitor's IP address on page load, before anyone had chosen
-     to watch anything. The card is drawn from the masjid's own palette instead
-     and only reaches YouTube when the visitor clicks it. */
+  /* Video cards show YouTube's own thumbnail. This is the ONE place on the
+     site that loads something from a third party, so it is worth being clear
+     about the trade-off: Google's image host sees each visitor's IP address
+     when the Media page opens, before they have clicked anything. The privacy
+     notice says so. referrerpolicy="no-referrer" at least withholds which page
+     they came from, and the images load lazily so the request is not made
+     until the card is close to the screen.
+
+     Underneath every thumbnail the masjid's own plum panel remains, so if an
+     image is missing or blocked the card still looks deliberate. */
   .media-thumb-wrap{position:relative;aspect-ratio:16/9;overflow:hidden;
     background:linear-gradient(160deg,var(--brand-700),var(--brand-900));}
   .media-thumb-wrap::after{content:"";position:absolute;inset:0;
     background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cG9seWdvbiBmaWxsPSJub25lIiBzdHJva2U9IiNEQ0JCNjMiIHN0cm9rZS13aWR0aD0iMS42IiBwb2ludHM9IjUwLDIgNTcuMywzMi40IDgzLjksMTYuMSA2Ny42LDQyLjcgOTgsNTAgNjcuNiw1Ny4zIDgzLjksODMuOSA1Ny4zLDY3LjYgNTAsOTggNDIuNyw2Ny42IDE2LjEsODMuOSAzMi40LDU3LjMgMiw1MCAzMi40LDQyLjcgMTYuMSwxNi4xIDQyLjcsMzIuNCIvPjwvc3ZnPg==");background-size:78px;opacity:.17;}
-  .media-thumb-wrap img{display:none;}
-  .media-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(12,2,8,.55);border:1px solid rgba(220,187,99,.45);z-index:1;display:flex;align-items:center;justify-content:center;color:#fff;transition:.2s ease;}
+  .media-thumb-wrap img{display:block;position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;z-index:1;background:var(--brand-900);}
+  /* A gentle darkening so the gold play arrow reads on a bright thumbnail. */
+  .media-thumb-wrap .media-scrim{position:absolute;inset:0;z-index:2;
+    background:radial-gradient(circle at 50% 50%,rgba(12,2,8,.34),rgba(12,2,8,.10) 62%);}
+  .media-play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(12,2,8,.55);border:1px solid rgba(220,187,99,.45);z-index:3;display:flex;align-items:center;justify-content:center;color:#fff;transition:.2s ease;}
   .media-play svg{width:20px;height:20px;margin-left:3px;color:var(--gold-bright);}
   .media-item:hover .media-play{background:var(--brand-900);}
   .media-cap{padding:13px 15px;}
@@ -736,7 +756,7 @@ window.TAIYABAH_PUBLIC = {
     display:inline-flex;align-items:center;gap:6px;
     color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;
     border-bottom:1px solid transparent;
-  }
+  min-height:28px;padding:5px 2px;}
   .pl-admin-link:hover{color:var(--brand-800);border-color:var(--brand-800);}
   .pl-admin-link svg{width:12px;height:12px;}
 
@@ -1088,11 +1108,66 @@ window.TAIYABAH_PUBLIC = {
   .cform .cf-submit{width:100%;justify-content:center;margin-top:2px;border:none;cursor:pointer;font-family:inherit;}
   .cf-note{font-size:.74rem;color:var(--muted);margin-top:12px;line-height:1.6;text-align:center;}
 
-  .back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(243,239,227,.68);font-size:.8rem;font-weight:600;text-decoration:none;margin-bottom:16px;cursor:pointer;}
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(243,239,227,.68);font-size:.8rem;font-weight:600;text-decoration:none;margin-bottom:12px;cursor:pointer;
+    min-height:28px;padding:5px 2px;}
   .back-link:hover{color:#F3EFE3;}
   .back-link svg{width:14px;height:14px;}
   .svc-detail-facts{max-width:640px;margin:0 auto;}
   .page-body .cs-cta{max-width:640px;margin-left:auto;margin-right:auto;}
+
+  /* ---- Two-column service pages -------------------------------------------
+     Wide screens left ~400px of empty margin either side of a 640px column,
+     which reads as unfinished. The fix is NOT to widen the text: ~65-75
+     characters per line is where reading speed peaks, and stretching prose to
+     fill 1440px measurably slows people down — the older the reader, the more
+     it costs. So the reading column keeps its measure and the second column
+     carries the things you ACT on: the phone number, the form.
+
+     Below 1024px this collapses to one column. Source order is deliberate —
+     the phone number comes first in the markup, so on a phone it never ends up
+     buried beneath a contact form. */
+  .svc-split{display:grid;gap:30px;align-items:start;}
+  .svc-split > .svc-detail-facts{max-width:none;margin:0;}
+  .svc-aside{display:flex;flex-direction:column;}
+  .svc-aside > :first-child{margin-top:0;}
+  .svc-aside .svc-cta-row{margin-top:0;}
+  @media(min-width:1024px){
+    .svc-split{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;}
+    .svc-split.is-rail{grid-template-columns:minmax(0,1fr) 330px;}
+    /* The rail is short and reference-like, so it follows you down the page.
+       A form must never do this — it is taller than the viewport. */
+    .svc-split.is-rail .svc-aside{position:sticky;top:95px;}
+  }
+  @media(min-width:1200px){
+    .svc-split.is-rail .svc-aside{top:141px;}
+  }
+  /* is-rail-first: the aside is FIRST in the markup, because on a phone those
+     numbers must be the very first thing a bereaved family sees. At desktop
+     width grid placement moves it to the right-hand column without touching
+     the source order. */
+  @media(min-width:1024px){
+    .svc-split.is-rail-first{grid-template-columns:minmax(0,1fr) 330px;}
+    .svc-split.is-rail-first > .svc-detail-facts{grid-column:1;grid-row:1;}
+    .svc-split.is-rail-first > .svc-aside{grid-column:2;grid-row:1;position:sticky;top:95px;margin-top:0;}
+  }
+  @media(min-width:1200px){
+    .svc-split.is-rail-first > .svc-aside{top:141px;}
+  }
+  @media(max-width:1023px){
+    .svc-split.is-rail-first > .svc-aside{margin-top:0;margin-bottom:26px;}
+  }
+  /* A hub page is nothing but a list of onward links — no prose, so no reading
+     measure to protect. Two across uses the width instead of stacking four
+     cards down the middle of an empty screen. */
+  .svc-detail-facts.svc-hub{max-width:900px;}
+  .svc-hub-grid{display:grid;gap:14px;}
+  .svc-hub-grid .svc-cta-row{margin-top:0;height:100%;}
+  @media(min-width:820px){.svc-hub-grid{grid-template-columns:1fr 1fr;}}
+  /* On phones the aside is a block of its own, not a column. */
+  @media(max-width:1023px){
+    .svc-split{gap:0;}
+    .svc-aside{margin-top:26px;}
+  }
 
   /* ---------- HALL HIRE: split hero banner (text fades into a full, clear photo) ---------- */
   .svc-hero-banner{
@@ -1179,6 +1254,29 @@ window.TAIYABAH_PUBLIC = {
   }
   .foot-credit a:hover{border-color:var(--gold-bright);}
 
+  /* Sits opposite the back-to-top control, so the two read as a pair. Appears
+     only once the visitor has actually navigated somewhere, because a back
+     button with nowhere to go is worse than none. */
+  .goback{
+    position:fixed;bottom:24px;left:24px;z-index:900;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:0 18px 0 14px;height:46px;border-radius:999px;
+    background:var(--brand-900);color:#F3EFE3;
+    border:1px solid rgba(198,162,76,.42);
+    font-family:inherit;font-size:.82rem;font-weight:700;letter-spacing:.01em;
+    cursor:pointer;box-shadow:var(--shadow);
+    opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;
+  }
+  .goback.show{opacity:1;visibility:visible;transform:translateY(0);}
+  .goback svg{width:15px;height:15px;color:var(--gold-bright);}
+  .goback:hover{background:var(--gold-bright);color:var(--brand-900);border-color:var(--gold-bright);}
+  .goback:hover svg{color:var(--brand-900);}
+  .goback:focus-visible{outline:2px solid var(--gold-bright);outline-offset:3px;}
+  @media (max-width:520px){
+    .goback{bottom:20px;left:16px;height:42px;padding:0 15px 0 12px;font-size:.78rem;}
+  }
+  @media (prefers-reduced-motion:reduce){ .goback{transition:none;} }
+
   .totop{position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;box-shadow:var(--shadow);}
   .totop.show{opacity:1;visibility:visible;transform:translateY(0);}
 
@@ -1191,7 +1289,7 @@ window.TAIYABAH_PUBLIC = {
   }
 
   @media print{
-    header,.nav-overlay,.nav-panel,.totop{display:none !important;}
+    header,.nav-overlay,.nav-panel,.totop,.goback{display:none !important;}
     body{background:#fff;color:#000;}
     table.pt th{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
@@ -1419,15 +1517,16 @@ window.TAIYABAH_PUBLIC = {
           <div class="gp-foot" id="gpDate">Loading today&rsquo;s times…</div>
         </div>
 
-        <div class="glance-card glance-promo">
-          <span class="gp-notmiss">Not to be Missed</span>
-          <div class="fc-eyebrow">Community Event</div>
-          <h3>3rd International Quraan Competition</h3>
-          <div class="gp-when">26&ndash;30 August 2026</div>
-          <p>Contestants of all ages recite the Qur&rsquo;an from memory. Sisters welcome, with segregated facilities.</p>
-          <a class="btn btn-gold" href="https://habibulquraan.co.uk" target="_blank" rel="noopener">More Info →</a>
-          <div class="gp-where"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.1-7-11a7 7 0 0114 0c0 4.9-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg> Zakariyya Jaam&rsquo;e Masjid</div>
-          <div class="gp-live">Hosted by Habib Ul Quraan &middot; live @habibulquraan</div>
+        <div class="glance-card glance-promo glance-wa">
+          <span class="gp-notmiss"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 004.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 01-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.23 8.23 0 018.24 8.24c0 4.54-3.7 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.71-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.09-.17.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.84-.2-.48-.4-.42-.55-.43h-.47c-.16 0-.43.06-.65.31-.22.24-.85.83-.85 2.03s.87 2.35.99 2.51c.12.17 1.71 2.62 4.15 3.67.58.25 1.03.4 1.39.51.58.19 1.11.16 1.53.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.17-.47-.29z"/></svg> Announcements</span>
+          <div class="fc-eyebrow">Stay updated</div>
+          <h3>Join the masjid WhatsApp group</h3>
+          <p>Prayer time changes, janāzah notices and community announcements, straight to your phone.</p>
+          <a class="gp-qr" href="https://chat.whatsapp.com/GUU82kvhjNmCXNksk5iRwm" target="_blank" rel="noopener">
+            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAIAAABdNliuAAALvElEQVR42u3dyxHjVBiEUUxpSSbEQPQTA5mwvyQwjFWUrtv933MCsK2H9ZVW/Vpr/QYAPO13pwAAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAODXrpYf+tcff7pab/345+/Hz2f2M3fcIdlvz153R5T6ds+6779DvMUCQA2JBQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgHgTNe8Q2pZYLjP8kbquu848/N+545vb1nF8azzrPMWCwASCwASCwBILABILABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAH3KdfPDZVYfsSsaOHZWWzzz5rtvxO7PXfd5Z8qzzFgsASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAPzE5RTwa/O2bk5ehrnv/rGffN3BWywASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAHyIpR3eyK7NtGzd7NhmaVmGyf7OHXfIvN0kvMUCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAkC9o5d27Gk8e5aymyctmzwt1+i+eWtI8+46zzpvsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAUG/g0s6OLZGTz5J1lEmfed+89Z55TwbPOm+xACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILAAgsQAgsQBwkJqlnezeyzzZbZaWY7dk8iybPJ513mIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAYD/6Zp3SDuWN1qOKCt7Pq2juOs+/2S4/5nznkvZe6nlLHmLBQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgGAx9Qs7WRXMrKfuePbW67RfdlrtMPJ377jrsvK/ot3XM2T93O8xQKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAgMQCQEDN0k52gSG7zZJdtNjx7S0bR9lrNO9/1MJ6z/f/zpY72VssAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwA8pmZpp2X7YscRtWxK7NjTyO78ZI89ez6zKy73v/3kFZeW/RxvsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAwANeay1n4a3sRkd2HaVlyaRlRyW7S8P3X6N5d8i8jSNvsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAEFCztJNdhslqOaKWLZGTN3l2nM/sv/jkM2/bylssAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILAAcpGZp576WFZeseUsmtlmc+c+fpZYFm3lPxZb1Hm+xACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILADwmGveIbUsMOw4oh2LFtnVkR1ajsh+zpl3XfYzs9eoZanMWywASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAAS81lrHHnx2zSO7jtKykjFv76Xlus+7RtkjOvn/Pm/9zFssAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILAAEDFzambdokT1LLasjO5y8EHLy/6hll8bWjbdYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWAA4yMClnRYtSyZZ2SOyo5K65+07nXk1593z3mIBQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAOAx17xDalnzaNkSmbd5Mm+PqGWfpGVxJXuWTn6CeYsFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQD+02utVfFDWzZP5q24tKyO8P13cstn+r9Puu7eYgFgIIkFAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAeBM17xD2rHAkN3oyP7OlqvZsqNibSb179jxO7NH1PJ/P3kvy1ssAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwA8ZuDSTssqzo4jmrfm0bK4YpPn+4+o5f603uMtFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAJBYA+InXWstZeMt6T+osZc9ny97LvOvesiEz799x8h3iLRYAakgsAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwBnuk4++OyOSnZ5Y4fsWWpZxZm3SzPv39GynzPvadOyn+MtFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAAmqWdrL7JC3rKNnzuePb5y1vWHFxPr/5GTLvLHmLBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQWAIV5rrYofmt1m2fHt89Z7dpzPFi17L/OWi+atNrU8GbJPxZar6S0WACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAec5188C2rDtlvn3eWdiyZzFsIaXHyhkz2Ts5+prdYADiaxAKAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAcKbXWqvih7bsVGR3P7K/M3vddxx7dj8nu08y74iydwhnPsG8xQKAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAwGNqlnZ4lvWeZ4/Ihsz3/87sdlD233Hy/91bLABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwADHG1/NCWJZOsk7cvsvs5lmGe/faW39lyJ5/8j/MWCwADSSwASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILAGe65h3SvLWZHbsfO7YvWo6o5RrtWB3Jbp7Mu+tOfoKdvJ/jLRYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWAAJea62KH7pjqyG7vDFvp6JlySR7jcA9/8nf6S0WAAaSWACQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAznQ5BTxlx/ZFy8pQy5nPLlZl75DsndxyRPZzvMUCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAsCXsrTDG9kdlZaFkB3m7b20rOK0rM3MW8WZt6zlLRYAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFAB5z9NJOy1bDDjsWLVp2VHZ8e3aX5v7vbNmlmfffbLmX8BYLABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwBfauDSjk2JO05esNnx7dnzmT1L89Z7dtwh2efSyati3mIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAWCI11rLWQAAb7EAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwCf9i+mR9EUr6JXagAAAABJRU5ErkJggg==" width="630" height="630" alt="QR code that opens the Taiyabah Masjid WhatsApp group">
+          </a>
+          <div class="gp-when">Scan with your camera</div>
+          <a class="btn btn-gold" href="https://chat.whatsapp.com/GUU82kvhjNmCXNksk5iRwm" target="_blank" rel="noopener">Or tap to join →</a>
         </div>
 
         <div class="glance-card">
@@ -2438,7 +2537,8 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="svc-detail-facts">
+      <div class="svc-detail-facts svc-hub">
+        <div class="svc-hub-grid">
         <a class="svc-cta-row" href="#" data-nav="svc-birth" style="margin-top:0;">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c0-3.5 2-6 3-8s.5-4-1-5.5"/><circle cx="15" cy="7" r="2.3"/><path d="M6 19h14"/><path d="M11 19v-4a3 3 0 016 0v4"/></svg></span>
           <span class="t"><span class="k">Guidance for new arrivals</span><span class="v">Birth</span></span>
@@ -2459,6 +2559,7 @@ window.TAIYABAH_PUBLIC = {
           <span class="t"><span class="k">Ghusl, kafn, janāzah and burial — what the masjid arranges</span><span class="v">Funeral Services</span></span>
           <span class="go">&rsaquo;</span>
         </a>
+        </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
@@ -2482,6 +2583,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
+      <div class="svc-split is-rail">
       <div class="svc-detail-facts">
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Congratulations on the arrival of your child. This covers guidance and services relevant to a newborn.</p>
         <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">Circumcision (Khitān)</h3><span class="rule"></span></div>
@@ -2494,12 +2596,15 @@ window.TAIYABAH_PUBLIC = {
           <div class="soon-row"><span class="t">12 – 18 months</span><span class="tnum" style="font-weight:700;">£300</span></div>
         </div>
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">BCoM does not circumcise babies over 18 months old.</p>
+      </div>
+      <div class="svc-aside">
         <a class="svc-cta-row" href="tel:01204363680">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
           <span class="t"><span class="k">Call BCoM to book &middot; option 4</span><span class="v tnum">01204 363 680</span></span>
           <span class="go">&rsaquo;</span>
         </a>
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Office hours 9am–3pm &middot; admin@thebcom.org &middot; 1 Vicarage Street, Bolton BL3 5LE. A service of Bolton Council of Mosques, independent of Taiyabah Masjid.</p>
+      </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
@@ -2523,6 +2628,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
+      <div class="svc-split is-rail">
       <div class="svc-detail-facts">
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">For many couples, an Islamic ceremony carries a significance that a civil registration alone does not provide. Taiyabah Masjid is able to conduct this Nikāḥ on your behalf, in keeping with authentic Islamic practice — both parties giving their free and informed consent, and the groom presenting a dowry (mahr) to the bride as part of the contract.</p>
         <div class="svc-advisory">
@@ -2530,12 +2636,15 @@ window.TAIYABAH_PUBLIC = {
           <p>A Nikāḥ performed at the masjid is not, by itself, a marriage recognised under UK law. We strongly encourage every couple to additionally complete a separate civil marriage — this protects both partners' legal rights, including around property and inheritance, should the need ever arise.</p>
         </div>
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Requirements such as documentation, witnesses, available dates and any applicable fees vary and are best confirmed directly with the masjid.</p>
+      </div>
+      <div class="svc-aside">
         <a class="svc-cta-row" href="tel:01204535997">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
           <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
           <span class="go">&rsaquo;</span>
         </a>
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses, timings and any applicable fees — are best discussed directly with the office when you call.</p>
+      </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
@@ -2559,6 +2668,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
+      <div class="svc-split is-rail">
       <div class="svc-detail-facts">
         <div class="svc-quote">
           <p class="ar arabic" lang="ar" dir="rtl">مَا حَقُّ امْرِئٍ مُسْلِمٍ لَهُ شَيْءٌ يُوصِي فِيهِ يَبِيتُ لَيْلَتَيْنِ إِلَّا وَوَصِيَّتُهُ مَكْتُوبَةٌ عِنْدَهُ</p>
@@ -2584,11 +2694,14 @@ window.TAIYABAH_PUBLIC = {
           <div class="h">General information, not advice</div>
           <p>This is a starting point, not legal, financial or religious advice for your own circumstances. UK inheritance tax and probate rules are detailed and change over time — please speak to a qualified solicitor to write your will, and to the imam for guidance on the Islamic shares that apply to your family.</p>
         </div>
+      </div>
+      <div class="svc-aside">
         <a class="svc-cta-row" href="tel:01204535997">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
-          <span class="t"><span class="k">Speak to the imam &middot; call the main office</span><span class="v tnum">01204 535 997</span></span>
+          <span class="t"><span class="k">Speak to the imam</span><span class="v tnum">01204 535 997</span></span>
           <span class="go">&rsaquo;</span>
         </a>
+      </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
@@ -2615,18 +2728,20 @@ window.TAIYABAH_PUBLIC = {
 
   <section class="page-body">
     <div class="container">
-      <div class="svc-detail-facts">
-
+      <div class="svc-split is-rail-first">
+      <div class="svc-aside">
         <div class="fs-urgent">
           <span class="u-lab">If someone has just passed away</span>
           <h3>Ring BCoM first</h3>
-          <p>Bolton Council of Mosques runs the borough's Muslim funeral service and will liaise with the council and the hospital on your behalf. They answer out of hours. Once they are involved, the masjid will arrange everything set out below.</p>
+          <p>Bolton Council of Mosques runs the borough's Muslim funeral service and will liaise with the council and the hospital on your behalf. They answer out of hours. Once they are involved, the masjid will arrange everything set out on this page.</p>
           <div class="fs-nums">
             <a class="fs-num" href="tel:01204363680"><span class="who">BCoM &middot; office hours</span><span class="no">01204&nbsp;363&nbsp;680</span></a>
             <a class="fs-num" href="tel:01204392919"><span class="who">BCoM &middot; out of hours</span><span class="no">01204&nbsp;392&nbsp;919</span></a>
             <a class="fs-num" href="tel:01204535997"><span class="who">Taiyabah Masjid office</span><span class="no">01204&nbsp;535&nbsp;997</span></a>
           </div>
         </div>
+      </div>
+      <div class="svc-detail-facts">
 
         <div class="subhead" style="margin-top:6px;"><span class="idx">01</span><h3>What the masjid provides</h3><span class="rule"></span></div>
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-bottom:18px;">Everything here is arranged by the masjid. If you are unsure what is needed or in what order, ring the office and someone will talk you through it.</p>
@@ -2664,6 +2779,7 @@ window.TAIYABAH_PUBLIC = {
         </a>
 
       </div>
+      </div>
     </div>
   </section>
 </div>
@@ -2680,6 +2796,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
+      <div class="svc-split svc-split-form">
       <div class="svc-detail-facts">
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Many in the community turn to the masjid for guidance on matters affecting their day-to-day lives. Our imams are able to advise on a range of subjects, including marriage, bereavement, family matters, and general Islamic guidance. If you would like to arrange a time to speak with one of the imams, please contact the main office to make an appointment.</p>
         <a class="svc-cta-row" href="tel:01204535997">
@@ -2688,7 +2805,8 @@ window.TAIYABAH_PUBLIC = {
           <span class="go">&rsaquo;</span>
         </a>
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Appointments are arranged through the office, so the imam can make time to see you properly rather than in passing.</p>
-
+      </div>
+      <div class="svc-aside">
         <div class="cform-divider">Or write to us</div>
         <p class="cform-lead">Prefer not to call? Send a short message below and an imam will get back to you.</p>
         <form class="cform" id="imamForm">
@@ -2707,6 +2825,7 @@ window.TAIYABAH_PUBLIC = {
           <button type="submit" class="btn btn-gold cf-submit">Send Message</button>
           <p class="cf-note">You'll receive a reply by email or phone. All messages are treated as confidential.</p>
         </form>
+      </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
@@ -2733,51 +2852,51 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="media-grid">
         <a class="media-item" href="https://www.youtube.com/watch?v=gC7H_60vPFU" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/gC7H_60vPFU/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Taiyabah Masjid Bolton New Build Update 2026</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=N7wFXynmLHM" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/N7wFXynmLHM/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Taiyabah Masjid Bolton — History &amp; New Build Journey Todate</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=BWofQ9Ux0k0" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/BWofQ9Ux0k0/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">New Taiyabah Masjid Bolton Plan Walkthrough</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=KpAiKZnd6-Q" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/KpAiKZnd6-Q/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">New Build First Phase Completion Time-Lapse, Ramadhan 2019</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=mjNi1DoEyR8" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/mjNi1DoEyR8/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Construction Update at Taiyabah Masjid Bolton (20 Dec 2018)</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=icwQ1K-AGhM" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/icwQ1K-AGhM/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Taiyabah Masjid December 2021 — Phase 2 Start Update</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=in_Gm496Wpc" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/in_Gm496Wpc/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Fundraiser 2022</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=6Z302cNuVL4" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/6Z302cNuVL4/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Message by Mufti Fayyaz Saheb, Imam of Taiyabah Masjid Bolton</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=hnrxkmeSmHs" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/hnrxkmeSmHs/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Qari Rashid Musa — Message for the New Build</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=k1GYXfiqzqE" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/k1GYXfiqzqE/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Qari Faruk Saheb Samni — Special Message for the New Build</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=K35Y-ROIzgk" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/K35Y-ROIzgk/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Prayer Mat Campaign Explained</div></div>
         </a>
         <a class="media-item" href="https://www.youtube.com/watch?v=nJo4-8i3yEI" target="_blank" rel="noopener">
-          <div class="media-thumb-wrap"><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
+          <div class="media-thumb-wrap"><img class="media-thumb" src="https://i.ytimg.com/vi/nJo4-8i3yEI/maxresdefault.jpg" alt="" aria-hidden="true" loading="lazy" decoding="async" width="1280" height="720" referrerpolicy="no-referrer"><span class="media-scrim" aria-hidden="true"></span><span class="media-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span></div>
           <div class="media-cap"><div class="mt">Beautiful Qur'an Recitation by Hafiz Naeem Dilip, Bolton</div></div>
         </a>
       </div>
@@ -2809,7 +2928,7 @@ window.TAIYABAH_PUBLIC = {
         <p>This notice covers this website only. It explains what the website collects, why, and what you can ask us to do about it. It is written to be read, not to be survived.</p>
 
         <div class="legal-note">
-          <p><strong>The short version.</strong> The only thing this website collects is a hall hire request, and only if you choose to send one. There are no cookies, no analytics, no advertising, and no tracking of any kind. Nothing on this site loads from another company's servers.</p>
+          <p><strong>The short version.</strong> The only thing this website collects is a hall hire request, and only if you choose to send one. There are no cookies, no analytics, no advertising, and no tracking of any kind. Almost everything on the site is served from the site itself; the two exceptions are named below.</p>
         </div>
 
         <h2>Who is responsible</h2>
@@ -2834,9 +2953,10 @@ window.TAIYABAH_PUBLIC = {
 
         <h2>Cookies and tracking</h2>
         <p>This website sets <strong>no cookies</strong>. It does not use Google Analytics or any other analytics service. It does not carry advertising and does not track you between sites.</p>
-        <p>Everything the site needs &mdash; its typefaces, images and code &mdash; is served from the site itself, so simply visiting a page does not tell any other company that you were here.</p>
-        <p>The one exception is the <strong>hall hire page</strong>. Opening it asks our booking database which dates are already taken, so that the calendar can show you something true. That request carries no information about you &mdash; it asks only which sessions are spoken for &mdash; and it is not made on any other page.</p>
-        <p>Two things on the site are links out to other companies, and they only do anything if you choose to click them: <strong>Open in Maps</strong> on the contact page opens Google Maps, and the <strong>video cards</strong> on the media page open YouTube. Once you follow one of those links you are on their website and their own privacy policy applies. Our WhatsApp group link works the same way. We deliberately do not embed any of these in the page, so that nothing reaches them unless you decide it should.</p>
+        <p>Almost everything the site needs &mdash; its typefaces, its own photographs and its code &mdash; is served from the site itself, so on nearly every page, simply visiting tells no other company that you were here. There are two exceptions, and they are set out below rather than buried.</p>
+        <p>The first is the <strong>hall hire page</strong>. Opening it asks our booking database which dates are already taken, so that the calendar can show you something true. That request carries no information about you &mdash; it asks only which sessions are spoken for &mdash; and it is not made on any other page. The database is ours, hosted for us in London.</p>
+        <p>The second is the <strong>media page</strong>. Each video card shows the still image YouTube holds for that video, and those images come from Google's servers rather than ours. That means that when you open the media page, Google can see your IP address and roughly where in the world you are, before you have clicked on anything. We ask the browser not to tell Google which page you came from, and the images are only requested as you scroll down to them, but we cannot stop the request itself. This happens on the media page and nowhere else. If you would rather it did not happen at all, do not open that page.</p>
+        <p>Other links on the site go out to other companies, and they only do anything if you choose to click them: <strong>Open in Maps</strong> on the contact page opens Google Maps, the <strong>video cards</strong> on the media page open YouTube, and our WhatsApp group link opens WhatsApp. Once you follow one of those links you are on their website and their own privacy policy applies. We deliberately do not embed a map, a video player or a chat widget anywhere in the page &mdash; the only thing that loads from elsewhere is the video still images described above.</p>
 
         <h2>Your rights</h2>
         <p>You can ask us to:</p>
@@ -2856,7 +2976,7 @@ window.TAIYABAH_PUBLIC = {
         <h2>Changes</h2>
         <p>If we change how the website handles information, we will update this page and change the date below.</p>
 
-        <p class="legal-meta">Last updated 26 August 2026 &middot; Bolton Central Islamic Society, registered charity 1041569.</p>
+        <p class="legal-meta">Last updated 27 August 2026 &middot; Bolton Central Islamic Society, registered charity 1041569.</p>
 
       </div>
     </div>
@@ -2962,6 +3082,10 @@ window.TAIYABAH_PUBLIC = {
   </div>
 </footer>
 
+<button type="button" class="goback" id="goBack" aria-label="Go back to the previous page">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+  <span>Back</span>
+</button>
 <div class="totop" id="toTop" aria-label="Back to top">↑</div>
 
 <script>
@@ -3737,12 +3861,39 @@ window.TAIYABAH_PUBLIC = {
   })();
 
 
+  /* Whether going back stays inside the site. history.length cannot answer
+     that — it counts entries from before the visitor arrived — and a simple
+     counter cannot either, because going FORWARD would decrement it. So every
+     entry this page creates carries its own position, and back/forward read
+     that position back out of the entry they land on. */
+  var histIdx = 0;
+
+  function updateBack(){
+    var b = document.getElementById('goBack');
+    if(b) b.classList.toggle('show', histIdx > 0);
+  }
+
   function showPage(name, opts){
     opts = opts || {};
     pages.forEach(p => p.classList.toggle('page-active', p.dataset.page === name));
     navLinks.forEach(l => { if(l.closest('.nav-stack') || l.closest('.topnav-list')) l.classList.toggle('active', l.dataset.nav === name); });
     if(!opts.noScroll) window.scrollTo({top:0, behavior:'auto'});
-    history.replaceState(null, '', name === 'home' ? '#' : '#'+name);
+    /* Navigation used to call replaceState, which OVERWRITES the current
+       history entry rather than adding one. The consequence was that the
+       browser back button — and the back gesture on a phone, which is how most
+       people navigate — did nothing between pages, or left the site entirely.
+       Pushing an entry makes both behave the way people expect.
+
+       opts.replace is for restoring a page rather than navigating to it (first
+       load, or responding to back/forward), so entries do not pile up. */
+    var url = (name === 'home' ? '#' : '#' + name);
+    if(opts.replace){
+      history.replaceState({ page: name, idx: histIdx }, '', url);
+    } else if(!(location.hash === url || (name === 'home' && location.hash === ''))){
+      histIdx++;
+      history.pushState({ page: name, idx: histIdx }, '', url);
+    }
+    updateBack();
     document.title = (name === 'home')
       ? 'Taiyabah Masjid, Bolton — Prayer Times, New Build & Community'
       : 'Taiyabah Masjid — ' + (PAGE_TITLES[name] || (name.charAt(0).toUpperCase() + name.slice(1)));
@@ -3752,6 +3903,37 @@ window.TAIYABAH_PUBLIC = {
       window.taiyabahLoadAvailability();
     }
   }
+  window.addEventListener('popstate', function(e){
+    var name = (e.state && e.state.page) ||
+               (location.hash ? location.hash.replace(/^#/, '') : 'home');
+    if(!document.querySelector('.page[data-page="' + name + '"]')) name = 'home';
+    histIdx = (e.state && typeof e.state.idx === 'number') ? e.state.idx : 0;
+    showPage(name, { replace: true });
+  });
+
+  (function(){
+    var backBtn = document.getElementById('goBack');
+    if(backBtn) backBtn.addEventListener('click', function(){ history.back(); });
+  })();
+
+  /* YouTube thumbnails. maxresdefault.jpg does not exist for every upload —
+     older or lower-resolution videos only have hqdefault — so each image falls
+     back once. If that fails too the image is hidden and the card keeps the
+     masjid's own plum panel underneath rather than showing a broken image. */
+  (function(){
+    var thumbs = document.querySelectorAll('img.media-thumb');
+    Array.prototype.forEach.call(thumbs, function(img){
+      img.addEventListener('error', function(){
+        if(img.getAttribute('data-fallback') === 'used'){
+          img.style.display = 'none';
+          return;
+        }
+        img.setAttribute('data-fallback', 'used');
+        img.src = img.src.replace('/maxresdefault.jpg', '/hqdefault.jpg');
+      });
+    });
+  })();
+
   navLinks.forEach(a => a.addEventListener('click', (e) => {
     e.preventDefault();
     const scrollTarget = a.dataset.scrollTo;
@@ -3765,7 +3947,7 @@ window.TAIYABAH_PUBLIC = {
     }
   }));
   const initial = (location.hash || '').replace('#','');
-  if(initial && document.querySelector('.page[data-page="'+initial+'"]')) showPage(initial, {noScroll:true});
+  if(initial && document.querySelector('.page[data-page="'+initial+'"]')) showPage(initial, {noScroll:true, replace:true});
 
   /* ---------------- header + burger ---------------- */
   const header = document.getElementById('siteHeader');
