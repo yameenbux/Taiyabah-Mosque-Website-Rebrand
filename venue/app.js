@@ -162,7 +162,7 @@
 
     function load() {
       return sb.from("hall_bookings")
-        .select("id,created_at,booking_date,session_slot,hall,first_name,last_name,address,phone,status,office_notes,handled_at")
+        .select("id,created_at,booking_date,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
         .order("booking_date", { ascending: true })
         .then(function (res) {
           if (res.error) {
@@ -225,7 +225,9 @@
       }
       list.innerHTML = items.map(function (r) {
         var isOpen = r.status === "new";
-        var hall = r.hall === "any" ? "Any available hall" : "Hall " + esc(r.hall);
+        var hall = "Hall " + esc(r.hall) +
+                   (String(r.hall) === "3" ? " (1st floor)" : " (ground floor)") +
+                   (r.kitchen ? " \u00B7 with kitchen" : " \u00B7 no kitchen");
         return '' +
           '<article class="bk-item s-' + esc(r.status) + '" data-id="' + esc(r.id) + '">' +
             '<div class="bk-when">' +
