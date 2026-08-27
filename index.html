@@ -830,6 +830,10 @@ window.TAIYABAH_PUBLIC = {
   .hh-notice b{font-weight:700;}
 
   .hh-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .hh-choose{display:flex;flex-direction:column;gap:14px;}
+  .hh-choice{display:flex;flex-direction:column;gap:7px;}
+  .hh-clabel{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .hh-sub{display:block;font-size:.66rem;font-weight:500;opacity:.72;letter-spacing:0;text-transform:none;}
   .hh-halls{display:flex;flex-wrap:wrap;gap:7px;}
   .hh-hall{
     font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;
@@ -2103,11 +2107,22 @@ window.TAIYABAH_PUBLIC = {
           </div>
 
           <div class="hh-controls">
-            <div class="hh-halls" id="hhHalls">
-              <button type="button" class="hh-hall is-on" data-hall="any">Any hall</button>
-              <button type="button" class="hh-hall" data-hall="1">Hall 1</button>
-              <button type="button" class="hh-hall" data-hall="2">Hall 2</button>
-              <button type="button" class="hh-hall" data-hall="3">Hall 3</button>
+            <div class="hh-choose">
+              <div class="hh-choice">
+                <span class="hh-clabel">Which hall?</span>
+                <div class="hh-halls" id="hhHalls">
+                  <button type="button" class="hh-hall" data-hall="1">Hall 1 <span class="hh-sub">Ground floor</span></button>
+                  <button type="button" class="hh-hall" data-hall="2">Hall 2 <span class="hh-sub">Ground floor</span></button>
+                  <button type="button" class="hh-hall" data-hall="3">Hall 3 <span class="hh-sub">1st floor</span></button>
+                </div>
+              </div>
+              <div class="hh-choice">
+                <span class="hh-clabel">Kitchen?</span>
+                <div class="hh-halls" id="hhKitchen">
+                  <button type="button" class="hh-hall" data-kitchen="yes">Including kitchen</button>
+                  <button type="button" class="hh-hall" data-kitchen="no">Without kitchen</button>
+                </div>
+              </div>
             </div>
             <label class="hh-sample"><input type="checkbox" id="hhSample"> Preview with sample data</label>
           </div>
@@ -2195,6 +2210,7 @@ window.TAIYABAH_PUBLIC = {
                 <div class="hf-sum-row"><span class="k">Date</span><span class="v" id="dnDate">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Slot</span><span class="v" id="dnSlot">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Hall</span><span class="v" id="dnHall">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Kitchen</span><span class="v" id="dnKitchen">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Contact</span><span class="v" id="dnPhone">&nbsp;</span></div>
               </div>
 
@@ -2652,7 +2668,8 @@ window.TAIYABAH_PUBLIC = {
 
         <h2>Who can see it</h2>
         <p>Booking requests are visible to masjid office staff who administer hall bookings, and to nobody else. The website itself cannot read them back — it can only add new ones.</p>
-        <p>The requests are stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes. Your details are not transferred outside the UK.</p>
+        <p>The requests are stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes.</p>
+        <p>So that a request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent for us by <strong>Resend</strong>, an email delivery service acting as our processor. It contains your name, your telephone number and the date, slot and hall you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
 
         <h2>How long we keep it</h2>
         <p>Booking requests are deleted <strong>six months after the date you asked about</strong>. Requests that were declined or cancelled are deleted after <strong>three months</strong>. We keep them that long so that we can deal with any question about a booking after the event, and no longer.</p>
@@ -3018,8 +3035,8 @@ window.TAIYABAH_PUBLIC = {
      look; it is off by default and paints a loud banner when on.
 
      Sessions are the unit of hire (morning / afternoon / evening), which is
-     the shape the real diary will need. Availability is per hall, hence the
-     hall filter — "any" means at least one hall free.
+     the shape the real diary will need. The venue is let as a whole, so one
+     confirmed booking closes that session regardless of which hall it was for.
   ------------------------------------------------------------------------ */
   (function(){
    try {
@@ -3038,7 +3055,8 @@ window.TAIYABAH_PUBLIC = {
     var view = new Date(); view.setDate(1); view.setHours(0,0,0,0);
     var firstAllowed = new Date(view);
     var selected = null;
-    var hall = 'any';
+    var hall = null;      // nothing chosen yet — both must be picked
+    var kitchen = null;
     var sample = false;
     var agreed = false;
 
@@ -3069,7 +3087,6 @@ window.TAIYABAH_PUBLIC = {
        has no way of knowing.
     --------------------------------------------------------------------- */
     var taken = null;                    // null = we do not know yet
-    var HALL_COUNT = 3;
 
     function iso(d){
       return d.getFullYear() + '-' +
@@ -3085,7 +3102,7 @@ window.TAIYABAH_PUBLIC = {
       var base = String(cfg.SUPABASE_URL).trim()
                    .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
 
-      fetch(base + '/rest/v1/hall_availability?select=booking_date,session_slot,hall', {
+      fetch(base + '/rest/v1/hall_availability?select=booking_date,session_slot', {
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
           'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
@@ -3096,10 +3113,7 @@ window.TAIYABAH_PUBLIC = {
       }).then(function(data){
         var map = {};
         (data || []).forEach(function(r){
-          var key = r.booking_date + '|' + r.session_slot;
-          if(!map[key]) map[key] = { specific: {}, any: 0 };
-          if(r.hall === 'any') map[key].any += 1;
-          else map[key].specific[r.hall] = true;
+          map[r.booking_date + '|' + r.session_slot] = true;
         });
         taken = map;
         render(); renderPanel();
@@ -3109,17 +3123,11 @@ window.TAIYABAH_PUBLIC = {
       });
     }
 
-    // How many of the three halls are gone for this date and slot, and is the
-    // one the visitor picked among them?
+    // The venue is let as a whole. One confirmed booking — any hall, kitchen or
+    // not — closes that session for everybody.
     function slotFree(d, slotKey){
-      if(taken === null) return null;                    // not known yet
-      var e = taken[iso(d) + '|' + slotKey];
-      if(!e) return true;                                 // nothing booked
-      var specific = Object.keys(e.specific).length;
-      var used = specific + e.any;
-      if(used >= HALL_COUNT) return false;                // every hall gone
-      if(hall !== 'any' && e.specific[hall]) return false; // their hall is gone
-      return true;
+      if(taken === null) return null;                     // not known yet
+      return !taken[iso(d) + '|' + slotKey];
     }
 
     function sampleState(d){
@@ -3168,12 +3176,20 @@ window.TAIYABAH_PUBLIC = {
         if(aw) aw.style.display = 'none';
         return;
       }
-      var hallLabel = (hall === 'any' ? 'any hall' : 'Hall ' + hall);
+      var hallLabel = hall ? ('Hall ' + hall) : 'the venue';
+      var chosen = !!(hall && kitchen);
       dEl.textContent = selected.toLocaleDateString('en-GB',
         { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-      sEl.textContent = sample
-        ? ('Sample availability for ' + hallLabel + '.')
-        : ('Availability for this date has not been published yet. You can still ask the office about ' + hallLabel + '.');
+      if(sample){
+        sEl.textContent = 'Sample availability for ' + hallLabel + '.';
+      } else if(taken === null){
+        sEl.textContent = 'We could not check availability just now. The office can confirm on the phone.';
+      } else if(!chosen){
+        sEl.textContent = 'Choose a hall and whether you need the kitchen to book a slot.';
+      } else {
+        sEl.textContent = hallLabel + ', ' +
+          (kitchen === 'yes' ? 'including the kitchen' : 'without the kitchen') + '.';
+      }
 
       sessionsFor(selected).forEach(function(row){
         var d = document.createElement('div');
@@ -3182,9 +3198,10 @@ window.TAIYABAH_PUBLIC = {
         // rather than claims. Never offer to book a slot we cannot confirm.
         var label = row.free === true ? 'Book' : (row.free === false ? 'Booked' : 'Ask');
         var state = row.free === true ? 'Available' : (row.free === false ? 'Booked' : 'Not published');
-        // Terms must be accepted before a slot can be booked. Asking a
-        // question about a date is not a booking, so it stays open.
-        var blocked = (row.free === false) || (row.free === true && !agreed);
+        // Terms must be accepted, and a hall and kitchen answer chosen, before
+        // a slot can be booked. Asking a question about a date is not a
+        // booking, so that stays open either way.
+        var blocked = (row.free === false) || (row.free === true && (!agreed || !chosen));
         d.innerHTML =
           '<span class="hs-t">' + row.s.label +
           ' <span style="font-weight:400;opacity:.6;">' + row.s.time + '</span>' +
@@ -3263,7 +3280,7 @@ window.TAIYABAH_PUBLIC = {
         session.label + ' slot \u00B7 ' + session.time;
       document.getElementById('hfWhen').textContent =
         selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-        + ' \u00B7 ' + (hall === 'any' ? 'any available hall' : 'Hall ' + hall);
+        + ' \u00B7 Hall ' + hall + (kitchen === 'yes' ? ' with kitchen' : ' without kitchen');
       clearErrors();
       showPanelView('form');
       document.getElementById('hfFirst').focus();
@@ -3286,13 +3303,19 @@ window.TAIYABAH_PUBLIC = {
       return digits.length >= 10 && digits.length <= 11 && digits.charAt(0) === '0';
     }
 
+    // Reached when a slot cannot be booked from here — either it is already
+    // taken, or availability could not be checked. Say which; they are very
+    // different situations for the person reading it.
     function requestSlot(session, free){
       var msg = document.getElementById('hhBookMsg');
       if(!msg) return;
-      msg.textContent = 'Online booking isn\'t connected yet, so this hasn\'t been reserved and no payment has been taken. '
-        + 'To hold the ' + session.label.toLowerCase() + ' slot ('  + session.time + ') on '
-        + selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' })
-        + ', please call the office on 01204 535 997.';
+      var when = selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' })
+                 + ', ' + session.label.toLowerCase() + ' (' + session.time + ')';
+      msg.textContent = (free === false)
+        ? ('The venue is already booked for ' + when + '. The office may be able to '
+           + 'suggest another date \u2014 call 01204 535 997.')
+        : ('We could not check whether ' + when + ' is free, so nothing has been '
+           + 'requested. Please call the office on 01204 535 997 and they will check for you.');
       msg.style.display = '';
     }
 
@@ -3408,7 +3431,9 @@ window.TAIYABAH_PUBLIC = {
         document.getElementById('dnDate').textContent  =
           selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
         document.getElementById('dnSlot').textContent  = pendingSlot.label + ' \u00B7 ' + pendingSlot.time;
-        document.getElementById('dnHall').textContent  = (hall === 'any' ? 'Any available hall' : 'Hall ' + hall);
+        document.getElementById('dnHall').textContent  = 'Hall ' + hall +
+          (hall === '3' ? ' (1st floor)' : ' (ground floor)');
+        document.getElementById('dnKitchen').textContent = (kitchen === 'yes' ? 'Included' : 'Not included');
         document.getElementById('dnPhone').textContent = phone;
         document.getElementById('dnPrice').textContent = money(priceFor(pendingSlot.key, isMember));
         if(msgHtml) document.getElementById('dnMsg').innerHTML = msgHtml;
@@ -3456,6 +3481,7 @@ window.TAIYABAH_PUBLIC = {
           booking_date: isoDate,
           session_slot: pendingSlot.key,
           hall:         hall,
+          kitchen:      (kitchen === 'yes'),
           first_name:   first,
           last_name:    last,
           address:      addr,
@@ -3507,6 +3533,16 @@ window.TAIYABAH_PUBLIC = {
         });
       }
     );
+    document.getElementById('hhKitchen').addEventListener('click', function(e){
+      var b = e.target.closest('.hh-hall');
+      if(!b) return;
+      kitchen = b.dataset.kitchen;
+      Array.prototype.forEach.call(this.querySelectorAll('.hh-hall'), function(x){
+        x.classList.toggle('is-on', x === b);
+      });
+      renderPanel();
+    });
+
     document.getElementById('hhHalls').addEventListener('click', function(e){
       var b = e.target.closest('.hh-hall');
       if(!b) return;
