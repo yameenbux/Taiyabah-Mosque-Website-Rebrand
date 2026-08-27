@@ -212,6 +212,19 @@ window.TAIYABAH_PUBLIC = {
   @media (max-width:1300px){ .hu-upcoming{display:none;} }
 
   /* ---------- ACCOUNT / BASKET / LOGIN / REGISTER (placeholders — live once accounts ship) ---------- */
+  .acct-hello{
+    display:none;align-items:center;gap:9px;margin-right:16px;text-decoration:none;
+    padding:6px 14px 6px 11px;border-radius:999px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(198,162,76,.34);
+    color:#F3EFE3;transition:.2s ease;max-width:230px;
+  }
+  .acct-hello:hover{background:var(--gold-bright);border-color:var(--gold-bright);color:var(--brand-900);}
+  .acct-hello svg{width:16px;height:16px;flex-shrink:0;color:var(--gold-bright);}
+  .acct-hello:hover svg{color:var(--brand-900);}
+  .acct-hello .ah-t{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
+  .acct-hello .ah-k{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
+  .acct-hello .ah-v{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  @media (min-width:1080px){ .acct-hello:not([hidden]){display:inline-flex;} }
   .acct-icons{display:none;align-items:center;gap:19px;margin-right:8px;}
   .acct-btn{
     display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;
@@ -1265,23 +1278,28 @@ window.TAIYABAH_PUBLIC = {
       <div class="hu-upcoming" id="huUpcoming"></div>
     </div>
 
+    <a class="acct-hello" href="account/" id="hdrHello" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5"/></svg>
+      <span class="ah-t"><span class="ah-k">Welcome</span><span class="ah-v" id="hdrHelloName">&nbsp;</span></span>
+    </a>
+
     <div class="acct-icons">
-      <button type="button" class="acct-btn" data-coming-soon="Account">
+      <a class="acct-btn" href="account/" id="hdrAccount">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5"/></svg>
         <span>Account</span>
-      </button>
+      </a>
       <button type="button" class="acct-btn" data-coming-soon="Basket">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 9z"/><path d="M8 9V7a4 4 0 018 0v2"/></svg>
         <span>Basket</span>
       </button>
-      <button type="button" class="acct-btn" data-coming-soon="Login">
+      <a class="acct-btn" href="account/" id="hdrLogin">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9"/></svg>
         <span>Login</span>
-      </button>
-      <button type="button" class="acct-btn" data-coming-soon="Register">
+      </a>
+      <a class="acct-btn" href="account/" id="hdrRegister">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M18 8v4M20 10h-4"/></svg>
         <span>Register</span>
-      </button>
+      </a>
     </div>
 
     <a class="hu-donate" data-nav="newbuild" data-scroll-to="give">
@@ -3799,6 +3817,65 @@ window.TAIYABAH_PUBLIC = {
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
   }
+  /* ---------------- Shop account: who is signed in? ----------------
+     Deliberately does NOT load the Supabase library. The whole job here is to
+     read the session the account area already stored and show a name, so it
+     reads localStorage and decodes the token's own expiry claim. Pulling in
+     200KB of library on every page view to render one word would be a poor
+     trade.
+
+     This is display only. Nothing here grants access to anything — Row Level
+     Security decides that, server-side, on every request. A forged localStorage
+     entry would change the greeting and nothing else. */
+  (function(){
+    try {
+      var cfg = window.TAIYABAH_PUBLIC || {};
+      if(!cfg.SUPABASE_URL || cfg.SUPABASE_URL.indexOf('PASTE_') !== -1) return;
+
+      var host = cfg.SUPABASE_URL.replace(/^https?:\/\//,'').split('.')[0];
+      if(!host) return;
+      var raw = window.localStorage.getItem('sb-' + host + '-auth-token');
+      if(!raw) return;
+
+      var session = JSON.parse(raw);
+      var token = session && session.access_token;
+      if(!token) return;
+
+      var parts = token.split('.');
+      if(parts.length < 2) return;
+      var pad = parts[1].replace(/-/g,'+').replace(/_/g,'/');
+      while(pad.length % 4) pad += '=';
+      var claims = JSON.parse(atob(pad));
+
+      // An expired token means signed out, whatever localStorage still holds.
+      if(!claims.exp || claims.exp * 1000 <= Date.now()) return;
+
+      var name = (session.user && session.user.user_metadata &&
+                  session.user.user_metadata.full_name) ||
+                 (session.user && session.user.email) || claims.email;
+      if(!name) return;
+
+      // First name only — the header has no room for "Muhammad Abdur-Rahman".
+      var first = String(name).trim().split(/\s+/)[0];
+
+      var hello = document.getElementById('hdrHello');
+      var nameEl = document.getElementById('hdrHelloName');
+      if(hello && nameEl){
+        nameEl.textContent = first;
+        hello.hidden = false;
+        hello.setAttribute('title', 'Signed in as ' + name);
+      }
+      // Sign-in and registration prompts are noise once you are signed in.
+      ['hdrLogin','hdrRegister'].forEach(function(id){
+        var n = document.getElementById(id);
+        if(n) n.style.display = 'none';
+      });
+    } catch(e){
+      // A greeting must never take the page down with it.
+      if(window.console && console.warn) console.warn('account greeting unavailable:', e);
+    }
+  })();
+
   document.querySelectorAll('[data-coming-soon]').forEach(btn => {
     btn.addEventListener('click', () => showToast(`${btn.dataset.comingSoon} — launching soon.`));
   });
