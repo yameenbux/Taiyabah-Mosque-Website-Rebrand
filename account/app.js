@@ -86,10 +86,23 @@
     var btn = el("register-submit");
     busy(btn, true);
 
+    // Where the confirmation link should bring them back to.
+    //
+    // Without this, Supabase sends them to the project's Site URL, which
+    // defaults to http://localhost:3000 — a developer's machine that no
+    // customer can reach. Deriving it from wherever this page is actually
+    // being served means it keeps working on the staging address and after
+    // the domain moves, with no code change.
+    //
+    // The address still has to be allow-listed under
+    // Authentication -> URL Configuration -> Redirect URLs, or Supabase
+    // silently falls back to the Site URL.
+    var backHere = window.location.href.split("#")[0].split("?")[0];
+
     sb.auth.signUp({
       email: email,
       password: password,
-      options: { data: { full_name: name } }
+      options: { data: { full_name: name }, emailRedirectTo: backHere }
     }).then(function (res) {
       busy(btn, false, "Create account");
 
@@ -208,10 +221,27 @@
 
   // --- what to show on arrival ----------------------------------------------
   // detectSessionInUrl handles somebody arriving from the confirmation email.
+  // An expired or already-used confirmation link comes back as an error in the
+  // URL fragment. Say so plainly instead of showing a blank register form.
+  function linkError() {
+    var frag = (window.location.hash || "").replace(/^#/, "");
+    if (!frag) return null;
+    var params = new URLSearchParams(frag);
+    var code = params.get("error_code") || params.get("error");
+    if (!code) return null;
+    var desc = (params.get("error_description") || "").replace(/\+/g, " ");
+    if (/expired/i.test(code) || /expired/i.test(desc)) {
+      return "That confirmation link has expired. Create your account again and we will send a fresh one.";
+    }
+    return "That confirmation link didn't work. Create your account again and we will send a fresh one.";
+  }
+
   sb.auth.getSession().then(function (res) {
     var session = res.data && res.data.session;
     if (session && session.user) { renderDone(session.user); return; }
     show("view-register");
+    var problem = linkError();
+    if (problem) setError("register-error", problem);
   }).catch(function () { show("view-register"); });
 
 })();
