@@ -1,14 +1,11 @@
-<div align="center">
-
 # Taiyabah Masjid — Website, Madrasah Portal & Venue Portal
 
-**Prayer times, the new build appeal, community information, hall hire
-bookings, and two staff portals for Taiyabah Masjid, Bolton.**
+**Prayer times, the new build appeal, community information, hall hire bookings,
+and two staff portals for Taiyabah Masjid, Bolton.**
 
-Bolton Central Islamic Society · Registered charity 1041569
-31a Draycott Street, Bolton BL1 8HD
+Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Street, Bolton BL1 8HD
 
-</div>
+![The Taiyabah Masjid website home page](docs/screenshot-home.jpg)
 
 ## What this is
 
@@ -60,6 +57,81 @@ template uses that `build.py` does not define. **Exit 0 is clean.**
 
 Images and fonts are base64 data URIs substituted at build time from
 `/tmp/*_b64.txt`. Nothing is fetched from another server at runtime.
+
+---
+
+## Tech stack
+
+| Layer | What's used | Why |
+| --- | --- | --- |
+| **Frontend** | HTML5, CSS3, vanilla JavaScript | No framework and no bundler. One self-contained file a browser runs directly — fewer moving parts on a site a volunteer may have to edit years from now |
+| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 20 pages |
+| **Routing** | Hash-based, single document | Every page is one HTTP response. No server, no router library, and the whole site works from a file:// URL |
+| **Build** | Python 3, standard library only | Substitutes `{{PLACEHOLDER}}` tokens into the template. `verify_structure.py` runs first and refuses to build a broken document |
+| **Typography** | Fraunces, Hanken Grotesk, Amiri — self-hosted woff2 | Google Fonts would send every visitor's IP to Google before they consented. Subset with fontTools; Arabic keeps its full shaping tables |
+| **Images** | Pillow — resize, unsharp mask, base64 inline | Everything is a data URI, so the page makes no image requests at all |
+| **Backend** | Supabase — Postgres 15, GoTrue auth, PostgREST | Managed Postgres in **London**, so booking data never leaves the UK |
+| **Access control** | Row Level Security + column-level `GRANT` | The anon key can insert seven named columns and cannot read a single row back. Office staff can change three columns and no others |
+| **Authentication** | Supabase Auth with TOTP two-factor | Roles live in their own table, never on the user's own row, so nobody can promote themselves |
+| **Notifications** | Supabase Edge Functions (Deno) + Resend | A booking that arrives on a Friday night should not wait until Tuesday |
+| **Testing** | Playwright (Python) for the browser, `psql` for the database | Policies are proved against a real Postgres with a Supabase stub *before* they reach the live project |
+| **Hosting** | GitHub Pages | Static; a push to `main` is the deploy |
+
+## What it looks like
+
+**Hall hire** — real availability read from the database, two sessions a day, a
+twelve-month horizon, and terms that must be agreed before a slot unlocks.
+
+![The hall hire booking calendar, showing session availability for a chosen date](docs/screenshot-hallhire.jpg)
+
+**The venue portal** — where the office works through requests. Staff signed in
+here can see bookings and provably nothing else; they may change a request's
+status and notes, but never the applicant's own details.
+
+![The venue hire portal listing new booking requests](docs/screenshot-venue-portal.jpg)
+
+## Engineering notes
+
+Each of these came from something that actually went wrong.
+
+**Nothing reaches another company.** The site sets no cookies and makes zero
+third-party requests — fonts self-hosted, the Google Maps embed replaced with an
+address card, YouTube thumbnails removed. The one exception is the hall hire
+page, which asks the booking database which dates are taken; that fetch is
+deferred so that reading the prayer times contacts nobody. All of this is
+asserted by a test against the rendered page, so a future change that
+reintroduces a tracker fails the build rather than the privacy notice.
+
+**A structural checker that runs before every build.** One missing `</div>`
+once left seven pages nested inside another. Navigation highlighted correctly,
+the URL changed, and nothing rendered — because the pages were still in the DOM,
+which is exactly what the tests were checking. `verify_structure.py` now checks
+div balance per page and document-wide, dead `data-nav` targets, unresolved
+anchors, duplicate ids, and placeholders `build.py` does not define.
+
+**Special category data that is asked for and then thrown away.** The booking
+form asks whether the enquirer is a masjid member, because that decides the rate
+quoted. Membership of a mosque discloses religious belief — Article 9 data. The
+answer is used on screen and never transmitted; the resulting price is withheld
+too, since with two possible figures storing one would disclose the answer just
+as plainly.
+
+**Least privilege between two audiences sharing one login system.** Venue office
+staff and madrasah staff sign in through the same Supabase project, but a
+`hall_office` role sees bookings and provably nothing else — a test asserts they
+can read zero other profiles and zero other role rows.
+
+**Failing honestly when the truth is unknown.** If availability cannot be
+fetched, every date stays "unknown" rather than claiming to be free. If a
+booking cannot be submitted, the screen says so and gives the office number
+instead of showing a false confirmation. Both paths are tested by aborting the
+request.
+
+**Tests that ask the right question.** Three bugs shipped because tests checked
+the DOM rather than what a person can see. The suite now attaches
+`page.on("pageerror")` (console listeners do not catch uncaught exceptions),
+navigates by clicking real links rather than calling the hoisted `showPage()`,
+and asserts visibility and rendered height rather than presence.
 
 ---
 
@@ -205,6 +277,31 @@ In this order:
 
 ---
 
-<div align="center">
-<sub>Designed &amp; built by <a href="https://ysbdesigns.uk">YSB Designs</a></sub>
-</div>
+## About this project
+
+Part of a wider *Taiyabah Masjid — Complete Overhaul*, alongside the
+[prayer times app](https://github.com/yameenbux/Taiyabah-Mosque-App) and the
+[home smart screen](https://github.com/yameenbux/Taiyabah-Masjid-HomeSmartScreen).
+Branding, fonts and prayer data are shared with those sibling repositories
+rather than reinvented here.
+
+## Credits
+
+Built for Bolton Central Islamic Society. The Taiyabah Masjid name, the masjid's
+logo and the prayer timetable belong to the charity — the timetable is the
+masjid's own published times, not calculated by this site and not taken from a
+third-party aggregator.
+
+Typefaces are [Fraunces](https://github.com/undercasetype/Fraunces),
+[Hanken Grotesk](https://github.com/globalfoundries/HankenGrotesk) and
+[Amiri](https://github.com/aliftype/amiri), all under the SIL Open Font License
+1.1, self-hosted here as that licence expressly permits. Photography of the
+masjid and the new build was supplied by the masjid. Shop category images are
+stock photography standing in until the masjid's own product photographs are
+available.
+
+Bolton Council of Mosques contact details on the funeral services page are taken
+from BCoM's own published information and should be confirmed with the masjid
+before they are relied upon.
+
+Designed and built by **[YSB Designs](https://ysbdesigns.uk)**.
