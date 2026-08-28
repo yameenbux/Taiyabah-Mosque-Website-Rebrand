@@ -273,7 +273,7 @@ window.TAIYABAH_PUBLIC = {
   .nav-panel{
     position:fixed;top:0;right:0;height:100%;width:min(380px,88vw);
     background:linear-gradient(165deg,var(--brand-900),#22071a 75%);
-    z-index:1150;padding:96px 32px 28px;
+    z-index:1150;padding:84px 30px 28px;
     transform:translateX(100%);
     /* visibility, not just transform. Sliding the panel off-screen leaves its
        links focusable and in the accessibility tree, so a keyboard user tabbing
@@ -288,13 +288,18 @@ window.TAIYABAH_PUBLIC = {
     display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(0,0,0,.35);overflow-y:auto;
   }
   .nav-panel.open{transform:translateX(0);visibility:visible;transition:transform .5s cubic-bezier(.77,0,.18,1), visibility 0s;}
+  /* These two were eating the top third of the drawer. They are shortcuts, not
+     the menu — the page list is what people came for, so they are sized to sit
+     above it rather than compete with it. */
   .nav-app-cta{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
-    background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:13px 15px;margin-bottom:20px;
+    background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.35);
+    border-radius:10px;padding:9px 13px;margin-bottom:9px;
   }
-  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.82rem;font-family:"Fraunces",serif;}
-  .nav-app-cta span{display:block;color:rgba(243,239,227,.65);font-size:.7rem;margin-top:2px;}
-  .nav-app-cta .go{color:var(--gold-bright);font-size:1.1rem;}
+  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.78rem;font-family:"Fraunces",serif;line-height:1.25;}
+  .nav-app-cta span{display:block;color:rgba(243,239,227,.6);font-size:.66rem;margin-top:1px;line-height:1.3;}
+  .nav-app-cta .go{color:var(--gold-bright);font-size:1rem;}
+  .nav-live-cta{margin-bottom:16px;}
   .nav-live-cta{background:rgba(180,50,50,.08);border-color:rgba(220,90,90,.3);}
   .nav-live-cta strong{display:flex;align-items:center;gap:7px;}
   .live-dot{width:7px;height:7px;border-radius:50%;background:#E15B5B;display:inline-block;box-shadow:0 0 0 rgba(225,91,91,.6);animation:livepulse 2s infinite;}
@@ -304,14 +309,19 @@ window.TAIYABAH_PUBLIC = {
     display:flex;align-items:center;gap:12px;padding:13px 4px;color:#F3EFE3;font-family:"Fraunces",serif;
     font-size:1rem;border-bottom:1px solid rgba(255,255,255,.07);transition:.25s ease;cursor:pointer;
   }
-  .nav-stack li a .num{font-family:"Hanken Grotesk",sans-serif;font-size:.66rem;color:var(--gold-bright);font-weight:700;width:18px;}
+  /* An icon says what the section is; 01..11 only said how long the list was. */
+  .nav-stack li a .nav-ic{
+    width:21px;height:21px;flex:0 0 21px;color:var(--gold-bright);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .nav-stack li a .nav-ic svg{width:19px;height:19px;display:block;}
   .nav-stack li a:hover, .nav-stack li a.active{color:var(--gold-bright);padding-left:10px;}
   .nav-stack li.featured a{color:var(--gold-bright);}
   /* Account controls inside the burger drawer. Below 1080px this is the ONLY
      route to the account area, so it sits above the page list rather than
      under it. Four across matches the header, and each tile clears 44px in
      both directions. */
-  .nav-acct{margin:2px 0 20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .nav-acct{margin:0 0 16px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.1);}
   .nav-acct-hello{
     display:none;align-items:center;gap:10px;margin-bottom:12px;text-decoration:none;
     padding:10px 14px;border-radius:12px;
@@ -327,8 +337,8 @@ window.TAIYABAH_PUBLIC = {
      empty columns and push the remaining tiles into a corner. */
   .nav-acct-row.is-signed-in{grid-template-columns:repeat(2,1fr);}
   .na-btn{
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-    min-height:66px;padding:10px 2px;border-radius:12px;text-decoration:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+    min-height:60px;padding:9px 2px;border-radius:11px;text-decoration:none;cursor:pointer;
     background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
     color:rgba(243,239,227,.82);font-family:inherit;transition:.2s ease;
   }
@@ -1297,28 +1307,6 @@ window.TAIYABAH_PUBLIC = {
   }
   .foot-credit a:hover{border-color:var(--gold-bright);}
 
-  /* Sits opposite the back-to-top control, so the two read as a pair. Appears
-     only once the visitor has actually navigated somewhere, because a back
-     button with nowhere to go is worse than none. */
-  .goback{
-    position:fixed;bottom:24px;left:24px;z-index:900;
-    display:inline-flex;align-items:center;gap:7px;
-    padding:0 18px 0 14px;height:46px;border-radius:999px;
-    background:var(--brand-900);color:#F3EFE3;
-    border:1px solid rgba(198,162,76,.42);
-    font-family:inherit;font-size:.82rem;font-weight:700;letter-spacing:.01em;
-    cursor:pointer;box-shadow:var(--shadow);
-    opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;
-  }
-  .goback.show{opacity:1;visibility:visible;transform:translateY(0);}
-  .goback svg{width:15px;height:15px;color:var(--gold-bright);}
-  .goback:hover{background:var(--gold-bright);color:var(--brand-900);border-color:var(--gold-bright);}
-  .goback:hover svg{color:var(--brand-900);}
-  .goback:focus-visible{outline:2px solid var(--gold-bright);outline-offset:3px;}
-  @media (max-width:520px){
-    .goback{bottom:20px;left:16px;height:42px;padding:0 15px 0 12px;font-size:.78rem;}
-  }
-  @media (prefers-reduced-motion:reduce){ .goback{transition:none;} }
 
   .totop{position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;box-shadow:var(--shadow);}
   .totop.show{opacity:1;visibility:visible;transform:translateY(0);}
@@ -1332,7 +1320,7 @@ window.TAIYABAH_PUBLIC = {
   }
 
   @media print{
-    header,.nav-overlay,.nav-panel,.totop,.goback{display:none !important;}
+    header,.nav-overlay,.nav-panel,.totop{display:none !important;}
     body{background:#fff;color:#000;}
     table.pt th{background:#000 !important;color:#fff !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
   }
@@ -1506,17 +1494,17 @@ window.TAIYABAH_PUBLIC = {
     </div>
   </div>
   <ul class="nav-stack">
-    <li><a data-nav="home" class="active"><span class="num">01</span> Home</a></li>
-    <li class="featured"><a data-nav="newbuild"><span class="num">02</span> New Build</a></li>
-    <li><a data-nav="prayer"><span class="num">03</span> Prayer Times</a></li>
-    <li><a data-nav="about"><span class="num">04</span> About Us</a></li>
-    <li><a data-nav="madrasah"><span class="num">05</span> Madrasah</a></li>
-    <li><a data-nav="getapp"><span class="num">06</span> Get the App</a></li>
-    <li><a data-nav="shop"><span class="num">07</span> Shop</a></li>
-    <li><a data-nav="articles"><span class="num">08</span> Articles</a></li>
-    <li><a data-nav="services"><span class="num">09</span> Services</a></li>
-    <li><a data-nav="media"><span class="num">10</span> Media</a></li>
-    <li><a data-nav="contact"><span class="num">11</span> Contact Us</a></li>
+    <li><a data-nav="home" class="active"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.6 12 3.6l8.5 7v9.3a1 1 0 0 1-1 1h-4.7v-6.2H9.2v6.2H4.5a1 1 0 0 1-1-1z"/></svg></span>Home</a></li>
+    <li class="featured"><a data-nav="newbuild"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.4 21h17.2"/><path d="M7.6 21V4.2h11"/><path d="M15.6 4.2v3.9"/><path d="M14.1 8.1h3"/><path d="M7.6 8.4 12 4.2"/></svg></span>New Build</a></li>
+    <li><a data-nav="prayer"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.1V12l3.4 2"/></svg></span>Prayer Times</a></li>
+    <li><a data-nav="about"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.7 14.3c2.7.3 4.8 2.3 4.8 5.2"/></svg></span>About Us</a></li>
+    <li><a data-nav="madrasah"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>Madrasah</a></li>
+    <li><a data-nav="getapp"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.6" y="2.2" width="10.8" height="19.6" rx="2.4"/><path d="M10.6 18.6h2.8"/></svg></span>Get the App</a></li>
+    <li><a data-nav="shop"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></span>Shop</a></li>
+    <li><a data-nav="articles"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 4.5h15v14.2a.8.8 0 0 1-.8.8H5.3a.8.8 0 0 1-.8-.8z"/><path d="M7.8 8.6h8.4"/><path d="M7.8 12.2h8.4"/><path d="M7.8 15.8h5"/></svg></span>Articles</a></li>
+    <li><a data-nav="services"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3.5h6v3.4l2 3.2v8.4a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-8.4l2-3.2z"/><path d="M7.5 15c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"/></svg></span>Services</a></li>
+    <li><a data-nav="media"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.2"/><path d="M10.6 9.3 15.4 12l-4.8 2.7z"/></svg></span>Media</a></li>
+    <li><a data-nav="contact"><span class="nav-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7.2l9 6 9-6"/></svg></span>Contact Us</a></li>
   </ul>
   <div class="panel-foot">
     <p>31a Draycott Street, Bolton, BL1 8HD &middot; 01204 535 997</p>
@@ -2875,7 +2863,7 @@ window.TAIYABAH_PUBLIC = {
       </div>
       <div class="svc-aside">
         <div class="cform-divider">Or write to us</div>
-        <p class="cform-lead">Prefer not to call? Send a short message below and an imam will get back to you.</p>
+        <p class="cform-lead">Prefer not to call? Fill this in and your email app opens with the message ready to send to the office.</p>
         <form class="cform" id="imamForm">
           <div class="cf-row">
             <label for="im-name">Name</label>
@@ -2889,8 +2877,8 @@ window.TAIYABAH_PUBLIC = {
             <label for="im-message">Message</label>
             <textarea id="im-message" name="message" required></textarea>
           </div>
-          <button type="submit" class="btn btn-gold cf-submit">Send Message</button>
-          <p class="cf-note">You'll receive a reply by email or phone. All messages are treated as confidential.</p>
+          <button type="submit" class="btn btn-gold cf-submit">Open my email app</button>
+          <p class="cf-note">Your email app opens with everything filled in &mdash; <strong>you still need to press send</strong>. If nothing happens, your device has no email app set up: please ring the office instead. Messages are treated as confidential and an imam will reply by email or phone.</p>
         </form>
       </div>
       </div>
@@ -3149,10 +3137,6 @@ window.TAIYABAH_PUBLIC = {
   </div>
 </footer>
 
-<button type="button" class="goback" id="goBack" aria-label="Go back to the previous page">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-  <span>Back</span>
-</button>
 <div class="totop" id="toTop" aria-label="Back to top">↑</div>
 
 <script>
@@ -3928,18 +3912,6 @@ window.TAIYABAH_PUBLIC = {
   })();
 
 
-  /* Whether going back stays inside the site. history.length cannot answer
-     that — it counts entries from before the visitor arrived — and a simple
-     counter cannot either, because going FORWARD would decrement it. So every
-     entry this page creates carries its own position, and back/forward read
-     that position back out of the entry they land on. */
-  var histIdx = 0;
-
-  function updateBack(){
-    var b = document.getElementById('goBack');
-    if(b) b.classList.toggle('show', histIdx > 0);
-  }
-
   function showPage(name, opts){
     opts = opts || {};
     pages.forEach(p => p.classList.toggle('page-active', p.dataset.page === name));
@@ -3955,12 +3927,10 @@ window.TAIYABAH_PUBLIC = {
        load, or responding to back/forward), so entries do not pile up. */
     var url = (name === 'home' ? '#' : '#' + name);
     if(opts.replace){
-      history.replaceState({ page: name, idx: histIdx }, '', url);
+      history.replaceState({ page: name }, '', url);
     } else if(!(location.hash === url || (name === 'home' && location.hash === ''))){
-      histIdx++;
-      history.pushState({ page: name, idx: histIdx }, '', url);
+      history.pushState({ page: name }, '', url);
     }
-    updateBack();
     document.title = (name === 'home')
       ? 'Taiyabah Masjid, Bolton — Prayer Times, New Build & Community'
       : 'Taiyabah Masjid — ' + (PAGE_TITLES[name] || (name.charAt(0).toUpperCase() + name.slice(1)));
@@ -3974,14 +3944,8 @@ window.TAIYABAH_PUBLIC = {
     var name = (e.state && e.state.page) ||
                (location.hash ? location.hash.replace(/^#/, '') : 'home');
     if(!document.querySelector('.page[data-page="' + name + '"]')) name = 'home';
-    histIdx = (e.state && typeof e.state.idx === 'number') ? e.state.idx : 0;
     showPage(name, { replace: true });
   });
-
-  (function(){
-    var backBtn = document.getElementById('goBack');
-    if(backBtn) backBtn.addEventListener('click', function(){ history.back(); });
-  })();
 
   /* YouTube thumbnails. maxresdefault.jpg does not exist for every upload —
      older or lower-resolution videos only have hqdefault — so each image falls
@@ -4159,7 +4123,18 @@ window.TAIYABAH_PUBLIC = {
 
   document.getElementById('year').textContent = new Date().getFullYear();
 
-  /* ---------------- Imams' Advice: contact form (mailto, no backend) ---------------- */
+  /* ---------------- Imams' Advice: contact form ----------------
+     INTERIM. This hands the message to the visitor's own email app; it does not
+     send anything itself, and nothing is stored. Two ways that fails: they may
+     never press send, and a device with no mail app configured does nothing at
+     all. The wording above the form now says both of those plainly rather than
+     promising delivery.
+
+     Phase 2 replaces this with an Edge Function that emails the office and
+     keeps no copy — deliberately NOT a database table, because "ask the imam"
+     collects marital, health and bereavement matters that would be special
+     category data the moment they were stored. It waits for the same DNS work
+     as the booking alerts. */
   const imamForm = document.getElementById('imamForm');
   if(imamForm){
     imamForm.addEventListener('submit', (e) => {
@@ -4169,7 +4144,7 @@ window.TAIYABAH_PUBLIC = {
       const message = document.getElementById('im-message').value.trim();
       const subject = encodeURIComponent('Ask the Imam — message from ' + (name || 'the website'));
       const body = encodeURIComponent('Name: ' + name + '\nContact: ' + contact + '\n\nMessage:\n' + message);
-      showToast('Opening your email app to send this to the masjid office…');
+      showToast('Opening your email app — remember to press send.');
       window.location.href = 'mailto:info@taiyabahmasjid.com?subject=' + subject + '&body=' + body;
     });
   }
