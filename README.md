@@ -1,7 +1,8 @@
-# Taiyabah Masjid — Website, Madrasah Portal & Venue Portal
+# Taiyabah Masjid — Website, Accounts & Staff Portals
 
-**Prayer times, the new build appeal, community information, hall hire bookings,
-and two staff portals for Taiyabah Masjid, Bolton.**
+**Prayer times, the new build appeal and donations, community information, hall
+hire bookings, visitor accounts and two staff portals for Taiyabah Masjid,
+Bolton.**
 
 Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Street, Bolton BL1 8HD
 
@@ -10,15 +11,16 @@ Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Str
 ## What this is
 
 Taiyabah Masjid has served Bolton's Muslim community since 1967 — one of the
-first masjids in the city. This repository holds three things:
+first masjids in the city. This repository holds four things:
 
 | | |
 |---|---|
-| **The public website** | Prayer times, the new build appeal, services, the madrasah, hall hire with online booking, and contact details. |
+| **The public website** | Prayer times, the new build appeal and donations, services, the madrasah, hall hire with online booking, and contact details. |
+| **`account/`** | Where a visitor registers, confirms their email and signs in. Public-facing, ready for the shop and the membership area. |
 | **`portal/`** | The **Madrasah Portal** — authenticated, for parents, teaching staff and administrators. Reached from the Madrasah page. |
 | **`venue/`** | The **Venue Hire Portal** — authenticated, for the office staff who handle bookings at the Taiyabah Centre. Reached from the Hall Hire page. |
 
-Both portals share one Supabase project, one set of accounts and one
+All three sign-in areas share one Supabase project, one set of accounts and one
 two-factor setup, but a person only sees what their role allows.
 
 > **The site is not live yet.** `robots.txt` currently blocks all search
@@ -30,18 +32,32 @@ two-factor setup, but a person only sees what their role allows.
 
 ```
 index_template.html     the SOURCE of the website — edit this, never index.html
-build.py                substitutes {{PLACEHOLDERS}} -> writes index.html
+404_template.html       the source of the 404 page
+build.py                substitutes {{PLACEHOLDERS}} -> writes index.html and 404.html
 verify_structure.py     static checks; run BEFORE build.py, every time
 index.html              GENERATED. Do not edit by hand.
+404.html                GENERATED. Do not edit by hand.
 
 robots.txt              currently blocks all crawlers (staging)
 robots.live.txt         rename to robots.txt on launch day
 sitemap.xml
-404.html
+og-image.jpg            link preview picture — must sit in the web ROOT
 
+account/                Visitor accounts  (index.html, app.js, config.js)
 portal/                 Madrasah Portal   (index.html, app.js, config.js)
 venue/                  Venue Hire Portal (index.html, app.js, config.js)
+assets/                 icon-192.png and logo-cream.png (used by 404.html)
+
+DEPLOY.md               what gets uploaded and what never does
+DONATIONS.md            the Stripe setup, and why Gift Aid is not on the site
+brand/                  logo and icon files for Stripe, and the script that
+                        generates them from assets/ — never uploaded
+docs/                   screenshots for this README — never uploaded
 ```
+
+`DEPLOY.md` is the file to read before putting anything on a server. Roughly half
+of what is in this repository is source and tooling that must **not** be
+uploaded.
 
 ### Building
 
@@ -54,6 +70,13 @@ pages nested inside another one — the navigation highlighted correctly, the UR
 changed, and nothing rendered. It checks div balance per page and document-wide,
 dead `data-nav` targets, unresolved anchors, duplicate ids, and placeholders the
 template uses that `build.py` does not define. **Exit 0 is clean.**
+
+It also prints a loud, unmissable banner for two things that would otherwise
+ship silently and cost the masjid money: a donate link still pointing at the old
+WordPress site, and a Stripe link containing `test_`. A test-mode link is a
+complete, convincing checkout that takes nothing at all, and nothing on screen
+would tell you. Neither is fatal — the build still runs, so the site can be
+previewed — but you will not forget.
 
 Images and fonts are base64 data URIs substituted at build time from
 `/tmp/*_b64.txt`. Nothing is fetched from another server at runtime.
@@ -74,8 +97,9 @@ Images and fonts are base64 data URIs substituted at build time from
 | **Access control** | Row Level Security + column-level `GRANT` | The anon key can insert seven named columns and cannot read a single row back. Office staff can change three columns and no others |
 | **Authentication** | Supabase Auth with TOTP two-factor | Roles live in their own table, never on the user's own row, so nobody can promote themselves |
 | **Notifications** | Supabase Edge Functions (Deno) + Resend | A booking that arrives on a Friday night should not wait until Tuesday |
+| **Payments** | Stripe Payment Links | Donations are four fixed tiers plus a donor-chooses amount. No server code and no card data anywhere near this repository — Stripe hosts the checkout |
 | **Testing** | Playwright (Python) for the browser, `psql` for the database | Policies are proved against a real Postgres with a Supabase stub *before* they reach the live project |
-| **Hosting** | GitHub Pages | Static; a push to `main` is the deploy |
+| **Hosting** | Any static host | The built files are uploaded to the web root; there is no server-side anything. See `DEPLOY.md` for exactly which files |
 
 ## What it looks like
 
@@ -94,13 +118,16 @@ status and notes, but never the applicant's own details.
 
 Each of these came from something that actually went wrong.
 
-**Nothing reaches another company.** The site sets no cookies and makes zero
-third-party requests — fonts self-hosted, the Google Maps embed replaced with an
-address card, YouTube thumbnails removed. The one exception is the hall hire
-page, which asks the booking database which dates are taken; that fetch is
-deferred so that reading the prayer times contacts nobody. All of this is
-asserted by a test against the rendered page, so a future change that
-reintroduces a tracker fails the build rather than the privacy notice.
+**Almost nothing reaches another company.** The site sets no cookies, carries no
+analytics and embeds no third-party widget — fonts are self-hosted and the Google
+Maps iframe was replaced with an address card. Two pages reach outside, and both
+are named in the privacy notice: hall hire asks the booking database (ours,
+hosted in London) which dates are taken, deferred so that reading the prayer
+times contacts nobody; and the media page loads each video's still image from
+YouTube, sent with `referrerpolicy="no-referrer"` and `loading="lazy"`. The
+masjid chose that trade-off knowingly — plain cards read as broken. All of this
+is asserted by a test against the rendered page, so a change that reintroduces a
+tracker fails the build rather than the privacy notice.
 
 **A structural checker that runs before every build.** One missing `</div>`
 once left seven pages nested inside another. Navigation highlighted correctly,
@@ -132,6 +159,27 @@ the DOM rather than what a person can see. The suite now attaches
 `page.on("pageerror")` (console listeners do not catch uncaught exceptions),
 navigates by clicking real links rather than calling the hoisted `showPage()`,
 and asserts visibility and rendered height rather than presence.
+
+**A menu that was slid away but not hidden.** The burger drawer was moved
+off-screen with `transform` alone, which leaves its twenty links focusable and in
+the accessibility tree — a keyboard user tabbing across the header fell into a
+menu they could not see. It now sets `visibility:hidden` when closed, with the
+flip delayed to the end of the slide so nothing blinks out mid-animation. Fixing
+that broke focus-into-menu on open, because a hidden element cannot take focus;
+the test caught it in the same run.
+
+**Reaching the account area at all.** Account, Basket, Login and Register
+appeared only at 1340px and up, and the drawer had no account link — so on every
+phone, every tablet and every laptop window below 1340px there was no route to
+`account/` from anywhere on the site. The header controls now appear from 1080px,
+exactly where the burger disappears, and the drawer carries the same four. A test
+opens the site at thirteen widths and fails if no account link is on screen.
+
+**Transparent artwork disappears on a matching background.** The Stripe logo was
+supplied as plum-on-transparent, the masjid set the checkout background to plum,
+and the result was an invisible logo that looked like a failed upload. `brand/`
+now ships both inks and names the files for the *background* they belong on
+rather than for their own colour.
 
 ---
 
@@ -205,15 +253,80 @@ website** — change one and you must change all three.
 
 ---
 
+## Donations
+
+Four fixed tiers (£250 / £500 / £1,000 / £5,000) plus one link where the donor
+sets the amount, all **Stripe Payment Links**. The five `href`s live in the
+`.nb-give-card` block on the New Build page and are the whole integration —
+there is no server code, no webhook and no secret key. Bank transfer details sit
+directly beneath them and cost the masjid nothing.
+
+They replaced five WooCommerce links on the masjid's old WordPress site, which
+would have become 404s the moment the domain moved — while still looking
+perfectly fine on screen. `verify_structure.py` now guards against both that and
+test-mode links; see `DONATIONS.md` for the Stripe settings.
+
+### Two claims that were taken off the page
+
+**Gift Aid.** The donate card used to promise *"add Gift Aid — 25p to every £1"*.
+Stripe cannot produce or store a valid HMRC declaration, so the promise came off
+rather than being made and not kept. Gift Aid is off the *page*, not off the
+table: the masjid can still claim on bank transfers, standing orders and cash
+with a declaration held at the office.
+
+**"100% Donation Policy."** Card payments carry a processing fee, so it was not
+true. The tick on the home page now reads *Registered charity 1041569*, which is
+verifiable.
+
+Neither claim can drift back: a test walks all 20 pages plus the header, drawer
+and footer looking for both phrases.
+
+---
+
+## Navigation
+
+The whole site is one document, so "pages" are `.page[data-page]` blocks toggled
+by `showPage()`. Two things about that are worth knowing before changing it.
+
+**Back means *up*, not *previously*.** Every child page carries a `.back-link` at
+the top pointing at its parent — *‹ Services*, *‹ Birth, Marriage & Death*. All
+eight child pages have one and all twelve top-level pages deliberately do not; a
+test checks every one and that clicking it lands on the right parent.
+
+A floating "Back" button was tried and removed. It followed browser history
+rather than the site's structure, so arriving back at Home still counted as
+"you can go back" and it appeared on the front page.
+
+**The browser's own back button works.** Navigation calls `history.pushState`,
+and a `popstate` listener restores the page. It used to call `replaceState`,
+which overwrites the current entry instead of adding one — so the back button
+and the back gesture on a phone did nothing between pages, or dumped the visitor
+off the site entirely. That was the real bug; the floating control was a bad
+answer to it.
+
+---
+
 ## Privacy
 
-The site sets **no cookies**, uses no analytics, and makes **zero requests to
-third-party servers**. Fonts are self-hosted, the Google Maps embed was replaced
-with an address card, and YouTube thumbnails were removed. Everything that
-reaches another company does so only when a visitor chooses to click it.
+The site sets **no cookies**, uses no analytics, and carries no advertising or
+tracking. Fonts are self-hosted and the Google Maps embed was replaced with an
+address card, so no page loads a third-party script, iframe or font.
+
+Exactly one third party is contacted, on exactly one page: the **media** page
+loads each video's still image from `i.ytimg.com`, which means Google sees a
+visitor's IP address there. The requests carry no referrer and are lazy-loaded,
+and the privacy notice states this plainly rather than claiming otherwise.
+Everything else that reaches another company does so only when a visitor
+chooses to click it.
 
 This is asserted by an automated test against the rendered page, not just
-believed. If a future change reintroduces a tracker, that test fails.
+believed. If a future change contacts a host other than the masjid's own
+Supabase project or YouTube's image host, that test fails.
+
+**The 404 page counts too.** It was still pulling Fraunces and Hanken Grotesk
+from Google Fonts long after every other page had them built in — quietly
+contradicting the notice. Its fonts are now inlined and it is generated by
+`build.py` from `404_template.html`, so it cannot drift back.
 
 The privacy notice lives at the `privacy` page and is linked from the footer.
 
@@ -247,18 +360,46 @@ Browser tests use Playwright. Three habits, each from a bug that shipped:
 - **Assert what is visible**, not what is in the DOM. `text_content` reads
   hidden nodes, so a block that rendered on the wrong page still passed.
 
+The suite is a set of standalone scripts rather than a framework. Each one prints
+PASS/FAIL lines and exits non-zero on failure, so any of them can be run alone
+while working on that area:
+
+| Covers | Asserts, in short |
+|---|---|
+| Full-site sweep | every page renders with real height, no broken images, no dead nav targets, no cookies, no console errors, no overflow at 390 / 768 / 1440 |
+| Donations | each tier reaches its own Stripe link, exactly five distinct links, **none in test mode**, no `/product/` link surviving, bank details untouched |
+| Unbackable claims | "Gift Aid" and "100% donation" appear on no page, and not in the header, drawer or footer |
+| Account reachability | an account link is on screen at thirteen widths from 360px to 1920px, signed in and signed out |
+| Back navigation | all eight child pages link to the right parent, all twelve top-level pages have none, browser back/forward still work |
+| Drawer | eleven sections with icons and no numbers, 44px tap targets, no focusable controls while closed |
+| Hall hire | availability, hall and kitchen both mandatory, the whole-venue rule, URL normalisation |
+| Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
+| Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
+
+Database policies are proved separately, against a throwaway Postgres with
+`_test_supabase_stub.sql` standing in for Supabase, before anything reaches the
+live project.
+
 ---
 
 ## Launch day
 
 In this order:
 
-1. Point `taiyabahmasjid.com` at this site. The canonical tag and sitemap
+1. Upload the files listed in `DEPLOY.md` to the web root. `og-image.jpg` must
+   sit in the root itself — the site refers to it by absolute address, and one
+   folder deeper means every shared link loses its picture.
+2. Point `taiyabahmasjid.com` at this site. The canonical tag and sitemap
    already name that domain.
-2. **Delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.** Miss
-   this and the site works perfectly but never appears in Google.
-3. Update `PORTAL_URL` in the Edge Function settings, and the QR code if the app
+3. **Delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.** Miss
+   this and the site works perfectly but never appears in Google. Doing it
+   *before* step 2 lets Google index the temporary address, after which the old
+   and new sites compete with each other.
+4. Update `PORTAL_URL` in the Edge Function settings, and the QR code if the app
    has moved to its own domain by then.
+
+The donate links need nothing on launch day — they already point at Stripe, not
+at the old site.
 
 ---
 
@@ -267,6 +408,20 @@ In this order:
 - **The prayer timetable holds 2026 only.** It degrades honestly — the header
   falls back to "open the app" — but it needs the 2027 timetable before
   1 January 2027.
+- **Hall hire prices are still marked as placeholders in the code**
+  (`member 100/120`, `non-member 150/180`) and the calculation runs in the
+  browser, so both tiers are readable via View Source. The masjid has been asked
+  to confirm or correct the figures.
+- **The funerals page carries no prices at all.** The masjid has been asked what
+  to publish, member and non-member.
+- **The Imams' Advice form does not send anything itself.** It hands the message
+  to the visitor's own email app via `mailto:` — so the visitor must still press
+  send, and a device with no mail app configured does nothing at all. The wording
+  on the page says both of those plainly rather than promising delivery. Phase 2
+  replaces it with an Edge Function that emails the office and stores nothing:
+  deliberately *not* a database table, because "ask the imam" collects marital,
+  health and bereavement matters that would be Article 9 data the moment they
+  were written down.
 - **Booking emails are not connected.** The Edge Function is written and tested;
   it needs a verified sending domain. Until then a request waits in the portal.
 - **The app is still served from a personal GitHub Pages address**, which the QR
@@ -274,6 +429,10 @@ In this order:
 - **The notification function always replies OK to Supabase, even on failure.**
   That prevents a retry loop emailing the office repeatedly, but it means a
   silent failure stays silent. Send a test booking every few months.
+- **YouTube thumbnails are blocked by some ad blockers.** `i.ytimg.com` is on
+  several tracker blocklists, so a visitor running uBlock Origin or Brave sees
+  the plum fallback panel rather than the video still. Inlining the twelve images
+  would remove the dependency entirely and restore the zero-third-party position.
 
 ---
 
@@ -300,8 +459,8 @@ masjid and the new build was supplied by the masjid. Shop category images are
 stock photography standing in until the masjid's own product photographs are
 available.
 
-Bolton Council of Mosques contact details on the funeral services page are taken
-from BCoM's own published information and should be confirmed with the masjid
-before they are relied upon.
+Bolton Council of Mosques contact details on the funeral services page were
+taken from BCoM's own published information and **confirmed with the masjid on
+28 August 2026**.
 
 Designed and built by **[YSB Designs](https://ysbdesigns.uk)**.
