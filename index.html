@@ -234,7 +234,12 @@ window.TAIYABAH_PUBLIC = {
   .acct-btn span{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;white-space:nowrap;}
   .acct-btn:hover{color:#F3EFE3;}
   .acct-btn:hover svg{color:#fff;}
-  @media (min-width:1340px){ .acct-icons{display:flex;} }
+  /* These used to appear only at 1340px and up, which meant that on every
+     laptop narrower than that — and on every phone and tablet — there was no
+     way to reach the account area at all. The burger disappears at 1080px, so
+     that is where these have to take over. Measured: they fit at 1080 with
+     113px to spare, because .header-utility absorbs the slack. */
+  @media (min-width:1080px){ .acct-icons{display:flex;} }
 
   .coming-soon-toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(16px);
@@ -269,10 +274,20 @@ window.TAIYABAH_PUBLIC = {
     position:fixed;top:0;right:0;height:100%;width:min(380px,88vw);
     background:linear-gradient(165deg,var(--brand-900),#22071a 75%);
     z-index:1150;padding:96px 32px 28px;
-    transform:translateX(100%);transition:transform .5s cubic-bezier(.77,0,.18,1);
+    transform:translateX(100%);
+    /* visibility, not just transform. Sliding the panel off-screen leaves its
+       links focusable and in the accessibility tree, so a keyboard user tabbing
+       across the header would fall into a menu they cannot see. visibility is
+       animatable in the special way that keeps the panel on screen for the whole
+       slide-out, then removes it. */
+    visibility:hidden;
+    /* visibility flips instantly on open and is delayed to the end of the slide
+       on close, so the panel never blinks out mid-animation. Relying on
+       visibility interpolation instead is less predictable. */
+    transition:transform .5s cubic-bezier(.77,0,.18,1), visibility 0s linear .5s;
     display:flex;flex-direction:column;box-shadow:-30px 0 60px rgba(0,0,0,.35);overflow-y:auto;
   }
-  .nav-panel.open{transform:translateX(0);}
+  .nav-panel.open{transform:translateX(0);visibility:visible;transition:transform .5s cubic-bezier(.77,0,.18,1), visibility 0s;}
   .nav-app-cta{
     display:flex;align-items:center;justify-content:space-between;gap:10px;
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:13px 15px;margin-bottom:20px;
@@ -292,6 +307,34 @@ window.TAIYABAH_PUBLIC = {
   .nav-stack li a .num{font-family:"Hanken Grotesk",sans-serif;font-size:.66rem;color:var(--gold-bright);font-weight:700;width:18px;}
   .nav-stack li a:hover, .nav-stack li a.active{color:var(--gold-bright);padding-left:10px;}
   .nav-stack li.featured a{color:var(--gold-bright);}
+  /* Account controls inside the burger drawer. Below 1080px this is the ONLY
+     route to the account area, so it sits above the page list rather than
+     under it. Four across matches the header, and each tile clears 44px in
+     both directions. */
+  .nav-acct{margin:2px 0 20px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .nav-acct-hello{
+    display:none;align-items:center;gap:10px;margin-bottom:12px;text-decoration:none;
+    padding:10px 14px;border-radius:12px;
+    background:rgba(220,187,99,.12);border:1px solid rgba(198,162,76,.34);color:#F3EFE3;
+  }
+  .nav-acct-hello:not([hidden]){display:flex;}
+  .nav-acct-hello svg{width:18px;height:18px;flex-shrink:0;color:var(--gold-bright);}
+  .nav-acct-hello .ah-t{display:flex;flex-direction:column;line-height:1.2;min-width:0;}
+  .nav-acct-hello .ah-k{font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
+  .nav-acct-hello .ah-v{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nav-acct-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  /* Once signed in, Login and Register go, so the row would otherwise leave two
+     empty columns and push the remaining tiles into a corner. */
+  .nav-acct-row.is-signed-in{grid-template-columns:repeat(2,1fr);}
+  .na-btn{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    min-height:66px;padding:10px 2px;border-radius:12px;text-decoration:none;cursor:pointer;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+    color:rgba(243,239,227,.82);font-family:inherit;transition:.2s ease;
+  }
+  .na-btn svg{width:19px;height:19px;color:var(--gold-bright);flex-shrink:0;}
+  .na-btn span{font-size:.53rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700;}
+  .na-btn:hover,.na-btn:focus-visible{background:rgba(220,187,99,.16);border-color:rgba(220,187,99,.42);color:#F3EFE3;}
   .nav-panel .panel-foot{margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,.1);}
   .nav-panel .panel-foot p{color:rgba(243,239,227,.55);font-size:.76rem;margin-bottom:12px;line-height:1.5;}
   .social-row{display:flex;gap:9px;}
@@ -1438,6 +1481,30 @@ window.TAIYABAH_PUBLIC = {
     <span><strong><span class="live-dot" aria-hidden="true"></span> Listen live</strong><span>The masjid's live audio stream</span></span>
     <span class="go">&rsaquo;</span>
   </a>
+  <div class="nav-acct">
+    <a class="nav-acct-hello" href="account/" id="navHello" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5"/></svg>
+      <span class="ah-t"><span class="ah-k">Welcome</span><span class="ah-v" id="navHelloName">&nbsp;</span></span>
+    </a>
+    <div class="nav-acct-row">
+      <a class="na-btn" href="account/" id="navAccount">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5"/></svg>
+        <span>Account</span>
+      </a>
+      <button type="button" class="na-btn" data-coming-soon="Basket">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 9z"/><path d="M8 9V7a4 4 0 018 0v2"/></svg>
+        <span>Basket</span>
+      </button>
+      <a class="na-btn" href="account/" id="navLogin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H6a2 2 0 00-2 2v12a2 2 0 002 2h5"/><path d="M15 8l4 4-4 4"/><path d="M19 12H9"/></svg>
+        <span>Login</span>
+      </a>
+      <a class="na-btn" href="account/" id="navRegister">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M18 8v4M20 10h-4"/></svg>
+        <span>Register</span>
+      </a>
+    </div>
+  </div>
   <ul class="nav-stack">
     <li><a data-nav="home" class="active"><span class="num">01</span> Home</a></li>
     <li class="featured"><a data-nav="newbuild"><span class="num">02</span> New Build</a></li>
@@ -1560,7 +1627,7 @@ window.TAIYABAH_PUBLIC = {
           <h3>Support Your Masjid</h3>
           <p>Helping us maintain the masjid and build our new home.</p>
           <a class="btn btn-gold" data-nav="newbuild" data-scroll-to="give" style="align-self:center;">Donate Now</a>
-          <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> 100% Donation Policy</span>
+          <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
       </div>
     </div>
@@ -1756,7 +1823,7 @@ window.TAIYABAH_PUBLIC = {
               <span class="dc-main">Give any other amount</span>
               <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
             </a>
-            <p class="dc-note">Opens the masjid's secure donation page. If you are a UK taxpayer, please add Gift Aid — it adds <b>25p to every £1</b> at no cost to you.</p>
+            <p class="dc-note">Opens the masjid's secure donation page. Card payments carry a small processing fee &mdash; a bank transfer below reaches the masjid in full, if that suits you better.</p>
 
             <div class="nb-give-divider"></div>
 
@@ -3969,7 +4036,11 @@ window.TAIYABAH_PUBLIC = {
     burgerBtn.classList.add('open'); navPanel.classList.add('open'); navOverlay.classList.add('open');
     document.body.style.overflow='hidden';
     burgerBtn.setAttribute('aria-expanded','true');
-    const f = focusablesIn(navPanel); if(f.length) f[0].focus();
+    /* The panel is visibility:hidden until the .open class lands, and focusing a
+       hidden element is a no-op. Wait one frame so the browser has applied the
+       style before we try to move focus into it. */
+    const f = focusablesIn(navPanel);
+    if(f.length) requestAnimationFrame(() => f[0].focus());
   }
   function closeMenu(){
     burgerBtn.classList.remove('open'); navPanel.classList.remove('open'); navOverlay.classList.remove('open');
@@ -4040,18 +4111,25 @@ window.TAIYABAH_PUBLIC = {
       // First name only — the header has no room for "Muhammad Abdur-Rahman".
       var first = String(name).trim().split(/\s+/)[0];
 
-      var hello = document.getElementById('hdrHello');
-      var nameEl = document.getElementById('hdrHelloName');
-      if(hello && nameEl){
-        nameEl.textContent = first;
-        hello.hidden = false;
-        hello.setAttribute('title', 'Signed in as ' + name);
-      }
+      // The greeting lives in two places: the header on wide screens, and the
+      // burger drawer everywhere else. Both have to agree, or someone signed in
+      // on a phone is still shown "Login".
+      [['hdrHello','hdrHelloName'], ['navHello','navHelloName']].forEach(function(pair){
+        var hello = document.getElementById(pair[0]);
+        var nameEl = document.getElementById(pair[1]);
+        if(hello && nameEl){
+          nameEl.textContent = first;
+          hello.hidden = false;
+          hello.setAttribute('title', 'Signed in as ' + name);
+        }
+      });
       // Sign-in and registration prompts are noise once you are signed in.
-      ['hdrLogin','hdrRegister'].forEach(function(id){
+      ['hdrLogin','hdrRegister','navLogin','navRegister'].forEach(function(id){
         var n = document.getElementById(id);
         if(n) n.style.display = 'none';
       });
+      var navRow = document.querySelector('.nav-acct-row');
+      if(navRow) navRow.classList.add('is-signed-in');
     } catch(e){
       // A greeting must never take the page down with it.
       if(window.console && console.warn) console.warn('account greeting unavailable:', e);
