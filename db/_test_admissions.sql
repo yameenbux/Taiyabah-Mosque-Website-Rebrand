@@ -1,12 +1,12 @@
 -- ===========================================================================
 --  _test_admissions.sql — LOCAL ONLY. NEVER RUN THIS AGAINST SUPABASE.
 --
---  Proves the security properties of 003_admissions.sql against a throwaway
+--  Proves the security properties of 008_admissions.sql against a throwaway
 --  local Postgres 16. Files beginning _test_ touch data and roles directly.
 --
 --    createdb taiyabah_test
 --    psql -d taiyabah_test -f _test_stubs.sql
---    psql -d taiyabah_test -f 003_admissions.sql
+--    psql -d taiyabah_test -f 008_admissions.sql
 --    psql -d taiyabah_test -f _test_admissions.sql
 --
 --  The migration's own tests once passed because the harness created the very
