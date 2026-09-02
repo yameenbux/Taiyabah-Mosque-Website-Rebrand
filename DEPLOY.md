@@ -65,7 +65,9 @@ Anything typed straight into `index.html` is wiped the next time that runs.
 
 ## On launch day, in this order
 
-1. Point `taiyabahmasjid.com` at this site.
+1. Decide what happens to the madrasah form preview link — see
+   "The madrasah application form" below. Do not skip this one.
+2. Point `taiyabahmasjid.com` at this site.
 2. Only then: delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.
 
 That order matters. Doing it the other way round lets Google index the
@@ -100,8 +102,23 @@ heading, "The Taiyabah Shop is on its way."
 ## The madrasah application form is finished but must not be uploaded yet
 
 `apply/` is a complete, working application form. It is kept out of
-`taiyabah-site-upload.zip` on purpose, and nothing on the public site links to
-it. Uploading that folder is what makes it live — there is no other switch.
+`taiyabah-site-upload.zip` on purpose.
+
+**The Admissions page now carries a link to it, labelled as a preview.** That is
+fine while the site sits on the staging address (`robots.txt` blocks every
+crawler and the form says plainly that it will not send anything). It is NOT
+fine once `taiyabahmasjid.com` points here — a parent would fill in their
+child's medical details and get an error.
+
+So before the domain is pointed, do one of two things:
+
+* **Finish the list below**, apply `003_admissions.sql`, and change the link on
+  the Admissions page from "Have a look at the new form" to a real Apply
+  button — search `index_template.html` for `PREVIEW LINK`; or
+* **remove that link and its note**, and put `apply/` back behind the wall.
+
+Whichever you choose, `apply/` must be on the server for the link to work, so
+add it to the upload list at the same time as you make the link real.
 
 It writes through `db/003_admissions.sql`, **which has not been applied**. So
 even if the folder were uploaded by accident today, a submission would fail:

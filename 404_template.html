@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Page not found — Taiyabah Masjid</title>
+<meta name="robots" content="noindex">
+<!-- These two point at the site root, not at assets/. The repo's folder is
+     committed as "Assets" with a capital A, and GitHub Pages serves from a
+     case-sensitive filesystem, so "assets/logo-cream.png" 404s and this page
+     loses its logo. Both files already sit in the root, which no longer
+     depends on how that folder happens to be capitalised. -->
+<link rel="icon" type="image/png" href="/icon-192.png">
+<!-- Fonts are self-hosted here for the same reason as on the main site: a
+     Google Fonts link would send the visitor's IP address to Google, and the
+     privacy notice says no page does that. A 404 is still a page. -->
+<style>{{FONT_FACES_404}}</style>
+<style>
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --gold:#C6A24C; --gold-bright:#DCBB63; --paper:#F5F1E8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:32px;
+    background:linear-gradient(180deg,var(--brand-900),var(--brand-800));
+    color:#F3EFE3;font-family:"Hanken Grotesk",system-ui,sans-serif;
+  }
+  img{height:56px;margin-bottom:28px;}
+  h1{font-family:"Fraunces",serif;font-size:2rem;margin-bottom:12px;}
+  p{color:rgba(243,239,227,.75);max-width:420px;line-height:1.7;margin-bottom:28px;}
+  a.btn{
+    display:inline-flex;padding:14px 28px;border-radius:999px;font-weight:700;
+    background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);text-decoration:none;
+  }
+</style>
+</head>
+<body>
+  <img src="/logo-cream.png" alt="Taiyabah Masjid">
+  <h1>This page can't be found</h1>
+  <p>The page you were looking for doesn't exist here. Head back home for prayer times, the new build appeal, and how to reach the masjid.</p>
+  <a class="btn" href="/">Back to the homepage</a>
+</body>
+</html>
