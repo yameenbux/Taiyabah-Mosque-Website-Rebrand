@@ -1,7 +1,8 @@
 # Taiyabah Masjid — Website, Accounts & Staff Portals
 
-**Prayer times, the new build appeal and donations, community information, hall
-hire bookings, visitor accounts and two staff portals for Taiyabah Masjid,
+**Prayer times, the new build appeal and donations, community information,
+madrasah admissions and a holiday planner, adult courses, hall hire bookings,
+Nikāḥ date requests, visitor accounts and two staff portals for Taiyabah Masjid,
 Bolton.**
 
 Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Street, Bolton BL1 8HD
@@ -11,7 +12,7 @@ Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Str
 ## What this is
 
 Taiyabah Masjid has served Bolton's Muslim community since 1967 — one of the
-first masjids in the city. This repository holds four things:
+first masjids in the city. This repository holds five things:
 
 | | |
 |---|---|
@@ -19,6 +20,7 @@ first masjids in the city. This repository holds four things:
 | **`account/`** | Where a visitor registers, confirms their email and signs in. Public-facing, ready for the shop and the membership area. |
 | **`portal/`** | The **Madrasah Portal** — authenticated, for parents, teaching staff and administrators. Reached from the Madrasah page. |
 | **`venue/`** | The **Venue Hire Portal** — authenticated, for the office staff who handle bookings at the Taiyabah Centre. Reached from the Hall Hire page. |
+| **`apply/`** | The **madrasah application form**. Finished and tested, and deliberately **not deployed** — see [Things behind a switch](#things-behind-a-switch). |
 
 All three sign-in areas share one Supabase project, one set of accounts and one
 two-factor setup, but a person only sees what their role allows.
@@ -46,7 +48,12 @@ og-image.jpg            link preview picture — must sit in the web ROOT
 account/                Visitor accounts  (index.html, app.js, config.js)
 portal/                 Madrasah Portal   (index.html, app.js, config.js)
 venue/                  Venue Hire Portal (index.html, app.js, config.js)
-assets/                 icon-192.png and logo-cream.png (used by 404.html)
+assets/                 icons and logo (see the note on capitalisation below)
+apply/                  Madrasah application form — NOT uploaded, see DEPLOY.md
+build-inputs/           the 44 files build.py reads: fonts, compressed photos,
+                        the prayer timetable, QR codes. Committed, so a fresh
+                        clone can rebuild the site.
+db/                     migrations 008-010 and their local test harness
 
 DEPLOY.md               what gets uploaded and what never does
 DONATIONS.md            the Stripe setup, and why Gift Aid is not on the site
@@ -79,7 +86,19 @@ would tell you. Neither is fatal — the build still runs, so the site can be
 previewed — but you will not forget.
 
 Images and fonts are base64 data URIs substituted at build time from
-`/tmp/*_b64.txt`. Nothing is fetched from another server at runtime.
+`build-inputs/`. Nothing is fetched from another server at runtime.
+
+Those inputs used to be read from `/tmp`, which meant the "edit the template and
+rebuild" rule only worked on the one machine that still had the temp files — a
+fresh clone could not rebuild the site at all, and the generated `index.html`
+was the only real copy. They are committed now, and the way to check that claim
+is still true is to make it fail:
+
+```bash
+rm index.html 404.html && python3 verify_structure.py && python3 build.py
+```
+
+Both files should come back byte-identical.
 
 ---
 
@@ -88,7 +107,7 @@ Images and fonts are base64 data URIs substituted at build time from
 | Layer | What's used | Why |
 | --- | --- | --- |
 | **Frontend** | HTML5, CSS3, vanilla JavaScript | No framework and no bundler. One self-contained file a browser runs directly — fewer moving parts on a site a volunteer may have to edit years from now |
-| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 23 pages |
+| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 27 pages |
 | **Routing** | Hash-based, single document | Every page is one HTTP response. No server, no router library, and the whole site works from a file:// URL |
 | **Build** | Python 3, standard library only | Substitutes `{{PLACEHOLDER}}` tokens into the template. `verify_structure.py` runs first and refuses to build a broken document |
 | **Typography** | Fraunces, Hanken Grotesk, Amiri — self-hosted woff2 | Google Fonts would send every visitor's IP to Google before they consented. Subset with fontTools; Arabic keeps its full shaping tables |
@@ -197,19 +216,43 @@ Supabase SQL editor, in order.
 | `005_availability_by_hall.sql` | Superseded by 006; keep for history |
 | `006_halls_and_kitchen.sql` | Named halls, the kitchen option, whole-venue availability |
 | `007_retention_and_cleanup.sql` | Schedules the deletion job, drops `whoami()` |
+| `008_admissions.sql` | Madrasah applications. **Not applied** — see below |
+| `009_courses.sql` | Adult courses and their sign-ups. **Not applied** |
+| `010_nikah_requests.sql` | Nikāḥ date requests. **Not applied** |
 
 `STAFF_give_someone_a_role.sql` is the one you will reuse — it grants a role to
 an account by email address and prints the full staff list.
 
 Files beginning `_test_` are **local only**. They insert junk rows and call
-`set role`. Never run one against Supabase. `_test_supabase_stub.sql` recreates
-enough of Supabase on a throwaway Postgres to prove policies before they ship.
+`set role`. Never run one against Supabase. `_test_supabase_stub.sql` (and
+`db/_test_stubs.sql` for 008-010) recreates enough of Supabase on a throwaway
+Postgres to prove policies before they ship.
 
-### Two rules that were learned the hard way
+Every harness in `db/` reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS`
+role before asserting anything. Skip that and the tests run as a superuser,
+which ignores RLS — and a broken policy set passes. That is not hypothetical:
+it is how both of the failures above got as far as they did.
+
+### Four rules that were learned the hard way
 
 **GRANT and RLS are different things and you need both.** Postgres checks table
 privileges *before* it evaluates any policy. Migration 002 shipped with policies
 but no grants, and every signed-in query failed with `permission denied`.
+
+**`INSERT … RETURNING` is checked against the SELECT policies.** With
+`FORCE ROW LEVEL SECURITY` on and no read policy for the function's owner, a
+`SECURITY DEFINER` insert that used `returning id into …` failed with *"new row
+violates row-level security policy"* — pointing at the WITH CHECK clause, which
+was fine. It passed locally at first because the objects were owned by a
+superuser, and a superuser ignores RLS entirely. Generate the uuid in the
+function instead, and keep the read gate shut.
+
+**A count inside a `SECURITY DEFINER` function returns nothing under FORCE.**
+Same trap, worse symptom: no error at all. The fifteen-place cap on the adult
+courses silently counted zero every time and handed out unlimited places. `009`
+and `010` therefore enable RLS but do **not** force it, with the reasoning
+written above the line so nobody "tidies" it to match `008`. Anon still holds no
+privileges on those tables, so nothing is weaker.
 
 **Blanket default privileges are a foot-gun.** Migration 002 ends with
 `alter default privileges … grant … on tables to authenticated`, which applies
@@ -348,6 +391,34 @@ The privacy notice lives at the `privacy` page and is linked from the footer.
 
 ---
 
+## Things behind a switch
+
+Three features are finished, tested, and deliberately not switched on. Each
+writes personal data to the masjid's own database, and the compliance work has
+to land first — see `DEPLOY.md` for the full pre-flight list on each.
+
+| Feature | Where | Switch | Migration |
+|---|---|---|---|
+| Madrasah application form | `apply/` | not in the upload zip | `008_admissions.sql` |
+| Course sign-ups (Arabic, Ghusl) | Education pages | `REGISTRATION_OPEN` | `009_courses.sql` |
+| Nikāḥ date requests | Marriage page | `REQUESTS_OPEN` | `010_nikah_requests.sql` |
+
+**Apply the migration before flipping the switch, never the other way round.**
+With the switch on and the tables missing, a visitor fills in a form and is
+handed an error — which is worse than the honest "ring the office" they see now.
+
+The three are not equally gated. `008` holds children's medical conditions,
+SEND and EHCP status: Article 9 data, and the DPIA has to be finished first.
+`009` and `010` hold adults' names, emails and phone numbers — still personal
+data needing ICO registration, a lawful basis, a retention period and a line in
+the privacy notice, but a much shorter conversation. Do not treat them as one
+job.
+
+Every one of these forms shows the office phone number in the meantime, and says
+plainly that online submission is not live yet.
+
+---
+
 ## Testing
 
 Browser tests use Playwright. Three habits, each from a bug that shipped:
@@ -375,6 +446,15 @@ while working on that area:
 | Hall hire | availability, hall and kitchen both mandatory, the whole-venue rule, URL normalisation |
 | Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
 | Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
+| Articles | four articles reachable from the hub, heroes and thumbnails load, cross-links resolve |
+| Madrasah admissions | fees, times and rules on the page, no unconfirmed dates published, form stays dark |
+| Holiday planner | twelve month grids, closures painted, every Islamic date tagged as an estimate, "closed today" correct against a fixed clock |
+| Education | tiles reach both course pages, forms hidden while closed, place cap and waiting list wording |
+| Nikāḥ requests | past days disabled, **no availability colouring anywhere**, first and second choice, flexible time, request wording never promises a booking |
+
+Two of those assert an absence rather than a presence, which is the point:
+nothing may publish a date the masjid has not confirmed, and nothing may paint a
+nikāḥ day as free when the site has no idea whether it is.
 
 Database policies are proved separately, against a throwaway Postgres with
 `_test_supabase_stub.sql` standing in for Supabase, before anything reaches the
@@ -386,16 +466,22 @@ live project.
 
 In this order:
 
-1. Upload the files listed in `DEPLOY.md` to the web root. `og-image.jpg` must
+1. **Decide what happens to the madrasah form preview link.** The Admissions
+   page links to `apply/`, labelled as a preview. That is fine on the staging
+   address, where crawlers are blocked and the form says it will not send
+   anything. It is not fine on the public domain. Either finish the `008`
+   pre-flight list and make the link a real Apply button, or take the link out.
+   Do not skip this one — it is the item most likely to be forgotten.
+2. Upload the files listed in `DEPLOY.md` to the web root. `og-image.jpg` must
    sit in the root itself — the site refers to it by absolute address, and one
    folder deeper means every shared link loses its picture.
-2. Point `taiyabahmasjid.com` at this site. The canonical tag and sitemap
+3. Point `taiyabahmasjid.com` at this site. The canonical tag and sitemap
    already name that domain.
-3. **Delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.** Miss
+4. **Delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.** Miss
    this and the site works perfectly but never appears in Google. Doing it
    *before* step 2 lets Google index the temporary address, after which the old
    and new sites compete with each other.
-4. Update `PORTAL_URL` in the Edge Function settings, and the QR code if the app
+5. Update `PORTAL_URL` in the Edge Function settings, and the QR code if the app
    has moved to its own domain by then.
 
 The donate links need nothing on launch day — they already point at Stripe, not
@@ -405,6 +491,25 @@ at the old site.
 
 ## Known limitations
 
+- **`index.html` is 11 MB.** Every visitor downloads the whole thing before
+  anything renders — roughly six seconds on typical UK 4G, on a site whose
+  audience is overwhelmingly on phones. It grows with every photograph added,
+  and each commit stores another full copy. The fix is to move the embedded
+  images out to `assets/img/` as separate lazy-loaded files, which would drop
+  the document to a few hundred KB and let browsers cache each image. The
+  single-file model was a reasonable call at 2 MB; it has been outgrown.
+- **`assets/` is committed as `Assets/` with a capital A.** GitHub Pages serves
+  from a case-sensitive filesystem, so `assets/logo-cream.png` 404s. The 404
+  page now points at the copies in the web root instead, which do not depend on
+  how that folder happens to be capitalised. Worth renaming properly one day.
+- **Several published figures are still unconfirmed by the masjid**: the
+  madrasah academic year, date-of-birth windows and deadline in
+  `apply/config.js`; which evening the Arabic class runs; the place cap on the
+  Ghusl workshop; and whether either course has a fee. The pages are written so
+  that nothing unconfirmed is stated as fact, but they are thinner than they
+  should be until those answers come back.
+- **The Nikāḥ request calendar has no minimum notice period.** Someone can ask
+  for tomorrow. Whether that wants a floor is a decision for the office.
 - **The prayer timetable holds 2026 only.** It degrades honestly — the header
   falls back to "open the app" — but it needs the 2027 timetable before
   1 January 2027.

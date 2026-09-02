@@ -112,7 +112,7 @@ child's medical details and get an error.
 
 So before the domain is pointed, do one of two things:
 
-* **Finish the list below**, apply `003_admissions.sql`, and change the link on
+* **Finish the list below**, apply `008_admissions.sql`, and change the link on
   the Admissions page from "Have a look at the new form" to a real Apply
   button — search `index_template.html` for `PREVIEW LINK`; or
 * **remove that link and its note**, and put `apply/` back behind the wall.
@@ -120,7 +120,7 @@ So before the domain is pointed, do one of two things:
 Whichever you choose, `apply/` must be on the server for the link to work, so
 add it to the upload list at the same time as you make the link real.
 
-It writes through `db/003_admissions.sql`, **which has not been applied**. So
+It writes through `db/008_admissions.sql`, **which has not been applied**. So
 even if the folder were uploaded by accident today, a submission would fail:
 there is nowhere for a child's medical, SEND, EHCP or ethnicity data to go.
 That is the safety property. Do not "tidy up" by applying the migration early.
@@ -141,7 +141,7 @@ Before any of it ships, all of the following must be done:
    date-of-birth windows. Every year-specific value lives in that one block so
    the page can never go stale the way the old IBEUK form did.
 
-Then: apply `003_admissions.sql`, add `apply/` to the upload list above, and
+Then: apply `008_admissions.sql`, add `apply/` to the upload list above, and
 change the Admissions page on the main site from "applications open soon" to a
 link to `/apply/`.
 
@@ -155,7 +155,7 @@ number. The sign-up forms are written and tested but hidden behind one switch.
 
 To turn them on:
 
-1. Apply `db/004_courses.sql`. Much lighter than the madrasah migration —
+1. Apply `db/009_courses.sql`. Much lighter than the madrasah migration —
    adult names, emails and phone numbers, no children and no health data — but
    it still needs ICO registration, a documented lawful basis, a retention
    period and a line in the privacy notice. Read the header of that file first.
@@ -187,7 +187,7 @@ currently shows the office phone number.
 
 To turn it on:
 
-1. Apply `db/005_nikah_requests.sql`. Same shortlist as `004_courses.sql` — ICO
+1. Apply `db/010_nikah_requests.sql`. Same shortlist as `009_courses.sql` — ICO
    registration, a documented lawful basis, a retention period and a line in
    the privacy notice. The same ICO entry covers all of them.
 2. In `index_template.html`, find `REQUESTS_OPEN = false` and set it true.
