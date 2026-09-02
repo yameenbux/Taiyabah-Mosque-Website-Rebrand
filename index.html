@@ -1107,6 +1107,15 @@ window.TAIYABAH_PUBLIC = {
   .svc-fact .k{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
   .svc-fact .v{font-size:1.5rem;font-weight:700;color:var(--brand-700);font-family:"Fraunces",serif;margin-top:2px;}
 
+  .adm-status{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:22px 22px 20px;}
+  .adm-status .lab{font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);display:block;margin-bottom:9px;}
+  .adm-status h3{font-family:"Fraunces",serif;font-size:1.08rem;color:#F3EFE3;margin-bottom:9px;line-height:1.3;}
+  .adm-status p{font-size:.86rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:12px;}
+  .adm-rules{display:grid;gap:0;border-top:1px solid var(--line);margin:4px 0 0;}
+  .adm-rules > div{display:grid;gap:2px 18px;padding:13px 0;border-bottom:1px solid var(--line);}
+  @media(min-width:560px){ .adm-rules > div{grid-template-columns:118px 1fr;} }
+  .adm-rules dt{font-size:.86rem;font-weight:700;color:var(--ink);}
+  .adm-rules dd{margin:0;font-size:.88rem;line-height:1.7;color:var(--muted);}
   .svc-cta-row{display:flex;gap:14px;align-items:center;padding:15px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-decoration:none;margin-top:12px;}
   .svc-cta-row .ic{width:38px;height:38px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .svc-cta-row .ic svg{width:18px;height:18px;}
@@ -1993,11 +2002,11 @@ window.TAIYABAH_PUBLIC = {
         <p class="cs-lead" style="text-align:left;">Digital portals for the madrasah are on the way — nothing is live yet, but this is what's coming.</p>
       </div>
       <div class="shop-grid">
-        <div class="shop-tile">
+        <a class="shop-tile" href="#" data-nav="madrasah-admissions">
           <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3.5h8l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1v-16a1 1 0 011-1z"/><path d="M15 3.5v4h4"/><path d="M9 12.5h6M9 16h6"/></svg></span>
-          <span class="sh-label">Application Form</span>
-          <span class="soon-tag">Coming soon</span>
-        </div>
+          <span class="sh-label">Admissions &amp; Fees</span>
+          <span class="live-tag">Read now</span>
+        </a>
         <a class="shop-tile" href="portal/">
           <span class="sh-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5c0-3 2.5-5.3 5.5-5.3s5.5 2.3 5.5 5.3"/><circle cx="17" cy="9" r="2.3"/><path d="M15.2 14.6c2.3.3 4.3 2.2 4.3 4.9"/></svg></span>
           <span class="sh-label">Parents Portal</span>
@@ -2018,6 +2027,101 @@ window.TAIYABAH_PUBLIC = {
       <p style="margin-top:16px;">
         <a class="pl-admin-link" href="portal/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></svg>Madrasah staff administration</a>
       </p>
+    </div>
+  </section>
+</div>
+
+<!-- ================= MADRASAH: ADMISSIONS ================= -->
+<div class="page" data-page="madrasah-admissions">
+  <section class="page-masthead">
+    <div class="container">
+      <a class="back-link" href="#" data-nav="madrasah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Madrasah</a>
+      <div class="section-head on-dark">
+        <div class="eyebrow">Madrasah</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Admissions</h1>
+        <p>Fees, class times and what the madrasah asks of students and parents &mdash; everything worth knowing before you apply.</p>
+      </div>
+    </div>
+  </section>
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-split is-rail-first">
+        <div class="svc-aside">
+          <div class="adm-status">
+            <span class="lab">Applications</span>
+            <h3>Online applications open soon</h3>
+            <p>You'll be able to apply for a place from this page. Until that's live, please ring the madrasah office to ask about places for this academic year.</p>
+            <p style="margin-bottom:0;"><strong style="color:#F3EFE3;">The office takes admission queries between 5pm and 7pm.</strong></p>
+          </div>
+          <a class="svc-cta-row" href="tel:01204535997">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Madrasah office &middot; 5pm&ndash;7pm</span><span class="v tnum">01204 535 997</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+          <a class="svc-cta-row" href="mailto:admin@taiyabahmasjid.com">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="M3 6l9 6 9-6"/></svg></span>
+            <span class="t"><span class="k">Email the office</span><span class="v">admin@taiyabahmasjid.com</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+        </div>
+
+        <div class="svc-detail-facts">
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The madrasah has taught the community's children since 1967, from age 4 through to Hifz and the Alimiyyah course. Everything below applies to every student, and submitting an application means agreeing to it.</p>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Fees</h3><span class="rule"></span></div>
+          <div class="soon-list">
+            <div class="soon-row"><span class="t">All classes</span><span class="tnum" style="font-weight:700;">&pound;10 / week</span></div>
+            <div class="soon-row"><span class="t">Hifz</span><span class="tnum" style="font-weight:700;">&pound;14 / week</span></div>
+            <div class="soon-row"><span class="t">Admission fee &middot; one-off</span><span class="tnum" style="font-weight:700;">&pound;20</span></div>
+          </div>
+          <p style="font-size:.86rem;color:var(--muted);line-height:1.7;margin-top:12px;">The admission fee is payable once your child has been granted a place. Fees are collected through the madrasah office or the parent portal, and are <strong>payable whether or not your child attends</strong>. Fees are reviewed each year &mdash; please confirm the current rate with the office when you apply.</p>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Class times</h3><span class="rule"></span></div>
+          <div class="soon-list">
+            <div class="soon-row"><span class="t">All classes &middot; Monday to Friday</span><span class="tnum" style="font-weight:700;">5:00&ndash;7:00pm</span></div>
+            <div class="soon-row"><span class="t">Hifz &middot; Monday to Friday</span><span class="tnum" style="font-weight:700;">5:00&ndash;7:30pm</span></div>
+            <div class="soon-row"><span class="t">Hifz &middot; Saturday</span><span class="tnum" style="font-weight:700;">9:00&ndash;11:00am</span></div>
+          </div>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Attendance</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Attendance is taken seriously, because a class only works if the children in it are there. The madrasah expects <strong>at least 90% attendance across the year</strong>, and a child consistently below that by the end of a term will lose their place.</p>
+          <ul class="art-checklist">
+            <li>Lateness counts towards the attendance figure</li>
+            <li>Ring the office on the day, between 5pm and 7pm</li>
+            <li>Tell us if your child will be late, not only if absent</li>
+            <li>Absence not reported on the day is recorded as unauthorised</li>
+          </ul>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Term dates and holidays</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The madrasah follows the school term dates recommended by Bolton Council, so holidays should be arranged outside term time wherever possible.</p>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">If you must travel during term, collect a <strong>Holiday Absence Form</strong> from the madrasah office and return it <strong>three weeks before you travel</strong>. Without it, the absence is unauthorised. A handwritten letter is not accepted in place of the form.</p>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Uniform and appearance</h3><span class="rule"></span></div>
+          <dl class="adm-rules">
+            <div><dt>Boys</dt><dd>Jubba and topi.</dd></div>
+            <div><dt>Girls</dt><dd>Abaya and burkhi, long enough to cover the chest and hair.</dd></div>
+            <div><dt>Hair</dt><dd>A haircut acceptable in Islam. Mohicans, mullets and unblended number 0 or 1 back and sides are not permitted &mdash; the hair must be equal.</dd></div>
+            <div><dt>High-vis</dt><dd>Compulsory for children up to Year 6 (ages 3&ndash;11) from November to March, while it is dark during madrasah hours.</dd></div>
+            <div><dt>If not followed</dt><dd>Children arriving without the correct uniform, or with an unacceptable hairstyle, are sent home.</dd></div>
+          </dl>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Day to day</h3><span class="rule"></span></div>
+          <dl class="adm-rules">
+            <div><dt>Toilet</dt><dd>Please make sure your child has been before leaving home. If there is an accident during madrasah, you will be called to collect them.</dd></div>
+            <div><dt>Concerns</dt><dd>Raise anything with the <strong>office manager</strong> rather than the teacher. It will be handled confidentially.</dd></div>
+            <div><dt>Policies</dt><dd>Students and parents are expected to follow all current madrasah policies. Copies are available from the office on request.</dd></div>
+            <div><dt>Proof of age</dt><dd>A birth certificate, valid passport or ID card is needed once a place has been confirmed.</dd></div>
+          </dl>
+
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">After you apply</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Submitting an application does <strong>not</strong> mean your child has been granted a place. Classes fill quickly, and where a class is already full, applicants are added to a waiting list and contacted when a space comes up. Admission to <strong>Hifz</strong> is additionally subject to the headteacher's approval.</p>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">You will need a working email address: it is how the office reaches you, and how you will sign in to the parent portal once your child has a place.</p>
+        </div>
+      </div>
+      <div class="cs-cta" style="margin-top:32px;">
+        <a class="btn btn-gold" data-nav="contact">Contact the office</a>
+        <a class="btn btn-ghost-light" data-nav="madrasah">Back to Madrasah</a>
+      </div>
     </div>
   </section>
 </div>
@@ -3637,6 +3741,7 @@ window.TAIYABAH_PUBLIC = {
     'article-five-pillars': 'The Five Pillars of Islam',
     'article-ramadan': 'What Is Ramadhan?',
     'article-hajj': 'What Is Hajj?',
+    'madrasah-admissions': 'Madrasah Admissions',
   };
 
 
