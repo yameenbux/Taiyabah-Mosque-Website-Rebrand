@@ -178,3 +178,35 @@ The place cap is enforced in the database, not in the page — the function
 counts existing sign-ups inside a lock and returns either a place or a
 waiting-list position. Nobody has to keep a "places left" number up to date,
 and two people cannot take the last seat at once.
+
+## Turning on Nikah date requests
+
+The Marriage page is live with the calendar, the time slots and a notice saying
+plainly that it is a request rather than a booking. Where the form will go, it
+currently shows the office phone number.
+
+To turn it on:
+
+1. Apply `db/005_nikah_requests.sql`. Same shortlist as `004_courses.sql` — ICO
+   registration, a documented lawful basis, a retention period and a line in
+   the privacy notice. The same ICO entry covers all of them.
+2. In `index_template.html`, find `REQUESTS_OPEN = false` and set it true.
+3. Rebuild and upload.
+
+Do not do step 2 before step 1.
+
+Worth knowing about the design:
+
+* **Nothing on that calendar shows availability, on purpose.** The masjid does
+  not publish its nikah diary, so every future day inside the year looks the
+  same — because as far as the website is concerned, it is. Colouring days
+  green would be inventing information the site does not have.
+* **The form asks for very little**: who to ring, when they would like it, and
+  anything they want to add. It does not collect the couple's names, addresses,
+  documents or witnesses. The office takes those on the phone once a date is
+  agreed, and there is no reason for the website to hold them.
+* **Two couples may request the same day.** The office decides. The only thing
+  refused is the same email asking twice for the same date.
+* The office works requests through `status` — new, contacted, confirmed,
+  declined, withdrawn — plus `agreed_date` and `agreed_time` for what was
+  actually settled, which may differ from what was asked for.

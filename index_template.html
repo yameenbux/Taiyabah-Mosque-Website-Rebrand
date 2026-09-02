@@ -1136,6 +1136,43 @@ window.TAIYABAH_PUBLIC = {
   @media(min-width:620px){ .hp-row .len{text-align:right;} }
   .hp-row.is-past{opacity:.5;}
   .hp-est{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.22);border-radius:4px;padding:2px 6px;margin-left:7px;white-space:nowrap;}
+  /* ---- Nikah date request ----------------------------------------------- */
+  .nk-wrap{margin-top:34px;}
+  .nk-layout{display:grid;gap:20px;grid-template-columns:1fr;align-items:start;}
+  @media(min-width:900px){ .nk-layout{grid-template-columns:minmax(0,1fr) 340px;} }
+  .nk-times{margin-top:16px;}
+  .nk-times .lab{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:700;color:var(--muted);display:block;margin-bottom:9px;}
+  .nk-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px;}
+  .nk-slot{background:var(--paper);border:1px solid var(--line);border-radius:9px;
+    padding:9px 6px;font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink);
+    cursor:pointer;min-height:40px;font-variant-numeric:tabular-nums;transition:.15s ease;}
+  .nk-slot:hover:not(:disabled){border-color:var(--gold);}
+  .nk-slot.is-sel{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+  .nk-slot.is-flex{grid-column:1/-1;}
+  .nk-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;position:sticky;top:95px;}
+  @media(max-width:899px){ .nk-panel{position:static;} }
+  .nk-panel h4{font-family:"Fraunces",serif;font-size:1.02rem;margin:0 0 4px;color:var(--ink);}
+  .nk-panel .sub{font-size:.82rem;color:var(--muted);line-height:1.6;margin:0 0 14px;}
+  .nk-pick{display:grid;gap:0;border-top:1px solid var(--line);margin-bottom:14px;}
+  .nk-pick > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    padding:11px 0;border-bottom:1px solid var(--line);}
+  .nk-pick .k{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+  .nk-pick .v{font-size:.9rem;font-weight:700;color:var(--ink);text-align:right;}
+  .nk-pick .v.empty{color:var(--muted);font-weight:500;}
+  .nk-mode{display:flex;gap:7px;margin-bottom:14px;}
+  .nk-mode button{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:9px;
+    padding:9px 8px;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--muted);
+    cursor:pointer;min-height:40px;}
+  .nk-mode button.is-on{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+  .nk-clear{background:none;border:none;font-family:inherit;font-size:.76rem;font-weight:600;
+    color:var(--brand-700);cursor:pointer;padding:4px 0;text-decoration:underline;}
+  .nk-closed{background:var(--brand-900);color:#F3EFE3;border-radius:12px;padding:17px 18px;}
+  .nk-closed h5{font-family:"Fraunces",serif;font-size:.98rem;color:#F3EFE3;margin:0 0 7px;}
+  .nk-closed p{font-size:.83rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0 0 12px;}
+  .nk-closed .tel{display:block;font-size:1.02rem;font-weight:700;color:var(--gold-bright);
+    text-decoration:none;font-variant-numeric:tabular-nums;}
   /* ---- Education course tiles ------------------------------------------- */
   .edu-grid{display:grid;gap:16px;grid-template-columns:1fr;}
   @media(min-width:640px){ .edu-grid{grid-template-columns:1fr 1fr;} }
@@ -3429,6 +3466,46 @@ window.TAIYABAH_PUBLIC = {
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses, timings and any applicable fees — are best discussed directly with the office when you call.</p>
       </div>
       </div>
+      <div class="nk-wrap" id="nikahReq">
+        <div class="subhead"><h3 style="font-size:1.1rem;">Request a date</h3><span class="rule"></span></div>
+        <div class="hh-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <span><b>This is a request, not a booking.</b> No date here is reserved, and nothing on this calendar shows what the masjid already has in the diary. Choose the day and time that would suit you, and the office will ring the person named on the request to confirm whether it can be done, go through the details, and take payment.</span>
+        </div>
+        <div class="nk-layout">
+          <div>
+            <div class="hh-cal">
+              <div class="hh-cal-head">
+                <button type="button" class="hh-nav" id="nkPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+                <div class="hh-month" id="nkMonth">&nbsp;</div>
+                <button type="button" class="hh-nav" id="nkNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+              </div>
+              <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+              <div class="hh-grid" id="nkGrid"></div>
+              <div class="nk-times">
+                <span class="lab" id="nkTimeLab">What time would suit you?</span>
+                <div class="nk-slots" id="nkSlots"></div>
+              </div>
+              <p class="hh-horizon">Requests can be made up to a year ahead.</p>
+            </div>
+          </div>
+          <div class="nk-panel">
+            <h4>Your request</h4>
+            <p class="sub">Pick a date on the calendar. You can add a second choice if you have one &mdash; it gives the masjid something to work with if the first is taken.</p>
+            <div class="nk-mode">
+              <button type="button" id="nkModeA" class="is-on">1st choice</button>
+              <button type="button" id="nkModeB">2nd choice</button>
+            </div>
+            <div class="nk-pick">
+              <div><span class="k">1st choice</span><span class="v empty" id="nkV1">Not chosen</span></div>
+              <div><span class="k">2nd choice</span><span class="v empty" id="nkV2">Optional</span></div>
+              <div><span class="k">Time</span><span class="v empty" id="nkVT">Not chosen</span></div>
+            </div>
+            <button type="button" class="nk-clear" id="nkClear">Start again</button>
+            <div id="nkAction" style="margin-top:14px;"></div>
+          </div>
+        </div>
+      </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
         <a class="btn btn-ghost-light" data-nav="svc-bmd">Birth, Marriage &amp; Death</a>
@@ -5047,6 +5124,252 @@ window.TAIYABAH_PUBLIC = {
         });
       });
     });
+  })();
+
+
+  /* ---------------- Nikāḥ date request -------------------------------------
+     A REQUEST, not a booking. Nothing on this calendar is coloured by
+     availability, and that is deliberate: the masjid does not publish its
+     nikāḥ diary, so painting days green would be inventing information the
+     site does not have. Every future day inside the horizon looks the same,
+     because as far as the website knows, it is.
+
+     REQUESTS_OPEN is the only switch. Leave it false until
+     db/005_nikah_requests.sql has been applied — with it true and the table
+     missing, someone picks a date, fills the form in and is handed an error.
+     While it is false the panel shows the office number instead, and the
+     calendar still works so people can see what they will be asked for.
+  ------------------------------------------------------------------------- */
+  (function(){
+    var REQUESTS_OPEN = false;
+    var HORIZON_DAYS  = 365;
+    var HOUR_FROM = 10, HOUR_TO = 20;   // inclusive, on the hour
+
+    var grid = document.getElementById('nkGrid');
+    if(!grid) return;
+    var $ = function(id){ return document.getElementById(id); };
+
+    var MON = ['January','February','March','April','May','June','July',
+               'August','September','October','November','December'];
+    var SH  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var DAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    function iso(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') +
+                            '-' + String(d.getDate()).padStart(2,'0'); }
+    function parse(s){ var p = s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
+    function pretty(s){ var d = parse(s);
+      return DAY[d.getDay()] + ' ' + d.getDate() + ' ' + SH[d.getMonth()] + ' ' + d.getFullYear(); }
+    function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+
+    var today = new Date(); today.setHours(0,0,0,0);
+    var last  = new Date(today); last.setDate(last.getDate() + HORIZON_DAYS);
+    var view  = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    var S = { mode:'a', a:null, b:null, time:null, flex:false };
+
+    function renderMonth(){
+      var y = view.getFullYear(), m = view.getMonth();
+      $('nkMonth').textContent = MON[m] + ' ' + y;
+      $('nkPrev').disabled = (y === today.getFullYear() && m === today.getMonth());
+      $('nkNext').disabled = (y === last.getFullYear()  && m === last.getMonth());
+
+      var first = new Date(y, m, 1), days = new Date(y, m+1, 0).getDate();
+      var lead = (first.getDay() + 6) % 7, html = '';
+      for(var i = 0; i < lead; i++) html += '<button type="button" class="hh-day is-blank" disabled></button>';
+      for(var d = 1; d <= days; d++){
+        var dt = new Date(y, m, d), key = iso(dt);
+        var out = dt < today || dt > last;
+        var cls = 'hh-day';
+        if(key === iso(today)) cls += ' is-today';
+        if(key === S.a || key === S.b) cls += ' is-sel';
+        html += '<button type="button" class="' + cls + '" data-d="' + key + '"' +
+                (out ? ' disabled' : '') + '><span>' + d + '</span><span class="dot"></span></button>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function renderSlots(){
+      var html = '';
+      for(var h = HOUR_FROM; h <= HOUR_TO; h++){
+        var t = String(h).padStart(2,'0') + ':00';
+        html += '<button type="button" class="nk-slot' + (!S.flex && S.time === t ? ' is-sel' : '') +
+                '" data-t="' + t + '">' + t + '</button>';
+      }
+      html += '<button type="button" class="nk-slot is-flex' + (S.flex ? ' is-sel' : '') +
+              '" data-t="flex">I’m flexible &mdash; the masjid can suggest a time</button>';
+      $('nkSlots').innerHTML = html;
+    }
+
+    function renderPanel(){
+      $('nkV1').textContent = S.a ? pretty(S.a) : 'Not chosen';
+      $('nkV1').classList.toggle('empty', !S.a);
+      $('nkV2').textContent = S.b ? pretty(S.b) : 'Optional';
+      $('nkV2').classList.toggle('empty', !S.b);
+      $('nkVT').textContent = S.flex ? 'Flexible' : (S.time || 'Not chosen');
+      $('nkVT').classList.toggle('empty', !S.flex && !S.time);
+      $('nkModeA').classList.toggle('is-on', S.mode === 'a');
+      $('nkModeB').classList.toggle('is-on', S.mode === 'b');
+      $('nkTimeLab').textContent = S.a ? 'What time on ' + pretty(S.a) + '?' : 'What time would suit you?';
+      renderAction();
+    }
+
+    function ready(){ return !!S.a && (S.flex || !!S.time); }
+
+    function renderAction(){
+      var host = $('nkAction');
+      if(!REQUESTS_OPEN){
+        host.innerHTML =
+          '<div class="nk-closed"><h5>Online requests open soon</h5>' +
+          '<p>You can see here exactly what the masjid will ask for. Until requests can be sent from this page, ring the office with your preferred date and they will take it from there.</p>' +
+          '<a class="tel" href="tel:01204535997">01204 535 997</a>' +
+          '<p style="margin:6px 0 0;font-size:.78rem;">Office hours 5pm&ndash;7pm.</p></div>';
+        return;
+      }
+      if(!ready()){
+        host.innerHTML = '<p class="sub" style="margin:0;">Choose a date and a time, and the form will appear here.</p>';
+        return;
+      }
+      if(host.querySelector('form')) return;      // already built — don't wipe what they typed
+      host.innerHTML =
+        '<form id="nkForm" novalidate autocomplete="on">' +
+          '<div class="hp-trap" aria-hidden="true"><label for="nkWeb">Leave empty</label>' +
+            '<input type="text" id="nkWeb" tabindex="-1" autocomplete="off"></div>' +
+          '<div class="cf-row" id="nkW_name"><label for="nkName">Your name</label>' +
+            '<input type="text" id="nkName" autocomplete="name"><span class="hf-err">Please tell us who to ask for.</span></div>' +
+          '<div class="cf-row" id="nkW_role"><label for="nkRole">You are</label>' +
+            '<select id="nkRole"><option value="">Please choose…</option>' +
+            '<option value="groom">The groom</option><option value="bride">The bride</option>' +
+            '<option value="family">A family member</option><option value="other">Someone else</option></select>' +
+            '<span class="hf-err">Please tell us who you are.</span></div>' +
+          '<div class="cf-row" id="nkW_phone"><label for="nkPhone">Phone</label>' +
+            '<input type="tel" id="nkPhone" autocomplete="tel" inputmode="tel"><span class="hf-err">The office will ring you, so we need a number.</span></div>' +
+          '<div class="cf-row" id="nkW_email"><label for="nkEmail">Email</label>' +
+            '<input type="email" id="nkEmail" autocomplete="email" inputmode="email"><span class="hf-err">That email address does not look right.</span></div>' +
+          '<div class="cf-row"><label for="nkGuests">Rough number of guests <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>' +
+            '<input type="text" id="nkGuests" inputmode="numeric"></div>' +
+          '<div class="cf-row"><label for="nkNotes">Anything else <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>' +
+            '<textarea id="nkNotes" maxlength="600" style="min-height:70px;"></textarea></div>' +
+          '<label class="declare2" id="nkW_priv"><input type="checkbox" id="nkPriv">' +
+            '<span>I understand the masjid will keep these details to deal with this request and to contact me about it. ' +
+            'See the <a href="#" data-nav="privacy">privacy notice</a>.</span></label>' +
+          '<div class="ar-problems" id="nkProblems" role="alert" aria-live="polite"></div>' +
+          '<button type="submit" class="btn btn-gold cf-submit" id="nkSubmit">Send my request</button>' +
+          '<p class="cf-note">Nothing is sent until you press this, and sending it does not reserve the date.</p>' +
+        '</form>' +
+        '<div class="ar-done" id="nkDone"><h4 id="nkDoneH">&nbsp;</h4><p id="nkDoneP">&nbsp;</p>' +
+          '<div class="ar-ref" id="nkDoneRef">&mdash;</div></div>';
+      wireForm();
+    }
+
+    function wireForm(){
+      var form = $('nkForm'), loadedAt = Date.now();
+      var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      function v(id){ return ($(id).value || '').trim(); }
+      function mark(id, bad){ $(id).classList.toggle('bad', !!bad); }
+      function problems(list){
+        var box = $('nkProblems');
+        box.innerHTML = list.map(function(m){ return '• ' + esc(m); }).join('<br>');
+        box.classList.add('on'); box.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        $('nkProblems').classList.remove('on');
+        var bad = [];
+        if(!S.a) bad.push('Choose a date on the calendar.');
+        if(!S.flex && !S.time) bad.push('Choose a time, or say you are flexible.');
+        mark('nkW_name', !v('nkName'));   if(!v('nkName')) bad.push('We need a name to ask for.');
+        mark('nkW_role', !v('nkRole'));   if(!v('nkRole')) bad.push('Tell us whether you are the groom, the bride or a family member.');
+        mark('nkW_phone', !v('nkPhone')); if(!v('nkPhone')) bad.push('The office rings every request, so we need a phone number.');
+        var badEmail = !EMAIL.test(v('nkEmail'));
+        mark('nkW_email', badEmail);      if(badEmail) bad.push('That email address does not look right.');
+        mark('nkW_priv', !$('nkPriv').checked);
+        if(!$('nkPriv').checked) bad.push('Please tick to say you understand how your details are used.');
+        if(bad.length){ problems(bad); return; }
+
+        if($('nkWeb').value !== '' || (Date.now() - loadedAt) < 2000){
+          form.style.display = 'none'; $('nkDone').classList.add('on');
+          $('nkDoneH').textContent = 'Thank you'; $('nkDoneP').textContent = '';
+          $('nkDoneRef').textContent = '—';
+          return;
+        }
+
+        var btn = $('nkSubmit');
+        btn.disabled = true; btn.textContent = 'Sending…';
+        var cfg = window.TAIYABAH_PUBLIC || {};
+        if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY){
+          btn.disabled = false; btn.textContent = 'Send my request';
+          problems(['Online requests are not connected yet. Please ring the office on 01204 535 997 between 5pm and 7pm.']);
+          return;
+        }
+
+        fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/request_nikah_date', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
+                    'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
+          body: JSON.stringify({ payload:{
+            preferred_date: S.a, alternative_date: S.b || '',
+            preferred_time: S.flex ? '' : S.time, time_flexible: S.flex,
+            guests_estimate: v('nkGuests'),
+            contact_name: v('nkName'), contact_role: v('nkRole'),
+            contact_phone: v('nkPhone'), contact_email: v('nkEmail'),
+            notes: v('nkNotes'), privacy_accepted: true
+          }})
+        })
+        .then(function(r){ return r.text().then(function(t){ return {ok:r.ok, body:t, status:r.status}; }); })
+        .then(function(res){
+          if(!res.ok) throw new Error(res.status + ' ' + res.body);
+          var d = JSON.parse(res.body);
+          form.style.display = 'none';
+          $('nkDone').classList.add('on');
+          $('nkDoneH').textContent = 'Request received';
+          $('nkDoneP').textContent = 'The office will ring you to confirm whether ' + pretty(S.a) +
+            ' can be done, go through the details and take payment. ' +
+            'This is not a confirmed booking until they say so.';
+          $('nkDoneRef').textContent = d.reference;
+          $('nkDone').scrollIntoView({behavior:'smooth', block:'center'});
+        })
+        .catch(function(err){
+          btn.disabled = false; btn.textContent = 'Send my request';
+          problems([/already have a request/.test(err.message)
+            ? 'We already have a request from that email address for that date. The office will be in touch.'
+            : 'We could not send your request just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
+        });
+      });
+    }
+
+    grid.addEventListener('click', function(e){
+      var b = e.target.closest('.hh-day'); if(!b || b.disabled) return;
+      var k = b.dataset.d;
+      if(S.mode === 'a'){
+        S.a = (S.a === k) ? null : k;
+        if(S.a && S.a === S.b) S.b = null;
+      } else {
+        S.b = (S.b === k) ? null : k;
+        if(S.b && S.b === S.a) S.a = null;
+      }
+      renderMonth(); renderPanel();
+    });
+
+    $('nkSlots').addEventListener('click', function(e){
+      var b = e.target.closest('.nk-slot'); if(!b) return;
+      if(b.dataset.t === 'flex'){ S.flex = !S.flex; if(S.flex) S.time = null; }
+      else { S.flex = false; S.time = (S.time === b.dataset.t) ? null : b.dataset.t; }
+      renderSlots(); renderPanel();
+    });
+
+    $('nkPrev').addEventListener('click', function(){ view.setMonth(view.getMonth()-1); renderMonth(); });
+    $('nkNext').addEventListener('click', function(){ view.setMonth(view.getMonth()+1); renderMonth(); });
+    $('nkModeA').addEventListener('click', function(){ S.mode = 'a'; renderPanel(); });
+    $('nkModeB').addEventListener('click', function(){ S.mode = 'b'; renderPanel(); });
+    $('nkClear').addEventListener('click', function(){
+      S = { mode:'a', a:null, b:null, time:null, flex:false };
+      $('nkAction').innerHTML = '';
+      renderMonth(); renderSlots(); renderPanel();
+    });
+
+    renderMonth(); renderSlots(); renderPanel();
   })();
 
   navLinks.forEach(a => a.addEventListener('click', (e) => {
