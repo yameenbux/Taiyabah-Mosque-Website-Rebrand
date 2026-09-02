@@ -88,7 +88,7 @@ Images and fonts are base64 data URIs substituted at build time from
 | Layer | What's used | Why |
 | --- | --- | --- |
 | **Frontend** | HTML5, CSS3, vanilla JavaScript | No framework and no bundler. One self-contained file a browser runs directly — fewer moving parts on a site a volunteer may have to edit years from now |
-| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 20 pages |
+| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 23 pages |
 | **Routing** | Hash-based, single document | Every page is one HTTP response. No server, no router library, and the whole site works from a file:// URL |
 | **Build** | Python 3, standard library only | Substitutes `{{PLACEHOLDER}}` tokens into the template. `verify_structure.py` runs first and refuses to build a broken document |
 | **Typography** | Fraunces, Hanken Grotesk, Amiri — self-hosted woff2 | Google Fonts would send every visitor's IP to Google before they consented. Subset with fontTools; Arabic keeps its full shaping tables |
@@ -278,7 +278,7 @@ with a declaration held at the office.
 true. The tick on the home page now reads *Registered charity 1041569*, which is
 verifiable.
 
-Neither claim can drift back: a test walks all 20 pages plus the header, drawer
+Neither claim can drift back: a test walks all 23 pages plus the header, drawer
 and footer looking for both phrases.
 
 ---
