@@ -52,6 +52,7 @@ subs = {
     '{{ARTICLE_RAMADAN_THUMB_B64}}': load('build-inputs/article_ramadan_thumb_b64.txt'),
     '{{ARTICLE_HAJJ_HERO_B64}}': load('build-inputs/article_hajj_hero_b64.txt'),
     '{{ARTICLE_HAJJ_THUMB_B64}}': load('build-inputs/article_hajj_thumb_b64.txt'),
+    '{{EDU_GHUSL_B64}}': load('build-inputs/edu_ghusl_b64.txt'),
 }
 
 out = tpl

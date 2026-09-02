@@ -148,27 +148,33 @@ link to `/apply/`.
 Until then the public Madrasah → Admissions page carries the fees, class times
 and guidelines only, and asks people to ring the office.
 
-## Turning on Arabic class registration
+## Turning on course registration
 
-The Education page is live with the class details and the office phone number.
-The sign-up form is written and tested but hidden behind one switch.
+The Education pages are live with the class details and the office phone
+number. The sign-up forms are written and tested but hidden behind one switch.
 
-To turn it on:
+To turn them on:
 
-1. Apply `db/004_arabic_classes.sql`. It is a much lighter ask than the
-   madrasah migration — adult names, emails and phone numbers, no children and
-   no health data — but it still needs ICO registration, a documented lawful
-   basis, a retention period and a line in the privacy notice. Read the header
-   of that file before running it.
+1. Apply `db/004_courses.sql`. Much lighter than the madrasah migration —
+   adult names, emails and phone numbers, no children and no health data — but
+   it still needs ICO registration, a documented lawful basis, a retention
+   period and a line in the privacy notice. Read the header of that file first.
 2. In `index_template.html`, find `REGISTRATION_OPEN = false` and set it true.
-3. While you are there, set `ARABIC_DAY` to the evening the class runs, e.g.
-   `'Tuesdays'`. Leave it empty and the page just says "one evening a week".
+   One switch covers every course.
+3. While you are there, set `day` on the arabic entry in `COURSES` to the
+   evening it runs, e.g. `'Tuesdays'`. Leave it empty and the page just says
+   "one evening a week".
 4. Rebuild and upload.
 
-Do not do step 2 before step 1. With the switch on and the table missing, a
+Do not do step 2 before step 1. With the switch on and the tables missing, a
 visitor fills the form in and is handed an error.
 
-The fifteen-place cap is enforced in the database, not in the page — the
-function counts existing sign-ups inside a lock and returns either a place or a
-waiting-list position. Nobody has to keep a "places left" number up to date, and
-two people cannot take the last seat at once.
+**Adding a third course** is a `.course-reg` div on a new page plus an entry in
+`COURSES` in `index_template.html`, and one row in `public.courses`. The
+capacity, the cohorts and whether sign-ups are open all live in that row, so
+the office can close a course without a code change.
+
+The place cap is enforced in the database, not in the page — the function
+counts existing sign-ups inside a lock and returns either a place or a
+waiting-list position. Nobody has to keep a "places left" number up to date,
+and two people cannot take the last seat at once.

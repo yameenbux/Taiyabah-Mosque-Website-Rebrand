@@ -1136,6 +1136,30 @@ window.TAIYABAH_PUBLIC = {
   @media(min-width:620px){ .hp-row .len{text-align:right;} }
   .hp-row.is-past{opacity:.5;}
   .hp-est{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.22);border-radius:4px;padding:2px 6px;margin-left:7px;white-space:nowrap;}
+  /* ---- Education course tiles ------------------------------------------- */
+  .edu-grid{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:640px){ .edu-grid{grid-template-columns:1fr 1fr;} }
+  .edu-tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;text-decoration:none;color:inherit;
+    box-shadow:var(--shadow);transition:.2s ease;}
+  a.edu-tile:hover{transform:translateY(-2px);border-color:var(--gold);}
+  .edu-tile .et-media{display:block;aspect-ratio:16/9;background:var(--brand-900);
+    position:relative;overflow:hidden;}
+  .edu-tile .et-media .et-ic{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;color:var(--gold-bright);opacity:.9;}
+  .edu-tile .et-media .et-ic svg{width:52px;height:52px;}
+  .edu-tile .et-photo{width:100%;height:100%;object-fit:cover;display:block;}
+  .edu-tile .et-body{display:flex;flex-direction:column;gap:5px;padding:17px 19px 20px;}
+  .edu-tile .et-tag{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;}
+  .edu-tile .et-h{font-family:"Fraunces",serif;font-weight:600;font-size:1.12rem;
+    color:var(--ink);line-height:1.25;margin:2px 0 1px;}
+  .edu-tile .et-p{font-size:.87rem;line-height:1.6;color:var(--muted);}
+  .edu-tile .et-meta{font-size:.76rem;color:var(--muted);opacity:.85;margin-top:4px;}
+  .edu-tile .et-read{margin-top:8px;font-size:.82rem;font-weight:700;color:var(--brand-700);}
+  .edu-tile.is-soon{opacity:.72;}
+  .edu-tile.is-soon .et-media{background:var(--paper);border-bottom:1px solid var(--line);}
+  .edu-tile.is-soon .et-media .et-ic{color:var(--muted);opacity:.45;}
   /* ---- Education / Arabic class registration ---------------------------- */
   .cf-two{display:grid;gap:0 14px;grid-template-columns:1fr;}
   @media(min-width:560px){ .cf-two{grid-template-columns:1fr 1fr;} }
@@ -2828,6 +2852,7 @@ window.TAIYABAH_PUBLIC = {
 </div>
 
 <!-- ================= SERVICES: EDUCATION ================= -->
+<!-- ================= SERVICES: EDUCATION (hub) ================= -->
 <div class="page" data-page="svc-education">
   <section class="page-masthead">
     <div class="container">
@@ -2835,7 +2860,71 @@ window.TAIYABAH_PUBLIC = {
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Education</h1>
-        <p>Classes at the masjid for adults, alongside the children's madrasah. We're starting with Arabic.</p>
+        <p>Classes and workshops at the masjid for adults, alongside the children's madrasah.</p>
+      </div>
+    </div>
+  </section>
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-detail-facts svc-hub">
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Every course below is open to adults aged 16 and over, taught at the masjid, with men's and women's sessions run separately. Places are limited and registration is required &mdash; you cannot simply turn up.</p>
+        <div class="edu-grid" style="margin-top:22px;">
+
+          <a class="edu-tile" href="#" data-nav="svc-edu-arabic">
+            <span class="et-media">
+              <span class="et-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M9 7.5h7M9 11h5"/></svg></span>
+            </span>
+            <span class="et-body">
+              <span class="et-tag">Weekly &middot; Adults 16+</span>
+              <span class="et-h">Arabic Classes</span>
+              <span class="et-p">Read and understand the language of the Qur'an, starting from the alphabet. No previous study assumed.</span>
+              <span class="et-meta">One evening a week &middot; 7&ndash;8pm &middot; 15 places</span>
+              <span class="et-read">Details &amp; sign-up &rarr;</span>
+            </span>
+          </a>
+
+          <a class="edu-tile" href="#" data-nav="svc-edu-ghusl">
+            <span class="et-media"><img class="et-photo" src="{{EDU_GHUSL_B64}}" alt="Carved marble headstones with gilded Arabic calligraphy" loading="lazy" decoding="async"></span>
+            <span class="et-body">
+              <span class="et-tag">Workshop &middot; Adults 16+</span>
+              <span class="et-h">Ghusl Workshop</span>
+              <span class="et-p">How to wash and prepare a body for burial &mdash; taught properly, by people who do it.</span>
+              <span class="et-meta">One-off session &middot; run periodically &middot; 15 places</span>
+              <span class="et-read">Details &amp; sign-up &rarr;</span>
+            </span>
+          </a>
+
+          <div class="edu-tile is-soon">
+            <span class="et-media">
+              <span class="et-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5c2.5-1.6 5.2-1.6 7.5 0v13c-2.3-1.6-5-1.6-7.5 0-2.5-1.6-5.2-1.6-7.5 0v-13c2.3-1.6 5-1.6 7.5 0z"/><path d="M12 4.5v13"/></svg></span>
+            </span>
+            <span class="et-body">
+              <span class="et-tag">Coming soon</span>
+              <span class="et-h">More courses</span>
+              <span class="et-p">Tajweed, Seerah, a women's circle &mdash; the classes that happen are the ones people ask for. Tell the office what you'd like taught.</span>
+              <span class="et-meta">&nbsp;</span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="cs-cta" style="margin-top:30px;">
+        <a class="btn btn-gold" data-nav="contact">Suggest a course</a>
+        <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= EDUCATION: ARABIC CLASSES ================= -->
+<div class="page" data-page="svc-edu-arabic">
+  <section class="page-masthead">
+    <div class="container">
+      <a class="back-link" href="#" data-nav="svc-education"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Education</a>
+      <div class="section-head on-dark">
+        <div class="eyebrow">Education</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Arabic Classes</h1>
+        <p>Evening Arabic for adults, taught at the masjid &mdash; from the alphabet upward.</p>
       </div>
     </div>
   </section>
@@ -2847,110 +2936,103 @@ window.TAIYABAH_PUBLIC = {
             <div class="svc-fact"><div class="k">Time</div><div class="v tnum">7&ndash;8pm</div></div>
             <div class="svc-fact"><div class="k">Places</div><div class="v tnum">15</div></div>
           </div>
-          <div class="adm-status" id="eduStatus">
-            <span class="lab">Registration</span>
-            <h3 id="eduStatusH">Registration opens shortly</h3>
-            <p id="eduStatusP">Places are limited to fifteen per class, so they are given out in the order people sign up. Ring the office to put your name down in the meantime.</p>
-            <p style="margin-bottom:0;"><strong style="color:#F3EFE3;">The office takes calls between 5pm and 7pm.</strong></p>
-          </div>
+          <div class="course-reg" data-course="arabic" data-cap="15"></div>
           <a class="svc-cta-row" href="tel:01204535997">
             <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
             <span class="t"><span class="k">Masjid office &middot; 5pm&ndash;7pm</span><span class="v tnum">01204 535 997</span></span>
             <span class="go">&rsaquo;</span>
           </a>
-          <a class="svc-cta-row" href="mailto:admin@taiyabahmasjid.com">
-            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="15" rx="2"/><path d="M3 6l9 6 9-6"/></svg></span>
-            <span class="t"><span class="k">Email the office</span><span class="v">admin@taiyabahmasjid.com</span></span>
-            <span class="go">&rsaquo;</span>
-          </a>
         </div>
-
         <div class="svc-detail-facts">
-          <div class="subhead"><h3 style="font-size:1.1rem;">Arabic Classes</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Evening Arabic for adults, taught at the masjid. The aim is to get you reading and understanding the language of the Qur'an rather than only reciting it &mdash; starting from the alphabet, so no previous study is assumed.</p>
-
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The aim is to get you reading and understanding the language of the Qur'an, not only reciting it. Classes start from the alphabet, so no previous study is assumed &mdash; and they run after the madrasah finishes, when the building is already open.</p>
           <dl class="adm-rules">
-            <div><dt>When</dt><dd><span id="eduWhen">One evening a week, 7:00&ndash;8:00pm.</span> Classes run after the madrasah finishes, so the building is already open.</dd></div>
+            <div><dt>When</dt><dd><span id="eduWhen">One evening a week, 7:00&ndash;8:00pm.</span></dd></div>
             <div><dt>Who for</dt><dd>Adults aged <strong>16 and over</strong>. Men's and women's classes are taught separately.</dd></div>
-            <div><dt>Places</dt><dd><strong>Fifteen per class.</strong> Small on purpose &mdash; a language class stops working when it gets much bigger than that.</dd></div>
-            <div><dt>Level</dt><dd>Complete beginners are welcome. Tell the office roughly where you are and you'll be placed accordingly.</dd></div>
-            <div><dt>Signing up</dt><dd>Registration is required &mdash; you cannot simply turn up. Places go in the order they are taken, and once fifteen are gone the rest join a waiting list.</dd></div>
+            <div><dt>Places</dt><dd><strong>Fifteen per class.</strong> Small on purpose &mdash; a language class stops working much beyond that.</dd></div>
+            <div><dt>Level</dt><dd>Complete beginners are welcome. Say roughly where you are when you register and you'll be placed accordingly.</dd></div>
+            <div><dt>Signing up</dt><dd>Required &mdash; you cannot simply turn up. Places go in the order they are taken; after fifteen, the rest join a waiting list.</dd></div>
           </dl>
-
-          <div id="eduRegWrap" style="margin-top:30px;">
-            <div class="subhead"><h3 style="font-size:1.1rem;">Register your place</h3><span class="rule"></span></div>
-            <div class="cform">
-              <p class="cform-lead">Fifteen places per class. If they have all gone by the time you send this, you'll be told straight away and put on the waiting list rather than left wondering.</p>
-              <form id="arForm" novalidate autocomplete="on">
-                <div class="hp-trap" aria-hidden="true"><label for="ar_web">Leave empty</label><input type="text" id="ar_web" tabindex="-1" autocomplete="off"></div>
-
-                <div class="cf-row" id="w_arCohort">
-                  <label>Which class</label>
-                  <div class="yn2">
-                    <label><input type="radio" name="arCohort" value="mens"> Men's class</label>
-                    <label><input type="radio" name="arCohort" value="womens"> Women's class</label>
-                  </div>
-                  <span class="hf-err">Please choose a class.</span>
-                </div>
-
-                <div class="cf-two">
-                  <div class="cf-row" id="w_arFirst"><label for="arFirst">First name</label>
-                    <input type="text" id="arFirst" autocomplete="given-name"><span class="hf-err">Please enter your first name.</span></div>
-                  <div class="cf-row" id="w_arLast"><label for="arLast">Surname</label>
-                    <input type="text" id="arLast" autocomplete="family-name"><span class="hf-err">Please enter your surname.</span></div>
-                </div>
-
-                <div class="cf-two">
-                  <div class="cf-row" id="w_arEmail"><label for="arEmail">Email</label>
-                    <input type="email" id="arEmail" autocomplete="email" inputmode="email"><span class="hf-err">That email address does not look right.</span></div>
-                  <div class="cf-row" id="w_arMobile"><label for="arMobile">Mobile</label>
-                    <input type="tel" id="arMobile" autocomplete="tel" inputmode="tel"><span class="hf-err">Please give us a number to confirm your place on.</span></div>
-                </div>
-
-                <div class="cf-row" id="w_arExp">
-                  <label for="arExp">How much Arabic do you have already?</label>
-                  <select id="arExp">
-                    <option value="none">None at all &mdash; starting from the alphabet</option>
-                    <option value="some">I can read some, but don't understand much</option>
-                    <option value="confident">I read confidently and want to build on it</option>
-                  </select>
-                </div>
-
-                <div class="cf-row">
-                  <label for="arNotes">Anything we should know <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
-                  <textarea id="arNotes" maxlength="400" style="min-height:70px;"></textarea>
-                </div>
-
-                <label class="declare2" id="w_arAge"><input type="checkbox" id="arAge">
-                  <span>I confirm I am 16 or over.</span></label>
-                <label class="declare2" id="w_arPriv"><input type="checkbox" id="arPriv">
-                  <span>I understand the masjid will keep my name and contact details to run this class and to tell me about it, and nothing else. See the <a href="#" data-nav="privacy">privacy notice</a>.</span></label>
-
-                <div class="ar-problems" id="arProblems" role="alert" aria-live="polite"></div>
-                <button type="submit" class="btn btn-gold cf-submit" id="arSubmit">Register my place</button>
-                <p class="cf-note">Nothing is sent until you press this. Questions? Ring <a href="tel:01204535997">01204 535 997</a>, 5pm&ndash;7pm.</p>
-              </form>
-
-              <div class="ar-done" id="arDone">
-                <h4 id="arDoneH">&nbsp;</h4>
-                <p id="arDoneP">&nbsp;</p>
-                <div class="ar-ref" id="arDoneRef">&mdash;</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.1rem;">More to come</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Arabic is the first course the masjid is running for adults. Others will be added here as they are arranged. If there is something you would like taught &mdash; Tajweed, Seerah, a women's circle &mdash; tell the office; the classes that happen are the ones people ask for.</p>
         </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
-        <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+        <a class="btn btn-ghost-light" data-nav="svc-education">All courses</a>
       </div>
     </div>
   </section>
 </div>
 
+<!-- ================= EDUCATION: GHUSL WORKSHOP ================= -->
+<div class="page" data-page="svc-edu-ghusl">
+  <section class="page-masthead">
+    <div class="container">
+      <a class="back-link" href="#" data-nav="svc-education"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Education</a>
+      <div class="section-head on-dark">
+        <div class="eyebrow">Education &middot; Workshop</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Ghusl Workshop</h1>
+        <p>How to wash and prepare a body for burial &mdash; a duty that falls on the community, and one most people have never been shown.</p>
+      </div>
+    </div>
+  </section>
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-split is-rail-first">
+        <div class="svc-aside">
+          <div class="svc-facts" style="margin-bottom:16px;">
+            <div class="svc-fact"><div class="k">Format</div><div class="v" style="font-size:1.05rem;">One session</div></div>
+            <div class="svc-fact"><div class="k">Places</div><div class="v tnum">15</div></div>
+          </div>
+          <div class="course-reg" data-course="ghusl" data-cap="15"></div>
+          <a class="svc-cta-row" href="#" data-nav="svc-funeral">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a7 7 0 0114 0c0 5.5-7 10-7 10z"/><path d="M12 7.5v5M9.5 10h5"/></svg></span>
+            <span class="t"><span class="k">If you need help right now</span><span class="v">Funeral Services</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+          <a class="svc-cta-row" href="tel:01204535997">
+            <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+            <span class="t"><span class="k">Masjid office &middot; 5pm&ndash;7pm</span><span class="v tnum">01204 535 997</span></span>
+            <span class="go">&rsaquo;</span>
+          </a>
+        </div>
+        <div class="svc-detail-facts">
+          <p class="art-lead" style="font-size:1rem;">Washing the body of someone who has died is a <b>fard kifayah</b> &mdash; an obligation on the community as a whole rather than on any one person. As long as enough people can do it, the duty is discharged for everyone. Where nobody can, it falls on everyone.</p>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">In practice most families discover, in the worst week of their lives, that they do not know how and do not know who to ask. This workshop exists so that fewer families are in that position &mdash; and so that when it happens on your street, someone nearby can step in.</p>
+
+          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.1rem;">What the workshop covers</h3><span class="rule"></span></div>
+          <ul class="art-checklist">
+            <li>What happens in the hours after a death, and who to ring first</li>
+            <li>What is needed, and where the masjid keeps it</li>
+            <li>The washing itself, taken through step by step</li>
+            <li>Shrouding &mdash; the kafan, and how it is prepared</li>
+            <li>The adab of it: modesty, gentleness, and holding your tongue afterwards</li>
+            <li>What follows &mdash; janāzah prayer, and the burial</li>
+          </ul>
+          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">It is taught at the masjid, which has its own mortuary, so what you are shown is what you would actually be doing in the room.</p>
+
+          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.1rem;">Practical details</h3><span class="rule"></span></div>
+          <dl class="adm-rules">
+            <div><dt>Who for</dt><dd>Adults aged <strong>16 and over</strong>. <strong>Men's and women's sessions are run separately</strong>, because men wash men and women wash women.</dd></div>
+            <div><dt>When</dt><dd>A one-off session, run periodically rather than to a fixed timetable. Register and the office will tell you when the next one is.</dd></div>
+            <div><dt>Places</dt><dd><strong>Fifteen per session.</strong> After that, names go on the list for the session after.</dd></div>
+            <div><dt>Experience</dt><dd>None expected. Most people who come have never done it. Those who have are welcome too &mdash; the masjid needs more of you.</dd></div>
+            <div><dt>Cost</dt><dd id="ghuslCost">Ring the office to confirm.</dd></div>
+          </dl>
+
+          <div class="art-cta-box">
+            <p>If you have had a bereavement and need help now, this is not the page you want &mdash; the masjid's funeral service is available around the clock and will take you through everything.</p>
+            <div class="cs-cta" style="margin-top:14px;">
+              <a class="btn btn-gold" data-nav="svc-funeral">Funeral Services</a>
+              <a class="btn btn-ghost-dark" data-nav="contact">Contact the office</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cs-cta" style="margin-top:32px;">
+        <a class="btn btn-ghost-light" data-nav="svc-education">All courses</a>
+      </div>
+    </div>
+  </section>
+</div>
 <!-- ================= SERVICES: HALL / ROOM HIRE ================= -->
 <div class="page" data-page="svc-hallhire">
   <section class="svc-hero-banner">
@@ -4012,6 +4094,8 @@ window.TAIYABAH_PUBLIC = {
     'madrasah-admissions': 'Madrasah Admissions',
     'madrasah-holidays': 'Holiday Planner',
     'svc-education': 'Education',
+    'svc-edu-arabic': 'Arabic Classes',
+    'svc-edu-ghusl': 'Ghusl Workshop',
   };
 
 
@@ -4768,127 +4852,201 @@ window.TAIYABAH_PUBLIC = {
   })();
 
 
-  /* ---------------- Evening Arabic classes ---------------------------------
-     REGISTRATION_OPEN is the only switch. Leave it false until
-     db/004_arabic_classes.sql has actually been applied — with it true and the
-     table missing, a visitor fills the form in and is handed an error, which
-     is worse than the honest "ring the office" the page shows instead.
+  /* ---------------- Course registration ------------------------------------
+     One module drives every course. Adding a third is a `.course-reg` div in
+     the markup plus an entry in COURSES below — the form, the validation, the
+     waiting-list handling and the closed state all come from here, so the two
+     courses cannot drift apart.
 
-     ARABIC_DAY: put the evening in here (e.g. 'Tuesdays') once it is fixed.
-     While it is empty the page says "one evening a week" and sends people to
-     the office, rather than naming a day that might change.
+     REGISTRATION_OPEN is the only switch. Leave it false until
+     db/004_courses.sql has been applied — with it true and the tables missing,
+     a visitor fills the form in and is handed an error, which is worse than
+     the honest "ring the office" they see instead.
+
+     `day`: fill in once the evening is fixed, e.g. 'Tuesdays'. While it is
+     empty the page says "one evening a week" rather than naming a day that
+     might change.
   ------------------------------------------------------------------------- */
   (function(){
     var REGISTRATION_OPEN = false;
-    var ARABIC_DAY = '';
-    var CAP = 15;
 
-    var form = document.getElementById('arForm');
-    if(!form) return;
-    var $ = function(id){ return document.getElementById(id); };
+    var COURSES = {
+      arabic: {
+        name: 'Arabic Classes', cap: 15, day: '',
+        closed: 'Places are limited to fifteen per class and go in the order people sign up. Ring the office to put your name down in the meantime.',
+        open:   'Fill in the form below. Places go in the order they are taken and you are told straight away whether you have one.',
+        cohorts: [['mens', "Men's class"], ['womens', "Women's class"]],
+        expLabel: 'How much Arabic do you have already?',
+        exp: [['none', 'None at all — starting from the alphabet'],
+              ['some', "I can read some, but don't understand much"],
+              ['confident', 'I read confidently and want to build on it']]
+      },
+      ghusl: {
+        name: 'Ghusl Workshop', cap: 15,
+        closed: 'Sessions are announced when they are scheduled. Ring the office to be told about the next one.',
+        open:   'Register below and the office will contact you with the date of the next session.',
+        cohorts: [['mens', "Men's session"], ['womens', "Women's session"]],
+        expLabel: 'Have you done this before?',
+        exp: [['none', 'No — I have never done it'],
+              ['some', 'I have helped once or twice'],
+              ['confident', 'I have done it a number of times']]
+      }
+    };
 
-    if(ARABIC_DAY){
-      $('eduWhen').textContent = ARABIC_DAY + ', 7:00–8:00pm.';
-    }
-
-    if(!REGISTRATION_OPEN){
-      $('eduRegWrap').style.display = 'none';
-      return;
-    }
-    $('eduStatusH').textContent = 'Registration is open';
-    $('eduStatusP').textContent = 'Fill in the form on this page. Places are given out in the order they are taken, and you are told immediately whether you have one.';
-
-    var loadedAt = Date.now();
     var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+    function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
-    function mark(id, on){ var e = $(id); if(e) e.classList.toggle('bad', !!on); }
-    function val(id){ return ($(id).value || '').trim(); }
-
-    function validate(){
-      var bad = [];
-      var cohort = form.querySelector('input[name="arCohort"]:checked');
-      mark('w_arCohort', !cohort);        if(!cohort) bad.push('Choose the men’s or women’s class.');
-      mark('w_arFirst', !val('arFirst')); if(!val('arFirst')) bad.push('Your first name is missing.');
-      mark('w_arLast',  !val('arLast'));  if(!val('arLast'))  bad.push('Your surname is missing.');
-      var badEmail = !EMAIL.test(val('arEmail'));
-      mark('w_arEmail', badEmail);        if(badEmail) bad.push('That email address does not look right.');
-      mark('w_arMobile', !val('arMobile'));
-      if(!val('arMobile')) bad.push('We need a mobile number to confirm your place.');
-      mark('w_arAge', !$('arAge').checked);
-      if(!$('arAge').checked) bad.push('These classes are for adults — please confirm you are 16 or over.');
-      mark('w_arPriv', !$('arPriv').checked);
-      if(!$('arPriv').checked) bad.push('Please tick to say you understand how your details are used.');
-      return bad;
+    var when = document.getElementById('eduWhen');
+    if(when && COURSES.arabic.day){
+      when.textContent = COURSES.arabic.day + ', 7:00–8:00pm.';
     }
 
-    function problems(list){
-      var box = $('arProblems');
-      box.innerHTML = list.map(function(m){ return '• ' + m; }).join('<br>');
-      box.classList.add('on');
-      box.scrollIntoView({ behavior:'smooth', block:'center' });
-    }
+    Array.prototype.forEach.call(document.querySelectorAll('.course-reg'), function(host){
+      var key = host.getAttribute('data-course');
+      var C = COURSES[key];
+      if(!C) return;
+      var p = 'cr_' + key + '_';                       // id prefix, unique per course
 
-    form.addEventListener('submit', function(e){
-      e.preventDefault();
-      $('arProblems').classList.remove('on');
-
-      var bad = validate();
-      if(bad.length){ problems(bad); return; }
-      if($('ar_web').value !== '' || (Date.now() - loadedAt) < 2000){
-        form.style.display = 'none'; $('arDone').classList.add('on');
-        $('arDoneH').textContent = 'Thank you'; $('arDoneP').textContent = '';
-        $('arDoneRef').textContent = '—';
+      if(!REGISTRATION_OPEN){
+        host.innerHTML =
+          '<div class="adm-status"><span class="lab">Registration</span>' +
+          '<h3>Registration opens shortly</h3><p>' + esc(C.closed) + '</p>' +
+          '<p style="margin-bottom:0;"><strong style="color:#F3EFE3;">The office takes calls between 5pm and 7pm.</strong></p></div>';
         return;
       }
 
-      var btn = $('arSubmit');
-      btn.disabled = true; btn.textContent = 'Sending…';
-      // TAIYABAH_PUBLIC, not TAIYABAH_CONFIG — the portals under /portal/ and
-      // /apply/ use the second name, the main site uses the first.
-      var cfg = window.TAIYABAH_PUBLIC || {};
-      if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY){
-        btn.disabled = false; btn.textContent = 'Register my place';
-        problems(['Online registration is not connected yet. Please ring the office on 01204 535 997 between 5pm and 7pm.']);
-        return;
+      host.innerHTML =
+        '<div class="cform">' +
+          '<p class="cform-lead">' + esc(C.open) + '</p>' +
+          '<form id="' + p + 'form" novalidate autocomplete="on">' +
+            '<div class="hp-trap" aria-hidden="true"><label for="' + p + 'web">Leave empty</label>' +
+              '<input type="text" id="' + p + 'web" tabindex="-1" autocomplete="off"></div>' +
+            '<div class="cf-row" id="' + p + 'w_cohort"><label>Which session</label><div class="yn2">' +
+              C.cohorts.map(function(c){
+                return '<label><input type="radio" name="' + p + 'cohort" value="' + c[0] + '"> ' + esc(c[1]) + '</label>';
+              }).join('') +
+            '</div><span class="hf-err">Please choose a session.</span></div>' +
+            '<div class="cf-two">' +
+              '<div class="cf-row" id="' + p + 'w_first"><label for="' + p + 'first">First name</label>' +
+                '<input type="text" id="' + p + 'first" autocomplete="given-name"><span class="hf-err">Please enter your first name.</span></div>' +
+              '<div class="cf-row" id="' + p + 'w_last"><label for="' + p + 'last">Surname</label>' +
+                '<input type="text" id="' + p + 'last" autocomplete="family-name"><span class="hf-err">Please enter your surname.</span></div>' +
+            '</div>' +
+            '<div class="cf-two">' +
+              '<div class="cf-row" id="' + p + 'w_email"><label for="' + p + 'email">Email</label>' +
+                '<input type="email" id="' + p + 'email" autocomplete="email" inputmode="email"><span class="hf-err">That email address does not look right.</span></div>' +
+              '<div class="cf-row" id="' + p + 'w_mobile"><label for="' + p + 'mobile">Mobile</label>' +
+                '<input type="tel" id="' + p + 'mobile" autocomplete="tel" inputmode="tel"><span class="hf-err">We need a number to confirm your place on.</span></div>' +
+            '</div>' +
+            '<div class="cf-row"><label for="' + p + 'exp">' + esc(C.expLabel) + '</label>' +
+              '<select id="' + p + 'exp">' + C.exp.map(function(o){
+                return '<option value="' + o[0] + '">' + esc(o[1]) + '</option>'; }).join('') + '</select></div>' +
+            '<div class="cf-row"><label for="' + p + 'notes">Anything we should know ' +
+              '<span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>' +
+              '<textarea id="' + p + 'notes" maxlength="400" style="min-height:70px;"></textarea></div>' +
+            '<label class="declare2" id="' + p + 'w_age"><input type="checkbox" id="' + p + 'age">' +
+              '<span>I confirm I am 16 or over.</span></label>' +
+            '<label class="declare2" id="' + p + 'w_priv"><input type="checkbox" id="' + p + 'priv">' +
+              '<span>I understand the masjid will keep my name and contact details to run this course and to tell me about it, and nothing else. ' +
+              'See the <a href="#" data-nav="privacy">privacy notice</a>.</span></label>' +
+            '<div class="ar-problems" id="' + p + 'problems" role="alert" aria-live="polite"></div>' +
+            '<button type="submit" class="btn btn-gold cf-submit" id="' + p + 'submit">Register my place</button>' +
+            '<p class="cf-note">Nothing is sent until you press this. Questions? Ring ' +
+              '<a href="tel:01204535997">01204 535 997</a>, 5pm–7pm.</p>' +
+          '</form>' +
+          '<div class="ar-done" id="' + p + 'done"><h4 id="' + p + 'doneH">&nbsp;</h4>' +
+            '<p id="' + p + 'doneP">&nbsp;</p><div class="ar-ref" id="' + p + 'doneRef">—</div></div>' +
+        '</div>';
+
+      var $ = function(s){ return document.getElementById(p + s); };
+      var form = $('form'), loadedAt = Date.now();
+      function val(s){ return ($(s).value || '').trim(); }
+      function mark(s, bad){ $(s).classList.toggle('bad', !!bad); }
+      function problems(list){
+        var box = $('problems');
+        box.innerHTML = list.map(function(m){ return '• ' + esc(m); }).join('<br>');
+        box.classList.add('on');
+        box.scrollIntoView({ behavior:'smooth', block:'center' });
       }
 
-      fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/register_for_arabic_class', {
-        method:'POST',
-        headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
-                  'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
-        body: JSON.stringify({ payload:{
-          cohort: form.querySelector('input[name="arCohort"]:checked').value,
-          first_name: val('arFirst'), surname: val('arLast'),
-          email: val('arEmail'), mobile: val('arMobile'),
-          experience: $('arExp').value, notes: val('arNotes'),
-          age_confirmed: true, privacy_accepted: true
-        }})
-      })
-      .then(function(r){ return r.text().then(function(t){ return { ok:r.ok, body:t, status:r.status }; }); })
-      .then(function(res){
-        if(!res.ok) throw new Error(res.status + ' ' + res.body);
-        var d = JSON.parse(res.body);
-        form.style.display = 'none';
-        $('arDone').classList.add('on');
-        if(d.outcome === 'place'){
-          $('arDoneH').textContent = 'You have a place';
-          $('arDoneP').textContent = 'The office will be in touch with the start date and what to bring. ' +
-            (d.places_left > 0 ? d.places_left + ' place' + (d.places_left === 1 ? '' : 's') + ' left on this class.'
-                               : 'That was the last place on this class.');
-        } else {
-          $('arDoneH').textContent = 'You are on the waiting list';
-          $('arDoneP').textContent = 'All ' + CAP + ' places had gone. You are number ' + d.waiting_position +
-            ' on the list and the office will contact you if a place comes up.';
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        $('problems').classList.remove('on');
+
+        var bad = [], cohort = form.querySelector('input[name="' + p + 'cohort"]:checked');
+        mark('w_cohort', !cohort);      if(!cohort) bad.push('Choose which session you would like to join.');
+        mark('w_first', !val('first')); if(!val('first')) bad.push('Your first name is missing.');
+        mark('w_last',  !val('last'));  if(!val('last'))  bad.push('Your surname is missing.');
+        var badEmail = !EMAIL.test(val('email'));
+        mark('w_email', badEmail);      if(badEmail) bad.push('That email address does not look right.');
+        mark('w_mobile', !val('mobile'));
+        if(!val('mobile')) bad.push('We need a mobile number to confirm your place.');
+        mark('w_age', !$('age').checked);
+        if(!$('age').checked) bad.push('This course is for adults — please confirm you are 16 or over.');
+        mark('w_priv', !$('priv').checked);
+        if(!$('priv').checked) bad.push('Please tick to say you understand how your details are used.');
+        if(bad.length){ problems(bad); return; }
+
+        // Validation first, then the anti-bot gates — an earlier version had
+        // these the other way round and showed a fake success screen to anyone
+        // who pressed the button early to see what was required.
+        if($('web').value !== '' || (Date.now() - loadedAt) < 2000){
+          form.style.display = 'none'; $('done').classList.add('on');
+          $('doneH').textContent = 'Thank you'; $('doneP').textContent = '';
+          $('doneRef').textContent = '—';
+          return;
         }
-        $('arDoneRef').textContent = d.reference;
-        $('arDone').scrollIntoView({ behavior:'smooth', block:'center' });
-      })
-      .catch(function(err){
-        btn.disabled = false; btn.textContent = 'Register my place';
-        var m = /already a registration/.test(err.message)
-          ? 'There is already a registration for that email address on this class. Ring the office if you think that is wrong.'
-          : 'We could not register you just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.';
-        problems([m]);
+
+        var btn = $('submit');
+        btn.disabled = true; btn.textContent = 'Sending…';
+        // TAIYABAH_PUBLIC on the main site; the portals under /portal/ and
+        // /apply/ use TAIYABAH_CONFIG. Different name, same two values.
+        var cfg = window.TAIYABAH_PUBLIC || {};
+        if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY){
+          btn.disabled = false; btn.textContent = 'Register my place';
+          problems(['Online registration is not connected yet. Please ring the office on 01204 535 997 between 5pm and 7pm.']);
+          return;
+        }
+
+        fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/register_for_course', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
+                    'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
+          body: JSON.stringify({ payload:{
+            course_key: key, cohort: cohort.value,
+            first_name: val('first'), surname: val('last'),
+            email: val('email'), mobile: val('mobile'),
+            experience: $('exp').value, notes: val('notes'),
+            age_confirmed: true, privacy_accepted: true
+          }})
+        })
+        .then(function(r){ return r.text().then(function(t){ return { ok:r.ok, body:t, status:r.status }; }); })
+        .then(function(res){
+          if(!res.ok) throw new Error(res.status + ' ' + res.body);
+          var d = JSON.parse(res.body);
+          form.style.display = 'none';
+          $('done').classList.add('on');
+          if(d.outcome === 'place'){
+            $('doneH').textContent = 'You have a place';
+            $('doneP').textContent = 'The office will be in touch with the details. ' +
+              (d.places_left > 0
+                ? d.places_left + ' place' + (d.places_left === 1 ? '' : 's') + ' left on this session.'
+                : 'That was the last place on this session.');
+          } else {
+            $('doneH').textContent = 'You are on the waiting list';
+            $('doneP').textContent = 'All ' + d.capacity + ' places had gone. You are number ' +
+              d.waiting_position + ' on the list, and the office will contact you when one comes up.';
+          }
+          $('doneRef').textContent = d.reference;
+          $('done').scrollIntoView({ behavior:'smooth', block:'center' });
+        })
+        .catch(function(err){
+          btn.disabled = false; btn.textContent = 'Register my place';
+          problems([/already a registration/.test(err.message)
+            ? 'There is already a registration for that email address on this course. Ring the office if you think that is wrong.'
+            : 'We could not register you just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
+        });
       });
     });
   })();
