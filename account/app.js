@@ -68,6 +68,39 @@
     el("done-name").textContent  = name;
     el("done-email").textContent = user.email;
     show("view-done");
+    offerAdminArea(user);
+  }
+
+  // Administrators use the same login here as they do for the shop, so this
+  // page is where they arrive. Rather than expecting them to know a URL, show
+  // a second button to /portals/ — but only if they really are one.
+  //
+  // Three things worth keeping straight if you change this:
+  //
+  //   1. The role comes from user_roles under RLS, never from anything the
+  //      browser holds. A customer's own read returns no rows, so no button.
+  //
+  //   2. It fails closed. Any error — offline, a policy change, a typo in a
+  //      column name — hides the button. A button that appears when we cannot
+  //      confirm the role would be worse than no button, because it would
+  //      teach an attacker which login is worth pursuing.
+  //
+  //   3. The button is a signpost, not a door. It grants nothing. The portals
+  //      ask for the authenticator code, and since migration 011 the database
+  //      refuses sensitive rows to a session that has not passed it.
+  function offerAdminArea(user) {
+    var btn = el("done-admin");
+    if (!btn) return;
+    btn.hidden = true;
+    if (!user || !user.id) return;
+
+    sb.from("user_roles").select("role").eq("user_id", user.id)
+      .then(function (res) {
+        if (res.error) return;                       // fail closed, say nothing
+        var roles = (res.data || []).map(function (r) { return r.role; });
+        btn.hidden = roles.indexOf("admin") === -1;
+      })
+      .catch(function () { /* fail closed */ });
   }
 
   // --- register -------------------------------------------------------------

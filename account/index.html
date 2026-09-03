@@ -367,6 +367,10 @@
       <div class="ok-note" style="text-align:center;">You are signed in. Your orders will be saved to this account.</div>
       <div class="card-actions">
         <a class="btn btn-gold" href="../index.html#shop">Go to the shop</a>
+        <!-- Administrators only, revealed by app.js after the role lookup comes
+             back. Hidden by default so that a customer, or a failed lookup,
+             shows nothing. -->
+        <a class="btn btn-ghost" href="../portals/" id="done-admin" hidden>Go to the admin area</a>
         <button type="button" class="btn btn-ghost" id="done-signout">Sign out</button>
       </div>
     </div>
