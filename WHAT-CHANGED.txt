@@ -1,0 +1,66 @@
+Back to the admin centre — for everyone
+=======================================
+
+Replaces the venue/ files from the previous zip. Upload over the top.
+
+  venue/index.html
+  venue/app.js
+  README.md
+
+The link now reads "← Back to the admin centre" and points at /portals/ from
+the moment the page loads, before anyone has signed in. That is what every
+member of staff will see, because every member of staff is an administrator.
+
+I left four lines in that put the old link back for a signed-in person who is
+NOT an administrator. Nobody is today, so it never runs. It is there so that
+the day somebody grants the hall_office role again, that person does not land
+on a "you have no access" page from the portal they use most. It costs nothing
+and it is commented as to why.
+
+
+ONE THING WORTH A CONVERSATION WITH THE COMMITTEE — NOT A CODE PROBLEM
+---------------------------------------------------------------------
+
+Giving every member of staff `admin` works, and for a handful of trustees it is
+a reasonable call. This is not me asking you to undo it. It is me making sure
+the trade is on the record, because it is the kind of thing that is obvious in
+hindsight and invisible beforehand.
+
+`admin` reads EVERYTHING. Today that is hall bookings and nikāḥ requests, which
+is unremarkable. But the madrasah system will hold roughly 800 children's
+records — names, dates of birth, and in time medical and special-educational-
+needs notes. That last category is special-category data under UK GDPR, and it
+carries a higher bar.
+
+Migration 004 was written for exactly this reason, and its own comment says it
+plainly: "the person who answers the phone about hiring a hall for a wedding has
+no business being able to open a child's file, and giving them that access would
+make the masjid's data protection position much harder to defend."
+
+The question is not technical. It is: is every person holding `admin` somebody
+the masjid would be content to name, in writing, to the ICO as having lawful
+access to every child's record?
+
+If the answer is yes — a few trustees, all DBS-checked, all with a reason to be
+there — then this is fine, and the useful thing is simply to write down that it
+was a decision rather than an accident. Regulators care far more about a
+documented judgement than a perfect one.
+
+If the answer is ever "not quite" — a volunteer who only does hall bookings, a
+teacher who only needs their own class — the narrower roles are all still there.
+Nothing was deleted. Every policy still honours hall_office and teacher, the
+tests still prove hall_office sees zero madrasah data, and granting one instead
+is a single line in STAFF_give_someone_a_role.sql.
+
+Two practical knock-ons while you are deciding:
+
+  * Migration 011 requires EVERY account holding admin to have an authenticator
+    set up before it will apply. More admins means more people to walk through
+    that. It is a hurdle worth clearing, not a reason to delay.
+
+  * Keep at least two administrators at all times. Deleting the only one
+    destroys its roles and profile by cascade, and nobody is left who can grant
+    the role back.
+
+I have added this to the README under the security rules, so it is somewhere
+the next person will find it rather than only in this note.
