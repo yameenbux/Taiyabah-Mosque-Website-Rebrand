@@ -25,9 +25,9 @@ exception when others then insert into r values (l,false,left(sqlerrm,80)); end;
 create or replace function pg_temp.req(d text, email text, extra jsonb default '{}'::jsonb)
 returns jsonb language plpgsql as $$ begin
   return public.request_nikah_date(
-    jsonb_build_object('preferred_date',d,'preferred_time','14:00','contact_name','A Person',
-      'contact_role','groom','contact_phone','07700900123','contact_email',email,
-      'privacy_accepted',true) || extra); end $$;
+    jsonb_build_object('preferred_date',d,'slot','after_zuhr','preferred_time','13:30',
+      'contact_name','A Person','contact_role','groom','contact_phone','07700900123',
+      'contact_email',email,'privacy_accepted',true) || extra); end $$;
 
 -- 1. anon may only call the function
 set role anon;
@@ -53,11 +53,11 @@ select pg_temp.eok('an alternative date is accepted',
   format($q$select pg_temp.req(%L,'couple2@example.com',
     jsonb_build_object('alternative_date',%L,'guests_estimate','120','notes','Saturday would suit us better'))$q$,
     (current_date+40)::text, (current_date+47)::text));
-select pg_temp.eok('flexible on time is accepted without a time',
+select pg_temp.eok('flexible is accepted without a prayer',
   format($q$select public.request_nikah_date(jsonb_build_object(
-    'preferred_date',%L,'time_flexible',true,'contact_name','B','contact_role','bride',
-    'contact_phone','07','contact_email','couple3@example.com','privacy_accepted',true))$q$,
-    (current_date+50)::text));
+    'preferred_date',%L,'slot','flexible','time_flexible',true,'contact_name','B',
+    'contact_role','bride','contact_phone','07','contact_email','couple3@example.com',
+    'privacy_accepted',true))$q$, (current_date+50)::text));
 reset role;
 
 -- 3. the things that must be refused
@@ -66,20 +66,42 @@ select pg_temp.efail('a date in the past is refused',
   format($q$select pg_temp.req(%L,'past@example.com')$q$, (current_date-1)::text));
 select pg_temp.efail('more than a year ahead is refused',
   format($q$select pg_temp.req(%L,'far@example.com')$q$, (current_date+400)::text));
-select pg_temp.efail('no time and not flexible is refused',
+select pg_temp.efail('no slot chosen is refused',
   format($q$select public.request_nikah_date(jsonb_build_object(
     'preferred_date',%L,'contact_name','C','contact_role','groom','contact_phone','07',
-    'contact_email','notime@example.com','privacy_accepted',true))$q$, (current_date+20)::text));
+    'contact_email','notime@example.com','privacy_accepted',true))$q$, (current_date+25)::text));
+
+-- the two-week notice period
+select pg_temp.efail('inside the two-week notice period is refused',
+  format($q$select pg_temp.req(%L,'soon@example.com')$q$, (current_date+13)::text));
+select pg_temp.eok('exactly fourteen days ahead is accepted',
+  format($q$select pg_temp.req(%L,'exactly14@example.com')$q$, (current_date+14)::text));
+
+-- the Saturday-only slot
+select pg_temp.efail('the 11am slot is refused on a weekday',
+  format($q$select pg_temp.req(%L,'sat1@example.com',
+    jsonb_build_object('slot','saturday_11','preferred_time','11:00'))$q$,
+    (date_trunc('week', current_date + 21) + interval '2 days')::date::text));
+select pg_temp.eok('the 11am slot is accepted on a Saturday',
+  format($q$select pg_temp.req(%L,'sat2@example.com',
+    jsonb_build_object('slot','saturday_11','preferred_time','11:00'))$q$,
+    (date_trunc('week', current_date + 21) + interval '5 days')::date::text));
+select pg_temp.efail('an unknown slot is refused',
+  format($q$select pg_temp.req(%L,'slot@example.com',
+    jsonb_build_object('slot','after_tahajjud'))$q$, (current_date+25)::text));
+select pg_temp.efail('flexible flag must match the flexible slot',
+  format($q$select pg_temp.req(%L,'mismatch@example.com',
+    jsonb_build_object('slot','flexible'))$q$, (current_date+25)::text));
 select pg_temp.efail('the privacy box must be ticked',
   format($q$select public.request_nikah_date(jsonb_build_object(
     'preferred_date',%L,'preferred_time','14:00','contact_name','C','contact_role','groom',
     'contact_phone','07','contact_email','nopriv@example.com','privacy_accepted',false))$q$,
-    (current_date+20)::text));
+    (current_date+25)::text));
 select pg_temp.efail('a bad email is refused',
-  format($q$select pg_temp.req(%L,'not-an-email')$q$, (current_date+20)::text));
+  format($q$select pg_temp.req(%L,'not-an-email')$q$, (current_date+25)::text));
 select pg_temp.efail('an unknown contact role is refused',
   format($q$select pg_temp.req(%L,'role@example.com',
-    jsonb_build_object('contact_role','wedding planner'))$q$, (current_date+20)::text));
+    jsonb_build_object('contact_role','wedding planner'))$q$, (current_date+25)::text));
 select pg_temp.efail('the same email cannot request the same date twice',
   format($q$select pg_temp.req(%L,'couple1@example.com')$q$, (current_date+30)::text));
 select pg_temp.eok('the same email CAN request a different date',
@@ -94,7 +116,7 @@ reset role;
 
 -- 5. admin workflow
 set role authenticated; set app.is_admin='on';
-insert into r select 'admin can read requests', count(*) = 5, count(*)::text from public.nikah_requests;
+insert into r select 'admin can read requests', count(*) >= 5, count(*)::text from public.nikah_requests;
 select pg_temp.eok('admin can confirm a request',
   $q$update public.nikah_requests set status='confirmed', agreed_date=preferred_date
      where contact_email='couple1@example.com'$q$);

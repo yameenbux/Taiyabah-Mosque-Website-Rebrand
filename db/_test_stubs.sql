@@ -10,3 +10,9 @@ create table public.admin_audit(
   actor uuid, created_at timestamptz not null default now());
 create or replace function public.is_admin() returns boolean
   language sql stable as $$ select current_setting('app.is_admin', true) = 'on' $$;
+
+-- Supabase provides these; the local harness has to stand them in.
+create or replace function auth.uid() returns uuid
+  language sql stable as $$ select nullif(current_setting('app.uid', true), '')::uuid $$;
+create or replace function public.has_role(uid uuid, r text) returns boolean
+  language sql stable as $$ select current_setting('app.role_' || r, true) = 'on' $$;

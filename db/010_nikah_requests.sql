@@ -35,6 +35,15 @@ create table public.nikah_requests (
   -- What they are asking for
   preferred_date date        not null,
   alternative_date date,
+  -- WHAT they asked for, not just when. A nikāḥ is nearly always held straight
+  -- after a congregational prayer, so the meaningful choice is the prayer;
+  -- preferred_time is the jamā'ah clock time as published on the day they
+  -- asked, kept alongside it because jamā'ah times move through the year and
+  -- the office needs to know what the family were actually looking at.
+  slot           text        not null
+                   check (slot in ('after_fajr','after_zuhr','after_asr',
+                                   'after_maghrib','after_isha',
+                                   'saturday_11','flexible')),
   preferred_time text,                       -- 'HH:MM', null when flexible
   time_flexible  boolean     not null default false,
   guests_estimate int        check (guests_estimate is null or guests_estimate between 0 and 2000),
@@ -59,8 +68,13 @@ create table public.nikah_requests (
 
   constraint alternative_after_or_equal_today
     check (alternative_date is null or alternative_date >= preferred_date - 365),
-  constraint flexible_or_a_time
-    check (time_flexible or preferred_time is not null)
+  constraint flexible_matches_slot
+    check ((slot = 'flexible') = time_flexible),
+  -- The Saturday late-morning slot exists for one reason: a nikāḥ before a
+  -- wedding meal, which only ever happens on a Saturday. Anything else would
+  -- be a mistake in the form.
+  constraint saturday_slot_is_on_a_saturday
+    check (slot <> 'saturday_11' or extract(isodow from preferred_date) = 6)
 );
 
 comment on table public.nikah_requests is
@@ -82,10 +96,17 @@ alter table public.nikah_requests enable row level security;
 -- function below reads the table to spot a duplicate request, and FORCE would
 -- apply RLS to the function's owner, silently returning nothing. anon still
 -- holds no privileges here at all, and authenticated is filtered to is_admin().
-create policy admin_read_nikah on public.nikah_requests
-  for select to authenticated using (public.is_admin());
-create policy admin_update_nikah on public.nikah_requests
-  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+-- The office works nikāḥ requests in the same place as hall bookings, so the
+-- hall_office role reads and updates these too. Same rule as hall_bookings:
+-- they may move the status and add notes, and may not touch what the family
+-- actually asked for.
+create policy office_read_nikah on public.nikah_requests
+  for select to authenticated
+  using (public.is_admin() or public.has_role(auth.uid(), 'hall_office'));
+create policy office_update_nikah on public.nikah_requests
+  for update to authenticated
+  using (public.is_admin() or public.has_role(auth.uid(), 'hall_office'))
+  with check (public.is_admin() or public.has_role(auth.uid(), 'hall_office'));
 create policy definer_insert_nikah on public.nikah_requests
   for insert with check (true);
 create policy definer_delete_nikah on public.nikah_requests
@@ -103,10 +124,12 @@ set search_path = public, pg_temp
 as $$
 declare
   HORIZON_DAYS constant int := 365;
+  NOTICE_DAYS  constant int := 14;   -- the masjid needs a fortnight
   v_date  date := (payload ->> 'preferred_date')::date;
   v_alt   date := nullif(payload ->> 'alternative_date','')::date;
   v_email text := lower(trim(payload ->> 'contact_email'));
   v_flex  boolean := coalesce((payload ->> 'time_flexible')::boolean, false);
+  v_slot  text := nullif(payload ->> 'slot','');
   v_time  text := nullif(payload ->> 'preferred_time','');
   v_ref   text;
 begin
@@ -116,14 +139,27 @@ begin
   if v_date < current_date then
     raise exception 'That date has already passed';
   end if;
+  -- Enforced here as well as in the page. The calendar simply does not offer
+  -- the next fortnight, but a form can be driven from outside a browser and
+  -- the office should never be handed a request it cannot honour.
+  if v_date < current_date + NOTICE_DAYS then
+    raise exception 'The masjid needs at least % days notice — the earliest date we can take is %',
+      NOTICE_DAYS, to_char(current_date + NOTICE_DAYS, 'DD Mon YYYY');
+  end if;
   if v_date > current_date + HORIZON_DAYS then
     raise exception 'Requests can only be made up to a year ahead';
   end if;
   if v_alt is not null and (v_alt < current_date or v_alt > current_date + HORIZON_DAYS) then
     raise exception 'The alternative date must also be within the next year';
   end if;
-  if not v_flex and v_time is null then
-    raise exception 'Please choose a time, or tell us you are flexible';
+  if v_slot is null then
+    raise exception 'Please choose a prayer, or tell us you are flexible';
+  end if;
+  if (v_slot = 'flexible') <> v_flex then
+    raise exception 'The chosen slot and the flexible flag disagree';
+  end if;
+  if v_slot = 'saturday_11' and extract(isodow from v_date) <> 6 then
+    raise exception 'The 11am slot is only available on a Saturday';
   end if;
 
   if exists (select 1 from public.nikah_requests
@@ -137,11 +173,12 @@ begin
            lpad(nextval('public.nikah_reference_seq')::text, 4, '0');
 
   insert into public.nikah_requests (
-    reference, preferred_date, alternative_date, preferred_time, time_flexible,
+    reference, preferred_date, alternative_date, slot, preferred_time, time_flexible,
     guests_estimate, contact_name, contact_role, contact_phone, contact_email,
     notes, privacy_accepted
   ) values (
-    v_ref, v_date, v_alt, case when v_flex then null else v_time end, v_flex,
+    v_ref, v_date, v_alt, v_slot,
+    case when v_flex then null else v_time end, v_flex,
     nullif(payload ->> 'guests_estimate','')::int,
     payload ->> 'contact_name', payload ->> 'contact_role',
     payload ->> 'contact_phone', v_email,
@@ -152,7 +189,7 @@ begin
   insert into public.admin_audit (action, detail)
   values ('nikah_request', jsonb_build_object('reference', v_ref, 'date', v_date));
 
-  return jsonb_build_object('reference', v_ref, 'preferred_date', v_date);
+  return jsonb_build_object('reference', v_ref, 'preferred_date', v_date, 'slot', v_slot);
 end;
 $$;
 
