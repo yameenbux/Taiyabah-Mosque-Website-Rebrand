@@ -90,7 +90,18 @@
   }
 
   /* =========================================================================
-     HALL BOOKINGS
+     REQUESTS — HALL BOOKINGS AND NIKĀḤ DATES, IN ONE LIST
+
+     Two different things arrive from the public website and both need the same
+     treatment: ring the person, agree it, record the outcome. Keeping them in
+     separate panels would mean the office checking two places and, sooner or
+     later, missing one. So they are loaded from their two tables, normalised
+     into one shape, and shown together with a badge saying which is which.
+
+     They keep their own tables because they hold genuinely different things —
+     a hall booking has a hall and a kitchen, a nikāḥ has a prayer slot and a
+     second choice of date — and forcing them into one table would mean a row
+     full of columns that never apply.
 
      Requests submitted through the public website land in `hall_bookings`.
      This panel is where the office works through them: ring the enquirer,
@@ -160,42 +171,100 @@
       box.hidden = false;
     }
 
+    var SLOT_LABELS = {
+      after_fajr: "After Fajr", after_zuhr: "After Zuhr", after_asr: "After Asr",
+      after_maghrib: "After Maghrib", after_isha: "After Isha",
+      saturday_11: "Saturday 11:00am", flexible: "Flexible — masjid to suggest"
+    };
+
+    // One shape for both kinds, so render() and apply() do not have to care.
+    function fromHall(r) {
+      var hall = "Hall " + r.hall + (String(r.hall) === "3" ? " (1st floor)" : " (ground floor)") +
+                 (r.kitchen ? " \u00B7 with kitchen" : " \u00B7 no kitchen");
+      return {
+        kind: "hall", table: "hall_bookings", handledCol: "handled_at",
+        id: r.id, created_at: r.created_at, date: r.booking_date,
+        detail: (SLOTS[r.session_slot] || r.session_slot) + " \u00B7 " + hall,
+        who: (r.first_name || "") + " " + (r.last_name || ""),
+        phone: r.phone, email: null, sub: r.address,
+        status: r.status, notes: r.office_notes, handled_at: r.handled_at
+      };
+    }
+
+    function fromNikah(r) {
+      var when = SLOT_LABELS[r.slot] || r.slot || "";
+      if (r.preferred_time && r.slot !== "flexible") when += " \u00B7 " + r.preferred_time;
+      if (r.alternative_date) when += " \u00B7 2nd choice " + longDate(r.alternative_date);
+      if (r.guests_estimate) when += " \u00B7 ~" + r.guests_estimate + " guests";
+      return {
+        kind: "nikah", table: "nikah_requests", handledCol: "reviewed_at",
+        id: r.id, created_at: r.submitted_at, date: r.preferred_date,
+        detail: when,
+        who: r.contact_name,
+        phone: r.contact_phone, email: r.contact_email,
+        sub: "Contact is the " + (r.contact_role === "family" ? "family" : r.contact_role) +
+             (r.notes ? " \u00B7 " + r.notes : ""),
+        status: r.status, notes: r.office_notes, handled_at: r.reviewed_at
+      };
+    }
+
     function load() {
-      return sb.from("hall_bookings")
-        .select("id,created_at,booking_date,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
-        .order("booking_date", { ascending: true })
-        .then(function (res) {
-          if (res.error) {
-            // Say what actually went wrong. A silent empty list reads as
-            // "no bookings" and the office stops checking.
-            setError("Couldn't load bookings — " + res.error.message);
-            rows = [];
-            return;
-          }
-          setError(null);
-          rows = res.data || [];
-        });
+      // Fetched together. If one table fails the other still shows, with the
+      // failure named — a half-empty list that says nothing is how a request
+      // gets missed.
+      return Promise.all([
+        sb.from("hall_bookings")
+          .select("id,created_at,booking_date,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
+          .order("booking_date", { ascending: true }),
+        sb.from("nikah_requests")
+          .select("id,submitted_at,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
+          .order("preferred_date", { ascending: true })
+      ]).then(function (res) {
+        var problems = [];
+        var out = [];
+        if (res[0].error) problems.push("hall bookings (" + res[0].error.message + ")");
+        else out = out.concat((res[0].data || []).map(fromHall));
+        if (res[1].error) {
+          // Until 010_nikah_requests.sql is applied this table does not exist,
+          // which is expected rather than broken. Say so plainly instead of
+          // showing the office a database error they cannot act on.
+          var missing = /does not exist|schema cache|relation/i.test(res[1].error.message || "");
+          if (!missing) problems.push("nikāḥ requests (" + res[1].error.message + ")");
+        } else {
+          out = out.concat((res[1].data || []).map(fromNikah));
+        }
+        setError(problems.length
+          ? "Couldn't load " + problems.join(" or ") + ". The rest of the list is still correct."
+          : null);
+        rows = out;
+      });
     }
 
     function visible() {
       var today = todayISO();
       var out = rows.filter(function (r) {
         if (filter === "new")      return r.status === "new";
-        if (filter === "upcoming") return r.status === "confirmed" && r.booking_date >= today;
+        if (filter === "upcoming") return r.status === "confirmed" && r.date >= today;
+        if (filter === "halls")    return r.kind === "hall";
+        if (filter === "nikah")    return r.kind === "nikah";
         return true;
       });
       if (query) {
         var q = query.toLowerCase();
         var digits = q.replace(/\D/g, "");
         out = out.filter(function (r) {
-          var name = (r.first_name + " " + r.last_name).toLowerCase();
+          var name = String(r.who || "").toLowerCase();
+          var mail = String(r.email || "").toLowerCase();
           var phone = String(r.phone).replace(/\D/g, "");
-          return name.indexOf(q) !== -1 || (digits.length >= 3 && phone.indexOf(digits) !== -1);
+          return name.indexOf(q) !== -1 || mail.indexOf(q) !== -1 ||
+                 (digits.length >= 3 && phone.indexOf(digits) !== -1);
         });
       }
       // Newest requests first when triaging; soonest first when looking ahead.
       if (filter === "new") {
         out.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+      } else {
+        out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
       }
       return out;
     }
@@ -204,15 +273,19 @@
       var today = todayISO();
       el("bk-n-new").textContent = rows.filter(function (r) { return r.status === "new"; }).length;
       el("bk-n-up").textContent  = rows.filter(function (r) {
-        return r.status === "confirmed" && r.booking_date >= today;
+        return r.status === "confirmed" && r.date >= today;
       }).length;
+      var nk = el("bk-n-nk");
+      if (nk) nk.textContent = rows.filter(function (r) { return r.kind === "nikah"; }).length;
     }
 
     function emptyLine() {
       if (query) return "Nothing matches “" + esc(query) + "”.";
-      if (filter === "new")      return "No new requests. Anything that comes in from the website will appear here.";
-      if (filter === "upcoming") return "No confirmed bookings coming up.";
-      return "No bookings yet.";
+      if (filter === "new")      return "No new requests. Anything that comes in from the website — a hall booking or a nikāḥ date — appears here.";
+      if (filter === "upcoming") return "Nothing confirmed coming up.";
+      if (filter === "halls")    return "No hall bookings yet.";
+      if (filter === "nikah")    return "No nikāḥ requests yet.";
+      return "Nothing yet.";
     }
 
     function render() {
@@ -225,32 +298,36 @@
       }
       list.innerHTML = items.map(function (r) {
         var isOpen = r.status === "new";
-        var hall = "Hall " + esc(r.hall) +
-                   (String(r.hall) === "3" ? " (1st floor)" : " (ground floor)") +
-                   (r.kitchen ? " \u00B7 with kitchen" : " \u00B7 no kitchen");
+        // A nikāḥ is a REQUEST — the office agrees it on the phone, and the
+        // wording here says so, so nobody reads "Confirm" as "already booked".
+        var go = r.kind === "nikah" ? "Agree date" : "Confirm";
         return '' +
-          '<article class="bk-item s-' + esc(r.status) + '" data-id="' + esc(r.id) + '">' +
+          '<article class="bk-item s-' + esc(r.status) + ' k-' + esc(r.kind) +
+            '" data-id="' + esc(r.id) + '" data-kind="' + esc(r.kind) + '">' +
             '<div class="bk-when">' +
-              '<span class="d">' + esc(longDate(r.booking_date)) + '</span>' +
-              '<span class="s">' + esc(SLOTS[r.session_slot] || r.session_slot) + ' · ' + hall + '</span>' +
+              '<span class="d">' + esc(longDate(r.date)) + '</span>' +
+              '<span class="s">' + esc(r.detail) + '</span>' +
+              '<span class="bk-kind t-' + esc(r.kind) + '">' +
+                (r.kind === "nikah" ? "Nik\u0101\u1E25" : "Hall") + '</span>' +
               '<span class="bk-pill p-' + esc(r.status) + '">' + esc(r.status) + '</span>' +
             '</div>' +
             '<div class="bk-who">' +
-              '<span class="nm">' + esc(r.first_name) + " " + esc(r.last_name) + '</span>' +
+              '<span class="nm">' + esc(r.who) + '</span>' +
               '<a href="tel:' + esc(String(r.phone).replace(/\s/g, "")) + '">' + esc(r.phone) + '</a>' +
+              (r.email ? ' <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '') +
             '</div>' +
-            '<div class="bk-addr">' + esc(r.address) + '</div>' +
+            '<div class="bk-addr">' + esc(r.sub) + '</div>' +
             '<div class="bk-meta">Requested ' + esc(ago(r.created_at)) +
               (r.handled_at ? ' · decided ' + esc(ago(r.handled_at)) : '') + '</div>' +
             '<textarea class="bk-notes" data-notes rows="1" placeholder="Notes — what was agreed, fee quoted, who called">' +
-              esc(r.office_notes || "") + '</textarea>' +
+              esc(r.notes || "") + '</textarea>' +
             '<div class="bk-acts">' +
               (isOpen
-                ? '<button type="button" class="bk-btn go" data-act="confirmed">Confirm</button>' +
+                ? '<button type="button" class="bk-btn go" data-act="confirmed">' + go + '</button>' +
                   '<button type="button" class="bk-btn no" data-act="declined">Decline</button>'
                 : '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
                   (r.status === "confirmed"
-                    ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel booking</button>'
+                    ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel</button>'
                     : '<button type="button" class="bk-btn" data-act="new">Reopen</button>')) +
               '<span class="bk-said" data-said></span>' +
             '</div>' +
@@ -260,19 +337,26 @@
 
     // Writes only the three columns the office is allowed to touch.
     function apply(id, item, act) {
+      var row = rows.filter(function (r) { return String(r.id) === String(id); })[0];
+      if (!row) { setError("That request is no longer in the list — reloading."); return load().then(render); }
       var notes = item.querySelector("[data-notes]").value.trim();
       var said  = item.querySelector("[data-said]");
       var btns  = item.querySelectorAll(".bk-btn");
       Array.prototype.forEach.call(btns, function (b) { b.disabled = true; });
       said.textContent = "Saving…";
 
+      // The two tables name their "when was this dealt with" column
+      // differently, and RLS only permits the office to write these few
+      // columns on either. Nothing else is ever sent.
       var patch = { office_notes: notes || null };
       if (act !== "save") {
         patch.status = act;
-        patch.handled_at = act === "new" ? null : new Date().toISOString();
+        patch[row.handledCol] = act === "new" ? null : new Date().toISOString();
       }
+      // hall_bookings has no 'cancelled' -> nikah calls it 'withdrawn'
+      if (row.kind === "nikah" && act === "cancelled") patch.status = "withdrawn";
 
-      return sb.from("hall_bookings").update(patch).eq("id", id)
+      return sb.from(row.table).update(patch).eq("id", id)
         .then(function (res) {
           if (res.error) {
             said.textContent = "";

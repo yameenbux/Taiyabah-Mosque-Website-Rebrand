@@ -208,6 +208,11 @@
   .bk-when{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
   .bk-when .d{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);}
   .bk-when .s{font-size:.83rem;color:var(--muted);}
+  .bk-kind{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-right:6px;}
+  .bk-kind.t-hall{background:rgba(94,22,56,.10);color:#5E1638;}
+  .bk-kind.t-nikah{background:rgba(165,122,34,.16);color:#7A5A16;}
+  .bk-item.k-nikah{border-left:3px solid rgba(165,122,34,.5);}
   .bk-pill{
     font-size:.63rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     padding:3px 9px;border-radius:999px;margin-left:auto;white-space:nowrap;
@@ -386,18 +391,19 @@
            there is no reason to show a parent an empty panel. -->
       <section class="bk" id="bk-panel" hidden>
         <div class="bk-head">
-          <h2>Hall bookings</h2>
-          <span class="bk-sub" id="bk-sub">Requests from the website. Ring the enquirer, then record what was agreed.</span>
+          <h2>Requests</h2>
+          <span class="bk-sub" id="bk-sub">Hall bookings and nik&#0257;&#7717; dates from the website, in one list. Ring the enquirer, then record what was agreed.</span>
         </div>
 
         <div class="bk-tabs" id="bk-tabs">
           <button type="button" class="bk-tab on" data-filter="new">New requests <span class="n" id="bk-n-new">0</span></button>
           <button type="button" class="bk-tab" data-filter="upcoming">Upcoming <span class="n" id="bk-n-up">0</span></button>
+          <button type="button" class="bk-tab" data-filter="nikah">Nik&#0257;&#7717; <span class="n" id="bk-n-nk">0</span></button>
           <button type="button" class="bk-tab" data-filter="all">All</button>
         </div>
 
         <label class="sr-only" for="bk-search">Search bookings by name or phone number</label>
-        <input type="search" class="bk-search" id="bk-search" placeholder="Search by name or number…" autocomplete="off">
+        <input type="search" class="bk-search" id="bk-search" placeholder="Search by name, number or email…" autocomplete="off">
 
         <div class="err" id="bk-error" hidden></div>
         <div class="bk-list" id="bk-list"></div>
