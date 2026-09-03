@@ -1,0 +1,102 @@
+Two folders, one letter apart — plus the two design changes
+===========================================================
+
+USE THIS ZIP, NOT THE ONE BEFORE IT. It contains the same recovery plus the
+changes to the account screen.
+
+
+1. WHAT WENT WRONG
+------------------
+The three new files were uploaded into `portal/` instead of `portals/`.
+
+    portal/    (no s)  = the MADRASAH PORTAL. Parents, teachers, pupils.
+    portals/   (with an s) = the new admin signpost.
+
+So on the live site right now:
+
+  * /portal/  serves the admin signpost, and the real Madrasah Portal is gone
+    from the working tree.
+  * /portals/ does not exist — so the "Go to the admin area" button you can see
+    on your account page leads to a Not Found page.
+
+Nothing is lost. Git kept the Madrasah Portal and it is in this zip, restored
+from the last commit before the overwrite, with its own app.js, config.js and
+Supabase library.
+
+
+2. WHAT TO UPLOAD
+-----------------
+Four folders. Upload them as folders, keeping the names exactly as they are —
+the whole problem was one missing "s".
+
+    portal/index.html            <- Madrasah Portal, put back
+    portal/app.js                <- Madrasah Portal, put back
+    portal/config.js
+    portal/supabase2.112.4.js
+
+    portals/index.html           <- the admin signpost, in the right place
+    portals/app.js
+    portals/config.js
+
+    account/index.html           <- the two changes below
+    venue/index.html             <- the credit moved, so all four pages match
+
+Afterwards, check on GitHub that BOTH `portal` and `portals` exist, and that
+opening portal/index.html shows a file whose title is
+"Madrasah Portal — Taiyabah Masjid".
+
+
+3. THE TWO CHANGES YOU ASKED FOR
+--------------------------------
+"Taiyabah Shop" now reads "Taiyabah Masjid". It covers the shop, the account
+and the admin route without naming any of them, and tells the public nothing
+they should not know.
+
+The YSB Designs credit has moved to the foot of the coloured panel. It is not
+pinned with absolute positioning — the panel shares out its spare height, so on
+a short screen or a phone it simply stacks instead of overlapping the wording.
+The same change is in all four pages so they still match.
+
+One thing I did NOT change, because you did not ask and it is a judgement call:
+the line under the heading still says "Create an account to buy from the masjid
+shop and keep track of your orders." That is true and gives nothing away, but
+it does now sit under an eyebrow that no longer says shop. Say the word if you
+want it broadened.
+
+Checked at three widths on all four pages: the credit sits at the foot, does
+not overlap the copy, does not spill out of the panel, stays aligned with the
+text on desktop, and nothing overflows sideways on a phone.
+
+
+4. IF THE BUTTON EVER STOPS SHOWING
+-----------------------------------
+It only appears for an account that holds the `admin` role. To see who has what:
+
+    select u.email, coalesce(ur.role::text, 'NO ROLE') as role
+      from auth.users u
+      left join public.user_roles ur on ur.user_id = u.id
+     order by u.email;
+
+Also worth knowing: GitHub Pages caches app.js for a few minutes, so hard-
+refresh (Ctrl+F5, or Cmd+Shift+R on a Mac) before deciding an upload failed.
+
+
+5. WHILE YOU ARE IN THERE — DELETE THIS
+---------------------------------------
+`WHAT-TO-DO.txt` from an earlier zip got committed to the repository root, and
+the repository root IS the public website. It is being served to anyone who
+guesses the URL, and it describes in plain English that two-step verification
+is not yet enforced in the database. That is not a sentence to publish.
+
+Delete it. These can go at the same time:
+
+    READ-ME-FIRST.txt
+    ogimage.jpg          (og-image.jpg is the real one and is the one used)
+    db/004_courses.sql   (a duplicate of 009 under an old number)
+    db/test
+    build-inputs/test
+    img/test
+    fonts/test
+
+And do not upload this file into the repository either — read it, then leave it
+in the zip.
