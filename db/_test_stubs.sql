@@ -16,3 +16,9 @@ create or replace function auth.uid() returns uuid
   language sql stable as $$ select nullif(current_setting('app.uid', true), '')::uuid $$;
 create or replace function public.has_role(uid uuid, r text) returns boolean
   language sql stable as $$ select current_setting('app.role_' || r, true) = 'on' $$;
+
+-- Supabase's auth.jwt(). Here it fabricates just the claim migration 011 reads,
+-- so a test can say "this session has passed two-step" or "it has not".
+create or replace function auth.jwt() returns jsonb language sql stable as $$
+  select jsonb_build_object('aal', coalesce(nullif(current_setting('app.aal', true), ''), 'aal1'));
+$$;
