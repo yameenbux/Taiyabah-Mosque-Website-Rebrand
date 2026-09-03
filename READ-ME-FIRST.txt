@@ -1,0 +1,65 @@
+TAIYABAH MASJID — WEBSITE UPDATE, 3 September 2026
+==================================================
+
+WHAT TO DO
+----------
+1. Unzip this into the root of the Taiyabah-Mosque-Website-Rebrand repository,
+   letting it overwrite. Ignore this file itself.
+2. Delete these four leftovers, which are superseded and doing nothing:
+
+       db/004_courses.sql        (renumbered to 009_courses.sql)
+       db/test                   (a stray 1-byte file)
+       build-inputs/test         (a stray 1-byte file)
+       ogimage.jpg               (duplicate of og-image.jpg, unused)
+
+3. Commit everything, including the new img/ folder, and push.
+
+DO NOT DELETE ANYTHING ELSE. In particular CNAME, Assets/ and
+portal/supabase2.112.4.js are in the repository, are not in this zip, and are
+all needed. This zip only adds and updates — it never removes.
+
+WHAT CHANGED
+------------
+The page went from 10.3 MB to 621 KB. First load, measured over HTTP at phone
+width, went from about 10.5 MB to about 615 KB.
+
+Every photograph used to be encoded inside index.html, so every visitor
+downloaded all 33 of them — including pictures on pages they never opened —
+before anything appeared on screen. They are now ordinary files in img/,
+fetched only when the page using them is actually shown.
+
+Several were also simply too big. The Shop masthead was 1800x2700 at 2.1 MB for
+a banner about 480 pixels tall. It is 341 KB now and looks identical.
+
+_config.yml is new and matters. GitHub Pages serves this repository from its
+root, so everything committed is a public web page unless it is excluded. Until
+now that included the build sources, the database migrations, the original
+photographs and the README. It also included apply/ — the madrasah application
+form, which is meant to stay unreachable until the DPIA is done. _config.yml
+excludes all of it while keeping it in git.
+
+AFTER YOU PUSH, CHECK TWO THINGS
+--------------------------------
+  https://taiyabahwebsite.ysbdesigns.uk/README.md   should now be Not Found
+  https://taiyabahwebsite.ysbdesigns.uk/apply/      should now be Not Found
+
+If either still loads, GitHub Pages has not picked up _config.yml and I need to
+know. Then open the site and check a photograph appears on the Shop page — if
+the images are broken, img/ did not get committed.
+
+WHY img/ AND NOT assets/img/
+----------------------------
+The repository already contains a folder committed as "Assets" with a capital
+A. Adding "assets" beside it collides on Windows and macOS, which cannot tell
+the two apart, and GitHub Pages — which can — then fails to find every
+photograph. Keeping img/ and fonts/ at the root avoids the problem entirely.
+
+THE WORKING LOOP FROM NOW ON
+----------------------------
+    # edit index_template.html
+    python3 verify_structure.py && python3 build.py
+    python3 optimise-images.py     # only when a photograph changed
+    git add -A && git commit -m "..." && git push
+
+Never edit index.html by hand — it is generated, and build.py will refuse to
+run if a photograph it needs is missing from img/.

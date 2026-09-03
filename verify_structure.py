@@ -88,6 +88,37 @@ def main():
         return 1
 
     print("structure OK — %d pages, all divs balanced, all links resolve" % len(pages))
+
+    # 7. Donation links that would silently take no money.
+    #    Two ways this goes wrong, and neither shows on screen:
+    #      a) a link still pointing at the old WordPress site — 404 once the
+    #         domain moves, but the button still looks fine;
+    #      b) a Stripe link created in TEST mode — a complete, convincing
+    #         checkout that never charges anyone.
+    warnings = []
+    stale = sorted(set(re.findall(r'https://www\.taiyabahmasjid\.com/product/[a-z0-9-]+/', src)))
+    if stale:
+        warnings.append(("%d DONATE LINK(S) STILL POINT AT THE OLD WORDPRESS SITE" % len(stale),
+                         stale,
+                         "These break the moment taiyabahmasjid.com points at THIS site."))
+    testmode = sorted(set(re.findall(r'https://buy\.stripe\.com/test_[A-Za-z0-9]+', src)))
+    if testmode:
+        warnings.append(("%d STRIPE LINK(S) ARE IN TEST MODE" % len(testmode),
+                         testmode,
+                         "These look like a real checkout and take no money at all."))
+    for head, urls, why in warnings:
+        print("")
+        print("  " + "!" * 68)
+        print("  !!  " + head)
+        print("  !!")
+        for u in urls:
+            print("  !!    " + u)
+        print("  !!")
+        print("  !!  " + why)
+        print("  !!  See DONATIONS.md.")
+        print("  " + "!" * 68)
+        print("")
+
     return 0
 
 

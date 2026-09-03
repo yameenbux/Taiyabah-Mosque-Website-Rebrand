@@ -1,17 +1,69 @@
 # Where each file goes
 
-Two piles. **Upload** goes on the web server. **Keep** stays in the repo and is
-never uploaded — it is how the site is rebuilt.
+**There is no upload step any more.** GitHub Pages serves this repository from
+its root at `taiyabahwebsite.ysbdesigns.uk`, so **committing and pushing IS
+deploying**. Nothing is copied anywhere by hand.
 
-## Upload — this is the website
+That has one consequence that is easy to miss: *everything in the repository is
+a public web page unless it is excluded*. `_config.yml` is what excludes things
+— it keeps a file in git and out of the published site. Anything not listed in
+its `exclude` block goes live the moment it is pushed.
 
-Everything in `taiyabah-site-upload.zip`. Unzip it and put the contents in the
-web root (the folder the domain points at — often `public_html`, `www` or
-`htdocs`), keeping the folder structure exactly as it is.
+```
+taiyabah-site-v2/
+│
+├── PUBLISHED — this is the website
+│   ├── index.html          all 27 pages. NOT the photographs — see assets/
+│   ├── 404.html
+│   ├── assets/
+│   │   ├── img/            every photograph (33 files, 3.1 MB)
+│   │   ├── fonts/          amiri.woff2
+│   │   └── *.png           logo and icons used by 404.html
+│   ├── account/            visitor register / sign in
+│   ├── venue/              hall hire office portal
+│   ├── portal/             madrasah portal
+│   ├── og-image.jpg        WhatsApp/Facebook preview — must stay in the ROOT
+│   ├── robots.txt          currently BLOCKS all search engines
+│   ├── robots.live.txt     rename to robots.txt on launch day
+│   ├── sitemap.xml
+│   └── _config.yml         the exclude list below
+│
+└── IN GIT, NOT PUBLISHED — excluded by _config.yml
+    ├── index_template.html the real source. All editing happens here.
+    ├── 404_template.html
+    ├── build.py            templates -> index.html and 404.html
+    ├── optimise-images.py  base64 sources -> img/
+    ├── verify_structure.py static checks, run before every build
+    ├── build-inputs/       13 MB: fonts, compressed photos, timetable, QR codes
+    ├── db/                 migrations 008-010 and their local test harness
+    ├── apply/              madrasah application form — NOT LIVE, see below
+    ├── brand/              logo files for Stripe
+    ├── newbuild-photos/    original photographs
+    ├── docs/               screenshots for the README
+    └── README.md, DEPLOY.md, DONATIONS.md
+```
+
+**Never edit `index.html` or `404.html` by hand.** They are generated. Edit
+`index_template.html`, then:
+
+```
+python3 verify_structure.py && python3 build.py
+python3 optimise-images.py        # only when a photograph changed
+```
+
+Then commit everything, including the regenerated `index.html` and anything new
+in `img/`. Forget the assets and every photograph on the site becomes a
+broken icon.
+
+## If the site ever moves off GitHub Pages
+
+`taiyabah-site-upload.zip` holds exactly the PUBLISHED list above. Unzip it into
+the web root — often `public_html`, `www` or `htdocs` — keeping the folder
+structure exactly as it is. Nothing else from the repository goes on the server.
 
 ```
 /                       the web root
-├── index.html          the entire public site — all 25 pages are in this one file
+├── index.html          all 27 pages, but NOT the photographs — see assets/ below
 ├── 404.html            shown when someone types an address that doesn't exist
 ├── og-image.jpg        the WhatsApp/Facebook link preview picture.
 │                       MUST sit in the root. The site refers to it as
@@ -20,7 +72,12 @@ web root (the folder the domain points at — often `public_html`, `www` or
 ├── robots.txt          currently BLOCKS all search engines (see launch day below)
 ├── robots.live.txt     the version to switch to on launch day
 ├── sitemap.xml         tells Google the site exists
-├── assets/             the logo and icons the 404 page uses
+├── assets/             MUST be uploaded — the site does not work without it
+│   ├── img/            every photograph on the site (33 files, 3.1 MB).
+│   │                   These used to be inside index.html. They are not any
+│   │                   more, so index.html on its own is NOT the website.
+│   ├── fonts/          amiri.woff2 — the Arabic typeface
+│   └── *.png           the logo and icons the 404 page uses
 ├── account/            where visitors register and sign in
 │   ├── index.html
 │   ├── app.js
@@ -210,3 +267,41 @@ Worth knowing about the design:
 * The office works requests through `status` — new, contacted, confirmed,
   declined, withdrawn — plus `agreed_date` and `agreed_time` for what was
   actually settled, which may differ from what was asked for.
+
+## The one thing that changed about uploading
+
+Until September 2026 `index.html` contained every photograph, base64-encoded
+inside the document. It was 10.3 MB, and every visitor downloaded all of it —
+including the pictures on pages they never opened — before anything appeared on
+screen.
+
+The photographs now live in `img/` as ordinary files, fetched only when
+the page using them is opened. First load went from about 10.5 MB to about
+615 KB.
+
+**So `index.html` is no longer the whole website.** Upload it without
+`img/` and every page loads, reads correctly, and shows a broken icon
+where each photograph should be. There is nothing on screen to tell you why.
+
+Two things stop that happening:
+
+* `build.py` refuses to build at all if a photograph it needs is missing from
+  `img/`, and prints the command that fixes it.
+* Every build prints how many image files the site references and how much they
+  weigh, so a number that suddenly drops is visible.
+
+Neither helps if the folder is simply left out of the upload. Upload the whole
+of `assets/`, every time.
+
+### When you change or add a photograph
+
+```
+python3 optimise-images.py      # only when an image changed
+python3 verify_structure.py && python3 build.py
+```
+
+`optimise-images.py` reads the base64 sources in `build-inputs/`, resizes each
+one to a sensible cap for its role, re-encodes it as a progressive JPEG and
+writes it to `img/`. It refuses to write a file that came out *bigger*
+than the source — that is how the WhatsApp QR code was caught trying to become
+a 32 KB JPEG when it is a perfectly good 4 KB PNG.

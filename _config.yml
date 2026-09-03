@@ -1,0 +1,56 @@
+# GitHub Pages configuration for the Taiyabah Masjid website.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# Pages serves this repository from its root, so *everything committed here is
+# a public web page* unless it is excluded. Before this file existed, that
+# included the build sources, the database migrations, the original
+# photographs and the README — all reachable by anyone who guessed the path.
+#
+# None of it was secret (there are no keys in any of it) but none of it belongs
+# on the masjid's website either. `exclude` keeps a file in git and out of the
+# published site, which is exactly the split DEPLOY.md describes.
+#
+# Anything NOT listed below is live the moment it is pushed.
+
+# NOTE: img/ and fonts/ deliberately sit at the repository root rather than
+# inside assets/. The repo already contains a folder committed as "Assets" with
+# a capital A; adding "assets" alongside it collides on Windows and macOS, where
+# the filesystem cannot tell them apart, and GitHub Pages — which is
+# case-sensitive — then 404s every photograph. Keeping them separate avoids the
+# whole problem.
+
+exclude:
+  # Build sources — 13 MB of base64 and the scripts that turn it into a site
+  - build-inputs/
+  - build.py
+  - optimise-images.py
+  - verify_structure.py
+  - index_template.html
+  - 404_template.html
+  - __pycache__/
+
+  # Database migrations and their local-only test harness
+  - db/
+
+  # Original photographs, already compressed into img/
+  - newbuild-photos/
+
+  # Logo files for Stripe, and README screenshots — not part of the site
+  - brand/
+  - docs/
+
+  # Documentation
+  - README.md
+  - DEPLOY.md
+  - DONATIONS.md
+
+  # The madrasah application form. Finished and tested, but it must not be
+  # reachable until the DPIA is done and 008_admissions.sql has been applied.
+  # Removing this line is one of the two ways to turn it on — the other is
+  # applying the migration. Do not remove it on its own.
+  - apply/
+
+# Keep the site's own files exactly as they are — no Markdown rendering, no
+# layouts, no Jekyll templating touching the built HTML.
+plugins: []

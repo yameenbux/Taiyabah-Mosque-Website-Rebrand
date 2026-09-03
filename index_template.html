@@ -1659,7 +1659,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= HOME ================= -->
 <div class="page page-active" data-page="home">
   <section class="hero">
-    <img class="hero-bg" src="{{HOME_BUILDING_B64}}" alt="Taiyabah Masjid, Blackburn Road, Bolton">
+    <img class="hero-bg" src="{{HOME_BUILDING_B64}}" alt="Taiyabah Masjid, Blackburn Road, Bolton" fetchpriority="high" decoding="async">
     <div class="hero-scrim"></div>
     <svg class="girih-mark tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
     <div class="container">
@@ -1760,8 +1760,8 @@ window.TAIYABAH_PUBLIC = {
   </section>
 
   <section class="banner">
-    <img class="bg" src="data:image/jpeg;base64,{{BANNER_PHOTO_B64}}" alt="An architect's render of the new Taiyabah Masjid building at night, showing its dome and minaret.">
-    <img class="bg-accent" src="data:image/jpeg;base64,{{BANNER_ACCENT_B64}}" alt="" aria-hidden="true">
+    <img class="bg" src="{{BANNER_PHOTO_B64}}" alt="An architect's render of the new Taiyabah Masjid building at night, showing its dome and minaret." loading="lazy" decoding="async">
+    <img class="bg-accent" src="{{BANNER_ACCENT_B64}}" alt="" aria-hidden="true" loading="lazy" decoding="async">
     <div class="scrim"></div>
     <div class="banner-content container narrow" style="margin:0 auto;">
       <div class="eyebrow">The New Build</div>
@@ -1837,9 +1837,9 @@ window.TAIYABAH_PUBLIC = {
         <p class="store-disclaimer">Taiyabah Masjid is a free web app, not a store listing — the badges above are shown for familiarity only and the QR opens the real app.</p>
       </div>
       <div class="app-promo-phones">
-        <div class="phone-shot p-left"><img src="data:image/jpeg;base64,{{APP_SHOT_LIVE_B64}}" alt="Screenshot of the Taiyabah Masjid app playing the masjid's live audio stream"></div>
-        <div class="phone-shot p-center"><img src="data:image/jpeg;base64,{{APP_SHOT_TIMES_B64}}" alt="Screenshot of the Taiyabah Masjid app showing today's prayer times and a live countdown to the next jamā&#703;ah."></div>
-        <div class="phone-shot p-right"><img src="data:image/jpeg;base64,{{APP_SHOT_DONATE_B64}}" alt="Screenshot of the Taiyabah Masjid app showing the donation screen"></div>
+        <div class="phone-shot p-left"><img src="{{APP_SHOT_LIVE_B64}}" alt="Screenshot of the Taiyabah Masjid app playing the masjid's live audio stream" loading="lazy" decoding="async"></div>
+        <div class="phone-shot p-center"><img src="{{APP_SHOT_TIMES_B64}}" alt="Screenshot of the Taiyabah Masjid app showing today's prayer times and a live countdown to the next jamā&#703;ah." loading="lazy" decoding="async"></div>
+        <div class="phone-shot p-right"><img src="{{APP_SHOT_DONATE_B64}}" alt="Screenshot of the Taiyabah Masjid app showing the donation screen" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </section>
@@ -1848,7 +1848,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= NEW BUILD ================= -->
 <div class="page" data-page="newbuild">
   <section class="newbuild-page-hero pm-photo">
-    <img class="pm-bg" src="data:image/jpeg;base64,{{BANNER_ACCENT_B64}}" alt="Architect's render of the new Taiyabah Masjid building at dusk">
+    <img class="pm-bg" src="{{BANNER_ACCENT_B64}}" alt="Architect's render of the new Taiyabah Masjid building at dusk" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="nbh-grid">
@@ -1972,7 +1972,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= PRAYER TIMES ================= -->
 <div class="page" data-page="prayer">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{PRAYER_HERO_B64}}" alt="Interior of a mosque prayer hall with an ornate mihrab and chandelier">
+    <img class="pm-bg" src="{{PRAYER_HERO_B64}}" alt="Interior of a mosque prayer hall with an ornate mihrab and chandelier" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -2091,7 +2091,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= MADRASAH ================= -->
 <div class="page" data-page="madrasah">
   <section class="page-masthead madrasah-hero">
-    <img class="mh-bg" src="{{MADRASAH_HERO_B64}}" alt="Students reading the Qur'an at their desks in a madrasah classroom">
+    <img class="mh-bg" src="{{MADRASAH_HERO_B64}}" alt="Students reading the Qur'an at their desks in a madrasah classroom" loading="lazy" decoding="async">
     <div class="mh-scrim"></div>
     <div class="container">
       <div class="mh-grid">
@@ -2369,7 +2369,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= SHOP (coming soon) ================= -->
 <div class="page" data-page="shop">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{SHOP_HERO_B64}}" alt="Shelves of Islamic books" style="object-position:center 30%;">
+    <img class="pm-bg" src="{{SHOP_HERO_B64}}" alt="Shelves of Islamic books" style="object-position:center 30%;" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -2386,47 +2386,47 @@ window.TAIYABAH_PUBLIC = {
       </div>
       <div class="shop-grid">
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_BOOKS_B64}}" alt="Islamic books">
+          <img class="sh-photo" src="{{SHOP_BOOKS_B64}}" alt="Islamic books" loading="lazy" decoding="async">
           <span class="sh-label">Books</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_DATES_B64}}" alt="Dates">
+          <img class="sh-photo" src="{{SHOP_DATES_B64}}" alt="Dates" loading="lazy" decoding="async">
           <span class="sh-label">Dates</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_HERBAL_B64}}" alt="Herbal medicine">
+          <img class="sh-photo" src="{{SHOP_HERBAL_B64}}" alt="Herbal medicine" loading="lazy" decoding="async">
           <span class="sh-label">Herbal Medicine</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_HONEY_B64}}" alt="Honey">
+          <img class="sh-photo" src="{{SHOP_HONEY_B64}}" alt="Honey" loading="lazy" decoding="async">
           <span class="sh-label">Honey</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo" id="shop-hajj" data-flash>
-          <img class="sh-photo" src="{{SHOP_HAJJ_B64}}" alt="Kaaba door kiswah, Hajj and Umrah">
+          <img class="sh-photo" src="{{SHOP_HAJJ_B64}}" alt="Kaaba door kiswah, Hajj and Umrah" loading="lazy" decoding="async">
           <span class="sh-label">Ihram &amp; Hajj/Umrah Items</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_OILS_B64}}" alt="Olive oil and olives">
+          <img class="sh-photo" src="{{SHOP_OILS_B64}}" alt="Olive oil and olives" loading="lazy" decoding="async">
           <span class="sh-label">Oils</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_PERFUME_B64}}" alt="Perfume bottle">
+          <img class="sh-photo" src="{{SHOP_PERFUME_B64}}" alt="Perfume bottle" loading="lazy" decoding="async">
           <span class="sh-label">Perfume</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_PRAYER_B64}}" alt="Prayer accessories">
+          <img class="sh-photo" src="{{SHOP_PRAYER_B64}}" alt="Prayer accessories" loading="lazy" decoding="async">
           <span class="sh-label">Prayer Accessories</span>
           <span class="soon-tag">Coming soon</span>
         </div>
         <div class="shop-tile has-photo">
-          <img class="sh-photo" src="{{SHOP_ZAMZAM_B64}}" alt="Zamzam water bottle at Masjid al-Haram, Makkah">
+          <img class="sh-photo" src="{{SHOP_ZAMZAM_B64}}" alt="Zamzam water bottle at Masjid al-Haram, Makkah" loading="lazy" decoding="async">
           <span class="sh-label">Zam Zam Water</span>
           <span class="soon-tag">Coming soon</span>
         </div>
@@ -2442,7 +2442,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= ARTICLES ================= -->
 <div class="page" data-page="articles">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{ARTICLES_HERO_B64}}" alt="Aerial view of the Ka'bah and Masjid al-Haram in Makkah">
+    <img class="pm-bg" src="{{ARTICLES_HERO_B64}}" alt="Aerial view of the Ka'bah and Masjid al-Haram in Makkah" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -2456,7 +2456,7 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="articles-grid">
         <a class="article-card" href="#" data-nav="article-what-is-islam">
-          <div class="ac-thumb"><img src="{{ARTICLE_ISLAM_HERO_B64}}" alt="Allah written in Arabic calligraphy, inscribed in gold on a black roundel"></div>
+          <div class="ac-thumb"><img src="{{ARTICLE_ISLAM_HERO_B64}}" alt="Allah written in Arabic calligraphy, inscribed in gold on a black roundel" loading="lazy" decoding="async"></div>
           <div class="ac-body">
             <span class="ac-tag">Faith Basics</span>
             <h3>What Is Islam?</h3>
@@ -2507,7 +2507,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= ARTICLE: WHAT IS ISLAM ================= -->
 <div class="page" data-page="article-what-is-islam">
   <section class="svc-hero-banner">
-    <img class="shb-bg" src="{{ARTICLE_ISLAM_HERO_B64}}" alt="Allah written in Arabic calligraphy, inscribed in gold on a black roundel inside a mosque">
+    <img class="shb-bg" src="{{ARTICLE_ISLAM_HERO_B64}}" alt="Allah written in Arabic calligraphy, inscribed in gold on a black roundel inside a mosque" loading="lazy" decoding="async">
     <div class="shb-scrim"></div>
     <div class="container">
       <div class="shb-content">
@@ -2600,7 +2600,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= ARTICLE: THE FIVE PILLARS ================= -->
 <div class="page" data-page="article-five-pillars">
   <section class="svc-hero-banner">
-    <img class="shb-bg" src="{{ARTICLE_PILLARS_HERO_B64}}" alt="The corner of a mosque with a carved white minaret rising against a clear blue sky">
+    <img class="shb-bg" src="{{ARTICLE_PILLARS_HERO_B64}}" alt="The corner of a mosque with a carved white minaret rising against a clear blue sky" loading="lazy" decoding="async">
     <div class="shb-scrim"></div>
     <div class="container">
       <div class="shb-content">
@@ -2668,7 +2668,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= ARTICLE: WHAT IS RAMADHAN ================= -->
 <div class="page" data-page="article-ramadan">
   <section class="svc-hero-banner">
-    <img class="shb-bg" src="{{ARTICLE_RAMADAN_HERO_B64}}" alt="A brass coffee pot, a pierced metal lantern and a dish of dates set out on a patterned cloth">
+    <img class="shb-bg" src="{{ARTICLE_RAMADAN_HERO_B64}}" alt="A brass coffee pot, a pierced metal lantern and a dish of dates set out on a patterned cloth" loading="lazy" decoding="async">
     <div class="shb-scrim"></div>
     <div class="container">
       <div class="shb-content">
@@ -2740,7 +2740,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= ARTICLE: WHAT IS HAJJ ================= -->
 <div class="page" data-page="article-hajj">
   <section class="svc-hero-banner">
-    <img class="shb-bg" src="{{ARTICLE_HAJJ_HERO_B64}}" alt="The Ka'bah at the centre of Masjid al-Haram in Makkah, surrounded by pilgrims">
+    <img class="shb-bg" src="{{ARTICLE_HAJJ_HERO_B64}}" alt="The Ka'bah at the centre of Masjid al-Haram in Makkah, surrounded by pilgrims" loading="lazy" decoding="async">
     <div class="shb-scrim"></div>
     <div class="container">
       <div class="shb-content">
@@ -2814,7 +2814,7 @@ window.TAIYABAH_PUBLIC = {
                button text: Shop Hajj &amp; Umrah items &rarr;
              Nothing else in this block needs to change. -->
         <div class="art-shop">
-          <img class="as-photo" src="{{SHOP_HAJJ_B64}}" alt="" aria-hidden="true">
+          <img class="as-photo" src="{{SHOP_HAJJ_B64}}" alt="" aria-hidden="true" loading="lazy" decoding="async">
           <div class="as-txt">
             <h3>Going to Hajj or Umrah?</h3>
             <p>The masjid shop will stock ihraam, prayer accessories and the practical bits pilgrims always end up needing. It isn't taking orders yet &mdash; but you can see what's coming.</p>
@@ -2841,7 +2841,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= SERVICES (index) ================= -->
 <div class="page" data-page="services">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{SERVICES_HERO_B64}}" alt="Men standing in a row for congregational prayer, hands folded">
+    <img class="pm-bg" src="{{SERVICES_HERO_B64}}" alt="Men standing in a row for congregational prayer, hands folded" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -3071,7 +3071,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= SERVICES: HALL / ROOM HIRE ================= -->
 <div class="page" data-page="svc-hallhire">
   <section class="svc-hero-banner">
-    <img class="shb-bg" src="{{HALLHIRE_BAND_B64}}" alt="Taiyabah Centre, Astley Street, Bolton">
+    <img class="shb-bg" src="{{HALLHIRE_BAND_B64}}" alt="Taiyabah Centre, Astley Street, Bolton" loading="lazy" decoding="async">
     <div class="shb-scrim"></div>
     <div class="container">
       <div class="shb-content">
@@ -3698,7 +3698,7 @@ window.TAIYABAH_PUBLIC = {
 <!-- ================= MEDIA ================= -->
 <div class="page" data-page="media">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{MEDIA_HERO_B64}}" alt="The Qur'an resting on a stand beside a microphone in the masjid">
+    <img class="pm-bg" src="{{MEDIA_HERO_B64}}" alt="The Qur'an resting on a stand beside a microphone in the masjid" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -3845,7 +3845,7 @@ window.TAIYABAH_PUBLIC = {
 
 <div class="page" data-page="contact">
   <section class="page-masthead pm-photo">
-    <img class="pm-bg" src="{{CONTACT_HERO_B64}}" alt="Close-up of a phone screen with social and messaging app icons">
+    <img class="pm-bg" src="{{CONTACT_HERO_B64}}" alt="Close-up of a phone screen with social and messaging app icons" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="section-head on-dark">
@@ -3874,7 +3874,7 @@ window.TAIYABAH_PUBLIC = {
           </div>
         </div>
         <div class="find-card">
-          <img class="fc-photo" src="{{CONTACT_BUILDING_B64}}" alt="Taiyabah Masjid on Draycott Street, Bolton">
+          <img class="fc-photo" src="{{CONTACT_BUILDING_B64}}" alt="Taiyabah Masjid on Draycott Street, Bolton" loading="lazy" decoding="async">
           <div class="fc-body">
             <div class="fc-place">
               <span class="fc-k">The masjid</span>
