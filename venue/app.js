@@ -1,5 +1,5 @@
 /* ===========================================================================
-   Taiyabah Masjid — Venue Hire Portal
+   Taiyabah Masjid — Hall Hire & Nikāḥ
    Bolton Central Islamic Society · Registered charity 1041569
 
    Handles: sign in -> MFA (enrol or verify) -> signed-in shell -> sign out.
@@ -427,6 +427,20 @@
   function renderApp(identity) {
     var name = identity.profile.full_name || identity.user.email;
     var roles = identity.roles.length ? identity.roles : ["no role assigned"];
+
+    // The page points at the admin centre, because every member of staff who
+    // uses it is an administrator — the masjid decided in September 2026 to
+    // stop granting single-area roles and give staff admin instead.
+    //
+    // This puts the link back if that ever changes. /portals/ refuses anyone
+    // without the admin role, so a hall_office volunteer following it would
+    // land on "you have no access" — a dead end on the page they use most.
+    // Four lines to make sure that day is a non-event.
+    var back = el("brand-back");
+    if (back && identity.roles.indexOf("admin") === -1) {
+      back.setAttribute("href", "../index.html#svc-hallhire");
+      back.textContent = "\u2190 Back to hall hire";
+    }
 
     el("app-name").textContent = name;
     el("app-email").textContent = identity.user.email;
