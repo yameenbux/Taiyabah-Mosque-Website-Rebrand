@@ -275,6 +275,22 @@
   @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
   .loading p{font-size:.85rem;color:var(--muted);}
 </style>
+<style>
+  /* The credit belongs at the foot of the panel, not in the middle of the
+     sentence it was sitting under. Two auto margins share out the free space,
+     which leaves the wording roughly centred and pins the credit to the
+     bottom — without absolute positioning, so a short screen simply stacks
+     instead of overlapping. */
+  .brand{justify-content:flex-start;}
+  .brand-inner{margin-top:auto;}
+  .brand .pcredit{
+    position:relative;z-index:2;margin:auto auto 0;padding-top:28px;
+    width:min(470px,86%);
+  }
+  @media (min-width:940px){
+    .brand .pcredit{margin:auto auto 0 max(6vw,32px);}
+  }
+</style>
 </head>
 <body>
 
@@ -286,8 +302,9 @@
       <h1>Venue Hire Portal</h1>
       <p>For masjid staff who handle hall and room hire at the Taiyabah Centre. Sign in to see requests that have come in from the website.</p>
       <a class="back" href="../index.html#svc-hallhire">&larr; Back to hall hire</a>
-      <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
     </div>
+
+    <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
   </div>
 
   <div class="panel">
