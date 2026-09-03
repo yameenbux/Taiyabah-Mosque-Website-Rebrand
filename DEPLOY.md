@@ -236,6 +236,68 @@ counts existing sign-ups inside a lock and returns either a place or a
 waiting-list position. Nobody has to keep a "places left" number up to date,
 and two people cannot take the last seat at once.
 
+## The admin signpost, and two-step verification
+
+### What an administrator sees
+
+An administrator signs in at `account/` like anybody else — same email, same
+password, no authenticator code, because that page is also the shop. Once
+signed in, they get a second button: **Go to the admin area**. It leads to
+`portals/`, which lists the staff areas their account can open.
+
+Three things to understand before changing any of it:
+
+* **The button is a signpost, not a door.** It grants nothing. `portals/` holds
+  no data — no booking, no application, no child's record. If someone got past
+  every check on it they would see a list of two links.
+* **It fails closed.** The role is read from `user_roles` under RLS. If that
+  read errors for any reason, the button stays hidden and the hub shows "no
+  access". A signpost that guesses is worse than no signpost, because it tells
+  an attacker which login is worth pursuing.
+* **Administrators only, for now.** Hall office staff and teachers still reach
+  their portals by their own links. `AREAS` in `portals/app.js` already carries
+  the role each area needs, so widening it later is one line, not a rewrite.
+
+### Turning on the database side of two-step (`011`)
+
+Until this migration is applied, the authenticator code on the staff portals is
+checked **in JavaScript only**. Anyone with a staff email address and password
+can skip the page and read the data straight from the API. Apply it.
+
+1. Every member of staff must have set up their authenticator first. The
+   migration checks, and refuses to apply while anyone holding `admin`,
+   `hall_office` or `teacher` has no verified factor — it prints their email
+   addresses. Get those people to sign in to their portal once; it walks them
+   through it. **Do not work around that check.** An administrator locked out is
+   an administrator who cannot grant roles to let themselves back in.
+2. Apply `db/011_require_two_step.sql` in the Supabase SQL editor.
+3. Sign in to `venue/` and confirm a booking still opens and saves. If it does,
+   the aal2 path works.
+
+What it changes: every policy that lets a signed-in member of staff reach
+across accounts now goes through `verified_admin()` or `verified_office()`,
+which are `is_admin()` / `can_see_bookings()` **and** an `aal2` JWT claim.
+
+What it deliberately does not change:
+
+* `profiles: read own` and `user_roles: read own`. `account/` and `portals/`
+  read those before the code is entered, to decide whether to show the admin
+  button. They return the signed-in person's own two rows.
+* Every public submission path. Members of the public are not signed in at all;
+  if this migration caught them the site would stop taking bookings, which is a
+  worse fault than the one it fixes.
+
+`is_admin()` and `can_see_bookings()` are left telling the truth. A function
+called `is_admin()` that returns false for an actual administrator is the sort
+of thing that costs somebody an evening.
+
+The bottom of `011` carries the exact SQL to put every policy back as it was.
+Reverting reopens the hole — treat it as buying an hour, not as a fix.
+
+**What it does not solve.** Two-step stops a stolen password. It does nothing
+about a borrowed, unlocked laptop: a session already at aal2 stays trusted
+until it expires. The office still needs to lock its screens.
+
 ## Turning on Nikah date requests
 
 The Marriage page is live with the calendar, the time slots and a notice saying

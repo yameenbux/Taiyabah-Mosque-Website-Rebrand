@@ -1,60 +1,77 @@
-Taiyabah Masjid — nikāḥ requests: notice period, prayer times, one admin list
-=============================================================================
+Taiyabah Masjid — the admin signpost, and two-step verification that is real
+============================================================================
 
-Copy every file below into the repo at the same path, overwriting what is
-there, then commit and push. Nothing else needs touching.
+Copy these into the repo at the same paths, overwriting what is there, then
+commit and push. `portals/` is a new folder.
 
-  index.html                  <- rebuilt; never edit this by hand
-  index_template.html         <- the source the build reads
-  venue/app.js                <- the admin list now loads nikāḥ as well as halls
-  venue/index.html            <- adds the Nikāḥ tab
-  db/010_nikah_requests.sql   <- NOT applied yet (see below)
-  db/_test_nikah.sql          <- LOCAL ONLY. Never run against Supabase.
-  db/_test_stubs.sql          <- LOCAL ONLY. Never run against Supabase.
-  README.md                   <- notice period, merged portal, honest open items
-  DEPLOY.md                   <- how to change the notice period without breaking it
+  portals/index.html            <- NEW. The hub an administrator lands on
+  portals/app.js                <- NEW
+  portals/config.js             <- NEW. Same values as account/config.js
+  account/index.html            <- adds the (hidden) admin button
+  account/app.js                <- reveals it only to administrators
+  db/011_require_two_step.sql   <- NOT applied yet. Read step 2 below first
+  db/_test_two_step.sql         <- LOCAL ONLY. Never run against Supabase
+  db/_test_stubs.sql            <- LOCAL ONLY
+  db/_test_supabase_stub.sql    <- LOCAL ONLY. Belongs in the madrasah-db repo
+  README.md
+  DEPLOY.md
 
-What changed
-------------
-1. Two weeks' notice. The calendar starts a fortnight from today; the days in
-   between are shown struck through so it is obvious why, and the database
-   refuses them again on the way in — a browser can be edited, the database
-   cannot.
+`portals/config.js` holds the same publishable key the other portals hold. That
+key is designed to be public; row level security is what protects the data. The
+secret key must never appear in any of these files.
 
-2. Times are prayers, not hours. The picker offers After Fajr, Zuhr, Asr,
-   Maghrib and Isha, and reads the real jamāʿah time for that date out of the
-   masjid's own 2026 timetable rather than inventing one. On a Saturday it also
-   offers 11:00am, for a nikāḥ held before a separate wedding meal. There is an
-   "I'm flexible" option for couples who would rather the masjid chose.
+1. The signpost
+---------------
+An administrator signs in at /account/ as usual and gets a second button, "Go to
+the admin area", leading to /portals/. That page lists the staff areas their
+account can open — today the venue portal and the madrasah portal.
 
-   Choosing Saturday 11am and then moving to a weekday clears the time, so
-   nobody can submit an 11am on a Tuesday. The database enforces the same rule.
+It is a signpost and nothing else. It holds no data: no booking, no application,
+no child's record. If someone got past every check on it they would see two
+links. Each portal still asks for the authenticator code when it is opened.
 
-3. One list for the office. The Astley Hall admin page now shows hall bookings
-   and nikāḥ requests together, each with a badge saying which it is. Nikāḥ rows
-   say "Agree date" rather than "Confirm", because the office still has to ring
-   and take payment. Writes go to the right table with the right timestamp
-   column — nothing is mixed up between the two.
+It fails closed. The role is read from user_roles under RLS, and if that read
+errors for any reason the button stays hidden. A button that appears when we
+cannot confirm the role would be worse than none, because it tells an attacker
+which login is worth pursuing.
 
-   If 010 has not been applied yet, the page notices the missing table and
-   carries on showing hall bookings, with no error thrown at the office.
+Administrators only, for now. Hall office staff and teachers still use their own
+links. Widening it later is one line in portals/app.js.
 
-Still outstanding — the office is NOT emailed yet
--------------------------------------------------
-You asked for the office to be emailed when a request arrives. That still needs
-a verified sending domain and DNS records (SPF, DKIM), the same job that the
-hall-booking alerts are waiting on. Until that is done, the admin list is the
-only place requests appear, so somebody has to look at it.
+2. The part that actually matters — apply 011
+---------------------------------------------
+Until this migration is applied, the authenticator code on the staff portals is
+checked IN JAVASCRIPT ONLY. Anyone holding a staff email address and password
+can skip the page entirely — curl, Postman, the browser console — and read hall
+bookings, nikah requests and admission applications straight from the API. The
+code prompt is a locked front door on a building with the windows open.
 
-Tidy-up you can do at the same time
------------------------------------
-These files are in the repo by accident and are being served publicly. Deleting
-them is safe:
+Before you apply it: every member of staff must have set up their authenticator.
+The migration checks this itself and REFUSES to apply while anyone holding
+admin, hall_office or teacher has no verified factor — it prints their email
+addresses. Get those people to sign in to their portal once; it walks them
+through the setup. Do not work around that check. An administrator who is locked
+out is an administrator who cannot grant roles to let themselves back in.
 
-  READ-ME-FIRST.txt
-  ogimage.jpg          (og-image.jpg is the real one and is referenced)
-  db/004_courses.sql   (a duplicate of 009 under an old number)
-  db/test
-  build-inputs/test
-  img/test
-  fonts/test
+Then: run db/011_require_two_step.sql in the Supabase SQL editor, sign in to the
+venue portal, and confirm a booking still opens and saves.
+
+What it does not solve: two-step stops a stolen password. It does nothing about
+a borrowed, unlocked laptop — a session already verified stays trusted until it
+expires. The office still needs to lock its screens.
+
+The bottom of 011 carries the exact SQL to put everything back if it goes wrong.
+Reverting reopens the hole, so treat it as buying an hour rather than a fix.
+
+3. Tested
+---------
+  24 SQL assertions in _test_two_step.sql, run against a database built from
+  every migration in order, all as a role that is genuinely subject to RLS.
+  Staff read nothing before the code and everything after it; an administrator
+  can still see their own role beforehand, which is what makes the button work;
+  the public can still submit; and a scan of pg_policies fails the build if any
+  future policy skips the check.
+
+  A browser test drives both pages: a customer gets no button, an administrator
+  does, hall office staff do not, a failed role lookup shows nothing, and the
+  hub reads no data tables at all.
