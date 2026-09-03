@@ -460,7 +460,8 @@ while working on that area:
 | Madrasah admissions | fees, times and rules on the page, no unconfirmed dates published, form stays dark |
 | Holiday planner | twelve month grids, closures painted, every Islamic date tagged as an estimate, "closed today" correct against a fixed clock |
 | Education | tiles reach both course pages, forms hidden while closed, place cap and waiting list wording |
-| Nikāḥ requests | past days disabled, **no availability colouring anywhere**, first and second choice, flexible time, request wording never promises a booking |
+| Nikāḥ requests | two weeks' notice enforced, **no availability colouring anywhere**, prayer times read from the masjid's own timetable, Saturday 11am offered only on Saturdays, first and second choice, request wording never promises a booking |
+| Venue portal | hall bookings and nikāḥ requests in one list, each write going to its own table and its own timestamp column, and no error shown to the office when the nikāḥ table has not been created yet |
 
 Two of those assert an absence rather than a presence, which is the point:
 nothing may publish a date the masjid has not confirmed, and nothing may paint a
@@ -568,8 +569,10 @@ decision if someone later decides the trade is worth it.
   Ghusl workshop; and whether either course has a fee. The pages are written so
   that nothing unconfirmed is stated as fact, but they are thinner than they
   should be until those answers come back.
-- **The Nikāḥ request calendar has no minimum notice period.** Someone can ask
-  for tomorrow. Whether that wants a floor is a decision for the office.
+- **The office is not emailed when a request arrives.** Hall bookings and nikāḥ
+  requests both land silently in the venue portal, so somebody has to look at
+  it. Sending email needs a verified domain and DNS records; until that is done
+  the portal is the only notification there is.
 - **The prayer timetable holds 2026 only.** It degrades honestly — the header
   falls back to "open the app" — but it needs the 2027 timetable before
   1 January 2027.

@@ -264,9 +264,32 @@ Worth knowing about the design:
   agreed, and there is no reason for the website to hold them.
 * **Two couples may request the same day.** The office decides. The only thing
   refused is the same email asking twice for the same date.
+* **Two weeks' notice.** The calendar starts a fortnight out and the days in
+  between are struck through rather than hidden, so it is obvious why they
+  cannot be picked. The database checks the same thing again — a browser can be
+  edited, the database cannot. To change the period, edit `MIN_NOTICE_DAYS` in
+  `index_template.html` **and** `NOTICE_DAYS` in `db/010_nikah_requests.sql`.
+  Changing one without the other is the way this breaks.
+* **Times are prayers, not hours.** The picker offers After Fajr, Zuhr, Asr,
+  Maghrib and Isha and shows the real jamāʿah time for the chosen date, read
+  out of the 2026 timetable already on the page. Beyond 2026 it shows the
+  prayer name without a time rather than inventing one. Saturdays additionally
+  offer 11:00am, for a nikāḥ before a separate wedding meal; picking that and
+  then moving to a weekday clears it, and the database refuses it anyway.
+* **Requests appear in the venue portal, alongside hall bookings.** One list,
+  one place to check. Nikāḥ rows are badged and say "Agree date" rather than
+  "Confirm", because the office still has to ring and take payment. Anyone with
+  the `hall_office` role sees both. Nothing is emailed yet — see below.
 * The office works requests through `status` — new, contacted, confirmed,
   declined, withdrawn — plus `agreed_date` and `agreed_time` for what was
   actually settled, which may differ from what was asked for.
+
+**The office is not emailed yet.** Both hall bookings and nikāḥ requests arrive
+silently and sit in the portal until somebody opens it. Email needs a verified
+sending domain with SPF and DKIM records before anything sent from it will
+reliably arrive, and an Edge Function to do the sending. Until that is in place,
+tell the office plainly that the portal is the only place a new request shows
+up — an alert that half-works is worse than none, because people stop checking.
 
 ## The one thing that changed about uploading
 

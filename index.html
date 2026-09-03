@@ -1152,12 +1152,20 @@ window.TAIYABAH_PUBLIC = {
   .nk-times .lab{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
     font-weight:700;color:var(--muted);display:block;margin-bottom:9px;}
   .nk-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px;}
-  .nk-slot{background:var(--paper);border:1px solid var(--line);border-radius:9px;
-    padding:9px 6px;font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink);
-    cursor:pointer;min-height:40px;font-variant-numeric:tabular-nums;transition:.15s ease;}
+  .nk-slots{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));}
+  .nk-slot{display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+    background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    padding:10px 12px;font-family:inherit;color:var(--ink);
+    cursor:pointer;min-height:52px;text-align:left;transition:.15s ease;}
+  .nk-slot .p{font-size:.86rem;font-weight:700;}
+  .nk-slot .t{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;}
   .nk-slot:hover:not(:disabled){border-color:var(--gold);}
   .nk-slot.is-sel{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
-  .nk-slot.is-flex{grid-column:1/-1;}
+  .nk-slot.is-sel .t{color:rgba(243,239,227,.72);}
+  .nk-slot.is-wide{grid-column:1/-1;}
+  /* a day inside the two-week notice period reads as unavailable rather than
+     simply absent, so nobody wonders why the calendar starts where it does */
+  .hh-day.is-tooSoon{opacity:.5;text-decoration:line-through;}
   .nk-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:20px;position:sticky;top:95px;}
   @media(max-width:899px){ .nk-panel{position:static;} }
@@ -3494,12 +3502,12 @@ window.TAIYABAH_PUBLIC = {
                 <span class="lab" id="nkTimeLab">What time would suit you?</span>
                 <div class="nk-slots" id="nkSlots"></div>
               </div>
-              <p class="hh-horizon">Requests can be made up to a year ahead.</p>
+              <p class="hh-horizon">Two weeks&rsquo; notice minimum, and up to a year ahead.</p>
             </div>
           </div>
           <div class="nk-panel">
             <h4>Your request</h4>
-            <p class="sub">Pick a date on the calendar. You can add a second choice if you have one &mdash; it gives the masjid something to work with if the first is taken.</p>
+            <p class="sub">Pick a date at least two weeks away. A second choice is optional but helps &mdash; it gives the masjid something to work with if the first is taken.</p>
             <div class="nk-mode">
               <button type="button" id="nkModeA" class="is-on">1st choice</button>
               <button type="button" id="nkModeB">2nd choice</button>
@@ -3507,7 +3515,7 @@ window.TAIYABAH_PUBLIC = {
             <div class="nk-pick">
               <div><span class="k">1st choice</span><span class="v empty" id="nkV1">Not chosen</span></div>
               <div><span class="k">2nd choice</span><span class="v empty" id="nkV2">Optional</span></div>
-              <div><span class="k">Time</span><span class="v empty" id="nkVT">Not chosen</span></div>
+              <div><span class="k">Prayer</span><span class="v empty" id="nkVT">Not chosen</span></div>
             </div>
             <button type="button" class="nk-clear" id="nkClear">Start again</button>
             <div id="nkAction" style="margin-top:14px;"></div>
@@ -5149,9 +5157,25 @@ window.TAIYABAH_PUBLIC = {
      calendar still works so people can see what they will be asked for.
   ------------------------------------------------------------------------- */
   (function(){
-    var REQUESTS_OPEN = false;
-    var HORIZON_DAYS  = 365;
-    var HOUR_FROM = 10, HOUR_TO = 20;   // inclusive, on the hour
+    var REQUESTS_OPEN   = false;
+    var HORIZON_DAYS    = 365;
+    var MIN_NOTICE_DAYS = 14;   // the masjid needs two weeks
+
+    // A nikāḥ almost always happens straight after a congregational prayer, so
+    // the choice offered is the prayer, not a clock time — and the clock time
+    // comes from the masjid's own published jamā'ah timetable rather than being
+    // typed in twice and drifting. The one regular exception is a Saturday
+    // late morning, before a wedding meal that is a separate event; that option
+    // only appears on Saturdays, because that is the only day it happens.
+    var PRAYER_SLOTS = [
+      { key:'after_fajr',    label:'After Fajr',    col:4  },
+      { key:'after_zuhr',    label:'After Zuhr',    col:7  },
+      { key:'after_asr',     label:'After Asr',     col:9  },
+      { key:'after_maghrib', label:'After Maghrib', col:10 },
+      { key:'after_isha',    label:'After Isha',    col:12 }
+    ];
+    var SATURDAY_SLOT = { key:'saturday_11', label:'Saturday, 11:00am',
+                          note:'before a wedding meal' };
 
     var grid = document.getElementById('nkGrid');
     if(!grid) return;
@@ -5171,25 +5195,40 @@ window.TAIYABAH_PUBLIC = {
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
     var today = new Date(); today.setHours(0,0,0,0);
+    var first = new Date(today); first.setDate(first.getDate() + MIN_NOTICE_DAYS);
     var last  = new Date(today); last.setDate(last.getDate() + HORIZON_DAYS);
-    var view  = new Date(today.getFullYear(), today.getMonth(), 1);
+    var view  = new Date(first.getFullYear(), first.getMonth(), 1);
 
-    var S = { mode:'a', a:null, b:null, time:null, flex:false };
+    var S = { mode:'a', a:null, b:null, slot:null, flex:false };
+
+    // The masjid's own timetable, already on the page for the prayer times.
+    // It holds 2026 only, so a date beyond it gets the prayer name without a
+    // time rather than an invented one.
+    function jamaah(dateISO, col){
+      var p = dateISO.split('-');
+      if (+p[0] !== 2026 || typeof FULL_2026 === 'undefined') return null;
+      var row = FULL_2026.find(function(r){ return r[0] === +p[1] && r[1] === +p[2]; });
+      return row ? row[col] : null;
+    }
+    function isSaturday(dateISO){ return parse(dateISO).getDay() === 6; }
 
     function renderMonth(){
       var y = view.getFullYear(), m = view.getMonth();
       $('nkMonth').textContent = MON[m] + ' ' + y;
-      $('nkPrev').disabled = (y === today.getFullYear() && m === today.getMonth());
+      $('nkPrev').disabled = (y === first.getFullYear() && m === first.getMonth());
       $('nkNext').disabled = (y === last.getFullYear()  && m === last.getMonth());
 
-      var first = new Date(y, m, 1), days = new Date(y, m+1, 0).getDate();
-      var lead = (first.getDay() + 6) % 7, html = '';
+      // Not called `first` — that name belongs to the earliest bookable date
+      // above, and shadowing it here made the whole calendar throw.
+      var monthStart = new Date(y, m, 1), days = new Date(y, m+1, 0).getDate();
+      var lead = (monthStart.getDay() + 6) % 7, html = '';
       for(var i = 0; i < lead; i++) html += '<button type="button" class="hh-day is-blank" disabled></button>';
       for(var d = 1; d <= days; d++){
         var dt = new Date(y, m, d), key = iso(dt);
-        var out = dt < today || dt > last;
+        var out = dt < first || dt > last;
         var cls = 'hh-day';
         if(key === iso(today)) cls += ' is-today';
+        if(out && dt >= today && dt < first) cls += ' is-tooSoon';
         if(key === S.a || key === S.b) cls += ' is-sel';
         html += '<button type="button" class="' + cls + '" data-d="' + key + '"' +
                 (out ? ' disabled' : '') + '><span>' + d + '</span><span class="dot"></span></button>';
@@ -5197,15 +5236,31 @@ window.TAIYABAH_PUBLIC = {
       grid.innerHTML = html;
     }
 
+    function slotLabel(key){
+      if(key === SATURDAY_SLOT.key) return SATURDAY_SLOT.label;
+      var s = PRAYER_SLOTS.filter(function(x){ return x.key === key; })[0];
+      return s ? s.label : key;
+    }
+
     function renderSlots(){
-      var html = '';
-      for(var h = HOUR_FROM; h <= HOUR_TO; h++){
-        var t = String(h).padStart(2,'0') + ':00';
-        html += '<button type="button" class="nk-slot' + (!S.flex && S.time === t ? ' is-sel' : '') +
-                '" data-t="' + t + '">' + t + '</button>';
+      var html = '', d = S.a;
+      PRAYER_SLOTS.forEach(function(s){
+        var at = d ? jamaah(d, s.col) : null;
+        html += '<button type="button" class="nk-slot' +
+                (S.slot === s.key ? ' is-sel' : '') + '" data-t="' + s.key + '">' +
+                '<span class="p">' + s.label + '</span>' +
+                (at ? '<span class="t">' + at + '</span>' : '') + '</button>';
+      });
+      if(d && isSaturday(d)){
+        html += '<button type="button" class="nk-slot is-wide' +
+                (S.slot === SATURDAY_SLOT.key ? ' is-sel' : '') +
+                '" data-t="' + SATURDAY_SLOT.key + '">' +
+                '<span class="p">' + SATURDAY_SLOT.label + '</span>' +
+                '<span class="t">' + SATURDAY_SLOT.note + '</span></button>';
       }
-      html += '<button type="button" class="nk-slot is-flex' + (S.flex ? ' is-sel' : '') +
-              '" data-t="flex">I’m flexible &mdash; the masjid can suggest a time</button>';
+      html += '<button type="button" class="nk-slot is-wide' + (S.flex ? ' is-sel' : '') +
+              '" data-t="flex"><span class="p">I’m flexible</span>' +
+              '<span class="t">the masjid can suggest a time</span></button>';
       $('nkSlots').innerHTML = html;
     }
 
@@ -5214,15 +5269,19 @@ window.TAIYABAH_PUBLIC = {
       $('nkV1').classList.toggle('empty', !S.a);
       $('nkV2').textContent = S.b ? pretty(S.b) : 'Optional';
       $('nkV2').classList.toggle('empty', !S.b);
-      $('nkVT').textContent = S.flex ? 'Flexible' : (S.time || 'Not chosen');
-      $('nkVT').classList.toggle('empty', !S.flex && !S.time);
+      var at = (S.slot && S.a) ? jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) : null;
+      $('nkVT').textContent = S.flex ? 'Flexible'
+        : (S.slot ? slotLabel(S.slot) + (at ? ' · ' + at : '') : 'Not chosen');
+      $('nkVT').classList.toggle('empty', !S.flex && !S.slot);
       $('nkModeA').classList.toggle('is-on', S.mode === 'a');
       $('nkModeB').classList.toggle('is-on', S.mode === 'b');
-      $('nkTimeLab').textContent = S.a ? 'What time on ' + pretty(S.a) + '?' : 'What time would suit you?';
+      $('nkTimeLab').textContent = S.a
+        ? 'Which prayer on ' + pretty(S.a) + '?'
+        : 'A nikāḥ is usually held straight after a congregational prayer';
       renderAction();
     }
 
-    function ready(){ return !!S.a && (S.flex || !!S.time); }
+    function ready(){ return !!S.a && (S.flex || !!S.slot); }
 
     function renderAction(){
       var host = $('nkAction');
@@ -5286,7 +5345,7 @@ window.TAIYABAH_PUBLIC = {
         $('nkProblems').classList.remove('on');
         var bad = [];
         if(!S.a) bad.push('Choose a date on the calendar.');
-        if(!S.flex && !S.time) bad.push('Choose a time, or say you are flexible.');
+        if(!S.flex && !S.slot) bad.push('Choose a prayer, or say you are flexible.');
         mark('nkW_name', !v('nkName'));   if(!v('nkName')) bad.push('We need a name to ask for.');
         mark('nkW_role', !v('nkRole'));   if(!v('nkRole')) bad.push('Tell us whether you are the groom, the bride or a family member.');
         mark('nkW_phone', !v('nkPhone')); if(!v('nkPhone')) bad.push('The office rings every request, so we need a phone number.');
@@ -5318,7 +5377,11 @@ window.TAIYABAH_PUBLIC = {
                     'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
           body: JSON.stringify({ payload:{
             preferred_date: S.a, alternative_date: S.b || '',
-            preferred_time: S.flex ? '' : S.time, time_flexible: S.flex,
+            slot: S.flex ? 'flexible' : S.slot,
+            preferred_time: (S.flex || !S.slot) ? '' :
+              (jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) ||
+               (S.slot === 'saturday_11' ? '11:00' : '')),
+            time_flexible: S.flex,
             guests_estimate: v('nkGuests'),
             contact_name: v('nkName'), contact_role: v('nkRole'),
             contact_phone: v('nkPhone'), contact_email: v('nkEmail'),
@@ -5357,13 +5420,14 @@ window.TAIYABAH_PUBLIC = {
         S.b = (S.b === k) ? null : k;
         if(S.b && S.b === S.a) S.a = null;
       }
-      renderMonth(); renderPanel();
+      if(S.slot === SATURDAY_SLOT.key && S.a && !isSaturday(S.a)) S.slot = null;
+      renderMonth(); renderSlots(); renderPanel();
     });
 
     $('nkSlots').addEventListener('click', function(e){
       var b = e.target.closest('.nk-slot'); if(!b) return;
-      if(b.dataset.t === 'flex'){ S.flex = !S.flex; if(S.flex) S.time = null; }
-      else { S.flex = false; S.time = (S.time === b.dataset.t) ? null : b.dataset.t; }
+      if(b.dataset.t === 'flex'){ S.flex = !S.flex; if(S.flex) S.slot = null; }
+      else { S.flex = false; S.slot = (S.slot === b.dataset.t) ? null : b.dataset.t; }
       renderSlots(); renderPanel();
     });
 
@@ -5372,7 +5436,7 @@ window.TAIYABAH_PUBLIC = {
     $('nkModeA').addEventListener('click', function(){ S.mode = 'a'; renderPanel(); });
     $('nkModeB').addEventListener('click', function(){ S.mode = 'b'; renderPanel(); });
     $('nkClear').addEventListener('click', function(){
-      S = { mode:'a', a:null, b:null, time:null, flex:false };
+      S = { mode:'a', a:null, b:null, slot:null, flex:false };
       $('nkAction').innerHTML = '';
       renderMonth(); renderSlots(); renderPanel();
     });

@@ -1,0 +1,60 @@
+Taiyabah Masjid — nikāḥ requests: notice period, prayer times, one admin list
+=============================================================================
+
+Copy every file below into the repo at the same path, overwriting what is
+there, then commit and push. Nothing else needs touching.
+
+  index.html                  <- rebuilt; never edit this by hand
+  index_template.html         <- the source the build reads
+  venue/app.js                <- the admin list now loads nikāḥ as well as halls
+  venue/index.html            <- adds the Nikāḥ tab
+  db/010_nikah_requests.sql   <- NOT applied yet (see below)
+  db/_test_nikah.sql          <- LOCAL ONLY. Never run against Supabase.
+  db/_test_stubs.sql          <- LOCAL ONLY. Never run against Supabase.
+  README.md                   <- notice period, merged portal, honest open items
+  DEPLOY.md                   <- how to change the notice period without breaking it
+
+What changed
+------------
+1. Two weeks' notice. The calendar starts a fortnight from today; the days in
+   between are shown struck through so it is obvious why, and the database
+   refuses them again on the way in — a browser can be edited, the database
+   cannot.
+
+2. Times are prayers, not hours. The picker offers After Fajr, Zuhr, Asr,
+   Maghrib and Isha, and reads the real jamāʿah time for that date out of the
+   masjid's own 2026 timetable rather than inventing one. On a Saturday it also
+   offers 11:00am, for a nikāḥ held before a separate wedding meal. There is an
+   "I'm flexible" option for couples who would rather the masjid chose.
+
+   Choosing Saturday 11am and then moving to a weekday clears the time, so
+   nobody can submit an 11am on a Tuesday. The database enforces the same rule.
+
+3. One list for the office. The Astley Hall admin page now shows hall bookings
+   and nikāḥ requests together, each with a badge saying which it is. Nikāḥ rows
+   say "Agree date" rather than "Confirm", because the office still has to ring
+   and take payment. Writes go to the right table with the right timestamp
+   column — nothing is mixed up between the two.
+
+   If 010 has not been applied yet, the page notices the missing table and
+   carries on showing hall bookings, with no error thrown at the office.
+
+Still outstanding — the office is NOT emailed yet
+-------------------------------------------------
+You asked for the office to be emailed when a request arrives. That still needs
+a verified sending domain and DNS records (SPF, DKIM), the same job that the
+hall-booking alerts are waiting on. Until that is done, the admin list is the
+only place requests appear, so somebody has to look at it.
+
+Tidy-up you can do at the same time
+-----------------------------------
+These files are in the repo by accident and are being served publicly. Deleting
+them is safe:
+
+  READ-ME-FIRST.txt
+  ogimage.jpg          (og-image.jpg is the real one and is referenced)
+  db/004_courses.sql   (a duplicate of 009 under an old number)
+  db/test
+  build-inputs/test
+  img/test
+  fonts/test
