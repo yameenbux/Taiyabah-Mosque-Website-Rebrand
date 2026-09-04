@@ -156,31 +156,40 @@ three lines, rebuild, done.
 Same applies to the nine `Coming soon` tags on the Shop page and the page
 heading, "The Taiyabah Shop is on its way."
 
-## The madrasah application form is finished but must not be uploaded yet
+## The madrasah application form is published, as a preview that cannot send
 
-`apply/` is a complete, working application form. It is kept out of
-`taiyabah-site-upload.zip` on purpose.
+`apply/` is a complete, working application form, and it **is** on the public
+site so that the "have a look at the new form" link on the Admissions page
+resolves. What stops it being used is `PREVIEW_ONLY` at the top of the script
+in `apply/index.html`.
 
-**The Admissions page now carries a link to it, labelled as a preview.** That is
-fine while the site sits on the staging address (`robots.txt` blocks every
-crawler and the form says plainly that it will not send anything). It is NOT
-fine once `taiyabahmasjid.com` points here — a parent would fill in their
-child's medical details and get an error.
+While `PREVIEW_ONLY` is true the page:
 
-So before the domain is pointed, do one of two things:
+* shows a banner, before anyone types, saying it cannot send an application and
+  giving the office number;
+* disables the Send button and relabels it;
+* returns from the submit handler **before the network call**, so nothing about
+  a child ever leaves the browser.
 
-* **Finish the list below**, apply `008_admissions.sql`, and change the link on
-  the Admissions page from "Have a look at the new form" to a real Apply
-  button — search `index_template.html` for `PREVIEW LINK`; or
-* **remove that link and its note**, and put `apply/` back behind the wall.
+That last point is the one that matters, and it is why excluding the folder was
+the wrong tool. Between 3 and 4 September `apply/` was in `_config.yml`'s
+exclude list, which did not hide the form so much as turn the Admissions
+page's button into a 404. Worse, it protected nobody from the real risk: before
+`PREVIEW_ONLY` existed the form was live-looking, and a parent could type their
+child's name, date of birth and medical notes, press Send, and have all of it
+transmitted to Supabase — which refused it only because the table does not
+exist. Nothing would have been stored. It would still have been sent, before
+the DPIA was written. **Being unable to keep data is not the same as not
+collecting it.**
 
-Whichever you choose, `apply/` must be on the server for the link to work, so
-add it to the upload list at the same time as you make the link real.
+There are now two independent gates, and both must be opened deliberately:
 
-It writes through `db/008_admissions.sql`, **which has not been applied**. So
-even if the folder were uploaded by accident today, a submission would fail:
-there is nowhere for a child's medical, SEND, EHCP or ethnicity data to go.
-That is the safety property. Do not "tidy up" by applying the migration early.
+1. `PREVIEW_ONLY = true` in `apply/index.html` — the browser never sends.
+2. `db/008_admissions.sql` **not applied** — there is nowhere for a child's
+   medical, SEND, EHCP or ethnicity data to go even if it did.
+
+Do not "tidy up" by applying the migration early, and do not flip the flag
+because the form looks finished. It is finished. That is not the question.
 
 Before any of it ships, all of the following must be done:
 
@@ -198,9 +207,15 @@ Before any of it ships, all of the following must be done:
    date-of-birth windows. Every year-specific value lives in that one block so
    the page can never go stale the way the old IBEUK form did.
 
-Then: apply `008_admissions.sql`, add `apply/` to the upload list above, and
-change the Admissions page on the main site from "applications open soon" to a
-link to `/apply/`.
+Then, in this order: apply `008_admissions.sql`, set `PREVIEW_ONLY = false` in
+`apply/index.html`, and change the Admissions page from "applications open soon"
+and "have a look at the new form" to a real Apply button — search
+`index_template.html` for `PREVIEW LINK`.
+
+`_test/apply_test.py` proves both halves: that the published form sends nothing
+even when a complete, valid application is entered and the disabled button is
+re-enabled from the console, and that the submission path still works when the
+flag is off — so the day you flip it, it will not have quietly rotted.
 
 Until then the public Madrasah → Admissions page carries the fees, class times
 and guidelines only, and asks people to ring the office.

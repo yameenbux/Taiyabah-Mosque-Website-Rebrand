@@ -488,7 +488,7 @@ while working on that area:
 | Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
 | Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
 | Articles | four articles reachable from the hub, heroes and thumbnails load, cross-links resolve |
-| Madrasah admissions | fees, times and rules on the page, no unconfirmed dates published, form stays dark |
+| Madrasah admissions | fees, times and rules on the page, no unconfirmed dates published, and the published form is a preview that sends nothing — proved by entering a complete valid application, re-enabling the disabled button from the console, and asserting zero requests leave the page |
 | Holiday planner | twelve month grids, closures painted, every Islamic date tagged as an estimate, "closed today" correct against a fixed clock |
 | Education | tiles reach both course pages, forms hidden while closed, place cap and waiting list wording |
 | Admin signpost | the button appears for administrators and nobody else, fails closed when the role lookup errors, and the hub itself reads no data at all |

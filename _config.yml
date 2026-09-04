@@ -45,11 +45,17 @@ exclude:
   - DEPLOY.md
   - DONATIONS.md
 
-  # The madrasah application form. Finished and tested, but it must not be
-  # reachable until the DPIA is done and 008_admissions.sql has been applied.
-  # Removing this line is one of the two ways to turn it on — the other is
-  # applying the migration. Do not remove it on its own.
-  - apply/
+  # Test scratch: a copy of the form with the preview flag off, written by
+  # _test/apply_test.py and normally deleted again. Never publish it.
+  - apply/_open.html
+
+  # NOTE: apply/ is NO LONGER excluded. It is published deliberately, as a
+  # preview that cannot send: PREVIEW_ONLY in apply/index.html disables the
+  # Send button and removes the network call, so nothing about a child ever
+  # leaves the browser. Excluding the folder instead only broke the "have a
+  # look at the new form" link on the Admissions page and taught nobody
+  # anything. The real gate is PREVIEW_ONLY plus the fact that
+  # 008_admissions.sql has not been applied — see DEPLOY.md.
 
 # Keep the site's own files exactly as they are — no Markdown rendering, no
 # layouts, no Jekyll templating touching the built HTML.

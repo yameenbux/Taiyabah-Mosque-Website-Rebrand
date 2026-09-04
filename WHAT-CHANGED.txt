@@ -1,66 +1,80 @@
-Back to the admin centre — for everyone
+The admissions preview link works again
 =======================================
 
-Replaces the venue/ files from the previous zip. Upload over the top.
+Upload these:
 
-  venue/index.html
-  venue/app.js
+  apply/index.html
+  _config.yml
   README.md
+  DEPLOY.md
 
-The link now reads "← Back to the admin centre" and points at /portals/ from
-the moment the page loads, before anyone has signed in. That is what every
-member of staff will see, because every member of staff is an administrator.
-
-I left four lines in that put the old link back for a signed-in person who is
-NOT an administrator. Nobody is today, so it never runs. It is there so that
-the day somebody grants the hall_office role again, that person does not land
-on a "you have no access" page from the portal they use most. It costs nothing
-and it is commented as to why.
+`apply/config.js` is unchanged, so leave the one already in the repo alone.
 
 
-ONE THING WORTH A CONVERSATION WITH THE COMMITTEE — NOT A CODE PROBLEM
----------------------------------------------------------------------
+WHY IT BROKE
+------------
+_config.yml had `- apply/` in its exclude list. GitHub Pages does not publish an
+excluded folder, so apply/ returned 404. It worked before because before that
+file existed, everything in the repo was published — which was the problem
+_config.yml was added to fix.
 
-Giving every member of staff `admin` works, and for a handful of trustees it is
-a reasonable call. This is not me asking you to undo it. It is me making sure
-the trade is on the record, because it is the kind of thing that is obvious in
-hindsight and invisible beforehand.
+The exclusion was deliberate: the form must not be usable before the DPIA. But
+it was the wrong tool, and I should have told you it would break the button
+rather than leaving you to find a dead link.
 
-`admin` reads EVERYTHING. Today that is hall bookings and nikāḥ requests, which
-is unremarkable. But the madrasah system will hold roughly 800 children's
-records — names, dates of birth, and in time medical and special-educational-
-needs notes. That last category is special-category data under UK GDPR, and it
-carries a higher bar.
+Here is what it was actually protecting against, and what it was not. Before
+today, the form was complete and looked live. A parent could type their child's
+name, date of birth and medical notes, press Send, and have all of it
+transmitted to Supabase — which refused it only because the table does not
+exist yet. Nothing would have been stored. It would still have been sent,
+before the DPIA was written. Being unable to keep data is not the same as not
+collecting it. Hiding the folder did nothing about that; it only meant nobody
+could find the form to try.
 
-Migration 004 was written for exactly this reason, and its own comment says it
-plainly: "the person who answers the phone about hiring a hall for a wedding has
-no business being able to open a child's file, and giving them that access would
-make the masjid's data protection position much harder to defend."
 
-The question is not technical. It is: is every person holding `admin` somebody
-the masjid would be content to name, in writing, to the ICO as having lawful
-access to every child's record?
+WHAT IT DOES NOW
+----------------
+apply/ is published again, and the form carries a PREVIEW_ONLY switch. While it
+is on:
 
-If the answer is yes — a few trustees, all DBS-checked, all with a reason to be
-there — then this is fine, and the useful thing is simply to write down that it
-was a decision rather than an accident. Regulators care far more about a
-documented judgement than a perfect one.
+  * a banner appears at the top, before anyone types, saying it cannot send an
+    application and giving the office number;
+  * the Send button is disabled and relabelled "Preview only — applications not
+    open";
+  * the submit handler returns BEFORE the network call, so nothing about a
+    child ever leaves the browser.
 
-If the answer is ever "not quite" — a volunteer who only does hall bookings, a
-teacher who only needs their own class — the narrower roles are all still there.
-Nothing was deleted. Every policy still honours hall_office and teacher, the
-tests still prove hall_office sees zero madrasah data, and granting one instead
-is a single line in STAFF_give_someone_a_role.sql.
+The third one is the real protection. The first two are so people understand,
+and because a disabled button is one line of devtools away from being enabled.
 
-Two practical knock-ons while you are deciding:
+There are now two independent gates, and both have to be opened on purpose:
 
-  * Migration 011 requires EVERY account holding admin to have an authenticator
-    set up before it will apply. More admins means more people to walk through
-    that. It is a hurdle worth clearing, not a reason to delay.
+  1. PREVIEW_ONLY = true in apply/index.html — the browser never sends.
+  2. 008_admissions.sql not applied — nowhere for the data to go if it did.
 
-  * Keep at least two administrators at all times. Deleting the only one
-    destroys its roles and profile by cascade, and nobody is left who can grant
-    the role back.
 
-I have added this to the README under the security rules, so it is somewhere
-the next person will find it rather than only in this note.
+TESTED
+------
+The test fills in a complete, valid application — parent, address, child, date
+of birth, school, class choices, allergies, SEND, both declarations — waits out
+the anti-bot timer, re-enables the disabled button from the console, and presses
+Send. It then asserts that ZERO requests left the page and that no
+"application received" screen appeared.
+
+It also runs the whole submission path against a copy with the flag off, and
+proves that still works end to end. That matters: the day the DPIA is signed,
+flipping one flag is the entire change, and nobody wants to find out then that
+the sending code has rotted in the meantime.
+
+
+WHEN YOU ARE READY TO OPEN IT, IN THIS ORDER
+--------------------------------------------
+  1. DPIA signed off, ICO registration in place, the rest of the list in
+     DEPLOY.md done.
+  2. Apply db/008_admissions.sql.
+  3. Set PREVIEW_ONLY = false.
+  4. Change the Admissions page button from "have a look at the new form" to a
+     real Apply button — search index_template.html for PREVIEW LINK.
+
+Doing 3 before 1 and 2 gives you a form that accepts children's records into a
+database nobody has assessed.
