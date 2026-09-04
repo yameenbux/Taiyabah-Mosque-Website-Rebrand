@@ -128,6 +128,11 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--gold-bright);out
 .submit:hover{background:var(--gold-bright);}
 .submit:disabled{opacity:.55;cursor:not-allowed;}
 .sub-note{font-size:.78rem;color:var(--muted);text-align:center;margin-top:12px;line-height:1.6;}
+.banner.preview-banner{background:#F3EFE3;border-color:#D9CFB4;border-left-color:var(--gold);}
+.banner.preview-banner .h,
+.banner.preview-banner p{color:#5B4A1F;}
+.banner.preview-banner a{color:#5B4A1F;font-weight:700;}
+.preview-note{font-weight:600;color:#7C3A20;}
 
 .summary{display:none;background:#FDF6F3;border:1px solid #EBCDBF;border-radius:11px;
   padding:14px 16px;margin-top:18px;}
@@ -167,6 +172,14 @@ footer a{color:var(--brand-700);}
 </header>
 
 <main class="container">
+
+  <div class="banner preview-banner" id="previewBanner" hidden>
+    <div class="h">Preview &mdash; not open yet</div>
+    <p>This is a look at the form the masjid is preparing. <strong>It cannot send
+    an application</strong>, and the academic year and dates shown on it are not
+    confirmed. To apply for a place, please ring the madrasah office on
+    <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a> between 5pm and 7pm.</p>
+  </div>
 
   <div class="banner">
     <div class="h">Please read first</div>
@@ -311,6 +324,8 @@ footer a{color:var(--brand-700);}
       </div>
 
       <button type="submit" class="submit" id="submitBtn">Send my application</button>
+      <p class="sub-note preview-note" id="previewNote" hidden>The form is not open
+        yet, so this button cannot send anything.</p>
       <p class="sub-note">Nothing is sent until you press this button. Admission queries: <a href="tel:01204535997">01204 535 997</a>, 5pm&ndash;7pm.</p>
     </fieldset>
   </form>
@@ -336,6 +351,31 @@ footer a{color:var(--brand-700);}
 
   var CFG  = window.TAIYABAH_CONFIG || {};
   var ADM  = window.TAIYABAH_ADMISSIONS || { classes: [], academicYear: "", deadline: null };
+  /* ---------------------------------------------------------------------
+     PREVIEW ONLY.
+
+     True means: this page is on the public website so people can look at it,
+     and it cannot send anything. The Send button is disabled, and the code
+     that would post to Supabase is never reached — nothing about a child
+     leaves the browser, not even a request that gets rejected.
+
+     That distinction matters. Before this switch existed the form was
+     complete and live-looking: a parent could type their child's name and
+     date of birth, press Send, and have it transmitted to Supabase, which
+     refused it only because the table does not exist yet. Nothing would have
+     been stored, but it would still have been sent, before the DPIA was
+     written. Being unable to keep the data is not the same as not collecting
+     it.
+
+     TO TURN THE REAL FORM ON, in this order:
+       1. Finish the DPIA and the ICO registration.
+       2. Apply db/008_admissions.sql.
+       3. Set this to false.
+     Doing 3 before 1 and 2 gives you a form that accepts children's records
+     into a database nobody has assessed. Do not.
+     --------------------------------------------------------------------- */
+  var PREVIEW_ONLY = true;
+
   var LOADED_AT = Date.now();
 
   /* ---- School year is derived, never typed. The academic year rolls over on
@@ -372,6 +412,22 @@ footer a{color:var(--brand-700);}
 
   $("metaYear").textContent     = ADM.academicYear || "—";
   $("metaDeadline").textContent = fmtDate(ADM.deadline);
+
+  /* Make the preview state visible rather than only true. Somebody who opens
+     this page must be able to tell in a glance that it is not open, before
+     they type a word about their child.
+
+     Disabling the button is the visible half; the guard in the submit handler
+     is the half that actually holds, because a disabled button is one line of
+     devtools away from being enabled again. */
+  if(PREVIEW_ONLY){
+    $("previewBanner").hidden = false;
+    $("previewNote").hidden   = false;
+    var sb = $("submitBtn");
+    sb.disabled = true;
+    sb.textContent = "Preview only — applications not open";
+    document.title = "Preview: Application for a place — Taiyabah Masjid";
+  }
 
   /* --------------------------------------------------------------------- */
   /* Children                                                              */
@@ -757,6 +813,16 @@ footer a{color:var(--brand-700);}
     // that would otherwise have been sent is ever silently swallowed.
     var list = validate();
     if(list.length){ showProblems(list); return; }
+
+    // A preview cannot send. Checked AFTER validation so the form still
+    // behaves like the real thing — you can see what it asks for and how it
+    // complains — and before anything touches the network.
+    if(PREVIEW_ONLY){
+      showProblems([{ msg: "This is a preview of the form, so it cannot send an " +
+        "application yet. To apply for a place, please ring the madrasah office " +
+        "on 01204 535 997 between 5pm and 7pm." }]);
+      return;
+    }
 
     // Honeypot: a field no human can see, so anything in it came from a script.
     // Timing is a weak second signal with a low threshold — autofill is fast,
