@@ -1,0 +1,71 @@
+DPIA, and the ethnicity field removed
+=====================================
+
+  Taiyabah-DPIA-madrasah-admissions-DRAFT.docx   the assessment, for the trustees
+  db/012_remove_ethnicity.sql                    run in the Supabase SQL editor
+  apply/index.html                               upload to the repo
+
+
+THE DOCUMENT
+------------
+Fifteen pages, following the ICO's own seven-step DPIA structure so a regulator
+recognises the shape of it. It is a DRAFT and deliberately unsigned.
+
+It is not legal advice, and the person who wrote it is the person who built the
+system — which makes it accurate about the software and no substitute for
+somebody qualified reading it. Its job is to state exactly what happens to the
+data so the trustees can make the judgements a DPIA requires.
+
+Everything the masjid must decide is marked DECISION REQUIRED. Everything that
+must be done before the form opens is marked ACTION, and all fourteen are
+collected in one table in Step 7 with a blank for an owner and a date.
+
+The four that will take real thought:
+
+  * the Article 6 lawful basis and the Article 9 condition for health data;
+  * whether a Data Protection Officer is legally required — arguable either way
+    for a madrasah of 800 children, and the reasoning has to be recorded
+    whichever way you land;
+  * who is named as accountable, so a parent has somebody to ask;
+  * whether to consult a few parents, or record why not.
+
+
+ETHNICITY IS GONE
+-----------------
+You decided to remove it rather than justify it. That is done, in three places:
+
+  * the field, its dropdown and the ONS group list are out of the form;
+  * the payload no longer carries it;
+  * migration 012 drops the column and rewrites the submission function.
+
+012 refuses to run if any row holds an ethnicity value. None do — nothing has
+ever been submitted — but on any other database that check is the difference
+between a tidy-up and destroying data.
+
+Run 012 in the SQL editor, then RUN 011 AGAIN. Same standing rule as before:
+011 only protects policies that exist when it runs, and 012 rewrites a
+function. I tested the whole sequence — 008, 009, 010, 011, 012, then 011 again
+— and confirmed 17 policies protected and a real submission still succeeding
+with the column gone.
+
+This takes a whole row off the DPIA's risk register rather than mitigating it,
+which is always the better trade when it is available.
+
+
+SOMETHING I BROKE AND FIXED
+---------------------------
+While removing ethnicity from the browser test I wrote a careless one-liner
+that emptied the test file instead of editing it. I rebuilt it from scratch,
+larger than before: it now also asserts the preview cannot send, that ethnicity
+stays gone from the form and from the payload, and that the honeypot still
+works. All eight suites pass.
+
+Telling you because a test file silently becoming empty is exactly the kind of
+thing that looks like everything passing.
+
+
+WHAT THIS DOES NOT DO
+---------------------
+It does not switch the form on, and nothing here brings that any closer on its
+own. The form still cannot send, and 008 stays as it is. The DPIA has to be
+completed and adopted first — that is the whole point of it.
