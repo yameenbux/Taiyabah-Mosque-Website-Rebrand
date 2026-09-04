@@ -22,7 +22,7 @@ first masjids in the city. This repository holds five things:
 | **`venue/`** | **Hall Hire & Nikāḥ** — authenticated, for the office staff who handle hall bookings and nikāḥ date requests. Reached from the Hall Hire page, or from `portals/` if you are an administrator. |
 | **`portals/`** | The signpost. An administrator signing in at `account/` gets a second button to here, and here lists the staff areas their account can open. Holds no data of its own. |
 
-Since September 2026 the masjid grants **administrator to every member of staff** who needs a portal, rather than the single-area roles. `hall_office` and `teacher` still exist in the database and every policy still honours them — see *Everyone is an administrator* under the security rules before deciding that is right permanently.
+**Roles as of September 2026.** `teacher` is a live, continuing role for madrasah staff and is deliberately separate from `admin`. `hall_office` is no longer granted to anyone — the people who handled hall bookings are administrators now — but the role and every policy that honours it are intact, so restoring the separation is a single grant.
 | **`apply/`** | The **madrasah application form**. Finished and tested, and deliberately **not deployed** — see [Things behind a switch](#things-behind-a-switch). |
 
 All three sign-in areas share one Supabase project, one set of accounts and one
@@ -233,7 +233,7 @@ Supabase SQL editor, in order.
 | `008_admissions.sql` | Madrasah applications. **Not applied** — see below |
 | `009_courses.sql` | Adult courses and their sign-ups. **Not applied** |
 | `010_nikah_requests.sql` | Nikāḥ date requests. **Not applied** |
-| `011_require_two_step.sql` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Not applied** |
+| `011_require_two_step.sql` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Re-run it after applying 008, 009 or 010** — it only alters policies that exist when it runs |
 
 `STAFF_give_someone_a_role.sql` is the one you will reuse — it grants a role to
 an account by email address and prints the full staff list.
@@ -412,22 +412,19 @@ The privacy notice lives at the `privacy` page and is linked from the footer.
   nothing else — proved by a test that asserts they see zero other profiles.
 - **Keep two administrators.** Deleting the only admin account destroys its
   roles and profile by cascade, and nobody can then grant the role back.
-- **Everyone is an administrator, and that is now the weakest point.** In
-  September 2026 the masjid stopped granting single-area roles and gave staff
-  `admin` instead. It works, and for a handful of trustees it is defensible.
-  But `admin` reads everything, and everything will include roughly 800
-  children's madrasah records — names, dates of birth, and in time medical and
-  special-educational-needs notes, which are special-category data under UK
-  GDPR. Migration `004` exists precisely because the person who answers the
-  phone about a wedding booking has no business opening a child's file.
+- **Who can reach a child's record.** `teacher` reaches madrasah data and not
+  hall bookings; `hall_office` reaches hall bookings and provably nothing else;
+  `admin` reaches everything. That separation is the point of migration `004`
+  and it is intact — the change in September 2026 was only that hall office
+  duties folded into `admin`, not that teachers became administrators.
 
-  Nothing in the code stops that separation being restored: `hall_office` and
-  `teacher` are intact, every policy still honours them, and the venue portal
-  already falls back gracefully for a non-admin. The decision to review, at
-  least annually, is whether every person holding `admin` is somebody the
-  masjid would be content to name in an ICO response as having lawful access to
-  every child's record. If the answer is ever "not quite", grant the narrower
-  role instead — it costs one line in
+  `admin` is therefore the role to be sparing with, because it is the only one
+  that opens roughly 800 children's records — names, dates of birth, and in time
+  medical and special-educational-needs notes, which are special-category data
+  under UK GDPR. The question to revisit annually is whether every person
+  holding `admin` is somebody the masjid would be content to name in an ICO
+  response as having lawful access to every child's file. If the answer is ever
+  "not quite", grant the narrower role instead: one line in
   `STAFF_give_someone_a_role.sql`.
 
 ---

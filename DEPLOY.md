@@ -279,6 +279,17 @@ Until this migration is applied, the authenticator code on the staff portals is
 checked **in JavaScript only**. Anyone with a staff email address and password
 can skip the page and read the data straight from the API. Apply it.
 
+**Run `db/011_PRECHECK.sql` first** — it is read-only and tells you who is
+missing an authenticator, whether you have a second administrator, and whether
+anything is currently unprotected.
+
+**And re-run `011` after applying `008`, `009` or `010`.** Those migrations
+create their own policies, and they create them *without* the two-step check.
+`011` only alters policies that exist when it runs, so on the masjid's project
+today it protects seven and skips ten, naming them in a notice. Running it again
+later is safe and is the whole fix. `011_PRECHECK.sql` reports `still_open` at
+any time — that number must be zero.
+
 1. Every member of staff must have set up their authenticator first. The
    migration checks, and refuses to apply while anyone holding `admin`,
    `hall_office` or `teacher` has no verified factor — it prints their email

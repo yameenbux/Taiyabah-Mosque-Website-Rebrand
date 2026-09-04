@@ -1,99 +1,39 @@
-The account page no longer promises a shop that isn't open
-==========================================================
+README.md and DEPLOY.md — catching up with today
+================================================
 
-Upload:
+Two files. Nothing else changed; no rebuild needed.
 
-  account/index.html
+The site in the repository is fully current — I checked the live clone. These
+two documents are the only things lagging, and both would mislead somebody
+reading them tomorrow.
 
-Nothing else changed. account/app.js is untouched.
+1. THE RE-RUN RULE (DEPLOY.md, and the migrations table in README.md)
 
+   011 only alters policies that exist at the moment it runs, and every
+   migration creates its own policies WITHOUT the two-step check. So applying
+   008, 009 or 010 reopens the hole 011 closed — silently, with no error.
 
-THE TWO UNTRUE LINES
---------------------
-Before:
-  "Create an account to buy from the masjid shop and keep track of your orders."
-  "You are signed in. Your orders will be saved to this account."
+   Both files now say: re-run 011 after applying any migration, and run
+   011_PRECHECK.sql to confirm still_open is zero.
 
-After:
-  "The masjid shop isn't open yet, so there is nothing to buy today. Create an
-   account now and it will be ready the moment it opens."
-  "You're signed in. The shop isn't open yet - when it is, this is the account
-   it will use."
+   You have already done this correctly today. The point of writing it down is
+   the next person, or you in three months.
 
-The gold button said "Go to the shop" and led to a page that says the shop is on
-its way. It now says "See what's coming to the shop", which is what the page
-actually shows.
+2. A CORRECTION ABOUT ROLES (README.md)
 
-That is the whole of the honesty fix, and it took ten minutes. It is the same
-call you made twice already - on Gift Aid, and on the "100% of your donation"
-line - and it was the last thing on the live site making a claim the masjid
-cannot currently keep.
+   I had written that the masjid now grants admin to every member of staff and
+   flagged it as a data protection risk — every staff member able to open 800
+   children's records.
 
+   That was me over-reading one sentence. You said nobody but admins uses the
+   VENUE portal; I generalised it to all staff everywhere. Teachers keep the
+   teacher role, and the separation that matters is intact:
 
-SOMETHING ELSE I FOUND WHILE IN THERE
--------------------------------------
-The register form asks for a full name, an email address and a password, and
-said nothing at all about what happens to them. No purpose, no link to the
-privacy notice, no consent line.
+     teacher       madrasah data, and NOT hall bookings
+     hall_office   hall and nikah only — granted to nobody now, but the role
+                   and its policies are intact, so restoring it is one grant
+     admin         everything
 
-Every other form on this site has one. Hall hire, nikah, admissions and the
-course sign-ups all state what they collect and make people tick a box. This
-one - the only form on the site that creates a permanent record of a person -
-had nothing.
-
-Under UK GDPR Article 13 you have to tell people what you are collecting and
-why, at the point you collect it. So the form now carries:
-
-  "We store your name and email address so that you can sign in, and for
-   nothing else. We do not share them, and there are no cookies or tracking on
-   this site. Privacy notice."
-
-with a working link through to the privacy page. I checked the link resolves
-rather than assuming it.
-
-I did NOT add a tick-box. For a straightforward account sign-up the lawful basis
-is contract rather than consent, and a box that everyone ticks without reading
-adds friction without adding protection. If your DPIA work concludes otherwise,
-it is a five-minute change.
-
-
-ONE THING FOR YOU AND THE COMMITTEE TO DECIDE
----------------------------------------------
-The copy is now honest. The underlying question is not a copy question:
-
-  Should the public be invited to register at all, while there is nothing for
-  an account to do?
-
-The Register and Login buttons sit in the site header on every page. Someone who
-follows them gets a truthful page telling them there is nothing to buy yet. That
-is fine. But you are still collecting names and email addresses for a service
-that does not exist, and:
-
-  * the list ages - people who sign up now may not remember doing so by the
-    time the shop opens, and a "welcome back" email to a stranger is how
-    complaints start;
-  * you have to keep and protect those records in the meantime;
-  * the privacy notice does not yet describe visitor accounts at all, which is
-    worth closing whichever way you decide.
-
-Two reasonable options:
-
-  A. Leave it as it is. The page tells the truth, and a small list of early
-     accounts is genuinely useful on the day the shop opens.
-
-  B. Take Register and Login out of the public header until the shop exists,
-     and leave the account page reachable by its address. Staff keep their
-     route in; the public are not asked for data nobody can yet use.
-
-I would pick B if the shop is more than a couple of months away, and A if it is
-close. That is a judgement about the shop's timetable, which you have and I do
-not - so I have changed nothing there.
-
-
-TESTED
-------
-A browser test asserts the word "orders" no longer appears anywhere on the page,
-that both cards say the shop is not open, that the button no longer calls a
-coming-soon page "the shop", that the register form names what it collects and
-links to the privacy notice, and that the link actually opens the privacy page
-on the main site. The layout was re-checked at three widths.
+   The README now describes that accurately, and the security note is narrowed
+   to the true point: admin is the role to be sparing with, because it is the
+   only one that opens a child's record.
