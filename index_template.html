@@ -1223,7 +1223,7 @@ window.TAIYABAH_PUBLIC = {
   .declare2 span{font-size:.85rem;line-height:1.6;color:var(--muted);font-weight:400;}
   .declare2 a{color:var(--brand-700);font-weight:600;cursor:pointer;}
   .declare2.bad{border-color:var(--danger);background:#FDF6F3;}
-  .cf-row.bad input,.cf-row.bad select,.cf-row.bad textarea{border-color:var(--danger);background:#FDF6F3;}
+  .cf-row.bad input,.cf-row.bad select,.cf-row.bad textarea{border-color:var(--danger);background-color:#FDF6F3;}
   .cf-row .hf-err{display:none;font-size:.76rem;color:var(--danger);font-weight:600;margin-top:5px;}
   .cf-row.bad .hf-err{display:block;}
   .hp-trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
@@ -1304,8 +1304,25 @@ window.TAIYABAH_PUBLIC = {
   .cform-lead{font-size:.85rem;color:var(--muted);line-height:1.6;margin-bottom:16px;}
   .cf-row{margin-bottom:14px;}
   .cf-row label{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
-  .cf-row input,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.92rem;color:var(--ink);}
-  .cf-row input:focus,.cf-row textarea:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
+  .cf-row input,.cf-row select,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.92rem;line-height:1.3;color:var(--ink);}
+  .cf-row input:focus,.cf-row select:focus,.cf-row textarea:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
+  /* A <select> left alone renders as the operating system's own widget, which
+     is why the "You are" field looked like it belonged to a different website
+     than the boxes above and below it. The error state already listed select;
+     the base state never did. Strip the native chrome and draw our own arrow —
+     inline, so it costs no request. Height is matched to the inputs by using
+     the same padding and font-size rather than a fixed height, so it stays in
+     step if those ever change. */
+  .cf-row select{
+    -webkit-appearance:none;-moz-appearance:none;appearance:none;
+    cursor:pointer;padding-right:38px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236E616A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 13px center;background-size:15px 15px;
+  }
+  .cf-row select:focus{
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233C0B2A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  }
+  .cf-row select:invalid,.cf-row select option[value=""]{color:var(--muted);}
   .cf-row textarea{resize:vertical;min-height:96px;line-height:1.5;}
   .cform .cf-submit{width:100%;justify-content:center;margin-top:2px;border:none;cursor:pointer;font-family:inherit;}
   .cf-note{font-size:.74rem;color:var(--muted);margin-top:12px;line-height:1.6;text-align:center;}

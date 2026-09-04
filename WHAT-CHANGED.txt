@@ -1,84 +1,60 @@
-Nikāḥ requests and course sign-ups are LIVE
-===========================================
+The "You are" dropdown now matches every other field
+====================================================
 
 Upload:
 
-  index.html            rebuilt — never edit this by hand
-  index_template.html   the source it was built from
-  404.html              rebuilt at the same time; unchanged in substance
+  index.html
+  index_template.html
 
-Nothing else. No SQL to run — 009, 010 and 011 are already applied and verified.
-
-
-WHAT IS NOW OPEN TO THE PUBLIC
-------------------------------
-  Nikāḥ date requests      REQUESTS_OPEN     = true
-  Adult course sign-ups    REGISTRATION_OPEN = true
-
-Both were finished and held shut for one reason: the ICO registration. That
-turned out to have been in place since May 2025, so they were waiting on nothing.
-
-The madrasah admissions form stays a preview. PREVIEW_ONLY is untouched.
+Replaces the two files from the previous zip — same change plus this fix.
 
 
-BUT I DID NOT JUST FLIP TWO SWITCHES
-------------------------------------
-Before turning them on I read the privacy notice. It said this:
+WHY IT LOOKED WRONG
+-------------------
+The stylesheet had this:
 
-    "The only thing this website collects is a hall hire request."
+    .cf-row input, .cf-row textarea { ...rounded, cream, our border... }
 
-The moment those two forms went live that sentence became false, on the one page
-whose entire job is to be true. Both forms carry a privacy tick pointing at a
-notice that did not describe what they collect — an Article 13 failure as well
-as a wrong statement.
+No `select`. So the browser rendered the dropdown with the operating system's
+own widget instead — the small grey box with the native arrow. On a Mac it
+would have looked different again, and on Windows different from both.
 
-So the notice is rewritten. It now describes all four things the site collects,
-each under its own heading:
+The giveaway is one line further up: the ERROR state rule DOES list select
 
-  * a hall hire request
-  * a nikāḥ date request — including that we deliberately do NOT ask for the
-    couple's names, addresses, documents or witnesses
-  * a place on an adult class, and the waiting list
-  * a shop account
+    .cf-row.bad input, .cf-row.bad select, .cf-row.bad textarea { ... }
 
-with the lawful basis for each, who can see it, that staff need an authenticator
-code and that the database now enforces that rather than the website, and how
-long each is kept.
+so whoever wrote it remembered the select for the red-border state and missed it
+for the normal one. That is why the field went red correctly when left blank but
+never looked right the rest of the time.
 
 
-AND SOMETHING I FOUND WHILE IN THERE
-------------------------------------
-The hall hire form — the oldest on the site, the one taking real requests from
-real people — had NO privacy statement at all. No line about what happens to the
-data, no link to the notice, nothing. Every other form had one.
+WHAT I DID
+----------
+Added select to the base and focus rules, then stripped the native chrome and
+drew our own arrow — an inline SVG, so it costs no network request and keeps the
+site's rule of loading nothing from anywhere else. The arrow darkens to the
+brand colour on focus.
 
-It now carries a short paragraph: what the data is used for, that it is not
-shared, that requests are deleted after six months, and a link to the notice.
+Heights are matched by giving all three controls the same line-height rather
+than by pinning a fixed height, so if the padding or font size ever changes they
+stay in step instead of drifting apart by a pixel again.
 
-Deliberately not a tick box. The basis for a hall booking is taking steps before
-entering a contract, not consent, so a box people tick unread adds friction and
-no protection.
-
-That gap predates this week's work. It is closed now.
-
-
-ONE THING TO CONFIRM ON FRIDAY
-------------------------------
-Twelve months is my proposed retention for nikāḥ requests and class sign-ups.
-Long enough to cover the year asked about and answer a later question, short
-enough to defend.
-
-It is now printed on the privacy notice, which makes it a promise the masjid has
-made. Please confirm it and minute it. If the trustees want a different period,
-tell me and I will change the notice and the deletion job together — never one
-without the other.
-
-Neither deletion job is scheduled yet, same as the admissions one. That is on
-the Friday list.
+One more thing while in there: the error-state rule used the `background`
+shorthand, which would have wiped the new arrow away whenever the field went
+red. Changed to `background-color`.
 
 
-TESTED
-------
-Nine browser suites pass, including a new one written for exactly this: it fails
-if the privacy notice ever stops describing a form the site actually has. It
-would have caught today's problem before I did.
+CHECKED, NOT EYEBALLED
+----------------------
+Border radius, border colour, background, font size and height are now compared
+between the select and the text inputs beside it, at 1280px and at 390px:
+
+    name=43px   select=43px   phone=43px
+
+The nikāḥ test now asserts that permanently, plus that the select is no longer
+rendering as a native widget. A future field cannot quietly go back to looking
+like it belongs to a different website.
+
+Worth knowing: this was the only <select> on the whole public site, so nothing
+else was affected. The madrasah form has its own stylesheet and its dropdowns
+were already styled.
