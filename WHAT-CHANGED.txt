@@ -1,39 +1,84 @@
-README.md and DEPLOY.md — catching up with today
-================================================
+Nikāḥ requests and course sign-ups are LIVE
+===========================================
 
-Two files. Nothing else changed; no rebuild needed.
+Upload:
 
-The site in the repository is fully current — I checked the live clone. These
-two documents are the only things lagging, and both would mislead somebody
-reading them tomorrow.
+  index.html            rebuilt — never edit this by hand
+  index_template.html   the source it was built from
+  404.html              rebuilt at the same time; unchanged in substance
 
-1. THE RE-RUN RULE (DEPLOY.md, and the migrations table in README.md)
+Nothing else. No SQL to run — 009, 010 and 011 are already applied and verified.
 
-   011 only alters policies that exist at the moment it runs, and every
-   migration creates its own policies WITHOUT the two-step check. So applying
-   008, 009 or 010 reopens the hole 011 closed — silently, with no error.
 
-   Both files now say: re-run 011 after applying any migration, and run
-   011_PRECHECK.sql to confirm still_open is zero.
+WHAT IS NOW OPEN TO THE PUBLIC
+------------------------------
+  Nikāḥ date requests      REQUESTS_OPEN     = true
+  Adult course sign-ups    REGISTRATION_OPEN = true
 
-   You have already done this correctly today. The point of writing it down is
-   the next person, or you in three months.
+Both were finished and held shut for one reason: the ICO registration. That
+turned out to have been in place since May 2025, so they were waiting on nothing.
 
-2. A CORRECTION ABOUT ROLES (README.md)
+The madrasah admissions form stays a preview. PREVIEW_ONLY is untouched.
 
-   I had written that the masjid now grants admin to every member of staff and
-   flagged it as a data protection risk — every staff member able to open 800
-   children's records.
 
-   That was me over-reading one sentence. You said nobody but admins uses the
-   VENUE portal; I generalised it to all staff everywhere. Teachers keep the
-   teacher role, and the separation that matters is intact:
+BUT I DID NOT JUST FLIP TWO SWITCHES
+------------------------------------
+Before turning them on I read the privacy notice. It said this:
 
-     teacher       madrasah data, and NOT hall bookings
-     hall_office   hall and nikah only — granted to nobody now, but the role
-                   and its policies are intact, so restoring it is one grant
-     admin         everything
+    "The only thing this website collects is a hall hire request."
 
-   The README now describes that accurately, and the security note is narrowed
-   to the true point: admin is the role to be sparing with, because it is the
-   only one that opens a child's record.
+The moment those two forms went live that sentence became false, on the one page
+whose entire job is to be true. Both forms carry a privacy tick pointing at a
+notice that did not describe what they collect — an Article 13 failure as well
+as a wrong statement.
+
+So the notice is rewritten. It now describes all four things the site collects,
+each under its own heading:
+
+  * a hall hire request
+  * a nikāḥ date request — including that we deliberately do NOT ask for the
+    couple's names, addresses, documents or witnesses
+  * a place on an adult class, and the waiting list
+  * a shop account
+
+with the lawful basis for each, who can see it, that staff need an authenticator
+code and that the database now enforces that rather than the website, and how
+long each is kept.
+
+
+AND SOMETHING I FOUND WHILE IN THERE
+------------------------------------
+The hall hire form — the oldest on the site, the one taking real requests from
+real people — had NO privacy statement at all. No line about what happens to the
+data, no link to the notice, nothing. Every other form had one.
+
+It now carries a short paragraph: what the data is used for, that it is not
+shared, that requests are deleted after six months, and a link to the notice.
+
+Deliberately not a tick box. The basis for a hall booking is taking steps before
+entering a contract, not consent, so a box people tick unread adds friction and
+no protection.
+
+That gap predates this week's work. It is closed now.
+
+
+ONE THING TO CONFIRM ON FRIDAY
+------------------------------
+Twelve months is my proposed retention for nikāḥ requests and class sign-ups.
+Long enough to cover the year asked about and answer a later question, short
+enough to defend.
+
+It is now printed on the privacy notice, which makes it a promise the masjid has
+made. Please confirm it and minute it. If the trustees want a different period,
+tell me and I will change the notice and the deletion job together — never one
+without the other.
+
+Neither deletion job is scheduled yet, same as the admissions one. That is on
+the Friday list.
+
+
+TESTED
+------
+Nine browser suites pass, including a new one written for exactly this: it fails
+if the privacy notice ever stops describing a form the site actually has. It
+would have caught today's problem before I did.

@@ -884,6 +884,9 @@ window.TAIYABAH_PUBLIC = {
   .hf-radios label:hover{border-color:var(--gold);}
   .hf-radios input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer;}
 
+  .hf-privacy{font-size:.8rem;line-height:1.6;color:var(--muted);margin:2px 0 14px;}
+  .hf-privacy a{color:var(--brand-700);font-weight:700;text-underline-offset:2px;}
+  .hf-privacy a:hover{color:var(--brand-900);}
   .hf-price{
     display:flex;align-items:center;flex-wrap:wrap;gap:10px;
     background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.5);
@@ -1451,6 +1454,8 @@ window.TAIYABAH_PUBLIC = {
   .legal-wrap li strong{color:var(--ink);font-weight:600;}
   .legal-wrap a{color:var(--brand-700);border-bottom:1px solid rgba(94,24,68,.3);}
   .legal-wrap a:hover{border-color:var(--brand-700);}
+  .legal-sub{font-family:'Fraunces',Georgia,serif;font-size:1.02rem;font-weight:600;
+             color:var(--brand-800);margin:22px 0 6px;}
   .legal-note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
     border-radius:0 10px 10px 0;padding:16px 20px;margin:22px 0;}
   .legal-note p{margin:0;font-size:.93rem;}
@@ -3207,6 +3212,17 @@ window.TAIYABAH_PUBLIC = {
                   <span class="hf-err">Please let us know so we can confirm the right rate.</span>
                 </fieldset>
 
+                <!-- Added 4 September 2026. This form has been taking real requests with no
+                     statement of what happens to the data and no link to the privacy notice —
+                     Article 13 requires people to be told at the point of collection, and every
+                     other form on the site had it. Not a tick box: the lawful basis here is
+                     taking steps before entering a contract, not consent, so a box people tick
+                     without reading would add friction and no protection. -->
+                <p class="hf-privacy">We use your name, address and number only to arrange this
+                  booking and confirm the fee. We do not share them and there is no marketing.
+                  Requests are deleted six months after the date you asked about.
+                  <a href="#" data-nav="privacy">Privacy notice</a>.</p>
+
                 <button type="submit" class="btn btn-gold" style="width:auto;">Continue to payment</button>
               </form>
             </div>
@@ -3804,28 +3820,63 @@ window.TAIYABAH_PUBLIC = {
         <p>This notice covers this website only. It explains what the website collects, why, and what you can ask us to do about it. It is written to be read, not to be survived.</p>
 
         <div class="legal-note">
-          <p><strong>The short version.</strong> The only thing this website collects is a hall hire request, and only if you choose to send one. There are no cookies, no analytics, no advertising, and no tracking of any kind. Almost everything on the site is served from the site itself; the two exceptions are named below.</p>
+          <p><strong>The short version.</strong> This website collects something about you only if you choose to send it: a hall hire request, a nik&#0257;&#7717; date request, a place on one of our adult classes, or an account for the masjid shop. Nothing else. There are no cookies, no analytics, no advertising, and no tracking of any kind. Almost everything on the site is served from the site itself; the two exceptions are named below.</p>
         </div>
 
         <h2>Who is responsible</h2>
         <p>Bolton Central Islamic Society, a registered charity (number 1041569), of 31a Draycott Street, Bolton BL1 8HD, operating as Taiyabah Masjid. We are the data controller for this website. You can reach us on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a> or at <a href="mailto:info@taiyabahmasjid.com">info@taiyabahmasjid.com</a>.</p>
 
         <h2>What this website collects</h2>
-        <p>One thing, and only when you send it: a request to hire a hall. If you complete the hall hire form we receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date, time slot and hall</strong> you asked about.</p>
+        <p>Four things, and only the ones you choose to send.</p>
+        <h3 class="legal-sub">A hall hire request</h3>
+        <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date, time slot and hall</strong> you asked about.</p>
         <p>The form also asks whether you are a member of the masjid, because the answer decides which rate you are quoted. <strong>That answer is not sent to us and is not stored anywhere.</strong> It is used to work out the figure shown on your screen and is then discarded when you leave the page. The figure itself is not stored either. Whether or not you are a member of a mosque says something about your religion, and we would rather not hold that than hold it carefully.</p>
-        <p>If you do not send a booking request, this website collects nothing about you at all.</p>
+        <h3 class="legal-sub">A nik&#0257;&#7717; date request</h3>
+        <p>We receive the <strong>name, telephone number and email address</strong> of whoever we
+        should ring, whether they are the bride, the groom or a family member, the
+        <strong>date or dates and the prayer time</strong> asked for, roughly how many guests are
+        expected, and anything else written in the notes box.</p>
+        <p>We deliberately do <strong>not</strong> ask for the couple&rsquo;s names, addresses,
+        documents or witnesses on this form. Those are taken by the office on the telephone once
+        a date has been agreed, and there is no reason for a public web form to hold them.</p>
+
+        <h3 class="legal-sub">A place on an adult class</h3>
+        <p>We receive your <strong>name, email address and telephone number</strong>, which class
+        and which group you are asking to join, and anything you write in the notes box. If the
+        class is already full we keep the same details on a waiting list and contact you when a
+        place comes up.</p>
+
+        <h3 class="legal-sub">A shop account</h3>
+        <p>If you create an account we receive your <strong>name and email address</strong>, and a
+        password which is stored only in a scrambled form that nobody at the masjid can read. The
+        shop is not open yet; the account exists so that it is ready when it is.</p>
+
+        <p>If you do not send any of those, this website collects nothing about you at all.</p>
 
         <h2>Why we need it, and what allows us to hold it</h2>
         <p>We need your name and telephone number to call you back, and your address because a hall hire is a contract and we need to know who we are contracting with. Our lawful basis is <strong>taking steps at your request before entering into a contract</strong> (UK GDPR Article 6(1)(b)).</p>
-        <p>We do not use your details for anything else. We will not add you to a mailing list, and we will not pass them to anyone else for marketing.</p>
+        <p>For a <strong>nik&#0257;&#7717; date request</strong> the same basis applies: you are asking
+        us to consider a date, which is a step towards an arrangement between you and the masjid.
+        We need a name and a number so that the office can ring you back, because a request is not
+        a booking and someone has to confirm it with you.</p>
+        <p>For an <strong>adult class</strong> we need your name and contact details to hold your
+        place, tell you where and when to come, and let you know if a place frees up. Same basis
+        again.</p>
+        <p>For a <strong>shop account</strong> we hold your name and email address because you
+        asked us to create an account, which is also Article 6(1)(b).</p>
+        <p>We do not use your details for anything else. We will not add you to a mailing list, and
+        we will not pass them to anyone else for marketing.</p>
 
         <h2>Who can see it</h2>
-        <p>Booking requests are visible to masjid office staff who administer hall bookings, and to nobody else. The website itself cannot read them back — it can only add new ones.</p>
-        <p>The requests are stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes.</p>
-        <p>So that a request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent for us by <strong>Resend</strong>, an email delivery service acting as our processor. It contains your name, your telephone number and the date, slot and hall you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
+        <p>Hall hire and nik&#0257;&#7717; requests are visible to the masjid office staff who handle them, and to nobody else. Class sign-ups are visible to masjid administrators. The website itself cannot read any of them back &mdash; it can only add new ones.</p>
+        <p>Staff reach them through a private portal that requires a password <em>and</em> a code from an authenticator app. Since September 2026 that second step is enforced by the database itself rather than by the website, so a stolen password on its own opens nothing.</p>
+        <p>All of it is stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes.</p>
+        <p>So that a hall hire request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent for us by <strong>Resend</strong>, an email delivery service acting as our processor. It contains your name, your telephone number and the date, slot and hall you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
 
         <h2>How long we keep it</h2>
-        <p>Booking requests are deleted <strong>six months after the date you asked about</strong>. Requests that were declined or cancelled are deleted after <strong>three months</strong>. We keep them that long so that we can deal with any question about a booking after the event, and no longer.</p>
+        <p><strong>Hall hire requests</strong> are deleted six months after the date you asked about. Requests that were declined or cancelled are deleted after three months.</p>
+        <p><strong>Nik&#0257;&#7717; date requests</strong> and <strong>class sign-ups</strong> are deleted twelve months after you send them &mdash; long enough to cover the year you asked about and answer any question afterwards, and no longer.</p>
+        <p><strong>Shop accounts</strong> are kept until you ask us to close yours. Ring or email the office and we will delete it.</p>
 
         <h2>Cookies and tracking</h2>
         <p>This website sets <strong>no cookies</strong>. It does not use Google Analytics or any other analytics service. It does not carry advertising and does not track you between sites.</p>
@@ -4959,7 +5010,7 @@ window.TAIYABAH_PUBLIC = {
      might change.
   ------------------------------------------------------------------------- */
   (function(){
-    var REGISTRATION_OPEN = false;
+    var REGISTRATION_OPEN = true;
 
     var COURSES = {
       arabic: {
@@ -5157,7 +5208,7 @@ window.TAIYABAH_PUBLIC = {
      calendar still works so people can see what they will be asked for.
   ------------------------------------------------------------------------- */
   (function(){
-    var REQUESTS_OPEN   = false;
+    var REQUESTS_OPEN   = true;
     var HORIZON_DAYS    = 365;
     var MIN_NOTICE_DAYS = 14;   // the masjid needs two weeks
 
