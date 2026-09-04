@@ -12,7 +12,7 @@
   It is excluded from taiyabah-site-upload.zip and listed under "Keep — never
   upload" in DEPLOY.md. It writes to db/003_admissions.sql, which has not been
   applied — so there is currently nowhere for a child's medical, SEND, EHCP or
-  ethnicity data to go. That is on purpose.
+  health and SEND data to go. That is on purpose.
 
   Before this ships: finish the DPIA, register with the ICO, document the
   lawful basis and Article 9 condition, write the Appropriate Policy Document
@@ -389,16 +389,16 @@ footer a{color:var(--brand-700);}
                       "Year 7","Year 8","Year 9","Year 10","Year 11","Year 12","Year 13",
                       "Not yet at school","Left school"];
 
-  /* ONS 2021 census groups. Every one has a way out — "Other" in each group,
-     plus "Prefer not to say", which is stored as no value at all rather than
-     as a made-up one. */
-  var ETHNIC = [
-    ["Asian or Asian British", ["Bangladeshi","Chinese","Indian","Pakistani","Any other Asian background"]],
-    ["Black, Black British, Caribbean or African", ["African","Caribbean","Any other Black background"]],
-    ["Mixed or multiple ethnic groups", ["White and Asian","White and Black African","White and Black Caribbean","Any other Mixed background"]],
-    ["White", ["English, Welsh, Scottish, Northern Irish or British","Irish","Gypsy or Irish Traveller","Roma","Any other White background"]],
-    ["Other ethnic group", ["Arab","Any other ethnic group"]]
-  ];
+  /* Ethnicity was collected here until 4 September 2026 and has been removed.
+     It is special category data under Article 9, and when the DPIA asked what
+     the masjid actually did with it, nobody could say. Collecting special
+     category data with no stated purpose is indefensible, so the field went
+     rather than being justified after the fact.
+
+     If the madrasah later decides it genuinely needs this — to check which
+     parts of the community it is reaching, say — reinstate it only after the
+     DPIA has been updated to record the purpose, who reviews it and how often.
+     Document first, field second. */
 
   var $ = function(id){ return document.getElementById(id); };
   function esc(s){ return String(s).replace(/[&<>"']/g, function(c){
@@ -446,15 +446,6 @@ footer a{color:var(--brand-700);}
           (window_ ? '<span class="wd">' + esc(window_) + '</span>' : '') + '</span>' +
         '<span class="pref">—</span></label>';
     }).join("");
-  }
-
-  function ethnicOptions(){
-    return '<option value="">Prefer not to say</option>' +
-      ETHNIC.map(function(g){
-        return '<optgroup label="' + esc(g[0]) + '">' +
-          g[1].map(function(o){ return '<option value="' + esc(g[0] + ' — ' + o) + '">' + esc(o) + '</option>'; }).join("") +
-          '</optgroup>';
-      }).join("");
   }
 
   function yesNo(name, id){
@@ -537,11 +528,6 @@ footer a{color:var(--brand-700);}
         '<label for="cMed' + n + '">Medical conditions <span class="opt">(optional)</span></label>' +
         '<input type="text" id="cMed' + n + '" class="c-med">' +
         '<span class="hint">Anything staff should know to look after your child safely.</span></div></div>' +
-
-      '<div class="row"><div class="field">' +
-        '<label for="cEth' + n + '">Ethnic group <span class="opt">(optional)</span></label>' +
-        '<select id="cEth' + n + '" class="c-eth">' + ethnicOptions() + '</select>' +
-        '<span class="hint">Asked so the madrasah can check it is serving the whole community. You do not have to answer.</span></div></div>' +
 
       '<div class="row"><div class="field">' +
         '<label for="cNotes' + n + '">Anything else <span class="opt">(optional)</span></label>' +
@@ -767,7 +753,6 @@ footer a{color:var(--brand-700);}
         has_send:      yn("send"),    send_detail:    q(".c-sendd").value.trim(),
         has_eha_ehcp:  yn("eha"),     eha_ehcp_detail:q(".c-ehad").value.trim(),
         medical_conditions: q(".c-med").value.trim(),
-        ethnicity:  q(".c-eth").value,
         general_notes: q(".c-notes").value.trim(),
         choices: choices
       });
