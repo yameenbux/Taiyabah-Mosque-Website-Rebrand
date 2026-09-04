@@ -55,11 +55,23 @@
   var AREAS = [
     {
       href:  "../venue/",
-      title: "Hall bookings and nikāḥ requests",
+      title: "Hall Hire & Nikāḥ",
       desc:  "Everything the public has asked for through the website: Astley Hall " +
              "bookings and nikāḥ dates, in one list. Ring the enquirer, then record " +
              "what was agreed.",
       needs: ["admin", "hall_office"]
+    },
+    {
+      // Added 4 September 2026. Sign-ups had been going live into the database
+      // with nothing anywhere to read them back — a test registration for the
+      // Arabic class arrived, got a reference number, and could not be found
+      // by anybody. Turning a form on and giving it somewhere to land are two
+      // jobs, and only the first had been done.
+      href:  "../courses/",
+      title: "Adult classes",
+      desc:  "Who has signed up for Arabic and the Ghusl workshop, how many places " +
+             "are left, and who is on the waiting list.",
+      needs: ["admin"]
     },
     {
       href:  "../portal/",
