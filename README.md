@@ -64,7 +64,7 @@ apply/                  Madrasah application form — uploaded as a PREVIEW that
 build-inputs/           the 44 files build.py reads: fonts, compressed photos,
                         the prayer timetable, QR codes. Committed, so a fresh
                         clone can rebuild the site.
-db/                     migrations 008-013 and their local test harness
+db/                     migrations 008-014 and their local test harness
 
 DEPLOY.md               what gets uploaded and what never does
 DONATIONS.md            the Stripe setup, and why Gift Aid is not on the site
@@ -239,6 +239,7 @@ Supabase SQL editor, in order.
 | `011_require_two_step.sql` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Re-run it after applying any later migration** — it only alters policies that exist when it runs |
 | `012_remove_ethnicity.sql` | Drops the ethnicity column from admissions. Refuses to run if any value is present |
 | `013_course_admin.sql` | `promote_from_waiting()` — lets an administrator give a waiting person a place *without* being able to overfill the session. Needs 009 and 011 |
+| `014_whole_day_hire.sql` | Hall hire by the DAY and by the NUMBER of halls, not by session and room. Retires `session_slot`, `hall` and `kitchen` without dropping them, adds kitchen-only hire, and refuses a one-hall booking on Fri/Sat/Sun. Needs 003 and 006 |
 
 `CHECK_course_registrations.sql` is read-only and safe to run in the SQL editor
 whenever you want to know what has actually arrived from the website — it exists
@@ -320,6 +321,21 @@ plainly.
 
 The consequence the office must know: when they ring back, they cannot see which
 rate the website quoted. They quote it themselves.
+
+### Charges
+
+The masjid's published rate card (Astley Hall, effective 1 January 2024,
+confirmed by the committee 7 September 2026) is printed on the page as it is
+printed on the masjid's sheet. **The website does not work out a total.** Two
+of the charges — £100 for utensils if they are used, 45p per person if the
+hirer cooks — depend on what actually happens on the day, so any figure the
+page produced would be incomplete and would be argued about at the door. The
+office quotes.
+
+There is no member rate, which is why the "are you a member of the masjid?"
+question was removed in September 2026. It existed only to choose between two
+prices, and asking somebody whether they belong to a mosque is asking about
+their religion. **Do not put it back without a second rate to justify it.**
 
 ### Retention
 
@@ -513,7 +529,9 @@ while working on that area:
 | Account reachability | an account link is on screen at thirteen widths from 360px to 1920px, signed in and signed out |
 | Back navigation | all eight child pages link to the right parent, all twelve top-level pages have none, browser back/forward still work |
 | Drawer | eleven sections with icons and no numbers, 44px tap targets, no focusable controls while closed |
-| Hall hire | availability, hall and kitchen both mandatory, the whole-venue rule, URL normalisation |
+| Hall hire | whole-day booking only, 1/2/3 halls or kitchen-only, one hall refused on Fri/Sat/Sun with a reason rather than a grey box, the whole-venue rule, URL normalisation, the 12-month horizon, and — the assertion that matters — the exact seven fields the form puts on the wire and nothing else |
+| Venue portal | a new whole-day booking, a kitchen-only booking and a booking taken under the old session model all render correctly, and the office still writes only `status`, `office_notes` and `handled_at` |
+| Whole-day hire (SQL) | old bookings survive the migration and keep what they asked for, one hall is refused at the weekend, kitchen-only carries no room count, the retired columns are unreachable from a browser, flood control still fires, and the public calendar publishes a date and nothing else |
 | Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
 | Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
 | Articles | four articles reachable from the hub, heroes and thumbnails load, cross-links resolve |

@@ -921,18 +921,36 @@ window.TAIYABAH_PUBLIC = {
     .hh-layout{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:44px;}
   }
   .hh-left,.hh-right{min-width:0;}
-  .hh-slots-info{
+  /* The published rate card. A table of money wants to be read down the
+     left and scanned down the right, so the name and the figure are pinned to
+     opposite edges with the dotted rule doing the work of a leader line. */
+  .hh-rates{
     background:var(--card);border:1px solid var(--line);border-radius:10px;
-    padding:14px 16px;margin-bottom:16px;
+    padding:16px 18px;margin-bottom:16px;
   }
-  .hh-slot-line{
-    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-    padding:7px 0;border-bottom:1px solid var(--line);
+  .hh-rates h4{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+    color:var(--brand-900);margin:0 0 3px;
   }
-  .hh-slot-line:last-of-type{border-bottom:none;}
-  .hh-slot-line .hs-name{font-size:.86rem;font-weight:700;color:var(--ink);}
-  .hh-slot-line .hs-time{font-size:.86rem;color:var(--brand-700);font-weight:600;}
-  .hh-slot-note{font-size:.78rem;line-height:1.55;color:var(--muted);margin-top:9px;}
+  .hh-rate-eff{font-size:.78rem;line-height:1.55;color:var(--muted);margin:0 0 12px;}
+  .hh-rate-band{margin-bottom:14px;}
+  .hh-rate-band:last-of-type{margin-bottom:0;}
+  .hh-rate-when{
+    display:block;font-size:.68rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--brand-700);margin-bottom:5px;
+  }
+  .hh-rate-line{
+    display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+    padding:6px 0;border-bottom:1px dotted var(--line);
+  }
+  .hh-rate-line:last-child{border-bottom:none;}
+  .hh-rate-line .n{font-size:.85rem;color:var(--ink);}
+  .hh-rate-line .p{
+    font-size:.88rem;font-weight:700;color:var(--brand-800);
+    white-space:nowrap;flex:0 0 auto;
+  }
+  .hh-rate-line .p a{color:var(--brand-700);}
+  .hh-rate-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:9px 0 0;}
 
   .hh-notice{
     display:flex;gap:11px;align-items:flex-start;
@@ -1001,6 +1019,10 @@ window.TAIYABAH_PUBLIC = {
   .hh-day.s-limited   .dot{background:var(--gold);}
   .hh-day.s-booked    .dot{background:var(--danger);}
   .hh-day.s-booked{color:var(--muted);}
+  /* Not booked — not offered. One hall at the weekend has no rate, so the day
+     is disabled with a reason rather than painted as though somebody has it. */
+  .hh-day.s-unoffered{color:var(--muted);opacity:.45;}
+  .hh-day.s-unoffered .dot{background:transparent;}
 
   .hh-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
   .hh-legend span{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);}
@@ -3124,24 +3146,25 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="hh-notice">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-            <span><b>Online booking isn't live yet.</b> The calendar shows how availability and booking will work once the masjid's diary is online. No date here reflects real availability &mdash; please call <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a> to check and book.</span>
+            <span><b>This sends a request, not a booking.</b> The date is not held until the office has rung you back, agreed it and taken the deposit. To book straight away, call <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a>.</span>
           </div>
 
           <div class="hh-controls">
             <div class="hh-choose">
               <div class="hh-choice">
-                <span class="hh-clabel">Which hall?</span>
-                <div class="hh-halls" id="hhHalls">
-                  <button type="button" class="hh-hall" data-hall="1">Hall 1 <span class="hh-sub">Ground floor</span></button>
-                  <button type="button" class="hh-hall" data-hall="2">Hall 2 <span class="hh-sub">Ground floor</span></button>
-                  <button type="button" class="hh-hall" data-hall="3">Hall 3 <span class="hh-sub">1st floor</span></button>
-                </div>
-              </div>
-              <div class="hh-choice">
-                <span class="hh-clabel">Kitchen?</span>
-                <div class="hh-halls" id="hhKitchen">
-                  <button type="button" class="hh-hall" data-kitchen="yes">Including kitchen</button>
-                  <button type="button" class="hh-hall" data-kitchen="no">Without kitchen</button>
+                <span class="hh-clabel">What do you need?</span>
+                <!-- How MANY halls, not which one. The kitchen and the cleaning
+                     come with every hall band, so there is nothing to choose
+                     there; kitchen-only hire is its own product at its own
+                     rate. One hall is Monday to Thursday only — the price list
+                     has no weekend rate for it, and the calendar disables
+                     those days rather than taking a booking the masjid does
+                     not sell. -->
+                <div class="hh-halls" id="hhHire">
+                  <button type="button" class="hh-hall" data-hire="halls" data-count="1">1 hall <span class="hh-sub">Mon&ndash;Thu only</span></button>
+                  <button type="button" class="hh-hall" data-hire="halls" data-count="2">2 halls <span class="hh-sub">Kitchen included</span></button>
+                  <button type="button" class="hh-hall" data-hire="halls" data-count="3">3 halls <span class="hh-sub">Kitchen included</span></button>
+                  <button type="button" class="hh-hall" data-hire="kitchen_only">Kitchen only <span class="hh-sub">No halls</span></button>
                 </div>
               </div>
             </div>
@@ -3158,9 +3181,8 @@ window.TAIYABAH_PUBLIC = {
             <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
             <div class="hh-grid" id="hhGrid"></div>
             <div class="hh-legend">
-              <span><i style="background:var(--success);"></i>Both slots free</span>
-              <span><i style="background:var(--gold);"></i>One slot left</span>
-              <span><i style="background:var(--danger);"></i>Fully booked</span>
+              <span><i style="background:var(--success);"></i>Available</span>
+              <span><i style="background:var(--danger);"></i>Booked</span>
               <span><i style="background:var(--line);"></i>Not published</span>
             </div>
             <p class="hh-horizon">Bookings can only be made up to 12 months in advance.</p>
@@ -3168,18 +3190,18 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="hh-panel" id="hhPanel">
             <h4 id="hhPanelDate">Select a date</h4>
-            <p class="hh-p-sub" id="hhPanelSub">Choose a day above to see the two hire slots.</p>
+            <p class="hh-p-sub" id="hhPanelSub">Choose what you need and a day above.</p>
             <label class="hh-agree" id="hhAgreeWrap" style="display:none;">
               <input type="checkbox" id="hhAgree">
               <span>I have read and agree to the <a href="#hire-terms" id="hhTermsLink">terms of hire</a>, including use of the venue in accordance with Islamic rulings.</span>
             </label>
-            <div class="hh-sessions" id="hhSessions"></div>
+            <div class="hh-sessions" id="hhAct"></div>
             <div class="hh-booked-msg" id="hhBookMsg" style="display:none;"></div>
 
             <div class="hh-form" id="hhForm" style="display:none;">
               <div class="hh-form-head">
                 <div>
-                  <div class="hf-slot" id="hfSlot">&nbsp;</div>
+                  <div class="hf-slot" id="hfHiring">&nbsp;</div>
                   <div class="hf-when" id="hfWhen">&nbsp;</div>
                 </div>
                 <button type="button" class="hf-back" id="hfBack">Change</button>
@@ -3212,14 +3234,13 @@ window.TAIYABAH_PUBLIC = {
                   <span class="hf-err">Please enter a valid UK phone number.</span>
                 </div>
 
-                <fieldset class="hf-field" id="wrapMember">
-                  <legend>Are you a member of the masjid?</legend>
-                  <div class="hf-radios">
-                    <label><input type="radio" name="hfMember" value="yes"> Yes</label>
-                    <label><input type="radio" name="hfMember" value="no"> No</label>
-                  </div>
-                  <span class="hf-err">Please let us know so we can confirm the right rate.</span>
-                </fieldset>
+                <!-- The membership question was removed on 7 September 2026.
+                     It existed only to decide which of two rates to quote, and
+                     the masjid's price list has one rate. Asking somebody
+                     whether they belong to a mosque is asking about their
+                     religion — Article 9 data — so a question that no longer
+                     decides anything is a question worth not asking. Do not
+                     put it back without a second rate to justify it. -->
 
                 <!-- Added 4 September 2026. This form has been taking real requests with no
                      statement of what happens to the data and no link to the privacy notice —
@@ -3232,7 +3253,7 @@ window.TAIYABAH_PUBLIC = {
                   Requests are deleted six months after the date you asked about.
                   <a href="#" data-nav="privacy">Privacy notice</a>.</p>
 
-                <button type="submit" class="btn btn-gold" style="width:auto;">Continue to payment</button>
+                <button type="submit" class="btn btn-gold" style="width:auto;">Send this request</button>
               </form>
             </div>
 
@@ -3240,16 +3261,13 @@ window.TAIYABAH_PUBLIC = {
               <div class="hf-summary">
                 <div class="hf-sum-row"><span class="k">Name</span><span class="v" id="dnName">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Date</span><span class="v" id="dnDate">&nbsp;</span></div>
-                <div class="hf-sum-row"><span class="k">Slot</span><span class="v" id="dnSlot">&nbsp;</span></div>
-                <div class="hf-sum-row"><span class="k">Hall</span><span class="v" id="dnHall">&nbsp;</span></div>
-                <div class="hf-sum-row"><span class="k">Kitchen</span><span class="v" id="dnKitchen">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Hiring</span><span class="v" id="dnHiring">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Contact</span><span class="v" id="dnPhone">&nbsp;</span></div>
               </div>
 
               <div class="hf-price">
-                <span class="hp-label">Estimated fee</span>
-                <span class="hp-val" id="dnPrice">&pound;&mdash;</span>
-                <span class="hp-badge">Placeholder &mdash; the office confirms the fee when it calls you</span>
+                <span class="hp-label">The fee</span>
+                <span class="hp-badge">The charges are set out below. The office confirms the exact figure &mdash; including utensils and the utility charge, if they apply &mdash; when it calls you.</span>
               </div>
 
               <div class="hh-booked-msg" id="dnMsg" style="display:block;">Your request has been sent to the masjid office. Nothing has been paid and this date is not held yet &mdash; the office will call you on the number above to confirm the date, the fee and how to pay. If you'd rather speak to someone now, ring 01204&nbsp;535&nbsp;997.</div>
@@ -3271,10 +3289,53 @@ window.TAIYABAH_PUBLIC = {
 
           <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-bottom:16px;">Taiyabah Centre &mdash; a separate building owned by the masjid &mdash; offers three halls and two kitchens for hire, suitable for a range of community and family occasions.</p>
 
-          <div class="hh-slots-info">
-            <div class="hh-slot-line"><span class="hs-name">Morning slot</span><span class="hs-time tnum">9:00 am &ndash; 4:00 pm</span></div>
-            <div class="hh-slot-line"><span class="hs-name">Evening slot</span><span class="hs-time tnum">5:00 pm &ndash; 11:00 pm</span></div>
-            <p class="hh-slot-note">Each hall is hired by the slot. The hour between four and five is kept clear for changeover.</p>
+          <!-- The masjid's published charges, printed here as they are printed
+               on the masjid's own sheet. The page does NOT work out a total:
+               utensils and the utility charge depend on what actually happens
+               on the day, and a figure on screen that turns out to be wrong is
+               worse than no figure. The office quotes. -->
+          <div class="hh-rates" id="hh-charges">
+            <h4>Charges</h4>
+            <p class="hh-rate-eff">Every hall booking includes the kitchen and the cleaning. Hire is for the whole day.</p>
+
+            <div class="hh-rate-band">
+              <span class="hh-rate-when">Monday &ndash; Thursday</span>
+              <div class="hh-rate-line"><span class="n">1 hall</span><span class="p tnum">&pound;350</span></div>
+              <div class="hh-rate-line"><span class="n">2 halls</span><span class="p tnum">&pound;500</span></div>
+              <div class="hh-rate-line"><span class="n">3 halls</span><span class="p tnum">&pound;600</span></div>
+            </div>
+
+            <div class="hh-rate-band">
+              <span class="hh-rate-when">Friday, Saturday &amp; Sunday</span>
+              <div class="hh-rate-line"><span class="n">2 halls</span><span class="p tnum">&pound;600</span></div>
+              <div class="hh-rate-line"><span class="n">3 halls</span><span class="p tnum">&pound;700</span></div>
+              <p class="hh-rate-note">There is no one-hall rate at the weekend.</p>
+            </div>
+
+            <div class="hh-rate-band">
+              <span class="hh-rate-when">Kitchen on its own</span>
+              <div class="hh-rate-line"><span class="n">Kitchen hire</span><span class="p tnum">&pound;125</span></div>
+              <div class="hh-rate-line"><span class="n">Utility charge</span><span class="p tnum">45p per person</span></div>
+            </div>
+
+            <div class="hh-rate-band">
+              <span class="hh-rate-when">If they apply</span>
+              <div class="hh-rate-line"><span class="n">Utensils, only if used</span><span class="p tnum">&pound;100</span></div>
+              <div class="hh-rate-line"><span class="n">Utility charge, if you cook in the kitchen</span><span class="p tnum">45p per person</span></div>
+              <div class="hh-rate-line"><span class="n">Damage to the venue</span><span class="p tnum">&pound;100</span></div>
+            </div>
+
+            <p class="hh-rate-note"><strong>&pound;100 deposit</strong> is payable on the day you book and is <strong>not refundable</strong>. The balance is due <strong>30 days before</strong> your booking date.</p>
+            <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
+          </div>
+
+          <div class="hh-rates">
+            <h4>Hall bookings</h4>
+            <p class="hh-rate-eff">Ring the office, or any of the booking team directly.</p>
+            <div class="hh-rate-line"><span class="n">Masjid office</span><span class="p tnum"><a href="tel:01204535997">01204 535 997</a></span></div>
+            <div class="hh-rate-line"><span class="n">Rafiq I Patel</span><span class="p tnum"><a href="tel:07951795465">07951 795465</a></span></div>
+            <div class="hh-rate-line"><span class="n">Mustaq Adam</span><span class="p tnum"><a href="tel:07909973776">07909 973776</a></span></div>
+            <div class="hh-rate-line"><span class="n">Alibhai Khotiwala</span><span class="p tnum"><a href="tel:07729297676">07729 297676</a></span></div>
           </div>
 
           <a class="svc-cta-row" href="https://www.google.com/maps?q=Taiyabah+Centre,+Astley+Street,+Bolton+BL1+8EH" target="_blank" rel="noopener">
@@ -3288,7 +3349,7 @@ window.TAIYABAH_PUBLIC = {
             <span class="go">&rsaquo;</span>
           </a>
 
-          <p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-top:16px;">For pricing, or to discuss anything the calendar doesn't cover, the office is the quickest route.</p>
+          <p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-top:16px;">The charges above are the masjid's published rates. For anything the calendar doesn't cover, the office is the quickest route.</p>
 
           <p class="hh-tc-prompt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h8l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1v-16a1 1 0 011-1z"/><path d="M15 3.5v4h4"/><path d="M9 13h6M9 16.5h4"/></svg>
@@ -3318,24 +3379,24 @@ window.TAIYABAH_PUBLIC = {
           <div class="hh-term">
             <div class="ht-n">2</div>
             <div>
-              <h4>Payment in full at the time of booking</h4>
-              <p>A booking is only confirmed once payment has been made in full. Dates are not held or reserved before payment is received.</p>
+              <h4>Deposit and balance</h4>
+              <p>A <strong>&pound;100 deposit</strong> is payable on the day you book, and it is <strong>not refundable</strong>. The <strong>full balance is due 30 days before</strong> your booking date. Dates are not held or reserved before the deposit is received.</p>
             </div>
           </div>
 
           <div class="hh-term">
             <div class="ht-n">3</div>
             <div>
-              <h4>Waste disposal and cleanliness</h4>
-              <p>The person hiring the venue is responsible for waste disposal and for leaving the hall and kitchen clean. This responsibility rests with the hirer, not with the masjid or the caretaker.</p>
+              <h4>Cleaning is included, and we do it</h4>
+              <p>Cleaning is included in the hire charge and is carried out by Taiyabah Centre cleaners only. Please do not arrange your own cleaners. You are still responsible for taking away anything you brought in, and for leaving the venue in a reasonable state.</p>
             </div>
           </div>
 
           <div class="hh-term">
             <div class="ht-n">4</div>
             <div>
-              <h4>Cleaning and waste removal charges</h4>
-              <p>A cleaning charge will be applied to any booking where the venue or kitchen has been left in a mess. A separate charge will be applied for the removal of any waste left behind.</p>
+              <h4>Utensils and the utility charge</h4>
+              <p>If you use the masjid's utensils, a charge of <strong>&pound;100</strong> applies. If you cook your own food in the kitchen, a utility charge of <strong>45p per person</strong> applies. Neither is charged unless it applies to your booking &mdash; the office confirms the final figure when it calls you.</p>
             </div>
           </div>
 
@@ -3359,7 +3420,7 @@ window.TAIYABAH_PUBLIC = {
               <div class="ht-n">7</div>
               <div>
                 <h4>Cancelling or moving your booking</h4>
-                <p>Cancel <strong>more than two weeks before</strong> your booked date and you will be refunded in full. Inside the last two weeks the fee is <strong>not refundable</strong> &mdash; but we will move your booking to another date instead, once, subject to what is free. Ring the office as early as you can: the sooner we know, the more likely we can offer the date you want.</p>
+                <p>The <strong>&pound;100 deposit is not refundable</strong> at any point, including if you cancel the same day you booked. Anything you have paid beyond the deposit is refunded if you cancel <strong>more than 30 days before</strong> your booked date. Inside 30 days the balance is not refundable &mdash; but we will move your booking to another date instead, once, subject to what is free. Ring the office as early as you can: the sooner we know, the more likely we can offer the date you want.</p>
               </div>
             </div>
 
@@ -3373,7 +3434,7 @@ window.TAIYABAH_PUBLIC = {
 
         </div>
 
-        <p class="hh-terms-foot"><b>Questions about any of this?</b> The masjid office will talk through anything the terms don't cover &mdash; pricing, larger events, or particular requirements for your occasion. Call <a href="tel:01204535997" style="color:var(--brand-700);font-weight:700;">01204&nbsp;535&nbsp;997</a>.</p>
+        <p class="hh-terms-foot"><b>Questions about any of this?</b> The masjid office will talk through anything the terms don't cover &mdash; larger events, or particular requirements for your occasion. The charges are published above. Call <a href="tel:01204535997" style="color:var(--brand-700);font-weight:700;">01204&nbsp;535&nbsp;997</a>.</p>
       </div>
 
       <p style="margin-top:26px;">
@@ -3496,7 +3557,17 @@ window.TAIYABAH_PUBLIC = {
           <div class="h">Please also register your marriage legally</div>
           <p>A Nikāḥ performed at the masjid is not, by itself, a marriage recognised under UK law. We strongly encourage every couple to additionally complete a separate civil marriage — this protects both partners' legal rights, including around property and inheritance, should the need ever arise.</p>
         </div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Requirements such as documentation, witnesses, available dates and any applicable fees vary and are best confirmed directly with the masjid.</p>
+        <!-- Stated openly rather than behind a tick box. It is a published
+             rate card, so nobody has to tell the website anything about
+             whether they belong to this masjid in order to read it. -->
+        <div class="hh-rates" style="margin-top:18px;">
+          <h4>The nik&#0257;&#7717; fee</h4>
+          <p class="hh-rate-eff">The same whatever the day and whatever the time.</p>
+          <div class="hh-rate-line"><span class="n">Members of the masjid</span><span class="p tnum">&pound;100</span></div>
+          <div class="hh-rate-line"><span class="n">Non-members</span><span class="p tnum">&pound;200</span></div>
+          <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
+        </div>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
       </div>
       <div class="svc-aside">
         <a class="svc-cta-row" href="tel:01204535997">
@@ -3504,7 +3575,7 @@ window.TAIYABAH_PUBLIC = {
           <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
           <span class="go">&rsaquo;</span>
         </a>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses, timings and any applicable fees — are best discussed directly with the office when you call.</p>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses and timings — are best discussed directly with the office when you call. The fee is &pound;100 for members and &pound;200 for non-members.</p>
       </div>
       </div>
       <div class="nk-wrap" id="nikahReq">
@@ -3660,7 +3731,7 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="fs-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M9 11l2 2 4-4"/><path d="M9 17h6"/></svg></span><div><h4>Burial co-ordination</h4><p>The masjid arranges the burial itself and co-ordinates with the cemetery so the family does not have to.</p></div></div>
 
-          <div class="fs-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3"/><path d="M10 1v3"/><path d="M14 1v3"/></svg></span><div><h4>Feeding &amp; kitchen<span class="fs-extra">extra cost</span></h4><p>Catering for mourners can be arranged at Astley Hall. Masjid seating can also be provided.</p></div></div>
+          <div class="fs-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><path d="M6 1v3"/><path d="M10 1v3"/><path d="M14 1v3"/></svg></span><div><h4>Feeding &amp; kitchen<span class="fs-extra">extra cost</span></h4><p>Catering for mourners can be arranged at Astley Hall, charged at the <a href="#" data-nav="svc-hallhire">normal hall hire rates</a>. Masjid seating can also be provided.</p></div></div>
 
           <div class="fs-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 00-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 00-7.8 7.8l1.1 1L12 21l7.7-7.6 1.1-1a5.5 5.5 0 000-7.8z"/></svg></span><div><h4>Bereavement support</h4><p>The imams are available to the family afterwards, for guidance and for the questions that come later.</p></div></div>
         </div>
@@ -3668,6 +3739,26 @@ window.TAIYABAH_PUBLIC = {
         <div class="subhead" style="margin-top:30px;"><span class="idx">02</span><h3>Where BCoM fits in</h3><span class="rule"></span></div>
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">A death has to be registered, and the hospital or coroner has to release the deceased, before a burial can go ahead. <strong style="color:var(--ink);">Bolton Council of Mosques handles that side</strong> &mdash; liaising with the council and the hospital &mdash; which is why they are the first call. The masjid then takes care of the ghusl, the kafn, the janāzah and the burial itself.</p>
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">You do not need to work out who does what. Ring either number and you will be pointed the right way.</p>
+
+        <div class="subhead" style="margin-top:30px;"><span class="idx">03</span><h3>What it costs</h3><span class="rule"></span></div>
+
+        <div class="hh-rates">
+          <h4>Coffin and kaffan</h4>
+          <p class="hh-rate-eff">Everything else set out above &mdash; the ghusl, the kafn, the jan&#0257;zah, transport, the fridge and co-ordinating the burial &mdash; is covered by the masjid and Bolton Council of Mosques. There is nothing further to pay for those.</p>
+          <div class="hh-rate-line"><span class="n">Adult coffin with kaffan</span><span class="p tnum">&pound;275</span></div>
+          <div class="hh-rate-line"><span class="n">Child coffin with kaffan</span><span class="p tnum">&pound;135</span></div>
+          <div class="hh-rate-line"><span class="n">Baby coffin with kaffan</span><span class="p tnum">&pound;75</span></div>
+          <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>. Catering at Astley Hall is charged separately, at the normal hall rates.</p>
+        </div>
+
+        <div class="hh-rates">
+          <h4>For a jan&#0257;zah, ring</h4>
+          <p class="hh-rate-eff">Any of these, at any hour.</p>
+          <div class="hh-rate-line"><span class="n">BCoM &middot; out of hours</span><span class="p tnum"><a href="tel:01204392919">01204 392 919</a></span></div>
+          <div class="hh-rate-line"><span class="n">Aziz D. Patel</span><span class="p tnum"><a href="tel:07973167122">07973 167122</a></span></div>
+          <div class="hh-rate-line"><span class="n">Alibhai Khotiwala</span><span class="p tnum"><a href="tel:07729297676">07729 297676</a></span></div>
+          <div class="hh-rate-line"><span class="n">Masjid office</span><span class="p tnum"><a href="tel:01204535997">01204 535 997</a></span></div>
+        </div>
 
         <div class="svc-advisory" style="margin-top:24px;">
           <p><strong>Please check with the office before making arrangements.</strong> What can be provided depends on the circumstances and on when the deceased is released. Nothing on this page should be taken as confirmed for a particular funeral until the masjid has spoken to you.</p>
@@ -3838,8 +3929,8 @@ window.TAIYABAH_PUBLIC = {
         <h2>What this website collects</h2>
         <p>Four things, and only the ones you choose to send.</p>
         <h3 class="legal-sub">A hall hire request</h3>
-        <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date, time slot and hall</strong> you asked about.</p>
-        <p>The form also asks whether you are a member of the masjid, because the answer decides which rate you are quoted. <strong>That answer is not sent to us and is not stored anywhere.</strong> It is used to work out the figure shown on your screen and is then discarded when you leave the page. The figure itself is not stored either. Whether or not you are a member of a mosque says something about your religion, and we would rather not hold that than hold it carefully.</p>
+        <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date</strong> and <strong>what you asked to hire</strong> &mdash; one, two or three halls, or the kitchen on its own.</p>
+        <p>This form used to ask whether you were a member of the masjid, because there were two prices. There is now one published price for everybody, so the question has been removed. <strong>We do not ask, and have never stored, anything about whether you belong to this or any mosque.</strong></p>
         <h3 class="legal-sub">A nik&#0257;&#7717; date request</h3>
         <p>We receive the <strong>name, telephone number and email address</strong> of whoever we
         should ring, whether they are the bride, the groom or a family member, the
@@ -4251,71 +4342,86 @@ window.TAIYABAH_PUBLIC = {
 
 
   /* ---------- Hall hire availability calendar ----------------------------
-     No real booking data exists yet, so every future day renders in the
-     neutral "not published" state. Nothing here asserts that a date is free.
+     Rewritten 7 September 2026, when the masjid's actual price list arrived.
 
-     The sample toggle exists so the masjid can see how real bookings will
-     look; it is off by default and paints a loud banner when on.
+     The venue is let BY THE DAY — there is no morning slot and no evening
+     slot — and what a hirer chooses is HOW MANY halls, not which one. The
+     kitchen and the cleaning are included in every hall band; kitchen-only
+     hire exists as its own product at its own rate.
 
-     Sessions are the unit of hire (morning / afternoon / evening), which is
-     the shape the real diary will need. The venue is let as a whole, so one
-     confirmed booking closes that session regardless of which hall it was for.
+     Nothing here works out a fee. The published charges have variables a web
+     page cannot know — whether the utensils were used, how many people ate —
+     so the page shows the masjid's rate card as printed and the office quotes
+     the actual figure on the phone. A number on screen that turns out to be
+     wrong is worse than no number.
+
+     There is no membership question either. The masjid charges one rate, so
+     the answer that used to decide the price now decides nothing — and with
+     it goes the Article 9 problem, because nothing on this page any longer
+     asks anybody about their religious affiliation.
   ------------------------------------------------------------------------ */
   (function(){
    try {
     var grid = document.getElementById('hhGrid');
     if(!grid) return;
 
-    // Two slots, not three. The 16:00–17:00 gap is deliberate changeover time
-    // and is not bookable.
-    var SESSIONS = [
-      { key:'morning', label:'Morning', time:'9:00 am – 4:00 pm' },
-      { key:'evening', label:'Evening', time:'5:00 pm – 11:00 pm' }
-    ];
     var MONTHS = ["January","February","March","April","May","June",
                   "July","August","September","October","November","December"];
 
     var view = new Date(); view.setDate(1); view.setHours(0,0,0,0);
     var firstAllowed = new Date(view);
     var selected = null;
-    var hall = null;      // nothing chosen yet — both must be picked
-    var kitchen = null;
+    var hire = null;        // {type:'halls', count:1..3} or {type:'kitchen_only'}
     var sample = false;
     var agreed = false;
 
-    // Bookings open 12 months out. Anything beyond is neither bookable nor
-    // reachable — the month arrows stop rather than letting people wander into
-    // dates the masjid will not honour.
     var todayRef = new Date(); todayRef.setHours(0,0,0,0);
     var maxDate = new Date(todayRef.getFullYear() + 1, todayRef.getMonth(), todayRef.getDate());
     var lastAllowedMonth = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
 
     function midnight(d){ var x = new Date(d); x.setHours(0,0,0,0); return x; }
-    function key(d){
+    function iso(d){
       return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0')
            + '-' + String(d.getDate()).padStart(2,'0');
     }
+    function longDate(d){
+      return d.toLocaleDateString('en-GB',
+        { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    }
 
-    // Deterministic pseudo-availability for the preview only. Derived from the
-    // date so it stays stable while clicking around, and never persisted.
+    // Friday, Saturday and Sunday have no one-hall rate on the price list, so
+    // the masjid does not sell that booking. Enforced in the database too
+    // (migration 014) — this is the courtesy, not the control.
+    function isWeekendRate(d){ var g = d.getDay(); return g === 5 || g === 6 || g === 0; }
+    function offeredOn(d){
+      if(!hire) return true;
+      if(hire.type !== 'halls') return true;
+      return !(hire.count === 1 && isWeekendRate(d));
+    }
+
+    function hireLabel(){
+      if(!hire) return 'the venue';
+      if(hire.type === 'kitchen_only') return 'Kitchen only';
+      return hire.count === 1 ? '1 hall' : hire.count + ' halls';
+    }
+    function hireLong(){
+      if(!hire) return '';
+      if(hire.type === 'kitchen_only') return 'Kitchen only';
+      return hireLabel() + ', kitchen and cleaning included';
+    }
+
     /* ---------------------------------------------------------------------
        Real availability.
 
-       Read from the hall_availability view, which holds nothing but a date,
-       a slot and a hall number for bookings the office has CONFIRMED. A
-       request nobody has agreed to yet does not block anyone else's date.
+       Read from the hall_availability view, which holds nothing but the dates
+       of bookings the office has CONFIRMED. A request nobody has agreed to
+       yet does not block anyone else's date.
 
        Until this has loaded — and if it fails to load at all — every day
        stays 'unknown'. The calendar must never claim a date is free when it
        has no way of knowing.
     --------------------------------------------------------------------- */
     var taken = null;                    // null = we do not know yet
-
-    function iso(d){
-      return d.getFullYear() + '-' +
-             String(d.getMonth()+1).padStart(2,'0') + '-' +
-             String(d.getDate()).padStart(2,'0');
-    }
 
     function loadAvailability(){
       var cfg = window.TAIYABAH_PUBLIC || {};
@@ -4325,7 +4431,7 @@ window.TAIYABAH_PUBLIC = {
       var base = String(cfg.SUPABASE_URL).trim()
                    .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
 
-      fetch(base + '/rest/v1/hall_availability?select=booking_date,session_slot', {
+      fetch(base + '/rest/v1/hall_availability?select=booking_date', {
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
           'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
@@ -4335,9 +4441,7 @@ window.TAIYABAH_PUBLIC = {
         return res.json();
       }).then(function(data){
         var map = {};
-        (data || []).forEach(function(r){
-          map[r.booking_date + '|' + r.session_slot] = true;
-        });
+        (data || []).forEach(function(r){ map[r.booking_date] = true; });
         taken = map;
         render(); renderPanel();
       }).catch(function(err){
@@ -4346,171 +4450,115 @@ window.TAIYABAH_PUBLIC = {
       });
     }
 
-    // The venue is let as a whole. One confirmed booking — any hall, kitchen or
-    // not — closes that session for everybody.
-    function slotFree(d, slotKey){
-      if(taken === null) return null;                     // not known yet
-      return !taken[iso(d) + '|' + slotKey];
+    // The venue is let as a whole. One confirmed booking closes the day for
+    // everybody, whatever was hired.
+    function dayFree(d){
+      if(taken === null) return null;                    // not known yet
+      return !taken[iso(d)];
     }
 
     function sampleState(d){
       var seed = (d.getFullYear()*372 + d.getMonth()*31 + d.getDate()) * 2654435761 % 97;
-      if(d.getDay() === 6 || d.getDay() === 0) return seed % 5 < 3 ? 'booked' : 'limited';
-      if(seed % 7 === 0) return 'booked';
-      if(seed % 3 === 0) return 'limited';
-      return 'available';
+      if(d.getDay() === 6 || d.getDay() === 0) return seed % 5 < 3 ? 'booked' : 'available';
+      return seed % 7 === 0 ? 'booked' : 'available';
     }
     function stateFor(d){
       if(sample) return sampleState(d);
-      if(taken === null) return 'unknown';
-      var free = SESSIONS.map(function(s){ return slotFree(d, s.key); });
-      if(free.every(function(f){ return f === false; })) return 'booked';
-      if(free.some(function(f){ return f === false; }))  return 'limited';
-      return 'available';
-    }
-
-    // With two slots: 'limited' means exactly one of them is gone.
-    function sessionsFor(d){
-      // Real data knows which slot is which; only the sample needs guessing.
-      if(!sample && taken !== null){
-        return SESSIONS.map(function(s){ return {s:s, free: slotFree(d, s.key)}; });
-      }
-      var st = stateFor(d);
-      if(st === 'unknown')   return SESSIONS.map(function(s){ return {s:s, free:null}; });
-      if(st === 'booked')    return SESSIONS.map(function(s){ return {s:s, free:false}; });
-      if(st === 'available') return SESSIONS.map(function(s){ return {s:s, free:true}; });
-      var seed = (d.getFullYear() + d.getMonth() + d.getDate()) % 2;
-      return SESSIONS.map(function(s,i){ return {s:s, free: i !== seed}; });
+      var free = dayFree(d);
+      if(free === null)  return 'unknown';
+      return free ? 'available' : 'booked';
     }
 
     function renderPanel(){
       var dEl = document.getElementById('hhPanelDate');
       var sEl = document.getElementById('hhPanelSub');
-      var wrap = document.getElementById('hhSessions');
+      var wrap = document.getElementById('hhAct');
       var foot = document.getElementById('hhPanelFoot');
       var msgBox = document.getElementById('hhBookMsg');
       wrap.innerHTML = '';
       if(msgBox) msgBox.style.display = 'none';
+
       if(!selected){
         dEl.textContent = 'Select a date';
-        sEl.textContent = 'Choose a day above to see the two hire slots.';
+        sEl.textContent = 'Choose what you need and a day above.';
         if(foot) foot.style.display = 'none';
         var aw = document.getElementById('hhAgreeWrap');
         if(aw) aw.style.display = 'none';
         return;
       }
-      var hallLabel = hall ? ('Hall ' + hall) : 'the venue';
-      var chosen = !!(hall && kitchen);
-      dEl.textContent = selected.toLocaleDateString('en-GB',
-        { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-      if(sample){
-        sEl.textContent = 'Sample availability for ' + hallLabel + '.';
-      } else if(taken === null){
+
+      var free = sample ? (sampleState(selected) === 'available') : dayFree(selected);
+      dEl.textContent = longDate(selected);
+
+      if(!hire){
+        sEl.textContent = 'Choose what you need — halls, or the kitchen on its own — to request this date.';
+      } else if(!offeredOn(selected)){
+        sEl.textContent = 'One hall is only available Monday to Thursday. On Friday, Saturday and Sunday the smallest booking is two halls.';
+      } else if(sample){
+        sEl.textContent = 'Sample availability for ' + hireLabel().toLowerCase() + '.';
+      } else if(free === null){
         sEl.textContent = 'We could not check availability just now. The office can confirm on the phone.';
-      } else if(!chosen){
-        sEl.textContent = 'Choose a hall and whether you need the kitchen to book a slot.';
       } else {
-        sEl.textContent = hallLabel + ', ' +
-          (kitchen === 'yes' ? 'including the kitchen' : 'without the kitchen') + '.';
+        sEl.textContent = hireLong() + '. Hire is for the whole day.';
       }
 
-      sessionsFor(selected).forEach(function(row){
-        var d = document.createElement('div');
-        d.className = 'hh-session';
-        // free === null means we genuinely do not know, so the button asks
-        // rather than claims. Never offer to book a slot we cannot confirm.
-        var label = row.free === true ? 'Book' : (row.free === false ? 'Booked' : 'Ask');
-        var state = row.free === true ? 'Available' : (row.free === false ? 'Booked' : 'Not published');
-        // Terms must be accepted, and a hall and kitchen answer chosen, before
-        // a slot can be booked. Asking a question about a date is not a
-        // booking, so that stays open either way.
-        var blocked = (row.free === false) || (row.free === true && (!agreed || !chosen));
-        d.innerHTML =
-          '<span class="hs-t">' + row.s.label +
-          ' <span style="font-weight:400;opacity:.6;">' + row.s.time + '</span>' +
-          '<span style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-bright);margin-top:2px;">' + state + '</span></span>';
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'hs-act';
-        btn.textContent = label;
-        btn.disabled = blocked;
-        (function(sess, isFree){
-          btn.addEventListener('click', function(){
-            if(isFree === true) openForm(sess);   // a real booking attempt
-            else requestSlot(sess, isFree);        // just an enquiry
-          });
-        })(row.s, row.free);
-        d.appendChild(btn);
-        wrap.appendChild(d);
+      var row = document.createElement('div');
+      row.className = 'hh-session';
+      var state = free === true ? 'Available' : (free === false ? 'Booked' : 'Not published');
+      row.innerHTML =
+        '<span class="hs-t">Whole day' +
+        '<span style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;' +
+        'text-transform:uppercase;color:var(--gold-bright);margin-top:2px;">' + state + '</span></span>';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hs-act';
+      btn.textContent = free === true ? 'Request' : (free === false ? 'Booked' : 'Ask');
+      // Terms must be accepted and a hire chosen before a date can be
+      // requested. Asking a question about a date is not a booking, so that
+      // stays open either way.
+      btn.disabled = (free === false) ||
+                     (free === true && (!agreed || !hire || !offeredOn(selected)));
+      btn.addEventListener('click', function(){
+        if(free === true) openForm(); else requestDate(free);
       });
+      row.appendChild(btn);
+      wrap.appendChild(row);
 
       if(foot) foot.style.display = '';
       var agreeWrap = document.getElementById('hhAgreeWrap');
       if(agreeWrap) agreeWrap.style.display = '';
     }
 
-    /* ------------------------------------------------------------------
-       PLACEHOLDER RATES — NOT THE MASJID'S REAL PRICING.
-
-       !! KNOWN LIMITATION — READ BEFORE PUTTING REAL PRICES HERE !!
-       Anything in this file is readable by anyone via View Source. These
-       figures are therefore public, and so is the fact that two bands
-       exist. That is acceptable only while they are placeholders.
-
-       Before real pricing goes live the calculation MUST move server-side
-       (a Postgres function or edge function behind Supabase) so the browser
-       is told one figure and never sees the other. The UI below is already
-       written that way — it renders a single number and never compares —
-       so only priceFor() needs replacing with a server call.
-    ------------------------------------------------------------------ */
-    var PRICING = {
-      member:    { morning: 100, evening: 120 },
-      nonmember: { morning: 150, evening: 180 }
-    };
-    function priceFor(sessionKey, isMember){
-      var band = PRICING[isMember ? 'member' : 'nonmember'];
-      var amount = band && band[sessionKey];
-      return typeof amount === 'number' ? amount : null;
-    }
-    function money(n){
-      return n === null ? '\u00A3\u2014' : '\u00A3' + n.toFixed(2);
-    }
-
-    var pendingSlot = null;
-
     function showPanelView(which){
-      var slots  = document.getElementById('hhSessions');
-      var agree  = document.getElementById('hhAgreeWrap');
-      var msg    = document.getElementById('hhBookMsg');
-      var form   = document.getElementById('hhForm');
-      var done   = document.getElementById('hhDone');
-      var foot   = document.getElementById('hhPanelFoot');
-      var dEl    = document.getElementById('hhPanelDate');
-      var sEl    = document.getElementById('hhPanelSub');
-      if(slots) slots.style.display = which === 'slots' ? '' : 'none';
+      var act   = document.getElementById('hhAct');
+      var agree = document.getElementById('hhAgreeWrap');
+      var msg   = document.getElementById('hhBookMsg');
+      var form  = document.getElementById('hhForm');
+      var done  = document.getElementById('hhDone');
+      var foot  = document.getElementById('hhPanelFoot');
+      var dEl   = document.getElementById('hhPanelDate');
+      var sEl   = document.getElementById('hhPanelSub');
+      if(act)   act.style.display   = which === 'slots' ? '' : 'none';
       if(agree) agree.style.display = which === 'slots' ? '' : 'none';
       if(msg && which !== 'slots') msg.style.display = 'none';
-      if(form) form.style.display = which === 'form' ? '' : 'none';
-      if(done) done.style.display = which === 'done' ? '' : 'none';
-      if(foot) foot.style.display = which === 'slots' ? '' : 'none';
-      if(dEl) dEl.style.display = which === 'slots' ? '' : 'none';
-      if(sEl) sEl.style.display = which === 'slots' ? '' : 'none';
+      if(form)  form.style.display  = which === 'form' ? '' : 'none';
+      if(done)  done.style.display  = which === 'done' ? '' : 'none';
+      if(foot)  foot.style.display  = which === 'slots' ? '' : 'none';
+      if(dEl)   dEl.style.display   = which === 'slots' ? '' : 'none';
+      if(sEl)   sEl.style.display   = which === 'slots' ? '' : 'none';
     }
 
-    function openForm(session){
-      pendingSlot = session;
-      document.getElementById('hfSlot').textContent =
-        session.label + ' slot \u00B7 ' + session.time;
-      document.getElementById('hfWhen').textContent =
-        selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-        + ' \u00B7 Hall ' + hall + (kitchen === 'yes' ? ' with kitchen' : ' without kitchen');
+    function openForm(){
+      document.getElementById('hfHiring').textContent = hireLong();
+      document.getElementById('hfWhen').textContent = longDate(selected) + ' · whole day';
       clearErrors();
       showPanelView('form');
       document.getElementById('hfFirst').focus();
     }
 
     function clearErrors(){
-      ['wrapFirst','wrapLast','wrapAddr','wrapPhone','wrapMember'].forEach(function(id){
+      ['wrapFirst','wrapLast','wrapAddr','wrapPhone'].forEach(function(id){
         var w = document.getElementById(id);
         if(w) w.classList.remove('has-err');
       });
@@ -4526,17 +4574,16 @@ window.TAIYABAH_PUBLIC = {
       return digits.length >= 10 && digits.length <= 11 && digits.charAt(0) === '0';
     }
 
-    // Reached when a slot cannot be booked from here — either it is already
+    // Reached when a date cannot be requested from here — either it is already
     // taken, or availability could not be checked. Say which; they are very
     // different situations for the person reading it.
-    function requestSlot(session, free){
+    function requestDate(free){
       var msg = document.getElementById('hhBookMsg');
       if(!msg) return;
-      var when = selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' })
-                 + ', ' + session.label.toLowerCase() + ' (' + session.time + ')';
+      var when = selected.toLocaleDateString('en-GB', { day:'numeric', month:'long' });
       msg.textContent = (free === false)
-        ? ('The venue is already booked for ' + when + '. The office may be able to '
-           + 'suggest another date \u2014 call 01204 535 997.')
+        ? ('The venue is already booked on ' + when + '. The office may be able to '
+           + 'suggest another date — call 01204 535 997.')
         : ('We could not check whether ' + when + ' is free, so nothing has been '
            + 'requested. Please call the office on 01204 535 997 and they will check for you.');
       msg.style.display = '';
@@ -4571,11 +4618,17 @@ window.TAIYABAH_PUBLIC = {
         if(past || beyond){
           btn.disabled = true;
           if(beyond) btn.title = 'Bookings open 12 months in advance';
+        } else if(!offeredOn(d)){
+          // Not "booked" — the masjid simply does not sell one hall on a
+          // weekend, and saying so is more useful than greying it out mutely.
+          btn.disabled = true;
+          btn.classList.add('s-unoffered');
+          btn.title = 'One hall is Monday to Thursday only';
         } else {
           btn.classList.add('s-' + stateFor(d));
         }
         if(d.getTime() === today.getTime()) btn.classList.add('is-today');
-        if(selected && key(d) === key(selected)) btn.classList.add('is-sel');
+        if(selected && iso(d) === iso(selected)) btn.classList.add('is-sel');
         btn.innerHTML = '<span class="d">' + day + '</span><span class="dot"></span>';
         btn.setAttribute('aria-label', d.toLocaleDateString('en-GB',
           { weekday:'long', day:'numeric', month:'long' }));
@@ -4613,10 +4666,8 @@ window.TAIYABAH_PUBLIC = {
       var last  = document.getElementById('hfLast').value.trim();
       var addr  = document.getElementById('hfAddr').value.trim();
       var phone = document.getElementById('hfPhone').value.trim();
-      var memEl = document.querySelector('input[name="hfMember"]:checked');
 
       var bad = null;
-      if(!memEl){ document.getElementById('wrapMember').classList.add('has-err'); bad = bad || 'wrapMember'; }
       if(!validPhone(phone)){ document.getElementById('wrapPhone').classList.add('has-err'); bad = 'wrapPhone'; }
       if(addr.length < 8){ document.getElementById('wrapAddr').classList.add('has-err'); bad = 'wrapAddr'; }
       if(last.length < 2){ document.getElementById('wrapLast').classList.add('has-err'); bad = 'wrapLast'; }
@@ -4626,21 +4677,8 @@ window.TAIYABAH_PUBLIC = {
         if(f) f.focus();
         return;
       }
+      if(!hire || !selected || !offeredOn(selected)) return;
 
-      var isMember = memEl.value === 'yes';
-
-      /* ------------------------------------------------------------------
-         Send the request to the masjid.
-
-         What is sent: the date, the slot, the hall, and how to reach them.
-         What is NOT sent: the membership answer, and the figure it produced.
-         "I am a member of this masjid" is a statement about someone's
-         religion, which is special category data under Article 9 of the UK
-         GDPR. It decides the price on this screen and is then discarded. The
-         price is withheld for the same reason — with only two possible
-         figures, storing one would disclose the answer just as plainly.
-         See migration 003 for the database side of this.
-      ------------------------------------------------------------------ */
       var cfg = window.TAIYABAH_PUBLIC || {};
       var configured = cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY &&
                        cfg.SUPABASE_URL.indexOf('PASTE_') === -1 &&
@@ -4650,15 +4688,10 @@ window.TAIYABAH_PUBLIC = {
       var origLabel = submitBtn ? submitBtn.textContent : '';
 
       function showDone(msgHtml){
-        document.getElementById('dnName').textContent  = first + ' ' + last;
-        document.getElementById('dnDate').textContent  =
-          selected.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-        document.getElementById('dnSlot').textContent  = pendingSlot.label + ' \u00B7 ' + pendingSlot.time;
-        document.getElementById('dnHall').textContent  = 'Hall ' + hall +
-          (hall === '3' ? ' (1st floor)' : ' (ground floor)');
-        document.getElementById('dnKitchen').textContent = (kitchen === 'yes' ? 'Included' : 'Not included');
-        document.getElementById('dnPhone').textContent = phone;
-        document.getElementById('dnPrice').textContent = money(priceFor(pendingSlot.key, isMember));
+        document.getElementById('dnName').textContent   = first + ' ' + last;
+        document.getElementById('dnDate').textContent   = longDate(selected);
+        document.getElementById('dnHiring').textContent = hireLong();
+        document.getElementById('dnPhone').textContent  = phone;
         if(msgHtml) document.getElementById('dnMsg').innerHTML = msgHtml;
         showPanelView('done');
       }
@@ -4674,10 +4707,7 @@ window.TAIYABAH_PUBLIC = {
         return;
       }
 
-      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending\u2026'; }
-
-      function pad(n){ return (n < 10 ? '0' : '') + n; }
-      var isoDate = selected.getFullYear() + '-' + pad(selected.getMonth()+1) + '-' + pad(selected.getDate());
+      if(submitBtn){ submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
 
       var timedOut = false;
       var timer = setTimeout(function(){ timedOut = true; }, 12000);
@@ -4686,10 +4716,14 @@ window.TAIYABAH_PUBLIC = {
       // pasting it verbatim yields ".../rest/v1/rest/v1/..." and a confusing
       // "Invalid path specified in request URL". Normalise to the bare origin.
       var apiBase = String(cfg.SUPABASE_URL || '')
-                      .trim()
-                      .replace(/\/+$/, '')
-                      .replace(/\/rest\/v1$/, '');
+                      .trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
 
+      /* ------------------------------------------------------------------
+         What is sent: the date, what is being hired, and how to reach them.
+         Nothing else. There is no membership answer to withhold any more —
+         the masjid charges one rate — and no price, because this page does
+         not work one out. See migration 014.
+      ------------------------------------------------------------------ */
       fetch(apiBase + '/rest/v1/hall_bookings', {
         method: 'POST',
         headers: {
@@ -4701,10 +4735,9 @@ window.TAIYABAH_PUBLIC = {
           'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
-          booking_date: isoDate,
-          session_slot: pendingSlot.key,
-          hall:         hall,
-          kitchen:      (kitchen === 'yes'),
+          booking_date: iso(selected),
+          hire_type:    hire.type,
+          halls_count:  hire.type === 'halls' ? hire.count : null,
           first_name:   first,
           last_name:    last,
           address:      addr,
@@ -4739,7 +4772,6 @@ window.TAIYABAH_PUBLIC = {
       return;
     });
 
-
     document.getElementById('hhAgree').addEventListener('change', function(e){
       agreed = e.target.checked;
       renderPanel();
@@ -4756,23 +4788,19 @@ window.TAIYABAH_PUBLIC = {
         });
       }
     );
-    document.getElementById('hhKitchen').addEventListener('click', function(e){
-      var b = e.target.closest('.hh-hall');
-      if(!b) return;
-      kitchen = b.dataset.kitchen;
-      Array.prototype.forEach.call(this.querySelectorAll('.hh-hall'), function(x){
-        x.classList.toggle('is-on', x === b);
-      });
-      renderPanel();
-    });
 
-    document.getElementById('hhHalls').addEventListener('click', function(e){
+    document.getElementById('hhHire').addEventListener('click', function(e){
       var b = e.target.closest('.hh-hall');
       if(!b) return;
-      hall = b.dataset.hall;
+      hire = b.dataset.hire === 'kitchen_only'
+        ? { type:'kitchen_only' }
+        : { type:'halls', count: parseInt(b.dataset.count, 10) };
       Array.prototype.forEach.call(this.querySelectorAll('.hh-hall'), function(x){
         x.classList.toggle('is-on', x === b);
       });
+      // A date already chosen may no longer be on offer — one hall on a
+      // Saturday. Drop it rather than carry a selection that cannot be booked.
+      if(selected && !offeredOn(selected)) selected = null;
       render(); renderPanel();
     });
 
