@@ -223,6 +223,24 @@
 
   .bk-who{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.87rem;}
   .bk-who .nm{font-weight:700;color:var(--ink);}
+  .bk-who .bk-ref{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;
+    font-weight:700;color:var(--brand-700);
+  }
+  /* Deposit state. 'refund due' is deliberately the loudest thing on a card:
+     Stripe has somebody's money for a date they cannot have, and nothing will
+     happen about it until a person notices. */
+  .bk-dep{
+    font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 8px;border-radius:3px;
+  }
+  .bk-dep.d-unpaid{background:rgba(110,97,106,.14);color:var(--muted);}
+  .bk-dep.d-awaiting{background:rgba(198,162,76,.2);color:#7A5B10;}
+  .bk-dep.d-paid{background:rgba(63,122,70,.16);color:var(--success);}
+  .bk-dep.d-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
+  .bk-dep.d-refund_due{background:var(--danger);color:#fff;}
+  .bk-tab.bk-tab-refund.on,.bk-tab.bk-tab-refund{border-color:var(--danger);color:var(--danger);}
+  .bk-tab.bk-tab-refund.on{background:var(--danger);color:#fff;}
   .bk-who a{color:var(--brand-700);font-weight:600;}
   .bk-addr{font-size:.83rem;color:var(--muted);line-height:1.55;}
   .bk-meta{font-size:.74rem;color:var(--muted);}
@@ -420,6 +438,9 @@
           <button type="button" class="bk-tab on" data-filter="new">New requests <span class="n" id="bk-n-new">0</span></button>
           <button type="button" class="bk-tab" data-filter="upcoming">Upcoming <span class="n" id="bk-n-up">0</span></button>
           <button type="button" class="bk-tab" data-filter="nikah">Nik&#0257;&#7717; <span class="n" id="bk-n-nk">0</span></button>
+          <!-- Hidden until there is one. Somebody has paid for a date they
+               cannot have and the masjid is holding their money. -->
+          <button type="button" class="bk-tab bk-tab-refund" data-filter="refunds" id="bk-tab-refunds" hidden>Refund due <span class="n" id="bk-n-rf">0</span></button>
           <button type="button" class="bk-tab" data-filter="all">All</button>
         </div>
 

@@ -199,10 +199,23 @@
              " \u00B7 kitchen and cleaning included \u00B7 whole day";
     }
 
+    // The deposit is what reserves a date now (migration 016), so the office
+    // has to be able to see it at a glance. 'refund_due' especially: it means
+    // Stripe has somebody's £100 for a date they cannot have, and until a
+    // human sends it back nothing else will.
+    var DEPOSIT_WORDS = {
+      unpaid:     "no deposit",
+      awaiting:   "sent to pay",
+      paid:       "deposit paid",
+      refund_due: "REFUND DUE",
+      refunded:   "refunded"
+    };
+
     function fromHall(r) {
       return {
         kind: "hall", table: "hall_bookings", handledCol: "handled_at",
         id: r.id, created_at: r.created_at, date: r.booking_date,
+        reference: r.reference, deposit: r.deposit_status,
         detail: whatWasHired(r),
         who: (r.first_name || "") + " " + (r.last_name || ""),
         phone: r.phone, email: null, sub: r.address,
@@ -219,6 +232,7 @@
         kind: "nikah", table: "nikah_requests", handledCol: "reviewed_at",
         id: r.id, created_at: r.submitted_at, date: r.preferred_date,
         detail: when,
+        reference: r.reference, deposit: null,
         who: r.contact_name,
         phone: r.contact_phone, email: r.contact_email,
         sub: "Contact is the " + (r.contact_role === "family" ? "family" : r.contact_role) +
@@ -233,10 +247,10 @@
       // gets missed.
       return Promise.all([
         sb.from("hall_bookings")
-          .select("id,created_at,booking_date,hire_type,halls_count,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
+          .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
         sb.from("nikah_requests")
-          .select("id,submitted_at,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
+          .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
           .order("preferred_date", { ascending: true })
       ]).then(function (res) {
         var problems = [];
@@ -266,6 +280,7 @@
         if (filter === "upcoming") return r.status === "confirmed" && r.date >= today;
         if (filter === "halls")    return r.kind === "hall";
         if (filter === "nikah")    return r.kind === "nikah";
+        if (filter === "refunds")  return r.deposit === "refund_due";
         return true;
       });
       if (query) {
@@ -296,6 +311,15 @@
       }).length;
       var nk = el("bk-n-nk");
       if (nk) nk.textContent = rows.filter(function (r) { return r.kind === "nikah"; }).length;
+      // Shown only when there is one. A tab that is always zero teaches the
+      // office to stop looking at it.
+      var rf = el("bk-tab-refunds");
+      var due = rows.filter(function (r) { return r.deposit === "refund_due"; }).length;
+      if (rf) {
+        rf.hidden = due === 0;
+        var n = el("bk-n-rf");
+        if (n) n.textContent = due;
+      }
     }
 
     function emptyLine() {
@@ -304,6 +328,7 @@
       if (filter === "upcoming") return "Nothing confirmed coming up.";
       if (filter === "halls")    return "No hall bookings yet.";
       if (filter === "nikah")    return "No nikāḥ requests yet.";
+      if (filter === "refunds")  return "Nothing waiting for a refund.";
       return "Nothing yet.";
     }
 
@@ -328,9 +353,14 @@
               '<span class="s">' + esc(r.detail) + '</span>' +
               '<span class="bk-kind t-' + esc(r.kind) + '">' +
                 (r.kind === "nikah" ? "Nik\u0101\u1E25" : "Hall") + '</span>' +
+              (r.deposit
+                ? '<span class="bk-dep d-' + esc(r.deposit) + '">' +
+                  esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>'
+                : '') +
               '<span class="bk-pill p-' + esc(r.status) + '">' + esc(r.status) + '</span>' +
             '</div>' +
             '<div class="bk-who">' +
+              (r.reference ? '<span class="bk-ref">' + esc(r.reference) + '</span>' : '') +
               '<span class="nm">' + esc(r.who) + '</span>' +
               '<a href="tel:' + esc(String(r.phone).replace(/\s/g, "")) + '">' + esc(r.phone) + '</a>' +
               (r.email ? ' <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '') +
