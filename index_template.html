@@ -62,7 +62,19 @@ window.TAIYABAH_PUBLIC = {
   SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
 };
 </script>
+<!-- Two icons on purpose. The data URI paints instantly and works from a
+     file:// URL, which the whole site is built to do. /favicon.ico is the
+     fallback every other route uses — Safari has never handled data-URI
+     favicons reliably, and bookmarks, crawlers and older browsers ask for
+     /favicon.ico whatever the page declares.
+
+     The mark is the eight-point girih star the site already uses, drawn AT
+     16px rather than shrunk from the logo lock-up. The lock-up is three words
+     and a line of Arabic; at 16 pixels it is a smear. -->
 <link rel="icon" type="image/png" href="data:image/png;base64,{{ICON_B64}}">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <style>{{FONT_FACES}}</style>
 <script type="application/ld+json">
 {
@@ -898,6 +910,11 @@ window.TAIYABAH_PUBLIC = {
   /* The deposit box. It is the loudest thing on the confirmation screen on
      purpose: paying is what reserves the date, and somebody who closes the tab
      without paying has not booked anything. */
+  /* This box sits on the dark panel, NOT on a light card. Every colour in it
+     is therefore a light one — the first version used --brand-800 and --muted,
+     which are inks for the light side of the site and rendered as dark text on
+     a dark ground. Matched to .hf-sum-row above so the whole screen reads as
+     one thing. */
   .hf-pay{
     background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.5);
     border-radius:12px;padding:16px 18px;margin:4px 0 14px;
@@ -905,12 +922,13 @@ window.TAIYABAH_PUBLIC = {
   .hf-pay .hp-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:12px;}
   .hf-pay .hp-amt{
     font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.6rem;
-    color:var(--brand-900);line-height:1;
+    color:var(--gold-bright);line-height:1;
   }
-  .hf-pay .hp-what{font-size:.85rem;color:var(--brand-800);font-weight:600;}
+  .hf-pay .hp-what{font-size:.85rem;color:#F3EFE3;font-weight:600;}
   .hf-pay .btn{width:auto;}
-  .hf-pay .hp-hold{font-size:.8rem;color:var(--brand-800);font-weight:600;margin:10px 0 0;}
-  .hf-pay .hp-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:8px 0 0;}
+  .hf-pay .hp-hold{font-size:.8rem;color:var(--gold-bright);font-weight:600;margin:10px 0 0;}
+  .hf-pay .hp-note{font-size:.78rem;line-height:1.6;color:rgba(243,239,227,.72);margin:8px 0 0;}
+  .hf-pay .hp-note strong{color:#F3EFE3;}
 
   .hf-price{
     display:flex;align-items:center;flex-wrap:wrap;gap:10px;
@@ -3310,10 +3328,10 @@ window.TAIYABAH_PUBLIC = {
                 </div>
                 <a class="btn btn-gold" id="dnPayBtn" href="#" rel="noopener">Pay the &pound;100 deposit</a>
                 <p class="hp-hold" id="dnHold">&nbsp;</p>
-                <p class="hp-note">The deposit is <strong>not refundable</strong> once your booking is agreed, but it <strong>is</strong> refunded in full if the masjid cannot give you the date. The balance is due 30 days before, and the office confirms the exact figure &mdash; including utensils and the utility charge if they apply &mdash; when it calls you.</p>
+                <p class="hp-note">The deposit is <strong>not refundable</strong> once your booking is agreed, but it <strong>is</strong> refunded in full if the masjid cannot give you the date. The <strong>balance</strong> is due 30 days before and is paid at the office &mdash; it is not a fixed amount, so the office confirms the exact figure, including utensils and the utility charge if they apply, when it calls you.</p>
               </div>
 
-              <div class="hh-booked-msg" id="dnMsg" style="display:block;">We have your request. <strong>The date is not yours until the deposit is paid.</strong> If you would rather pay by bank transfer or in cash, ring the office on 01204&nbsp;535&nbsp;997 and they will hold it for you instead.</div>
+              <div class="hh-booked-msg" id="dnMsg" style="display:block;">We have your request. <strong>The date is not yours until the deposit is paid above.</strong> Nothing else holds it. If you have any difficulty paying, ring the office on 01204&nbsp;535&nbsp;997.</div>
 
               <button type="button" class="hf-back" id="dnBack" style="margin-top:4px;">Start again</button>
             </div>
@@ -3368,8 +3386,8 @@ window.TAIYABAH_PUBLIC = {
               <div class="hh-rate-line"><span class="n">Damage to the venue</span><span class="p tnum">&pound;100</span></div>
             </div>
 
-            <p class="hh-rate-note"><strong>&pound;100 deposit</strong> reserves the date &mdash; it can be paid on this website when you book. It is not refundable if you cancel, but it is refunded in full if the masjid cannot give you the date. The balance is due <strong>30 days before</strong> your booking date.</p>
-            <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
+            <p class="hh-rate-note"><strong>&pound;100 deposit, paid online when you book.</strong> That is what reserves the date &mdash; nothing else holds it. It is not refundable if you cancel, but it is refunded in full if the masjid cannot give you the date.</p>
+            <p class="hh-rate-note">The <strong>balance</strong> is due 30 days before your booking date and is paid at the office: cash, or bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
           </div>
 
           <div class="hh-rates">
@@ -3423,7 +3441,8 @@ window.TAIYABAH_PUBLIC = {
             <div class="ht-n">2</div>
             <div>
               <h4>Deposit and balance</h4>
-              <p>A <strong>&pound;100 deposit</strong> reserves your date. <strong>The date is not held until the deposit is paid</strong> &mdash; you can pay it on this website when you book, or in cash or by bank transfer at the office. The <strong>full balance is due 30 days before</strong> your booking date.</p>
+              <p>A <strong>&pound;100 deposit</strong> reserves your date. <strong>The date is not held until the deposit is paid, and the deposit is paid online when you book.</strong> Nothing else holds a date.</p>
+              <p>The <strong>full balance is due 30 days before</strong> your booking date, and is paid at the office in cash or by bank transfer. It is not a fixed amount &mdash; it depends on how many halls you take, the day of the week, and whether the utensils or the utility charge apply &mdash; so the office confirms the figure when it calls you.</p>
               <p>The deposit is <strong>not refundable if you cancel</strong>. It <strong>is refunded in full</strong> if the masjid cannot give you the date &mdash; if we decline the booking, or if two payments reach us for the same day. You will not be left out of pocket for something that was not your doing.</p>
             </div>
           </div>
