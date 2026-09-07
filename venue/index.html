@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Hall Hire &amp; Nik&#0257;&#7717; — Taiyabah Masjid</title>
 <style>
 /* Self-hosted webfonts — SIL Open Font License 1.1. Served from this file so
@@ -241,6 +243,34 @@
   .bk-dep.d-refund_due{background:var(--danger);color:#fff;}
   .bk-tab.bk-tab-refund.on,.bk-tab.bk-tab-refund{border-color:var(--danger);color:var(--danger);}
   .bk-tab.bk-tab-refund.on{background:var(--danger);color:#fff;}
+  .bk-tab.bk-tab-balance{border-color:var(--gold);color:#7A5B10;}
+  .bk-tab.bk-tab-balance.on{background:var(--gold);color:var(--brand-900);}
+
+  /* What is owed, on one line. The office should never have to do the sum. */
+  .bk-money{
+    display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+    padding:9px 11px;border-radius:9px;background:var(--paper);
+    border:1px solid var(--line);font-size:.83rem;
+  }
+  .bk-money .bm-b{font-weight:700;color:var(--ink);}
+  .bk-money .bm-k{color:var(--muted);font-size:.76rem;}
+  .bk-money .bm-plus{color:var(--muted);}
+  .bk-money .bm-none{color:var(--muted);font-size:.78rem;line-height:1.5;}
+  .bk-money .bm-owed{
+    margin-left:auto;font-weight:800;font-size:.8rem;
+    padding:3px 9px;border-radius:999px;white-space:nowrap;
+  }
+  .bm-owed.bo-unpaid{background:rgba(198,162,76,.24);color:#7A5B10;}
+  .bm-owed.bo-paid{background:rgba(63,122,70,.16);color:var(--success);}
+  .bm-owed.bo-waived{background:rgba(110,97,106,.14);color:var(--muted);}
+  .bk-money .bm-extras{
+    display:inline-flex;align-items:center;gap:4px;font-size:.76rem;color:var(--muted);
+  }
+  .bk-money .bm-extras input{
+    font:inherit;font-size:.8rem;width:78px;padding:4px 7px;border-radius:7px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+  }
+  @media (max-width:560px){ .bk-money .bm-owed{margin-left:0;} }
   .bk-who a{color:var(--brand-700);font-weight:600;}
   .bk-addr{font-size:.83rem;color:var(--muted);line-height:1.55;}
   .bk-meta{font-size:.74rem;color:var(--muted);}
@@ -441,6 +471,10 @@
           <!-- Hidden until there is one. Somebody has paid for a date they
                cannot have and the masjid is holding their money. -->
           <button type="button" class="bk-tab bk-tab-refund" data-filter="refunds" id="bk-tab-refunds" hidden>Refund due <span class="n" id="bk-n-rf">0</span></button>
+          <!-- Balances are due 30 days before the event and are paid at the
+               office. Nothing else in the system would ever surface one, so
+               this tab is the whole mechanism. Hidden when nobody owes. -->
+          <button type="button" class="bk-tab bk-tab-balance" data-filter="balance" id="bk-tab-balance" hidden>Balance due <span class="n" id="bk-n-bal">0</span></button>
           <button type="button" class="bk-tab" data-filter="all">All</button>
         </div>
 

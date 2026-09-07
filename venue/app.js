@@ -211,11 +211,32 @@
       refunded:   "refunded"
     };
 
+    // Money, in pence, because £600.00 does not exist exactly in binary and a
+    // rounding error in somebody's hall bill is not a thing anybody wants to
+    // explain. The base rate is whatever was STORED against the booking, not
+    // whatever today's price list says — a booking taken in March keeps
+    // March's price after the trustees change it.
+    function money(p) {
+      if (p === null || p === undefined) return null;
+      return "\u00A3" + (p / 100).toFixed(2).replace(/\.00$/, "");
+    }
+
     function fromHall(r) {
+      var base = r.base_amount_p, extras = r.extras_p || 0;
+      // A legacy booking taken under the old session rates has no base: the
+      // combination it used is not on the current price list, and inventing a
+      // figure would be worse than a dash. The office knows what was charged.
+      var total = base === null || base === undefined ? null : base + extras;
       return {
         kind: "hall", table: "hall_bookings", handledCol: "handled_at",
         id: r.id, created_at: r.created_at, date: r.booking_date,
         reference: r.reference, deposit: r.deposit_status,
+        base: base, extras: extras, total: total,
+        balance: r.balance_status,
+        // What is still owed: the total less the £100 deposit, but only if one
+        // was actually paid online. A booking settled in cash owes the lot.
+        owed: total === null ? null
+              : Math.max(total - (r.deposit_status === "paid" ? 10000 : 0), 0),
         detail: whatWasHired(r),
         who: (r.first_name || "") + " " + (r.last_name || ""),
         phone: r.phone, email: null, sub: r.address,
@@ -233,6 +254,7 @@
         id: r.id, created_at: r.submitted_at, date: r.preferred_date,
         detail: when,
         reference: r.reference, deposit: null,
+        base: null, extras: 0, total: null, balance: null, owed: null,
         who: r.contact_name,
         phone: r.contact_phone, email: r.contact_email,
         sub: "Contact is the " + (r.contact_role === "family" ? "family" : r.contact_role) +
@@ -247,7 +269,7 @@
       // gets missed.
       return Promise.all([
         sb.from("hall_bookings")
-          .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,first_name,last_name,address,phone,status,office_notes,handled_at")
+          .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,base_amount_p,extras_p,balance_status,balance_paid_at,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
         sb.from("nikah_requests")
           .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
@@ -281,6 +303,14 @@
         if (filter === "halls")    return r.kind === "hall";
         if (filter === "nikah")    return r.kind === "nikah";
         if (filter === "refunds")  return r.deposit === "refund_due";
+        if (filter === "balance") {
+          if (r.kind !== "hall" || r.status !== "confirmed") return false;
+          if (r.balance === "paid" || r.balance === "waived") return false;
+          // Due 30 days before the event. Anything inside that window and
+          // unpaid is what the office needs to be chasing this week.
+          var days = (new Date(r.date) - Date.now()) / 86400000;
+          return days <= 30;
+        }
         return true;
       });
       if (query) {
@@ -320,6 +350,17 @@
         var n = el("bk-n-rf");
         if (n) n.textContent = due;
       }
+      var bt = el("bk-tab-balance");
+      var owing = rows.filter(function (r) {
+        if (r.kind !== "hall" || r.status !== "confirmed") return false;
+        if (r.balance === "paid" || r.balance === "waived") return false;
+        return (new Date(r.date) - Date.now()) / 86400000 <= 30;
+      }).length;
+      if (bt) {
+        bt.hidden = owing === 0;
+        var bn = el("bk-n-bal");
+        if (bn) bn.textContent = owing;
+      }
     }
 
     function emptyLine() {
@@ -329,7 +370,45 @@
       if (filter === "halls")    return "No hall bookings yet.";
       if (filter === "nikah")    return "No nikāḥ requests yet.";
       if (filter === "refunds")  return "Nothing waiting for a refund.";
+      if (filter === "balance")  return "Nobody owes a balance inside the next thirty days.";
       return "Nothing yet.";
+    }
+
+    // What is owed, in one line the office can read without arithmetic.
+    // Extras are typed here because nothing can know them in advance: £100 if
+    // the utensils were used, 45p a head if the hirer cooked.
+    function moneyLine(r) {
+      if (r.base === null || r.base === undefined) {
+        return '<div class="bk-money"><span class="bm-none">No rate on file — ' +
+               'taken under the old session charges. Ask the office what was ' +
+               'agreed.</span></div>';
+      }
+      var bits =
+        '<span class="bm-b">' + esc(money(r.base)) + '</span>' +
+        '<span class="bm-k">base</span>';
+      if (r.extras > 0) {
+        bits += '<span class="bm-plus">+</span>' +
+                '<span class="bm-b">' + esc(money(r.extras)) + '</span>' +
+                '<span class="bm-k">extras</span>';
+      }
+      if (r.deposit === "paid") {
+        bits += '<span class="bm-plus">&minus;</span>' +
+                '<span class="bm-b">\u00A3100</span><span class="bm-k">deposit</span>';
+      }
+      var owedWord = r.balance === "paid" ? "settled"
+                   : r.balance === "waived" ? "waived"
+                   : "outstanding";
+      bits += '<span class="bm-owed bo-' + esc(r.balance || "unpaid") + '">' +
+              (r.balance === "paid" || r.balance === "waived"
+                ? esc(owedWord)
+                : esc(money(r.owed)) + ' ' + owedWord) + '</span>';
+
+      return '<div class="bk-money">' + bits +
+             '<label class="bm-extras">extras &pound;' +
+             '<input type="number" step="0.01" min="0" data-extras value="' +
+             (r.extras ? (r.extras / 100).toFixed(2) : '') +
+             '" placeholder="0.00"></label>' +
+             '</div>';
     }
 
     function render() {
@@ -343,8 +422,17 @@
       list.innerHTML = items.map(function (r) {
         var isOpen = r.status === "new";
         // A nikāḥ is a REQUEST — the office agrees it on the phone, and the
-        // wording here says so, so nobody reads "Confirm" as "already booked".
+        // wording here says so, so nobody reads "Agree date" as "already
+        // booked".
         var go = r.kind === "nikah" ? "Agree date" : "Confirm";
+
+        // A hall booking whose deposit has been paid is BOOKED. It was
+        // confirmed by the payment (migration 017), not by anybody here, and
+        // there is deliberately no Decline: somebody has given the masjid £100
+        // and the terms now promise them the date. Undoing it is a separate,
+        // reasoned act — see the Cancel & refund button below — because it
+        // always means sending money back.
+        var paidUp = r.kind === "hall" && r.deposit === "paid";
         return '' +
           '<article class="bk-item s-' + esc(r.status) + ' k-' + esc(r.kind) +
             '" data-id="' + esc(r.id) + '" data-kind="' + esc(r.kind) + '">' +
@@ -366,25 +454,35 @@
               (r.email ? ' <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '') +
             '</div>' +
             '<div class="bk-addr">' + esc(r.sub) + '</div>' +
+            (r.kind === "hall" ? moneyLine(r) : '') +
             '<div class="bk-meta">Requested ' + esc(ago(r.created_at)) +
               (r.handled_at ? ' · decided ' + esc(ago(r.handled_at)) : '') + '</div>' +
             '<textarea class="bk-notes" data-notes rows="1" placeholder="Notes — what was agreed, fee quoted, who called">' +
               esc(r.notes || "") + '</textarea>' +
             '<div class="bk-acts">' +
-              (isOpen
-                ? '<button type="button" class="bk-btn go" data-act="confirmed">' + go + '</button>' +
-                  '<button type="button" class="bk-btn no" data-act="declined">Decline</button>'
-                : '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
-                  (r.status === "confirmed"
-                    ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel</button>'
-                    : '<button type="button" class="bk-btn" data-act="new">Reopen</button>')) +
+              (paidUp
+                ? '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
+                  (r.balance === "paid"
+                    ? '<button type="button" class="bk-btn" data-act="balance_unpaid">Balance not paid after all</button>'
+                    : '<button type="button" class="bk-btn go" data-act="balance_paid">Balance received</button>') +
+                  '<button type="button" class="bk-btn no" data-act="cancel_refund">Cancel &amp; refund</button>'
+                : isOpen
+                  ? '<button type="button" class="bk-btn go" data-act="confirmed">' + go + '</button>' +
+                    '<button type="button" class="bk-btn no" data-act="declined">Decline</button>'
+                  : '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
+                    (r.status === "confirmed"
+                      ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel</button>'
+                      : '<button type="button" class="bk-btn" data-act="new">Reopen</button>')) +
               '<span class="bk-said" data-said></span>' +
             '</div>' +
           '</article>';
       }).join("");
     }
 
-    // Writes only the three columns the office is allowed to touch.
+    // Writes only the columns the office is granted (migration 017): status,
+    // office_notes, handled_at, deposit_status, extras_p, balance_status and
+    // balance_paid_at. Not the reference, not the Stripe session, not the base
+    // rate, and nothing the hirer typed.
     function apply(id, item, act) {
       var row = rows.filter(function (r) { return String(r.id) === String(id); })[0];
       if (!row) { setError("That request is no longer in the list — reloading."); return load().then(render); }
@@ -398,7 +496,47 @@
       // differently, and RLS only permits the office to write these few
       // columns on either. Nothing else is ever sent.
       var patch = { office_notes: notes || null };
-      if (act !== "save") {
+
+      // The extras box is saved on every click, so a figure typed and then
+      // left is not silently lost when the office presses something else.
+      var xEl = item.querySelector("[data-extras]");
+      if (xEl) {
+        var pounds = parseFloat(xEl.value);
+        patch.extras_p = isNaN(pounds) ? 0 : Math.round(pounds * 100);
+      }
+
+      if (act === "balance_paid") {
+        patch.balance_status = "paid";
+        patch.balance_paid_at = new Date().toISOString();
+      } else if (act === "balance_unpaid") {
+        patch.balance_status = "unpaid";
+        patch.balance_paid_at = null;
+      } else if (act === "cancel_refund") {
+        // Not an UPDATE. Undoing a paid booking always means money going back,
+        // so it goes through cancel_paid_booking(), which insists on a written
+        // reason and writes to the audit log.
+        var why = window.prompt(
+          "Why is the masjid cancelling this booking?\n\n" +
+          "This refunds the \u00A3100 deposit in full. The reason is recorded " +
+          "in the audit log.\n\nAt least ten characters:");
+        if (!why || why.trim().length < 10) {
+          said.textContent = "";
+          Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+          return;
+        }
+        return sb.rpc("cancel_paid_booking",
+                      { p_reference: row.reference, p_reason: why.trim() })
+          .then(function (out) {
+            if (out.error) throw new Error(out.error.message);
+            setError(null);
+            return load().then(render);
+          })
+          .catch(function (e) {
+            said.textContent = "";
+            setError("Couldn't cancel that — " + (e && e.message) + ". Nothing was changed.");
+            Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+          });
+      } else if (act !== "save") {
         patch.status = act;
         patch[row.handledCol] = act === "new" ? null : new Date().toISOString();
       }
