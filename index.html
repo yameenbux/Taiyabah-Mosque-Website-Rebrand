@@ -3206,7 +3206,7 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="hh-notice">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-            <span><b>This sends a request, not a booking.</b> The date is not held until the office has rung you back, agreed it and taken the deposit. To book straight away, call <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a>.</span>
+            <span><b>Paying the &pound;100 deposit books the date.</b> Choose your day, fill in the short form and pay &mdash; the date is yours as soon as the deposit goes through, with nobody to wait for. It is held for you for thirty minutes while you pay. Prefer to arrange it by phone? Call <a href="tel:01204535997" style="color:var(--brand-800);font-weight:700;">01204 535 997</a>.</span>
           </div>
 
           <div class="hh-controls">
@@ -3313,7 +3313,12 @@ window.TAIYABAH_PUBLIC = {
                   Requests are deleted six months after the date you asked about.
                   <a href="#" data-nav="privacy">Privacy notice</a>.</p>
 
-                <button type="submit" class="btn btn-gold" style="width:auto;">Send this request</button>
+                <!-- Says where it goes. Pressing this does not book anything
+                     on its own — it takes the date off the calendar for
+                     thirty minutes and shows the deposit payment. Promising
+                     a booking here and then asking for £100 would be a
+                     nasty surprise; promising a "request" understates it. -->
+                <button type="submit" class="btn btn-gold" style="width:auto;">Continue to the &pound;100 deposit</button>
               </form>
             </div>
 
@@ -4027,7 +4032,7 @@ window.TAIYABAH_PUBLIC = {
         <p>If you do not send any of those, this website collects nothing about you at all.</p>
 
         <h2>Why we need it, and what allows us to hold it</h2>
-        <p>We need your name and telephone number to call you back, and your address because a hall hire is a contract and we need to know who we are contracting with. Our lawful basis is <strong>taking steps at your request before entering into a contract</strong> (UK GDPR Article 6(1)(b)).</p>
+        <p>For a <strong>hall hire</strong> we need your name and telephone number so that the office can confirm the balance and the caretaker can arrange access with you before the day, and your address because a hall hire is a contract and we need to know who we are contracting with. Our lawful basis is <strong>performance of a contract, and taking steps at your request before entering into one</strong> (UK GDPR Article 6(1)(b)).</p>
         <p>For a <strong>nik&#0257;&#7717; date request</strong> the same basis applies: you are asking
         us to consider a date, which is a step towards an arrangement between you and the masjid.
         We need a name and a number so that the office can ring you back, because a request is not
@@ -4592,9 +4597,13 @@ window.TAIYABAH_PUBLIC = {
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'hs-act';
-      btn.textContent = free === true ? 'Request' : (free === false ? 'Booked' : 'Ask');
+      // 'Book' rather than 'Request' since migration 017: the deposit
+      // confirms the booking outright and nobody in the office agrees it
+      // afterwards, so calling it a request understates what the button
+      // starts. 'Ask' stays for a date the calendar cannot price.
+      btn.textContent = free === true ? 'Book' : (free === false ? 'Booked' : 'Ask');
       // Terms must be accepted and a hire chosen before a date can be
-      // requested. Asking a question about a date is not a booking, so that
+      // booked. Asking a question about a date is not a booking, so that
       // stays open either way.
       btn.disabled = (free === false) ||
                      (free === true && (!agreed || !hire || !offeredOn(selected)));

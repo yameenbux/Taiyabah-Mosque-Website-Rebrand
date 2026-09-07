@@ -1,57 +1,39 @@
-TAIYABAH MASJID — upload, 7 September 2026
-==========================================
+TAIYABAH MASJID — hall hire wording fix, 7 September 2026
+=========================================================
 
-Two things to do, in this order.
+Upload these two files to the repository root, replacing what is there:
+
+  index.html
+  404.html
+
+Nothing to run in Supabase. This is website copy only.
 
 
-1. RUN THE SQL
+WHAT WAS WRONG
 --------------
-   Supabase -> SQL Editor -> paste the whole of db/017_paid_is_booked.sql -> Run.
-   Then paste the whole of db/011_require_two_step.sql and run that too.
+The notice at the top of "Check availability & book" still said:
 
-   (011 is the standing rule: it only protects the policies that exist when it
-   runs, so it goes again after every migration.)
+  "This sends a request, not a booking. The date is not held until the office
+   has rung you back, agreed it and taken the deposit."
 
-
-2. UPLOAD THE FILES
--------------------
-   Put these in the repository root, replacing what is there:
-
-     index.html
-     404.html
-     README.md
-     favicon.ico
-     apple-touch-icon.png
-     icon-192.png
-     icon-512.png
-     site.webmanifest
-
-   And this one inside the venue folder, replacing what is there:
-
-     venue/app.js
-     venue/index.html
-
-   Do NOT upload the db/ folder — migrations are pasted into Supabase, never
-   published on the website.
+Every clause of that is now false. Nobody rings you back, nobody in the office
+agrees the date, and the deposit is not taken over the phone. Worse, it told a
+hirer their date was not held when in fact it is — for thirty minutes while
+they pay.
 
 
-WHAT CHANGES
-------------
-   Paying the £100 deposit now books the date outright. The office no longer
-   confirms a booking that has already been paid for — there is no Confirm
-   button and no Decline button on a paid booking, because the masjid has
-   somebody's money and the terms promise them the date.
+WHAT IT SAYS NOW
+----------------
+  "Paying the £100 deposit books the date. Choose your day, fill in the short
+   form and pay — the date is yours as soon as the deposit goes through, with
+   nobody to wait for. It is held for you for thirty minutes while you pay.
+   Prefer to arrange it by phone? Call 01204 535 997."
 
-   The portal now shows the money: the hall rate is worked out automatically
-   from the date and the number of halls, the office types in the extras
-   (utensils, catering), and the line reads
+Two buttons were renamed to match what they actually do:
 
-       £500 base + £154 extras - £100 deposit = £554 outstanding
+  the calendar button   "Request"            ->  "Book"
+  the form button       "Send this request"  ->  "Continue to the £100 deposit"
 
-   A booking taken under the old session rates has no rate on file and says so
-   rather than showing £0.
-
-   There is one way to undo a paid booking: "Cancel & refund". It asks why,
-   records the reason in the audit log, marks the £100 as owed back, and frees
-   the date. It is deliberately slower than a button click, because it always
-   means sending money back to somebody.
+The privacy notice's reason for asking for a phone number was also corrected:
+the office rings to confirm the balance and arrange access, not to agree the
+booking.
