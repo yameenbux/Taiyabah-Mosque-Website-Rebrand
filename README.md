@@ -70,7 +70,7 @@ apply/                  Madrasah application form — uploaded as a PREVIEW that
 build-inputs/           the 44 files build.py reads: fonts, compressed photos,
                         the prayer timetable, QR codes. Committed, so a fresh
                         clone can rebuild the site.
-db/                     migrations 008-017 and their local test harness
+db/                     migrations 008-018 and their local test harness
 supabase/functions/     Edge Functions. stripe-webhook records a paid deposit;
                         its README has the deployment steps. Never uploaded
 
@@ -255,6 +255,7 @@ Supabase SQL editor, in order.
 | `015_retention.sql` | Makes the nikāḥ and course purges delete **everything** past twelve months rather than only the rows that were declined or withdrawn, adds a `dry_run` mode, and puts both on a weekly `pg_cron` job. Needs 009 and 010 |
 | `016_deposit_holds_the_date.sql` | Paying the £100 deposit is what reserves a date. Adds a booking reference, deposit state, a 30-minute hold while the hirer is in Stripe's checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. Also fixes a grant the README had described but nobody had made. Needs 014 |
 | `017_paid_is_booked.sql` | A paid deposit **is** the confirmation. `mark_deposit_paid()` now also sets the booking to confirmed, so nobody in the office has to agree to a date the masjid has already sold. Stores the hall rate against the booking (`base_amount_p`) at the price in force on the day it was taken, lets the office add `extras_p` for utensils and catering, and tracks the balance. Undoing a paid booking is no longer a Decline button but `cancel_paid_booking()`, which demands a written reason and audits it. Needs 016 |
+| `018_nikah_fee_online.sql` | The nikāḥ fee can be paid online. Deliberately the OPPOSITE of 017: `mark_nikah_fee_paid()` records money and does **not** touch `status`, because the masjid does not publish its nikāḥ diary and the site therefore cannot know whether a date is free. Paying is a way to settle the fee without coming in with cash; the office still agrees the date. Adds `fee_status`, `fee_amount_p`, `fee_paid_at` and the Stripe session, keeps a second payment from overwriting the first, and lets the office record a fee taken in cash. Needs 010 |
 
 `CHECK_retention.sql` is read-only and answers the question the trustees will
 ask: what is about to be deleted, are the jobs actually scheduled, and have
@@ -336,6 +337,18 @@ decided *who* could write; nothing decided *what*. Migration 016 makes the
 documentation true, which mattered the moment `stripe_session_id` and
 `deposit_paid_at` existed. If you find yourself writing down a restriction,
 check that something enforces it.
+
+**Two payment flows that look alike and must not behave alike.** Paying the
+hall deposit books the date (017). Paying the nikāḥ fee books nothing (018).
+The difference is not a preference — it is whether the site can see what is
+free. `hall_availability` is computed from real bookings; the masjid does not
+publish its nikāḥ diary, so every day on that calendar looks identical because
+as far as the website knows it is. Making the nikāḥ behave "consistently" would
+mean selling dates the imam may not be free for. Both migrations say so in
+their headers, `mark_nikah_fee_paid()` has a comment on the exact UPDATE that
+would do it, and `_test_nikah_fee.sql` section 03 fails the moment `status`
+moves. If a future change makes that section fail, the change is wrong, not
+the assertion.
 
 **A test that cannot fail is worse than no test.** `/portal/`'s suite installed
 its fake Supabase client by intercepting a request for

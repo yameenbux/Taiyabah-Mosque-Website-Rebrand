@@ -1,39 +1,110 @@
-TAIYABAH MASJID — hall hire wording fix, 7 September 2026
-=========================================================
+TAIYABAH MASJID — paying the nikāḥ fee online, 7 September 2026
+==============================================================
 
-Upload these two files to the repository root, replacing what is there:
-
-  index.html
-  404.html
-
-Nothing to run in Supabase. This is website copy only.
+FOUR STEPS. Steps 1 and 2 can be done in any order; 3 and 4 come last.
 
 
-WHAT WAS WRONG
+1. MAKE TWO STRIPE PAYMENT LINKS
+--------------------------------
+   In Stripe, create two Payment Links:
+
+       Nikah fee - member       £100
+       Nikah fee - non-member   £200
+
+   Set them up as payments for SERVICES, the same way you did the £100 hall
+   deposit. NOT as donations. A nikāḥ fee is not a gift, and running it
+   through a donation link misstates it in the charity's accounts and risks a
+   Gift Aid problem.
+
+   Copy both URLs. You need them in step 3.
+
+
+2. RUN THE SQL
 --------------
-The notice at the top of "Check availability & book" still said:
+   Supabase -> SQL Editor -> paste the whole of db/018_nikah_fee_online.sql
+   -> Run.
 
-  "This sends a request, not a booking. The date is not held until the office
-   has rung you back, agreed it and taken the deposit."
-
-Every clause of that is now false. Nobody rings you back, nobody in the office
-agrees the date, and the deposit is not taken over the phone. Worse, it told a
-hirer their date was not held when in fact it is — for thirty minutes while
-they pay.
+   Then paste the whole of db/011_require_two_step.sql and run that too.
+   (Standing rule: 011 goes again after every migration.)
 
 
-WHAT IT SAYS NOW
-----------------
-  "Paying the £100 deposit books the date. Choose your day, fill in the short
-   form and pay — the date is yours as soon as the deposit goes through, with
-   nobody to wait for. It is held for you for thirty minutes while you pay.
-   Prefer to arrange it by phone? Call 01204 535 997."
+3. PUT THE TWO LINKS INTO THE PAGE
+----------------------------------
+   Open index.html and find this, near the bottom:
 
-Two buttons were renamed to match what they actually do:
+       var NIKAH_LINKS = {
+         member:     '',   // £100
+         non_member: ''    // £200
+       };
 
-  the calendar button   "Request"            ->  "Book"
-  the form button       "Send this request"  ->  "Continue to the £100 deposit"
+   Paste the two URLs between the quote marks. Until you do, the "Pay the fee
+   online" box does not appear at all and the page just shows cash and bank
+   transfer as before — so uploading before you have the links is safe.
 
-The privacy notice's reason for asking for a phone number was also corrected:
-the office rings to confirm the balance and arrange access, not to agree the
-booking.
+   Send me the two URLs if you would rather I put them in and rebuild
+   properly; index.html is generated from a template and hand-editing it is
+   normally the wrong thing to do.
+
+
+4. UPLOAD THE FILES
+-------------------
+   Repository root, replacing what is there:
+
+       index.html
+       404.html
+       README.md
+
+   Inside the venue folder:
+
+       venue/app.js
+       venue/index.html
+
+   Then redeploy the webhook. It now handles both kinds of payment:
+
+       supabase functions deploy stripe-webhook --no-verify-jwt
+
+   (The file is in supabase-function/ in this zip — it belongs at
+   supabase/functions/stripe-webhook/index.ts in your project.)
+
+   Do NOT upload the db/ folder.
+
+
+WHAT THIS DOES — AND DELIBERATELY DOES NOT DO
+---------------------------------------------
+   A family can now pay the nikāḥ fee online instead of bringing cash to the
+   office. They pick £100 (member) or £200 (non-member) and type the
+   reference from their request; the office checks the rate on the call.
+
+   PAYING DOES NOT BOOK A DATE. This is the opposite of the hall, and it is
+   on purpose. The hall calendar knows what is free, so paying can sell a
+   date outright. The masjid does not publish its nikāḥ diary, so the website
+   has no idea whether any given day is available — taking £100 for a date
+   nobody has checked would be selling something the masjid cannot promise.
+
+   So the sequence is unchanged: family requests a date, office rings, office
+   agrees it. The only new thing is how the fee gets paid.
+
+   In the portal, a nikāḥ that has paid its fee still shows "Agree date" and
+   "Decline". That is correct. If those ever disappear, something has gone
+   wrong.
+
+
+NEW THINGS IN THE PORTAL
+------------------------
+   - a "fee paid" badge on nikāḥ rows, and which rate was paid, so a family
+     who picked the wrong one is visible
+   - "£100 received" / "£200 received" buttons, for a fee taken in cash or by
+     bank transfer
+   - the Refunds tab now shows nikāḥ fees owed back as well as hall deposits.
+     Before this, a nikāḥ refund was invisible.
+
+
+IF SOMEONE PAYS TWICE
+---------------------
+   Two family members both paying is ordinary. The first payment is kept
+   exactly as it is, the second is written to the audit log naming both
+   Stripe payments, and nothing is overwritten. Somebody refunds one. Find
+   them with:
+
+       select * from public.admin_audit
+        where action = 'nikah_fee_paid_twice' order by at desc;

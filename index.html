@@ -1011,6 +1011,44 @@ window.TAIYABAH_PUBLIC = {
   .hh-rate-line .p a{color:var(--brand-700);}
   .hh-rate-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:9px 0 0;}
 
+  /* Paying the nikāḥ fee online (migration 018). Sits on the LIGHT service
+     card, not the dark booking panel, so it uses the page inks rather than the
+     gold-on-plum of .hf-pay — the same mistake made once already on the hall
+     confirmation screen, where dark text was put on a dark background.
+
+     Deliberately understated. This is not a call to action: the family should
+     only be here once the office has rung them and agreed a date, so it reads
+     as an instruction they have been given rather than a button to press on
+     the way past. */
+  .nk-pay{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;margin-top:14px;
+  }
+  .nk-pay h4{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+    color:var(--brand-900);margin:0 0 3px;
+  }
+  .nk-pay .np-when{
+    font-size:.78rem;line-height:1.55;color:var(--muted);margin:0 0 12px;
+  }
+  .nk-pay label{
+    display:block;font-size:.72rem;font-weight:800;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--brand-700);margin-bottom:5px;
+  }
+  .nk-pay input{
+    width:100%;box-sizing:border-box;padding:10px 12px;font:inherit;
+    font-size:.92rem;letter-spacing:.04em;text-transform:uppercase;
+    border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);
+  }
+  .nk-pay input:focus{outline:2px solid var(--brand-700);outline-offset:1px;}
+  .nk-pay .np-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
+  .nk-pay .np-btns .btn{flex:1 1 190px;text-align:center;}
+  .nk-pay .np-err{
+    display:none;font-size:.8rem;line-height:1.55;color:#8B2E2E;margin:9px 0 0;
+  }
+  .nk-pay .np-err.on{display:block;}
+  .nk-pay .np-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:11px 0 0;}
+
   .hh-notice{
     display:flex;gap:11px;align-items:flex-start;
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.45);
@@ -3642,8 +3680,31 @@ window.TAIYABAH_PUBLIC = {
           <p class="hh-rate-eff">The same whatever the day and whatever the time.</p>
           <div class="hh-rate-line"><span class="n">Members of the masjid</span><span class="p tnum">&pound;100</span></div>
           <div class="hh-rate-line"><span class="n">Non-members</span><span class="p tnum">&pound;200</span></div>
-          <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
+          <p class="hh-rate-note">Pay in cash at the masjid office, by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>, or online below.</p>
         </div>
+
+        <!-- PAYING THE FEE ONLINE (migration 018).
+             This is a way to pay, not a way to book. Unlike the hall, the
+             masjid does not publish its nikāḥ diary, so this website has no
+             idea whether a date is free — paying cannot and must not agree
+             one. The office rings, agrees the date, and the family pays here
+             instead of coming in with cash.
+             Hidden entirely until the masjid's two Payment Links exist; cash
+             and bank transfer above stand on their own until then. -->
+        <div class="nk-pay" id="nkPayBox" hidden>
+          <h4>Pay the fee online</h4>
+          <p class="np-when"><strong>Once the office has rung you and agreed your date.</strong> Paying does not book a date on its own &mdash; the masjid confirms what it can do first.</p>
+          <label for="nkPayRef">Your reference</label>
+          <input type="text" id="nkPayRef" placeholder="NK-26-0001" autocomplete="off"
+                 spellcheck="false" inputmode="text" maxlength="11">
+          <div class="np-btns">
+            <button type="button" class="btn btn-gold" data-nkpay="member">Member &mdash; pay &pound;100</button>
+            <button type="button" class="btn btn-ghost-light" data-nkpay="non_member">Non-member &mdash; pay &pound;200</button>
+          </div>
+          <p class="np-err" id="nkPayErr"></p>
+          <p class="np-note">Your reference is on the confirmation you were given when you sent your request, and the office can read it out. Pick the rate that applies to you &mdash; the office checks it, and will tell you if anything is owed or owed back.</p>
+        </div>
+
         <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
       </div>
       <div class="svc-aside">
@@ -5359,6 +5420,93 @@ window.TAIYABAH_PUBLIC = {
   })();
 
 
+  /* ---------------- Paying the nikāḥ fee online ----------------------------
+     Migration 018. A way to PAY, not a way to BOOK.
+
+     The hall calendar can sell a date outright because the site computes what
+     is free. This cannot: the masjid does not publish its nikāḥ diary, so the
+     website genuinely does not know whether any given day is available. The
+     office rings, agrees the date, and the family pays here rather than coming
+     in with cash. mark_nikah_fee_paid() in the database deliberately leaves
+     `status` alone for the same reason.
+
+     Two links because there are two rates — £100 for members, £200 for
+     everyone else — and the site has no way to know which applies. The family
+     picks and the office checks on the call. That question is fine to ask HERE
+     and was removed from the hall form for good reason: a hall hirer may be of
+     any faith or none, and asking them about mosque membership is asking about
+     their religion. Somebody requesting a nikāḥ has already told us far more
+     than the answer would.
+
+     Until both links exist the whole box stays hidden and the cash and bank
+     transfer details above stand on their own. A pay button that goes nowhere
+     is worse than no pay button.
+  ------------------------------------------------------------------------- */
+  (function(){
+    // The masjid's Stripe Payment Links for the nikāḥ fee. Set up as payments
+    // for SERVICES, not donations — a nikāḥ fee is not a gift, and running it
+    // through a donation link misstates it in the charity's accounts and
+    // risks a Gift Aid problem. See DONATIONS.md.
+    var NIKAH_LINKS = {
+      member:     '',   // £100
+      non_member: ''    // £200
+    };
+
+    var box = document.getElementById('nkPayBox');
+    if(!box) return;
+    if(!NIKAH_LINKS.member || !NIKAH_LINKS.non_member) return;   // stays hidden
+    box.hidden = false;
+
+    var ref = document.getElementById('nkPayRef');
+    var err = document.getElementById('nkPayErr');
+
+    function problem(msg){
+      err.textContent = msg;
+      err.className = 'np-err on';
+      ref.focus();
+    }
+
+    ref.addEventListener('input', function(){
+      err.className = 'np-err';
+      // Typed without the dashes more often than with them. Put them back
+      // rather than refusing something that is obviously right.
+      var v = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if(/^NK\d/.test(v)) v = 'NK-' + v.slice(2);
+      if(/^NK-\d{2}\d/.test(v)) v = v.slice(0,5) + '-' + v.slice(5);
+      this.value = v.slice(0, 11);
+    });
+
+    box.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-nkpay]');
+      if(!btn) return;
+
+      var v = ref.value.trim().toUpperCase();
+      if(!v){
+        return problem('Please enter your reference first, so the masjid knows ' +
+                       'whose fee this is. It looks like NK-26-0001.');
+      }
+      // Checked here only so a typo does not send money to a reference that
+      // cannot be matched. The database checks it again properly, and records
+      // an unmatched payment rather than swallowing it.
+      if(!/^NK-\d{2}-\d{4}$/.test(v)){
+        return problem('That does not look like a nikāḥ reference. It is four ' +
+                       'digits after the year, like NK-26-0001. The office can ' +
+                       'read yours out if you cannot find it.');
+      }
+
+      var link = NIKAH_LINKS[btn.dataset.nkpay];
+      if(!link) return problem('That payment option is not available just now. ' +
+                               'Please ring the office on 01204 535 997.');
+
+      // client_reference_id is the only thing tying this payment to a request.
+      // Without it Stripe takes the money and nobody knows whose it is.
+      window.location.href = link +
+        (link.indexOf('?') === -1 ? '?' : '&') +
+        'client_reference_id=' + encodeURIComponent(v);
+    });
+  })();
+
+
   /* ---------------- Nikāḥ date request -------------------------------------
      A REQUEST, not a booking. Nothing on this calendar is coloured by
      availability, and that is deliberate: the masjid does not publish its
@@ -5611,9 +5759,17 @@ window.TAIYABAH_PUBLIC = {
           form.style.display = 'none';
           $('nkDone').classList.add('on');
           $('nkDoneH').textContent = 'Request received';
+          // Deliberately unchanged in substance by migration 018. The office
+          // still rings and still agrees the date; the only new thing is that
+          // the fee can then be paid online instead of in cash. Saying "you
+          // can pay now" here would invite somebody to pay for a date nobody
+          // has checked, which is the exact mistake this design avoids.
           $('nkDoneP').textContent = 'The office will ring you to confirm whether ' + pretty(S.a) +
-            ' can be done, go through the details and take payment. ' +
-            'This is not a confirmed booking until they say so.';
+            ' can be done and go through the details. ' +
+            'This is not a confirmed booking until they say so. ' +
+            'Once they have agreed a date you can pay the fee at the office, ' +
+            'by bank transfer, or online — keep the reference below, it is ' +
+            'what a payment is matched by.';
           $('nkDoneRef').textContent = d.reference;
           $('nkDone').scrollIntoView({behavior:'smooth', block:'center'});
         })
