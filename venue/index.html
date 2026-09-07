@@ -263,6 +263,23 @@
   .bm-owed.bo-unpaid{background:rgba(198,162,76,.24);color:#7A5B10;}
   .bm-owed.bo-paid{background:rgba(63,122,70,.16);color:var(--success);}
   .bm-owed.bo-waived{background:rgba(110,97,106,.14);color:var(--muted);}
+  /* A nikāḥ fee owed back is the same red as a hall deposit owed back. Stripe
+     has somebody's money either way, and the office should not have to learn
+     two colour schemes to notice it. */
+  .bm-owed.bo-refund{background:var(--danger);color:#fff;}
+
+  /* The nikāḥ fee badge. DELIBERATELY NOT .bk-dep: a paid deposit means the
+     date is sold, and a paid nikāḥ fee means nothing of the sort — the office
+     still has to agree the date. Same shape so the row reads consistently,
+     a quieter colour so it is not mistaken for a confirmation. */
+  .bk-fee-pill{
+    font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 8px;border-radius:3px;
+    background:rgba(110,97,106,.14);color:var(--muted);
+  }
+  .bk-fee-pill.f-paid{background:rgba(63,122,70,.12);color:var(--success);}
+  .bk-fee-pill.f-refund_due{background:var(--danger);color:#fff;}
+  .bk-fee-pill.f-waived,.bk-fee-pill.f-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
   .bk-money .bm-extras{
     display:inline-flex;align-items:center;gap:4px;font-size:.76rem;color:var(--muted);
   }

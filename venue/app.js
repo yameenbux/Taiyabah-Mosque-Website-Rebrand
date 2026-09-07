@@ -211,6 +211,18 @@
       refunded:   "refunded"
     };
 
+    // A nikāḥ fee, in the office's words. "fee paid" and nothing more — no
+    // wording here may suggest the date is settled, because paying a nikāḥ fee
+    // settles nothing (migration 018). The office agrees the date; this only
+    // says the money arrived.
+    var FEE_WORDS = {
+      unpaid:     "fee unpaid",
+      paid:       "fee paid",
+      refund_due: "FEE REFUND DUE",
+      refunded:   "fee refunded",
+      waived:     "fee waived"
+    };
+
     // Money, in pence, because £600.00 does not exist exactly in binary and a
     // rounding error in somebody's hall bill is not a thing anybody wants to
     // explain. The base rate is whatever was STORED against the booking, not
@@ -240,6 +252,7 @@
         detail: whatWasHired(r),
         who: (r.first_name || "") + " " + (r.last_name || ""),
         phone: r.phone, email: null, sub: r.address,
+        fee: null, feeAmount: null,
         status: r.status, notes: r.office_notes, handled_at: r.handled_at
       };
     }
@@ -253,7 +266,12 @@
         kind: "nikah", table: "nikah_requests", handledCol: "reviewed_at",
         id: r.id, created_at: r.submitted_at, date: r.preferred_date,
         detail: when,
+        // A nik\u0101\u1E25 fee is NOT a deposit and must not be shown as one. Paying it
+        // agrees nothing (migration 018) \u2014 the office still rings and still
+        // decides \u2014 so it rides in its own field, styled its own way, and
+        // never touches the deposit badge that means "this date is sold".
         reference: r.reference, deposit: null,
+        fee: r.fee_status, feeAmount: r.fee_amount_p,
         base: null, extras: 0, total: null, balance: null, owed: null,
         who: r.contact_name,
         phone: r.contact_phone, email: r.contact_email,
@@ -272,7 +290,7 @@
           .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,base_amount_p,extras_p,balance_status,balance_paid_at,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
         sb.from("nikah_requests")
-          .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
+          .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at,fee_status,fee_amount_p,fee_paid_at")
           .order("preferred_date", { ascending: true })
       ]).then(function (res) {
         var problems = [];
@@ -302,7 +320,8 @@
         if (filter === "upcoming") return r.status === "confirmed" && r.date >= today;
         if (filter === "halls")    return r.kind === "hall";
         if (filter === "nikah")    return r.kind === "nikah";
-        if (filter === "refunds")  return r.deposit === "refund_due";
+        if (filter === "refunds")  return r.deposit === "refund_due" ||
+                                          r.fee === "refund_due";
         if (filter === "balance") {
           if (r.kind !== "hall" || r.status !== "confirmed") return false;
           if (r.balance === "paid" || r.balance === "waived") return false;
@@ -344,7 +363,9 @@
       // Shown only when there is one. A tab that is always zero teaches the
       // office to stop looking at it.
       var rf = el("bk-tab-refunds");
-      var due = rows.filter(function (r) { return r.deposit === "refund_due"; }).length;
+      var due = rows.filter(function (r) {
+        return r.deposit === "refund_due" || r.fee === "refund_due";
+      }).length;
       if (rf) {
         rf.hidden = due === 0;
         var n = el("bk-n-rf");
@@ -372,6 +393,41 @@
       if (filter === "refunds")  return "Nothing waiting for a refund.";
       if (filter === "balance")  return "Nobody owes a balance inside the next thirty days.";
       return "Nothing yet.";
+    }
+
+    // The nikāḥ fee. A much simpler thing than the hall's sum: one fixed
+    // charge, £100 or £200, with nothing to add up. It is rendered separately
+    // rather than being squeezed into moneyLine() because the two mean
+    // genuinely different things — a hall's line is a bill being settled, and
+    // this is a single fee that has either arrived or not. Sharing the code
+    // would be the first step towards sharing the behaviour, and the whole
+    // point of 018 is that they do not behave alike.
+    function feeLine(r) {
+      var word = FEE_WORDS[r.fee] || r.fee || "fee unpaid";
+      var amt  = money(r.feeAmount);
+      // Amount first, state last — .bm-owed carries margin-left:auto and pins
+      // itself to the right edge, the same shape as a hall booking's line, so
+      // the office's eye lands in the same place on both kinds of row.
+      return '<div class="bk-money bk-fee">' +
+             (amt ? '<span class="bm-b">' + esc(amt) + '</span>' : '') +
+             // Which rate was paid is worth showing, because a family who
+             // picked the wrong one is only visible here. The office checks
+             // membership on the call; the site never asks.
+             (r.fee === "paid" && r.feeAmount
+                ? '<span class="bm-k">' +
+                  (r.feeAmount === 10000 ? "member rate"
+                   : r.feeAmount === 20000 ? "non-member rate"
+                   : "unusual amount \u2014 check this") + '</span>'
+                : '') +
+             (r.fee === "paid" || r.feeAmount
+                ? ''
+                : '<span class="bm-k">\u00A3100 members, \u00A3200 otherwise</span>') +
+             '<span class="bm-owed bo-' +
+               esc(r.fee === "paid" ? "paid"
+                   : r.fee === "refund_due" ? "refund"
+                   : r.fee === "waived" || r.fee === "refunded" ? "waived"
+                   : "unpaid") + '">' + esc(word) + '</span>' +
+             '</div>';
     }
 
     // What is owed, in one line the office can read without arithmetic.
@@ -445,6 +501,10 @@
                 ? '<span class="bk-dep d-' + esc(r.deposit) + '">' +
                   esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>'
                 : '') +
+              (r.fee && r.fee !== "unpaid"
+                ? '<span class="bk-fee-pill f-' + esc(r.fee) + '">' +
+                  esc(FEE_WORDS[r.fee] || r.fee) + '</span>'
+                : '') +
               '<span class="bk-pill p-' + esc(r.status) + '">' + esc(r.status) + '</span>' +
             '</div>' +
             '<div class="bk-who">' +
@@ -454,7 +514,7 @@
               (r.email ? ' <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '') +
             '</div>' +
             '<div class="bk-addr">' + esc(r.sub) + '</div>' +
-            (r.kind === "hall" ? moneyLine(r) : '') +
+            (r.kind === "hall" ? moneyLine(r) : feeLine(r)) +
             '<div class="bk-meta">Requested ' + esc(ago(r.created_at)) +
               (r.handled_at ? ' · decided ' + esc(ago(r.handled_at)) : '') + '</div>' +
             '<textarea class="bk-notes" data-notes rows="1" placeholder="Notes — what was agreed, fee quoted, who called">' +
@@ -473,6 +533,16 @@
                     (r.status === "confirmed"
                       ? '<button type="button" class="bk-btn no" data-act="cancelled">Cancel</button>'
                       : '<button type="button" class="bk-btn" data-act="new">Reopen</button>')) +
+              // The fee, recorded separately from the decision, because the
+              // two are separate acts. Most fees still arrive as cash across
+              // the counter; the office needs to be able to say so without
+              // touching whether the date is agreed.
+              (r.kind === "nikah"
+                ? (r.fee === "paid"
+                    ? '<button type="button" class="bk-btn" data-act="fee_unpaid">Fee not paid after all</button>'
+                    : '<button type="button" class="bk-btn go" data-act="fee_100">&pound;100 received</button>' +
+                      '<button type="button" class="bk-btn go" data-act="fee_200">&pound;200 received</button>')
+                : '') +
               '<span class="bk-said" data-said></span>' +
             '</div>' +
           '</article>';
@@ -505,7 +575,19 @@
         patch.extras_p = isNaN(pounds) ? 0 : Math.round(pounds * 100);
       }
 
-      if (act === "balance_paid") {
+      // Recording a nikāḥ fee. Note what is NOT set: `status`. A fee arriving
+      // — in cash here, or through Stripe in mark_nikah_fee_paid() — agrees
+      // nothing. The office agrees a nikāḥ date by pressing "Agree date", and
+      // that is the only thing that does it (migration 018).
+      if (act === "fee_100" || act === "fee_200") {
+        patch.fee_status = "paid";
+        patch.fee_amount_p = act === "fee_100" ? 10000 : 20000;
+        patch.fee_paid_at = new Date().toISOString();
+      } else if (act === "fee_unpaid") {
+        patch.fee_status = "unpaid";
+        patch.fee_amount_p = null;
+        patch.fee_paid_at = null;
+      } else if (act === "balance_paid") {
         patch.balance_status = "paid";
         patch.balance_paid_at = new Date().toISOString();
       } else if (act === "balance_unpaid") {
