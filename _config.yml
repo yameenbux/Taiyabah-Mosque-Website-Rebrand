@@ -33,6 +33,10 @@ exclude:
   # Database migrations and their local-only test harness
   - db/
 
+  # Edge Function source. No keys in it — the secrets live in Supabase, not
+  # here — but the masjid's website is not the place to publish server code.
+  - supabase/
+
   # Original photographs, already compressed into img/
   - newbuild-photos/
 

@@ -64,7 +64,9 @@ apply/                  Madrasah application form — uploaded as a PREVIEW that
 build-inputs/           the 44 files build.py reads: fonts, compressed photos,
                         the prayer timetable, QR codes. Committed, so a fresh
                         clone can rebuild the site.
-db/                     migrations 008-014 and their local test harness
+db/                     migrations 008-016 and their local test harness
+supabase/functions/     Edge Functions. stripe-webhook records a paid deposit;
+                        its README has the deployment steps. Never uploaded
 
 DEPLOY.md               what gets uploaded and what never does
 DONATIONS.md            the Stripe setup, and why Gift Aid is not on the site
@@ -239,7 +241,17 @@ Supabase SQL editor, in order.
 | `011_require_two_step.sql` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Re-run it after applying any later migration** — it only alters policies that exist when it runs |
 | `012_remove_ethnicity.sql` | Drops the ethnicity column from admissions. Refuses to run if any value is present |
 | `013_course_admin.sql` | `promote_from_waiting()` — lets an administrator give a waiting person a place *without* being able to overfill the session. Needs 009 and 011 |
-| `014_whole_day_hire.sql` | Hall hire by the DAY and by the NUMBER of halls, not by session and room. Retires `session_slot`, `hall` and `kitchen` without dropping them, adds kitchen-only hire, and refuses a one-hall booking on Fri/Sat/Sun. Needs 003 and 006 |
+| `014_whole_day_hire.sql` | Hall hire by the DAY and by the NUMBER of halls, not by session and room. Retires `session_slot`, `hall` and `kitchen` without dropping them, adds kitchen-only hire, and moves every insert-time rule out of CHECK constraints and into a trigger. Needs 003 and 006 |
+| `015_retention.sql` | Makes the nikāḥ and course purges delete **everything** past twelve months rather than only the rows that were declined or withdrawn, adds a `dry_run` mode, and puts both on a weekly `pg_cron` job. Needs 009 and 010 |
+| `016_deposit_holds_the_date.sql` | Paying the £100 deposit is what reserves a date. Adds a booking reference, deposit state, a 30-minute hold while the hirer is in Stripe's checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. Also fixes a grant the README had described but nobody had made. Needs 014 |
+
+`CHECK_retention.sql` is read-only and answers the question the trustees will
+ask: what is about to be deleted, are the jobs actually scheduled, and have
+they been running. Section 2 uses `dry_run`, so it touches nothing.
+
+**Each `_test_` file needs a freshly built database.** They insert fixtures and
+delete rows, so running two of them against the same database will fail in ways
+that look like faults in the migrations and are not.
 
 `CHECK_course_registrations.sql` is read-only and safe to run in the SQL editor
 whenever you want to know what has actually arrived from the website — it exists
@@ -288,6 +300,31 @@ bookings, nikāḥ requests and admission applications straight from the API.
 Migration `011` moves the check into the policies, where it cannot be walked
 around. The rule generalises: if a control is not in the database, assume it is
 decoration.
+
+**A CHECK constraint must be true forever, not just today.** Migration 003
+wrote three rules as CHECK constraints: the booking date must not be in the
+past, must be within twelve months, and — added later — one hall is not sold at
+the weekend. None of those is a property of a row; they are rules about what
+may be *taken*. Postgres re-evaluates every constraint whenever a row is
+UPDATED, so each one froze a booking the moment it stopped satisfying it. The
+office could not add a note to a booking after the event, and nobody had
+noticed because nobody had tried. Migration 014's backfill tried to touch every
+row and was refused in production by a real, confirmed, paid booking. `NOT
+VALID` does not help: it skips the one-off validation scan, but the constraint
+is still checked on every update. All three now live in a `BEFORE INSERT`
+trigger. If a rule contains `now()` or describes what somebody is *allowed to
+do*, it is not a constraint.
+
+**A grant is the control; a comment is not.** Migration 003 ended with
+`grant select, update on public.hall_bookings to authenticated` — UPDATE on the
+whole table. This README said for months that the office "may only change
+status, office_notes and handled_at", and `venue/app.js` said the same in a
+comment. Neither was true. Nothing had gone wrong, because the portal only ever
+wrote those three columns — but the database was not what stopped it. RLS
+decided *who* could write; nothing decided *what*. Migration 016 makes the
+documentation true, which mattered the moment `stripe_session_id` and
+`deposit_paid_at` existed. If you find yourself writing down a restriction,
+check that something enforces it.
 
 **Blanket default privileges are a foot-gun.** Migration 002 ends with
 `alter default privileges … grant … on tables to authenticated`, which applies
@@ -344,20 +381,37 @@ declined or cancelled ones after three. Migration 007 puts it on a weekly
 schedule. **Those periods are also written into the privacy notice on the
 website** — change one and you must change all three.
 
-**The other two purges do not yet keep the promise the website makes.** The
-privacy notice says nikāḥ date requests and class sign-ups are *"deleted twelve
-months after you send them"*. `purge_old_nikah_requests()` only removes rows that
-were `declined` or `withdrawn`; `purge_old_course_registrations()` only removes
-`withdrawn` or `no_show`. A confirmed nikāḥ or an attended class is therefore
-kept indefinitely.
+**Nikāḥ requests and class sign-ups are deleted after twelve months, whatever
+their status.** The privacy notice says so, and since migration 015 the code
+does it. Both purges previously removed only the rows that had been closed off —
+declined or withdrawn — so a confirmed nikāḥ request or an attended class was
+kept for ever while the website said otherwise. The committee decided on
+7 September 2026 that everything goes at twelve months, and 015 makes it true.
 
-Under Article 5(1)(e) the published period is the promise — either the code meets
-it or the wording changes. Neither has been done, deliberately: it is a trustees'
-decision (delete everything at twelve months, or keep confirmed nikāḥ records for
-the masjid's own register and say so in the notice) and it is on the agenda for
-11 September 2026. Nothing has been altered in the meantime.
+Both are now on a weekly `pg_cron` job alongside the hall booking purge, at
+03:30, 03:40 and 03:50 on a Monday.
 
-Neither purge is on a schedule yet either. Only hall bookings are.
+**The is_admin() check had to come out to make that work**, and that is worth
+understanding rather than reversing. Both purges began by refusing anyone who
+was not an administrator. `is_admin()` answers by looking up `auth.uid()`, and a
+pg_cron job holds no JWT — so the scheduled purge would have raised an exception
+every Monday and deleted nothing, silently, because a failed cron job rings
+nobody's phone. Access is now controlled by the EXECUTE grant instead: revoked
+from `anon` and `authenticated`, so only the owner and the scheduler can call
+them. An administrator can no longer trigger a purge from a browser, which is
+correct — deleting every record older than a year is not an errand you should be
+able to run by clicking.
+
+**Twelve is written in three places** — the privacy notice, the purge functions
+and the cron jobs. There is no single source for it. Change one and you must
+change all three; `CHECK_retention.sql` will tell you whether they still agree.
+
+**Madrasah admissions is deliberately not fixed yet.**
+`purge_old_admission_applications()` has both the same faults. Its table is
+empty (the form cannot send), and the retention period for a child's
+application is a DPIA question rather than a copy of the twelve months agreed
+for adults' contact details. Fix it in the same work that signs the DPIA and
+turns the form on — and do not turn that form on before it is done.
 
 ---
 
@@ -532,6 +586,9 @@ while working on that area:
 | Hall hire | whole-day booking only, 1/2/3 halls or kitchen-only, one hall refused on Fri/Sat/Sun with a reason rather than a grey box, the whole-venue rule, URL normalisation, the 12-month horizon, and — the assertion that matters — the exact seven fields the form puts on the wire and nothing else |
 | Venue portal | a new whole-day booking, a kitchen-only booking and a booking taken under the old session model all render correctly, and the office still writes only `status`, `office_notes` and `handled_at` |
 | Whole-day hire (SQL) | old bookings survive the migration and keep what they asked for, one hall is refused at the weekend, kitchen-only carries no room count, the retired columns are unreachable from a browser, flood control still fires, and the public calendar publishes a date and nothing else |
+| Frozen history (SQL) | a confirmed one-hall booking on a Friday that has already passed — a row every retired constraint would refuse — can still have its notes and status changed by the office. This is the section that would have caught the production failure |
+| Deposits (SQL) | asking for a date holds it for thirty minutes and the calendar closes immediately; a **second person is refused** while the first is in checkout; an unpaid hold releases itself; a repeated webhook delivery changes nothing; a payment for a date somebody else took is marked `refund_due` and logged; and the office cannot edit a reference, a Stripe session or a payment time |
+| Retention (SQL) | a **confirmed** nikāḥ request and an **attended** class sign-up older than twelve months are both deleted — the two the old code kept for ever — while eleven-month-old records survive; `dry_run` counts without deleting; an audit line is written even on a run that finds nothing; and neither purge can be called by `anon` or by a verified administrator at aal2 |
 | Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
 | Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
 | Articles | four articles reachable from the hub, heroes and thumbnails load, cross-links resolve |

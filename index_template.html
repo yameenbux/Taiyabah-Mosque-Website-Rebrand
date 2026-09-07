@@ -83,8 +83,7 @@ window.TAIYABAH_PUBLIC = {
   "sameAs": [
     "https://www.instagram.com/taiyabahmasjid/",
     "https://twitter.com/TaiyabahMasjid",
-    "https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw",
-    "https://yameenbux.github.io/Taiyabah-Mosque-App/"
+    "https://www.youtube.com/channel/UCIJm0mh5SFn1-esTJpdazSw"
   ]
 }
 </script>
@@ -722,6 +721,23 @@ window.TAIYABAH_PUBLIC = {
   .soon-row span.t{font-weight:600;font-size:.88rem;}
   .soon-tag{font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);border:1px solid var(--line);color:var(--muted);padding:4px 9px;border-radius:999px;}
 
+  /* ---------- App: coming soon ----------
+     The same idea as the shop's soon-tag, and deliberately the same shape, so
+     "not yet" reads the same way wherever it appears on the site. */
+  .app-soon{
+    display:flex;align-items:flex-start;gap:11px;flex-wrap:wrap;
+    background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.45);
+    border-radius:10px;padding:13px 15px;margin-bottom:18px;max-width:52ch;
+  }
+  .app-soon .as-pill{
+    flex:0 0 auto;font-size:.63rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;padding:4px 10px;border-radius:999px;
+    background:var(--gold-bright);color:var(--brand-900);
+  }
+  .app-soon .as-text{font-size:.85rem;line-height:1.6;color:rgba(243,239,227,.82);}
+  /* A badge for a listing that does not exist yet must not look like a link. */
+  .store-badge.is-soon{opacity:.55;cursor:default;}
+
   /* ---------- GET THE APP ---------- */
   .app-page-body{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding-top:150px;}
   .app-grid{display:grid;grid-template-columns:1fr .5fr;gap:50px;align-items:center;}
@@ -879,6 +895,23 @@ window.TAIYABAH_PUBLIC = {
   .hf-privacy{font-size:.8rem;line-height:1.6;color:var(--muted);margin:2px 0 14px;}
   .hf-privacy a{color:var(--brand-700);font-weight:700;text-underline-offset:2px;}
   .hf-privacy a:hover{color:var(--brand-900);}
+  /* The deposit box. It is the loudest thing on the confirmation screen on
+     purpose: paying is what reserves the date, and somebody who closes the tab
+     without paying has not booked anything. */
+  .hf-pay{
+    background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.5);
+    border-radius:12px;padding:16px 18px;margin:4px 0 14px;
+  }
+  .hf-pay .hp-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:12px;}
+  .hf-pay .hp-amt{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.6rem;
+    color:var(--brand-900);line-height:1;
+  }
+  .hf-pay .hp-what{font-size:.85rem;color:var(--brand-800);font-weight:600;}
+  .hf-pay .btn{width:auto;}
+  .hf-pay .hp-hold{font-size:.8rem;color:var(--brand-800);font-weight:600;margin:10px 0 0;}
+  .hf-pay .hp-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:8px 0 0;}
+
   .hf-price{
     display:flex;align-items:center;flex-wrap:wrap;gap:10px;
     background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.5);
@@ -1651,8 +1684,8 @@ window.TAIYABAH_PUBLIC = {
 
 <div class="nav-overlay" id="navOverlay"></div>
 <nav class="nav-panel" id="navPanel">
-  <a class="nav-app-cta" href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">
-    <span><strong>Open the prayer times app</strong><span>Live times &middot; Qibla &middot; alerts</span></span>
+  <a class="nav-app-cta" data-nav="prayer">
+    <span><strong>Prayer times</strong><span>Live times &middot; jam&#0257;&#703;ah &middot; the full year</span></span>
     <span class="go">&rsaquo;</span>
   </a>
   <a class="nav-app-cta nav-live-cta" href="https://taiyabahmbolton.radioca.st/;" target="_blank" rel="noopener">
@@ -1722,7 +1755,7 @@ window.TAIYABAH_PUBLIC = {
           <h1>A home for <em>faith</em>, learning &amp; community since 1967.</h1>
           <p class="lead">Taiyabah Masjid has served Bolton's Muslim community for over 55 years. This site is the front door — prayer times, the new build appeal, and how to reach us. For day-to-day use, the free app is faster.</p>
           <div class="hero-cta">
-            <a class="btn btn-gold" href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">Open the App</a>
+            <a class="btn btn-gold" data-nav="prayer">Prayer times</a>
             <a class="btn btn-ghost-dark btn-live" href="https://taiyabahmbolton.radioca.st/;" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span> Listen Live</a>
           </div>
           <div class="hero-chip">
@@ -1861,32 +1894,32 @@ window.TAIYABAH_PUBLIC = {
       <div class="app-promo-copy">
         <div class="eyebrow">Get the App</div>
         <h2 style="color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);">Taiyabah Masjid, in your pocket.</h2>
-        <p>A free web app built for the community — live prayer countdown, Qibla, the live audio stream, and opt-in alerts, installed straight to your home screen in a few taps.</p>
+        <p>A free App for the community — live prayer countdown, Qibla, the live audio stream, and opt-in alerts, straight from your home screen.</p>
         <ul class="app-feat-list">
           <li><span class="afi">✓</span>Live prayer countdown &amp; the full year's timetable</li>
           <li><span class="afi">✓</span>Qibla compass &amp; the live audio stream</li>
           <li><span class="afi">✓</span>Opt-in alerts for jamā&#703;ah, janāzah &amp; events</li>
           <li><span class="afi">✓</span>Works offline once installed</li>
         </ul>
-        <div class="app-promo-cta">
-          <a class="btn btn-gold" href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">Open the App →</a>
-          <a class="btn btn-ghost-dark" data-nav="getapp">Installation guide</a>
+        <!-- The App is still being built and will not be ready when the
+             website goes live. No "Open the App" button and no QR code until
+             there is something behind them — a badge or a code that leads
+             nowhere is worse than saying plainly that it is coming. -->
+        <div class="app-soon">
+          <span class="as-pill">Coming soon</span>
+          <span class="as-text">The App is being built now and will be on the App Store and Google Play. We will announce it here when it is ready.</span>
         </div>
         <div class="store-row">
-          <div class="store-badge" aria-hidden="true" title="Design placeholder — not a live App Store listing">
+          <div class="store-badge is-soon" aria-hidden="true" title="Coming soon — not yet on the App Store">
             <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.5 1.5c.12 1.02-.28 2.02-.9 2.77-.65.79-1.75 1.42-2.78 1.34-.14-1 .34-2.05.95-2.75.68-.8 1.86-1.39 2.73-1.36ZM19.9 17.36c-.34.79-.5 1.14-.94 1.84-.61.98-1.47 2.2-2.54 2.21-.95.01-1.2-.62-2.49-.61-1.29.01-1.56.62-2.51.61-1.07-.01-1.88-1.11-2.49-2.09-1.71-2.73-1.89-5.94-.83-7.65.75-1.22 1.94-1.94 3.05-1.94 1.13 0 1.84.65 2.77.65.9 0 1.46-.65 2.77-.65.99 0 2.04.54 2.78 1.47-2.44 1.34-2.04 4.83.43 6.16Z"/></svg>
             <span class="sb-text"><span class="sb-small">Download on the</span><span class="sb-big">App Store</span></span>
           </div>
-          <div class="store-badge" aria-hidden="true" title="Design placeholder — not a live Google Play listing">
+          <div class="store-badge is-soon" aria-hidden="true" title="Coming soon — not yet on Google Play">
             <svg viewBox="0 0 24 24"><path fill="#00D9FF" d="M3.6 1.8 14.3 12 3.6 22.2c-.4-.2-.7-.7-.7-1.2V3c0-.5.3-1 .7-1.2Z"/><path fill="#FFD900" d="m14.3 12-3-3L3.6 1.8c.2-.1.4-.1.6-.1.3 0 .6.1.9.2l11 6.2L14.3 12Z"/><path fill="#FF3D57" d="m14.3 12 2.8 2.9-11 6.2c-.3.2-.6.2-.9.2-.2 0-.4 0-.6-.1L11.3 15l3-3Z"/><path fill="#00F076" d="M20.9 10.6c.4.3.7.8.7 1.4s-.3 1.1-.7 1.4l-3.1 1.8-3-3.1 3-3.1 3.1 1.6Z"/></svg>
             <span class="sb-text"><span class="sb-small">Get it on</span><span class="sb-big">Google Play</span></span>
           </div>
-          <div class="qr-mini">
-            <img src="data:image/png;base64,{{QR_B64}}" alt="QR code to open the Taiyabah Masjid app">
-            <span>Scan to install — works on any phone</span>
-          </div>
         </div>
-        <p class="store-disclaimer">Taiyabah Masjid is a free web app, not a store listing — the badges above are shown for familiarity only and the QR opens the real app.</p>
+        <p class="store-disclaimer">Not yet available to download &mdash; these are the two stores the App will be on.</p>
       </div>
       <div class="app-promo-phones">
         <div class="phone-shot p-left"><img src="{{APP_SHOT_LIVE_B64}}" alt="Screenshot of the Taiyabah Masjid app playing the masjid's live audio stream" loading="lazy" decoding="async"></div>
@@ -2390,27 +2423,28 @@ window.TAIYABAH_PUBLIC = {
       <div class="app-grid">
         <div>
           <div class="eyebrow">Get the App</div>
-          <h1 style="color:#F3EFE3;font-size:clamp(1.9rem,4vw,2.6rem);">One URL. No app store. Works offline.</h1>
+          <h1 style="color:#F3EFE3;font-size:clamp(1.9rem,4vw,2.6rem);">The Taiyabah Masjid App is on its way.</h1>
           <p style="color:rgba(243,239,227,.78);line-height:1.75;margin-top:14px;font-size:1rem;max-width:52ch;">
-            A lightweight progressive web app built for Taiyabah Masjid, giving the community direct access to the masjid's own prayer timetable rather than a third-party aggregator. It installs to your home screen, works offline, and takes its times from the masjid's officially published Salah timetable.
+            We are building an App for the community, with the masjid's own prayer timetable rather than a third-party aggregator. It will be free, and it will be on the App Store and Google Play. Until then, everything below is on this website &mdash; the <a data-nav="prayer" style="color:var(--gold-bright);">full prayer timetable</a> is live now.
           </p>
           <div class="feat-grid">
-            <div class="feat"><h4>Prayer times</h4><p>Begin and jamā&#703;ah times for all five prayers, live countdown, and both Jumu'ah times on Fridays.</p></div>
+            <div class="feat"><h4>Prayer times</h4><p>Begin and jamā&#703;ah times for all five prayers, live countdown, and both Jumu'ah times on Fridays. <a data-nav="prayer" style="color:var(--gold-bright);">On the website now</a>.</p></div>
             <div class="feat"><h4>Reminders</h4><p>Sūrah al-Kahf on Fridays, morning &amp; evening adhkār, voluntary fasts, and observed Islamic calendar days.</p></div>
             <div class="feat"><h4>Qibla</h4><p>Great-circle bearing to the Kaaba with a live compass, refined to your own location.</p></div>
             <div class="feat"><h4>Alerts</h4><p>Opt-in by category — jamā&#703;ah reminders, janāzah, announcements and events.</p></div>
           </div>
-          <a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener" class="btn btn-gold">Open the App →</a>
+          <!-- Nothing to open yet. A button that goes nowhere, or to something
+               that is about to be replaced, is worse than an honest wait. -->
+          <div class="app-soon" style="margin-top:20px;">
+            <span class="as-pill">Coming soon</span>
+            <span class="as-text">We will announce it here, and on the masjid's noticeboards, the day it is on the stores.</span>
+          </div>
         </div>
         <div>
-          <div class="qr-card">
-            <img src="data:image/png;base64,{{QR_B64}}" alt="QR code to open the Taiyabah Masjid app">
-            <div class="u">Scan to open the app</div>
-          </div>
           <div class="steps">
-            <div><span class="n">1</span><span>Open the link (or scan the QR) in Safari or Chrome.</span></div>
-            <div><span class="n">2</span><span>iPhone: Share → "Add to Home Screen." Android: menu → "Install app."</span></div>
-            <div><span class="n">3</span><span>Open it from your home screen — Qibla and notifications need an internet connection at least once.</span></div>
+            <div><span class="n">1</span><span>The App is being built now.</span></div>
+            <div><span class="n">2</span><span>It will be published on the <b>App Store</b> and <b>Google Play</b>, free.</span></div>
+            <div><span class="n">3</span><span>Until then the prayer timetable, the live audio stream and everything else are on this website.</span></div>
           </div>
         </div>
       </div>
@@ -3262,15 +3296,24 @@ window.TAIYABAH_PUBLIC = {
                 <div class="hf-sum-row"><span class="k">Name</span><span class="v" id="dnName">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Date</span><span class="v" id="dnDate">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Hiring</span><span class="v" id="dnHiring">&nbsp;</span></div>
+                <div class="hf-sum-row"><span class="k">Reference</span><span class="v tnum" id="dnRef">&nbsp;</span></div>
                 <div class="hf-sum-row"><span class="k">Contact</span><span class="v" id="dnPhone">&nbsp;</span></div>
               </div>
 
-              <div class="hf-price">
-                <span class="hp-label">The fee</span>
-                <span class="hp-badge">The charges are set out below. The office confirms the exact figure &mdash; including utensils and the utility charge, if they apply &mdash; when it calls you.</span>
+              <!-- Paying the deposit is what reserves the date. Until it is
+                   paid the date is held for thirty minutes and no longer, so
+                   this is the only thing on the screen that matters. -->
+              <div class="hf-pay" id="dnPay">
+                <div class="hp-head">
+                  <span class="hp-amt tnum">&pound;100</span>
+                  <span class="hp-what">deposit &mdash; this is what holds the date</span>
+                </div>
+                <a class="btn btn-gold" id="dnPayBtn" href="#" rel="noopener">Pay the &pound;100 deposit</a>
+                <p class="hp-hold" id="dnHold">&nbsp;</p>
+                <p class="hp-note">The deposit is <strong>not refundable</strong> once your booking is agreed, but it <strong>is</strong> refunded in full if the masjid cannot give you the date. The balance is due 30 days before, and the office confirms the exact figure &mdash; including utensils and the utility charge if they apply &mdash; when it calls you.</p>
               </div>
 
-              <div class="hh-booked-msg" id="dnMsg" style="display:block;">Your request has been sent to the masjid office. Nothing has been paid and this date is not held yet &mdash; the office will call you on the number above to confirm the date, the fee and how to pay. If you'd rather speak to someone now, ring 01204&nbsp;535&nbsp;997.</div>
+              <div class="hh-booked-msg" id="dnMsg" style="display:block;">We have your request. <strong>The date is not yours until the deposit is paid.</strong> If you would rather pay by bank transfer or in cash, ring the office on 01204&nbsp;535&nbsp;997 and they will hold it for you instead.</div>
 
               <button type="button" class="hf-back" id="dnBack" style="margin-top:4px;">Start again</button>
             </div>
@@ -3325,7 +3368,7 @@ window.TAIYABAH_PUBLIC = {
               <div class="hh-rate-line"><span class="n">Damage to the venue</span><span class="p tnum">&pound;100</span></div>
             </div>
 
-            <p class="hh-rate-note"><strong>&pound;100 deposit</strong> is payable on the day you book and is <strong>not refundable</strong>. The balance is due <strong>30 days before</strong> your booking date.</p>
+            <p class="hh-rate-note"><strong>&pound;100 deposit</strong> reserves the date &mdash; it can be paid on this website when you book. It is not refundable if you cancel, but it is refunded in full if the masjid cannot give you the date. The balance is due <strong>30 days before</strong> your booking date.</p>
             <p class="hh-rate-note">Pay in cash at the masjid office, or by bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
           </div>
 
@@ -3380,7 +3423,8 @@ window.TAIYABAH_PUBLIC = {
             <div class="ht-n">2</div>
             <div>
               <h4>Deposit and balance</h4>
-              <p>A <strong>&pound;100 deposit</strong> is payable on the day you book, and it is <strong>not refundable</strong>. The <strong>full balance is due 30 days before</strong> your booking date. Dates are not held or reserved before the deposit is received.</p>
+              <p>A <strong>&pound;100 deposit</strong> reserves your date. <strong>The date is not held until the deposit is paid</strong> &mdash; you can pay it on this website when you book, or in cash or by bank transfer at the office. The <strong>full balance is due 30 days before</strong> your booking date.</p>
+              <p>The deposit is <strong>not refundable if you cancel</strong>. It <strong>is refunded in full</strong> if the masjid cannot give you the date &mdash; if we decline the booking, or if two payments reach us for the same day. You will not be left out of pocket for something that was not your doing.</p>
             </div>
           </div>
 
@@ -3420,7 +3464,8 @@ window.TAIYABAH_PUBLIC = {
               <div class="ht-n">7</div>
               <div>
                 <h4>Cancelling or moving your booking</h4>
-                <p>The <strong>&pound;100 deposit is not refundable</strong> at any point, including if you cancel the same day you booked. Anything you have paid beyond the deposit is refunded if you cancel <strong>more than 30 days before</strong> your booked date. Inside 30 days the balance is not refundable &mdash; but we will move your booking to another date instead, once, subject to what is free. Ring the office as early as you can: the sooner we know, the more likely we can offer the date you want.</p>
+                <p>The <strong>&pound;100 deposit is not refundable if you cancel</strong>, including if you cancel the same day you booked. Anything you have paid beyond the deposit is refunded if you cancel <strong>more than 30 days before</strong> your booked date. Inside 30 days the balance is not refundable &mdash; but we will move your booking to another date instead, once, subject to what is free. Ring the office as early as you can: the sooner we know, the more likely we can offer the date you want.</p>
+              <p>If <strong>the masjid</strong> cancels or cannot honour your date, everything you have paid is refunded in full, deposit included.</p>
               </div>
             </div>
 
@@ -3930,6 +3975,7 @@ window.TAIYABAH_PUBLIC = {
         <p>Four things, and only the ones you choose to send.</p>
         <h3 class="legal-sub">A hall hire request</h3>
         <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date</strong> and <strong>what you asked to hire</strong> &mdash; one, two or three halls, or the kitchen on its own.</p>
+        <p>If you pay the deposit on this website, the payment is taken by <strong>Stripe</strong>, who handle card payments for us. <strong>Your card details never reach this website</strong> &mdash; you are taken to Stripe's own secure page and back again. We are told only that your booking reference has been paid, and we keep that alongside your booking. Stripe holds the payment record itself under their own privacy policy, as they must for accounting and fraud prevention.</p>
         <p>This form used to ask whether you were a member of the masjid, because there were two prices. There is now one published price for everybody, so the question has been removed. <strong>We do not ask, and have never stored, anything about whether you belong to this or any mosque.</strong></p>
         <h3 class="legal-sub">A nik&#0257;&#7717; date request</h3>
         <p>We receive the <strong>name, telephone number and email address</strong> of whoever we
@@ -4093,8 +4139,8 @@ window.TAIYABAH_PUBLIC = {
         <li><a data-nav="media">Media</a></li>
       </ul></div>
       <div><h5>App</h5><ul>
-        <li><a href="https://yameenbux.github.io/Taiyabah-Mosque-App/" target="_blank" rel="noopener">Open the app</a></li>
-        <li><a data-nav="getapp">Install instructions</a></li>
+        <li><a data-nav="getapp">Coming soon</a></li>
+        <li><a data-nav="prayer">Prayer times</a></li>
       </ul></div>
       <div><h5>Contact</h5><ul>
         <li>31a Draycott Street, Bolton, BL1 8HD</li>
@@ -4364,6 +4410,12 @@ window.TAIYABAH_PUBLIC = {
    try {
     var grid = document.getElementById('hhGrid');
     if(!grid) return;
+
+    // The masjid's Stripe Payment Link for the £100 Astley Hall deposit.
+    // A hosted checkout: no card details ever touch this website. The booking
+    // reference is appended as client_reference_id so the webhook can match
+    // the payment to the booking it paid for.
+    var DEPOSIT_LINK = 'https://book.stripe.com/3cIdR9cHOfyo5Jk7xcf3a06';
 
     var MONTHS = ["January","February","March","April","May","June",
                   "July","August","September","October","November","December"];
@@ -4687,11 +4739,36 @@ window.TAIYABAH_PUBLIC = {
       var submitBtn = document.querySelector('#hhBookForm button[type=submit]');
       var origLabel = submitBtn ? submitBtn.textContent : '';
 
-      function showDone(msgHtml){
+      // `ref` and `heldUntil` come back from request_hall_booking(). When the
+      // request never reached the database they are null, and the pay box is
+      // hidden — there is nothing to pay against, and a payment with no
+      // booking behind it is money somebody has to chase and refund.
+      function showDone(msgHtml, ref, heldUntil){
         document.getElementById('dnName').textContent   = first + ' ' + last;
         document.getElementById('dnDate').textContent   = longDate(selected);
         document.getElementById('dnHiring').textContent = hireLong();
         document.getElementById('dnPhone').textContent  = phone;
+        document.getElementById('dnRef').textContent    = ref || '\u2014';
+
+        var pay = document.getElementById('dnPay');
+        if(ref && DEPOSIT_LINK){
+          // client_reference_id is what lets the webhook match the payment
+          // back to this booking. Without it Stripe takes £100 and nobody
+          // knows whose it is.
+          document.getElementById('dnPayBtn').href =
+            DEPOSIT_LINK + (DEPOSIT_LINK.indexOf('?') === -1 ? '?' : '&') +
+            'client_reference_id=' + encodeURIComponent(ref);
+          var until = heldUntil ? new Date(heldUntil) : null;
+          document.getElementById('dnHold').textContent = until
+            ? 'This date is held for you until ' +
+              until.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) +
+              '. After that somebody else can book it.'
+            : 'The date is held for a short while so you can pay.';
+          pay.style.display = '';
+        } else {
+          pay.style.display = 'none';
+        }
+
         if(msgHtml) document.getElementById('dnMsg').innerHTML = msgHtml;
         showPanelView('done');
       }
@@ -4702,8 +4779,9 @@ window.TAIYABAH_PUBLIC = {
         'and they will take your booking over the phone.';
 
       if(!configured){
-        // No key yet. Do not imply the request went anywhere.
-        showDone(CALL_OFFICE);
+        // No key yet. Do not imply the request went anywhere, and do not offer
+        // a payment button for a booking that does not exist.
+        showDone(CALL_OFFICE, null, null);
         return;
       }
 
@@ -4719,22 +4797,25 @@ window.TAIYABAH_PUBLIC = {
                       .trim().replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
 
       /* ------------------------------------------------------------------
+         Goes through request_hall_booking() rather than inserting directly.
+         The function takes a lock on the date, refuses it if somebody else is
+         already paying for it, holds it for thirty minutes and hands back a
+         reference. A plain INSERT could do none of that: two people asking for
+         the same Saturday both succeeded and both got sent to Stripe.
+
          What is sent: the date, what is being hired, and how to reach them.
          Nothing else. There is no membership answer to withhold any more —
          the masjid charges one rate — and no price, because this page does
-         not work one out. See migration 014.
+         not work one out. See migrations 014 and 016.
       ------------------------------------------------------------------ */
-      fetch(apiBase + '/rest/v1/hall_bookings', {
+      fetch(apiBase + '/rest/v1/rpc/request_hall_booking', {
         method: 'POST',
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
           'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json',
-          // The key has no read privilege, so asking for the row back would
-          // fail the whole request. Ask for nothing.
-          'Prefer': 'return=minimal'
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ payload: {
           booking_date: iso(selected),
           hire_type:    hire.type,
           halls_count:  hire.type === 'halls' ? hire.count : null,
@@ -4742,14 +4823,25 @@ window.TAIYABAH_PUBLIC = {
           last_name:    last,
           address:      addr,
           phone:        phone
-        })
+        }})
       }).then(function(res){
         clearTimeout(timer);
-        if(res.ok) { showDone(null); return; }
         return res.text().then(function(body){
-          // The rate-limit trigger speaks to the visitor directly; anything
-          // else is ours to apologise for.
-          if(body && body.indexOf('Too many booking requests') !== -1){
+          if(res.ok){
+            var out = {};
+            try { out = JSON.parse(body) || {}; } catch(e){}
+            showDone(null, out.reference, out.held_until);
+            // Somebody else's hold may have appeared while this form was open.
+            taken = null; loadAvailability();
+            return;
+          }
+          // Two messages the visitor can act on, and one apology.
+          if(body && body.indexOf('no longer available') !== -1){
+            showDone('Somebody started booking that date while you were filling this in, ' +
+                     'so we have not taken your request. Please pick another day, or ring ' +
+                     'the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.');
+            taken = null; loadAvailability();
+          } else if(body && body.indexOf('Too many booking requests') !== -1){
             showDone('We have already had several requests from this number today. ' +
                      'Please call the office on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a> ' +
                      'and they will help you directly.');
