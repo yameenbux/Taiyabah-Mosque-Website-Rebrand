@@ -72,9 +72,12 @@ on conflict do nothing;
 -- ---------------------------------------------------------------------------
 -- Something to read. Inserted as the owner, so RLS is not in the way here.
 -- ---------------------------------------------------------------------------
+-- Whole-day hire, by the number of halls (migration 014). The old
+-- session/hall/kitchen shape is refused by halls_count_valid now, which is
+-- how this fixture found out the model had changed.
 insert into public.hall_bookings
-  (booking_date, session_slot, hall, kitchen, first_name, last_name, address, phone)
-values (current_date + 40, 'evening', '2', false, 'Imran', 'Ali', '4 Mill St', '07700900111');
+  (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
+values (current_date + 40, 'halls', 2, 'Imran', 'Ali', '4 Mill St', '07700900111');
 
 insert into public.nikah_requests
   (reference, preferred_date, slot, preferred_time, contact_name, contact_role,
@@ -218,8 +221,8 @@ select pg_temp.eok('the public can still request a nikah date',
 
 select pg_temp.eok('the public can still submit a hall booking',
   $$insert into public.hall_bookings
-      (booking_date, session_slot, hall, kitchen, first_name, last_name, address, phone)
-    values (current_date + 60, 'evening', '1', false, 'Sara', 'Bi', '9 Green St', '07700900444')$$);
+      (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
+    values (current_date + 60, 'halls', 2, 'Sara', 'Bi', '9 Green St', '07700900444')$$);
 
 -- anon holds no SELECT grant at all, so this is refused before RLS is even
 -- consulted. Two locks on the same door, which is the intended shape.
@@ -246,10 +249,13 @@ select pg_temp.note(
                          'admin_audit','courses','course_registrations',
                          'admission_applications','admission_students',
                          'admission_contacts','admission_student_choices')
-       and 'authenticated' = any (roles || array['authenticated'])
        and coalesce(qual, '') !~ 'verified_(admin|office)'
-       and coalesce(qual, '') !~ 'auth\.uid\(\)'          -- "read own" / "update own"
        and coalesce(qual, '') not in ('', 'true')          -- definer-only policies
+       -- the three deliberate exceptions, named rather than matched by shape
+       and (tablename, policyname) not in (
+             ('profiles',   'profiles: read own'),
+             ('profiles',   'profiles: update own'),
+             ('user_roles', 'user_roles: read own'))
   ),
   coalesce((select string_agg(tablename || '.' || policyname, ', ')
               from pg_policies
@@ -259,8 +265,11 @@ select pg_temp.note(
                                  'admission_applications','admission_students',
                                  'admission_contacts','admission_student_choices')
                and coalesce(qual, '') !~ 'verified_(admin|office)'
-               and coalesce(qual, '') !~ 'auth\.uid\(\)'
-               and coalesce(qual, '') not in ('', 'true')), 'none'));
+               and coalesce(qual, '') not in ('', 'true')
+               and (tablename, policyname) not in (
+                     ('profiles',   'profiles: read own'),
+                     ('profiles',   'profiles: update own'),
+                     ('user_roles', 'user_roles: read own'))), 'none'));
 
 
 -- ===========================================================================
