@@ -99,7 +99,7 @@
      into one shape, and shown together with a badge saying which is which.
 
      They keep their own tables because they hold genuinely different things —
-     a hall booking has a hall and a kitchen, a nikāḥ has a prayer slot and a
+     a hall booking has a number of rooms, a nikāḥ has a prayer slot and a
      second choice of date — and forcing them into one table would mean a row
      full of columns that never apply.
 
@@ -120,7 +120,10 @@
      not a control — RLS is what actually stops a parent reading these.
      ======================================================================= */
   var bookings = (function () {
-    var SLOTS = { morning: "Morning · 9:00am – 4:00pm", evening: "Evening · 5:00pm – 11:00pm" };
+    // Hire is by the day now (migration 014). These labels are kept only to
+    // describe bookings taken BEFORE that change — the office still has to be
+    // able to read what those hirers were promised.
+    var LEGACY_SLOTS = { morning: "Morning · 9:00am – 4:00pm", evening: "Evening · 5:00pm – 11:00pm" };
     var rows = [];
     var filter = "new";
     var query = "";
@@ -178,13 +181,29 @@
     };
 
     // One shape for both kinds, so render() and apply() do not have to care.
+    // What was hired. New bookings say how many halls, or kitchen-only, and
+    // run for the whole day. Old ones named a room and a session, and are
+    // rendered as they were taken rather than translated into a shape they
+    // never had — a booking record that quietly changes meaning is worse than
+    // one that looks dated.
+    function whatWasHired(r) {
+      if (r.session_slot) {
+        return (LEGACY_SLOTS[r.session_slot] || r.session_slot) +
+               " \u00B7 Hall " + r.hall +
+               (r.kitchen ? " \u00B7 with kitchen" : " \u00B7 no kitchen") +
+               " \u00B7 booked under the old session rates";
+      }
+      if (r.hire_type === "kitchen_only") return "Kitchen only \u00B7 whole day";
+      var n = r.halls_count;
+      return (n === 1 ? "1 hall" : n + " halls") +
+             " \u00B7 kitchen and cleaning included \u00B7 whole day";
+    }
+
     function fromHall(r) {
-      var hall = "Hall " + r.hall + (String(r.hall) === "3" ? " (1st floor)" : " (ground floor)") +
-                 (r.kitchen ? " \u00B7 with kitchen" : " \u00B7 no kitchen");
       return {
         kind: "hall", table: "hall_bookings", handledCol: "handled_at",
         id: r.id, created_at: r.created_at, date: r.booking_date,
-        detail: (SLOTS[r.session_slot] || r.session_slot) + " \u00B7 " + hall,
+        detail: whatWasHired(r),
         who: (r.first_name || "") + " " + (r.last_name || ""),
         phone: r.phone, email: null, sub: r.address,
         status: r.status, notes: r.office_notes, handled_at: r.handled_at
@@ -214,7 +233,7 @@
       // gets missed.
       return Promise.all([
         sb.from("hall_bookings")
-          .select("id,created_at,booking_date,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
+          .select("id,created_at,booking_date,hire_type,halls_count,session_slot,hall,kitchen,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
         sb.from("nikah_requests")
           .select("id,submitted_at,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at")
