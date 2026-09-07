@@ -1,0 +1,57 @@
+TAIYABAH MASJID — upload, 7 September 2026
+==========================================
+
+Two things to do, in this order.
+
+
+1. RUN THE SQL
+--------------
+   Supabase -> SQL Editor -> paste the whole of db/017_paid_is_booked.sql -> Run.
+   Then paste the whole of db/011_require_two_step.sql and run that too.
+
+   (011 is the standing rule: it only protects the policies that exist when it
+   runs, so it goes again after every migration.)
+
+
+2. UPLOAD THE FILES
+-------------------
+   Put these in the repository root, replacing what is there:
+
+     index.html
+     404.html
+     README.md
+     favicon.ico
+     apple-touch-icon.png
+     icon-192.png
+     icon-512.png
+     site.webmanifest
+
+   And this one inside the venue folder, replacing what is there:
+
+     venue/app.js
+     venue/index.html
+
+   Do NOT upload the db/ folder — migrations are pasted into Supabase, never
+   published on the website.
+
+
+WHAT CHANGES
+------------
+   Paying the £100 deposit now books the date outright. The office no longer
+   confirms a booking that has already been paid for — there is no Confirm
+   button and no Decline button on a paid booking, because the masjid has
+   somebody's money and the terms promise them the date.
+
+   The portal now shows the money: the hall rate is worked out automatically
+   from the date and the number of halls, the office types in the extras
+   (utensils, catering), and the line reads
+
+       £500 base + £154 extras - £100 deposit = £554 outstanding
+
+   A booking taken under the old session rates has no rate on file and says so
+   rather than showing £0.
+
+   There is one way to undo a paid booking: "Cancel & refund". It asks why,
+   records the reason in the audit log, marks the £100 as owed back, and frees
+   the date. It is deliberately slower than a button click, because it always
+   means sending money back to somebody.

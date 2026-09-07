@@ -48,6 +48,12 @@ robots.txt              currently blocks all crawlers (staging)
 robots.live.txt         rename to robots.txt on launch day
 sitemap.xml
 og-image.jpg            link preview picture — must sit in the web ROOT
+favicon.ico             16/32/48 in one file. The mark is the girih star drawn
+                        AT those sizes, not the logo lock-up shrunk down
+site.webmanifest        name, colours and the home-screen icons
+apple-touch-icon.png    180px, iOS home screen
+icon-192.png            }  referenced by the manifest; the full logo, which
+icon-512.png            }  reads perfectly well at these sizes
 
 account/                Visitor accounts  (index.html, app.js, config.js)
 portal/                 Madrasah Portal   (index.html, app.js, config.js)
@@ -64,7 +70,7 @@ apply/                  Madrasah application form — uploaded as a PREVIEW that
 build-inputs/           the 44 files build.py reads: fonts, compressed photos,
                         the prayer timetable, QR codes. Committed, so a fresh
                         clone can rebuild the site.
-db/                     migrations 008-016 and their local test harness
+db/                     migrations 008-017 and their local test harness
 supabase/functions/     Edge Functions. stripe-webhook records a paid deposit;
                         its README has the deployment steps. Never uploaded
 
@@ -101,7 +107,11 @@ previewed — but you will not forget.
 
 Fonts and a handful of small always-needed graphics — the favicon, the header
 logo, the QR codes, two girih tiles — are base64 data URIs substituted at build
-time from `build-inputs/`. **Photographs are not.** They are files under
+time from `build-inputs/`. The favicon is declared **twice**, deliberately: as a
+data URI so it paints instantly and survives a `file://` URL, and as
+`/favicon.ico` because Safari has never handled data-URI favicons reliably and
+bookmarks, crawlers and older browsers ask for `/favicon.ico` whatever the page
+says. **Photographs are not.** They are files under
 `img/`, referenced by path and marked `loading="lazy"`, so a browser
 fetches one only when the page using it is actually shown.
 
@@ -132,7 +142,7 @@ Both files should come back byte-identical.
 | **Typography** | Fraunces, Hanken Grotesk, Amiri — self-hosted woff2 | Google Fonts would send every visitor's IP to Google before they consented. Subset with fontTools; Arabic keeps its full shaping tables |
 | **Images** | Pillow — resize, progressive JPEG, files under `img/` | Each photograph is fetched only when its page is opened. Inlining them all made the document 10.3 MB; first load is now about 615 KB |
 | **Backend** | Supabase — Postgres 15, GoTrue auth, PostgREST | Managed Postgres in **London**, so booking data never leaves the UK |
-| **Access control** | Row Level Security + column-level `GRANT` | The anon key can insert seven named columns and cannot read a single row back. Office staff can change three columns and no others |
+| **Access control** | Row Level Security + column-level `GRANT` | The anon key can insert seven named columns and cannot read a single row back. Office staff can change seven named columns — the booking's status, notes, when it was handled, its deposit and balance state, and the extras they add — and no others |
 | **Authentication** | Supabase Auth with TOTP two-factor | Roles live in their own table, never on the user's own row, so nobody can promote themselves |
 | **Notifications** | Supabase Edge Functions (Deno) + Resend | A booking that arrives on a Friday night should not wait until Tuesday |
 | **Payments** | Stripe Payment Links | Donations are four fixed tiers plus a donor-chooses amount. No server code and no card data anywhere near this repository — Stripe hosts the checkout |
@@ -244,6 +254,7 @@ Supabase SQL editor, in order.
 | `014_whole_day_hire.sql` | Hall hire by the DAY and by the NUMBER of halls, not by session and room. Retires `session_slot`, `hall` and `kitchen` without dropping them, adds kitchen-only hire, and moves every insert-time rule out of CHECK constraints and into a trigger. Needs 003 and 006 |
 | `015_retention.sql` | Makes the nikāḥ and course purges delete **everything** past twelve months rather than only the rows that were declined or withdrawn, adds a `dry_run` mode, and puts both on a weekly `pg_cron` job. Needs 009 and 010 |
 | `016_deposit_holds_the_date.sql` | Paying the £100 deposit is what reserves a date. Adds a booking reference, deposit state, a 30-minute hold while the hirer is in Stripe's checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. Also fixes a grant the README had described but nobody had made. Needs 014 |
+| `017_paid_is_booked.sql` | A paid deposit **is** the confirmation. `mark_deposit_paid()` now also sets the booking to confirmed, so nobody in the office has to agree to a date the masjid has already sold. Stores the hall rate against the booking (`base_amount_p`) at the price in force on the day it was taken, lets the office add `extras_p` for utensils and catering, and tracks the balance. Undoing a paid booking is no longer a Decline button but `cancel_paid_booking()`, which demands a written reason and audits it. Needs 016 |
 
 `CHECK_retention.sql` is read-only and answers the question the trustees will
 ask: what is about to be deleted, are the jobs actually scheduled, and have
@@ -325,6 +336,22 @@ decided *who* could write; nothing decided *what*. Migration 016 makes the
 documentation true, which mattered the moment `stripe_session_id` and
 `deposit_paid_at` existed. If you find yourself writing down a restriction,
 check that something enforces it.
+
+**A test that cannot fail is worse than no test.** `/portal/`'s suite installed
+its fake Supabase client by intercepting a request for
+`vendor/supabase-2.112.4.js`. When that library was vendored *inline* into the
+page instead, the interception stopped matching, the real library loaded, and
+every scenario in the suite quietly began asserting against a sign-in screen it
+could never get past. It still printed PASS lines. Two of its scenarios also
+depended on `portal/config.js` still containing `PASTE_YOUR_URL_HERE`, so
+filling in the masjid's real settings made them "fail" — noise that trained
+whoever ran it to ignore the output. Both are fixed: the stub is now installed
+with `Object.defineProperty(..., { writable: false })` before the page's own
+scripts run, and the placeholder config is served by the test rather than
+assumed. The general rule this bought: **deliberately break the code and check
+the suite notices.** Every suite in this repository has been negative-controlled
+that way, and it is how the null-rate bug in 014 and the missing audit row in
+016 were both caught before they reached the masjid.
 
 **Blanket default privileges are a foot-gun.** Migration 002 ends with
 `alter default privileges … grant … on tables to authenticated`, which applies
@@ -718,12 +745,10 @@ decision if someone later decides the trade is worth it.
   no-show. It is a trustees' decision, on the agenda for 11 September 2026 — see
   [Retention](#retention). Neither purge is on a schedule yet either; only hall
   bookings are.
-- **Several stray files sit in the repository root and are therefore live pages.**
-  `READ-ME-FIRST.txt`, `READ-THIS-FIRST.txt`, `READ-ME.txt`, `WHAT-TO-DO.txt`,
-  `WHAT-CHANGED.txt` and `ogimage.jpg` are none of them part of the site and none
-  of them are excluded in `_config.yml`. There are also six 1-byte `test` files
-  that GitHub's web interface creates when you make an empty folder. All harmless,
-  all litter, all worth deleting.
+- **`012_remove_ethnicity.sql` is not in the repository** and it is not clear
+  whether it was ever applied. The admissions form no longer asks for ethnicity,
+  so nothing is being collected, but the column may still exist on
+  `admission_applications`. Settle it before that form is switched on.
 - **The prayer timetable holds 2026 only.** It degrades honestly — the header
   falls back to "open the app" — but it needs the 2027 timetable before
   1 January 2027.
