@@ -40,6 +40,11 @@
 --
 --  Existing rows are kept and remain readable. Nothing is deleted.
 --
+--  A fourth thing had to be fixed to make that possible — see section 2. The
+--  first attempt at this migration failed in production on a booking taken
+--  on 26 August for 28 August, because touching a historic row re-checked a
+--  constraint that said the booking date must not be in the past.
+--
 --  Prerequisites: 003 and 006. Idempotent.
 --
 --  *** STANDING RULE: re-run 011_require_two_step.sql after this. ***
@@ -69,7 +74,77 @@ comment on column public.hall_bookings.halls_count is
 
 
 -- ---------------------------------------------------------------------------
--- 2. Existing rows
+-- 2. A landmine that had to be cleared first
+--
+-- Migration 003 wrote these two rules as CHECK constraints:
+--
+--     date_not_past    check (booking_date >= today)
+--     date_within_year check (booking_date <= today + 12 months)
+--
+-- A CHECK constraint is meant to state something that is true for as long as
+-- the row exists. "This date is in the future" is not that. It is true when
+-- the booking is taken and false the following week, and Postgres re-checks
+-- every constraint on a row whenever that row is UPDATED.
+--
+-- So the moment a booking date passed, the row froze: the office could no
+-- longer change its status or add a note, because doing so re-evaluated
+-- date_not_past against a date that was now in the past. Nobody had noticed
+-- because nobody had tried to edit an old booking — until the backfill below
+-- tried to touch every row in the table and was refused by a real, confirmed,
+-- paid booking from 28 August.
+--
+-- The rule itself is right; it is an INSERT-time rule and belongs in a
+-- trigger. Moving it there fixes the frozen-history bug as well, which is
+-- worth more than the migration it was blocking.
+-- ---------------------------------------------------------------------------
+alter table public.hall_bookings drop constraint if exists date_not_past;
+alter table public.hall_bookings drop constraint if exists date_within_year;
+
+create or replace function public.hall_bookings_date_window()
+returns trigger
+language plpgsql
+as $$
+declare
+  today date := (now() at time zone 'Europe/London')::date;
+begin
+  if new.booking_date < today then
+    raise exception 'That date has already passed.'
+      using errcode = 'check_violation';
+  end if;
+  if new.booking_date > today + interval '12 months' then
+    raise exception 'Bookings can only be made up to 12 months in advance.'
+      using errcode = 'check_violation';
+  end if;
+
+  -- Friday, Saturday and Sunday have no one-hall rate on the price list, so
+  -- the masjid does not sell that booking. Here rather than in a CHECK
+  -- constraint for the same reason as the dates above: it is a rule about
+  -- what may be TAKEN, not about what a stored row may contain. As a
+  -- constraint it froze every historic one-hall weekend booking — which is a
+  -- real thing that existed, because the old session rates allowed it.
+  if new.hire_type = 'halls'
+     and coalesce(new.halls_count, 0) = 1
+     and extract(dow from new.booking_date) in (0, 5, 6) then
+    raise exception 'One hall is only available Monday to Thursday. At the weekend the smallest booking is two halls.'
+      using errcode = 'check_violation';
+  end if;
+
+  return new;
+end$$;
+
+comment on function public.hall_bookings_date_window() is
+  'Every INSERT-time rule for hall bookings, in one place: the date window and the weekend minimum. These were CHECK constraints, which froze rows the moment they aged — any UPDATE re-checked them and failed, so the office could not record what happened to a booking after the event. A rule about when a row may be CREATED does not belong in a constraint about what a stored row may CONTAIN.';
+
+-- BEFORE INSERT, and deliberately not BEFORE UPDATE: the office must be able
+-- to record what happened to a booking after the event.
+drop trigger if exists hall_bookings_date_window_trg on public.hall_bookings;
+create trigger hall_bookings_date_window_trg
+  before insert on public.hall_bookings
+  for each row execute function public.hall_bookings_date_window();
+
+
+-- ---------------------------------------------------------------------------
+-- 3. Existing rows
 --
 -- Every booking taken under the old model was for one room, on one session,
 -- so it becomes a one-hall booking. The session it was for is not thrown
@@ -87,7 +162,7 @@ alter table public.hall_bookings
 
 
 -- ---------------------------------------------------------------------------
--- 3. What the old columns become
+-- 4. What the old columns become
 --
 -- Retired, not dropped. Dropping them would destroy the record of what past
 -- hirers were told they were getting, and the office reads these rows.
@@ -112,7 +187,7 @@ alter table public.hall_bookings
 
 
 -- ---------------------------------------------------------------------------
--- 4. The rules the price list implies
+-- 5. The rules the price list implies
 -- ---------------------------------------------------------------------------
 alter table public.hall_bookings drop constraint if exists hire_type_valid;
 alter table public.hall_bookings
@@ -131,25 +206,18 @@ alter table public.hall_bookings
     (hire_type = 'kitchen_only' and halls_count is null)
   );
 
--- Friday, Saturday and Sunday have no one-hall rate. The price list simply
--- does not offer it, so the website must not take that booking — and the
--- browser is not where a rule like that belongs.
---
--- NOT VALID on purpose. It applies to everything inserted from now on, and
--- leaves rows taken under the old model alone: some of them are one-hall
--- bookings on a Saturday, which was a perfectly good booking at the time.
--- Validating it would fail the migration over history nobody can change.
+-- The weekend minimum lives in the INSERT trigger in section 2, not here.
+-- It was a NOT VALID check constraint in the first draft of this migration,
+-- on the reasoning that NOT VALID would leave history alone. It does not:
+-- NOT VALID skips the one-off validation scan, but the constraint is still
+-- evaluated on every UPDATE. A confirmed one-hall booking on Friday
+-- 28 August — perfectly valid under the old session rates — could no longer
+-- be edited by the office at all.
 alter table public.hall_bookings drop constraint if exists weekend_needs_two_halls;
-alter table public.hall_bookings
-  add constraint weekend_needs_two_halls check (
-    hire_type <> 'halls'
-    or coalesce(halls_count, 0) > 1          -- coalesce for the same NULL reason
-    or extract(dow from booking_date) not in (0, 5, 6)
-  ) not valid;
 
 
 -- ---------------------------------------------------------------------------
--- 5. What the public may insert
+-- 6. What the public may insert
 --
 -- Column-level INSERT grants are the real gate: anything not named here
 -- cannot be set from a browser, whatever the request body says. `status`
@@ -162,7 +230,7 @@ grant insert (booking_date, hire_type, halls_count,
 
 
 -- ---------------------------------------------------------------------------
--- 6. Availability
+-- 7. Availability
 --
 -- One confirmed booking closes the whole date. That was already true per
 -- session — the venue is let as a whole — so this is the same rule with the
