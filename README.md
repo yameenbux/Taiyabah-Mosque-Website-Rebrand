@@ -70,7 +70,7 @@ apply/                  Madrasah application form — uploaded as a PREVIEW that
 build-inputs/           the 44 files build.py reads: fonts, compressed photos,
                         the prayer timetable, QR codes. Committed, so a fresh
                         clone can rebuild the site.
-db/                     migrations 008-018 and their local test harness
+db/                     migrations 008-019 and their local test harness
 supabase/functions/     Edge Functions. stripe-webhook records a paid deposit;
                         its README has the deployment steps. Never uploaded
 
@@ -256,6 +256,7 @@ Supabase SQL editor, in order.
 | `016_deposit_holds_the_date.sql` | Paying the £100 deposit is what reserves a date. Adds a booking reference, deposit state, a 30-minute hold while the hirer is in Stripe's checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. Also fixes a grant the README had described but nobody had made. Needs 014 |
 | `017_paid_is_booked.sql` | A paid deposit **is** the confirmation. `mark_deposit_paid()` now also sets the booking to confirmed, so nobody in the office has to agree to a date the masjid has already sold. Stores the hall rate against the booking (`base_amount_p`) at the price in force on the day it was taken, lets the office add `extras_p` for utensils and catering, and tracks the balance. Undoing a paid booking is no longer a Decline button but `cancel_paid_booking()`, which demands a written reason and audits it. Needs 016 |
 | `018_nikah_fee_online.sql` | The nikāḥ fee can be paid online. Deliberately the OPPOSITE of 017: `mark_nikah_fee_paid()` records money and does **not** touch `status`, because the masjid does not publish its nikāḥ diary and the site therefore cannot know whether a date is free. Paying is a way to settle the fee without coming in with cash; the office still agrees the date. Adds `fee_status`, `fee_amount_p`, `fee_paid_at` and the Stripe session, keeps a second payment from overwriting the first, and lets the office record a fee taken in cash. Needs 010 |
+| `019_weekly_digest.sql` | The Monday morning summary. `outstanding_summary()` counts what still needs a human — unanswered nikāḥ requests and how long the oldest has waited, refunds owed, balances due inside 30 days, what is on this week — and `send_weekly_digest()` posts it to the notify function on a weekly `pg_cron` job. **It sends nothing when nothing is outstanding**, which is the whole point: a weekly email that always arrives stops being read. Adds `app_settings`, which holds the notify endpoint and its shared secret and is readable by nobody but the owner. Needs 010, 016-018 and `pg_net` |
 
 `CHECK_retention.sql` is read-only and answers the question the trustees will
 ask: what is about to be deleted, are the jobs actually scheduled, and have
