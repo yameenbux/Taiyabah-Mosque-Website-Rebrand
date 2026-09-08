@@ -398,7 +398,55 @@
       </form>
     </div>
 
-    <!-- 3. Done -->
+    <!-- 3. Set up the authenticator.
+
+         Added 8 September 2026. /auth/ hands out a session, so /auth/ has to
+         finish the job. Before this, somebody who accepted an invitation
+         arrived at the admin signpost already signed in, saw three areas, and
+         was only challenged for an authenticator when they opened one of them
+         — which reads as "you are in… actually you are not".
+
+         It is also the moment they are paying attention. Somebody who wanders
+         off without enrolling is not just inconvenienced: migration 011
+         refuses to run while ANY staff account lacks a verified authenticator,
+         so one un-enrolled volunteer quietly blocks every database change the
+         masjid needs to make. -->
+    <div id="v-enrol" hidden>
+      <p class="eyebrow">Taiyabah Masjid</p>
+      <h1>One more step</h1>
+      <p class="sub">Staff accounts reach bookings, payments and pupil records,
+         so the masjid asks for a code from your phone as well as a password.
+         This takes a minute and you only do it once.</p>
+
+      <ul class="steps">
+        <li>Install an authenticator app — Google Authenticator, Microsoft
+            Authenticator or Authy are all free.</li>
+        <li>Scan the square below with it.</li>
+        <li>Type in the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="en-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="en-secret"></div>
+      </div>
+      <p class="sub" style="margin:0 0 4px;font-size:.8rem;">
+         Can&rsquo;t scan it? Type the code above into the app by hand.</p>
+
+      <form id="en-form" novalidate>
+        <div class="field">
+          <label for="en-code">Code from your app</label>
+          <input type="text" id="en-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000">
+        </div>
+        <p class="err" id="en-err" hidden></p>
+        <button type="submit" class="btn btn-gold" id="en-submit">Confirm and finish</button>
+      </form>
+      <p class="note">Keep the app on your phone &mdash; you will need it every
+         time you sign in. If you lose the phone, ring the office on
+         01204&nbsp;535&nbsp;997 and they can reset it for you.</p>
+    </div>
+
+    <!-- 4. Done -->
     <div id="v-done" hidden>
       <div class="big-tick" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"

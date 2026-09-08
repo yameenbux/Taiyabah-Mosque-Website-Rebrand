@@ -32,7 +32,7 @@
   var el  = function (id) { return document.getElementById(id); };
 
   function show(which) {
-    ["working", "password", "done", "error"].forEach(function (v) {
+    ["working", "password", "enrol", "done", "error"].forEach(function (v) {
       var node = el("v-" + v);
       if (node) node.hidden = v !== which;
     });
@@ -218,11 +218,96 @@
       if (prof && prof.error && window.console) {
         console.warn("profile name not saved:", prof.error.message);
       }
-      finish();
+      // Straight on to the authenticator, unless they already have one.
+      return needsAuthenticator().then(function (need) {
+        if (need) return startEnrolment();
+        finish();
+      });
     }).catch(function (e2) {
       btn.disabled = false; btn.textContent = "Save my password";
       problem("That could not be saved — " + (e2 && e2.message) +
               ". Please try again, or ring the office on 01204 535 997.");
+    });
+  });
+
+  /* --- setting up the authenticator ---------------------------------------
+
+     Done HERE rather than left to whichever area they open first. /auth/ is
+     what hands out the session, so /auth/ is what should finish the job — and
+     this is the one moment the person is actually paying attention.
+
+     It is skipped for anyone who already has a verified factor: a password
+     reset should not make somebody set their phone up again.
+  ------------------------------------------------------------------------- */
+  var enrolFactor = null;
+
+  function needsAuthenticator() {
+    return sb.auth.mfa.listFactors().then(function (res) {
+      if (res.error) return false;          // cannot tell — do not block them
+      var totp = ((res.data || {}).totp) || [];
+      return totp.filter(function (f) { return f.status === "verified"; }).length === 0;
+    }).catch(function () { return false; });
+  }
+
+  function startEnrolment() {
+    return sb.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: "Authenticator " + new Date().toISOString().slice(0, 10)
+    }).then(function (res) {
+      if (res.error) throw new Error(res.error.message);
+      enrolFactor = res.data.id;
+      // Supabase returns the QR as an SVG data URI, so no QR library is needed
+      // and nothing is fetched from anybody else.
+      el("en-qr").src = res.data.totp.qr_code;
+      el("en-secret").textContent = res.data.totp.secret;
+      show("enrol");
+      el("en-code").focus();
+    }).catch(function (e) {
+      // Enrolment is important but it is not worth stranding somebody who has
+      // just set a password. Let them through; the area they open will ask
+      // again, which is where this used to happen anyway.
+      if (window.console) console.warn("enrolment unavailable:", e && e.message);
+      finish();
+    });
+  }
+
+  el("en-code").addEventListener("input", function () {
+    this.value = this.value.replace(/\D/g, "").slice(0, 6);
+  });
+
+  el("en-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var err = el("en-err"), btn = el("en-submit");
+    var code = el("en-code").value.trim();
+    err.hidden = true;
+
+    if (code.length !== 6) {
+      err.textContent = "Please enter all six digits from your app.";
+      err.hidden = false; return;
+    }
+
+    btn.disabled = true; btn.textContent = "Checking…";
+
+    // A fresh challenge each time. A failed verify burns the previous one, and
+    // reusing it produces a second failure that looks like a wrong code.
+    sb.auth.mfa.challenge({ factorId: enrolFactor }).then(function (c) {
+      if (c.error) throw new Error(c.error.message);
+      return sb.auth.mfa.verify({
+        factorId: enrolFactor, challengeId: c.data.id, code: code
+      });
+    }).then(function (v) {
+      if (v.error) throw new Error(v.error.message);
+      finish();
+    }).catch(function (e2) {
+      btn.disabled = false; btn.textContent = "Confirm and finish";
+      el("en-code").value = "";
+      err.textContent = /invalid|incorrect|expired/i.test(String(e2 && e2.message))
+        ? "That code was not accepted. Codes change every 30 seconds — wait for " +
+          "the next one and try again. If they keep failing, check your phone's " +
+          "clock is set automatically."
+        : "That could not be checked — " + (e2 && e2.message) + ".";
+      err.hidden = false;
+      el("en-code").focus();
     });
   });
 
