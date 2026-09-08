@@ -141,14 +141,35 @@
             "Ask the office to send you another one, or ring 01204 535 997."];
   }
 
+  // Who the token turned out to belong to. Needed to write their profile row,
+  // and to prefill the name if whoever invited them already supplied one.
+  var who = null;
+
   // --- setting a password -------------------------------------------------
   function askForPassword() {
     el("pw-title").textContent = TITLES[type] || "Choose a password";
     el("pw-sub").textContent = type === "recovery"
       ? "Your old password no longer works. Pick a new one."
       : "This is the password you will use to sign in from now on.";
+
     show("password");
-    el("pw1").focus();
+
+    // Only asked on an invitation. Somebody resetting a password already has
+    // a name on file and should not be made to retype it.
+    var wrap = el("pw-name-wrap");
+    if (type === "invite") {
+      wrap.hidden = false;
+      // If the invitation carried a name, use it — the person can correct it.
+      // Supabase's own dashboard invite carries none, so this is usually
+      // empty today and will fill itself in once invitations are sent from
+      // the portal instead.
+      var given = (who && who.user_metadata && who.user_metadata.full_name) || "";
+      if (given && given !== (who && who.email)) el("pw-name").value = given;
+      el("pw-name").focus();
+    } else {
+      wrap.hidden = true;
+      el("pw1").focus();
+    }
   }
 
   el("pw-form").addEventListener("submit", function (e) {
@@ -162,13 +183,41 @@
     }
     err.hidden = true;
 
+    var wantName = type === "invite";
+    var name = wantName ? el("pw-name").value.trim().replace(/\s+/g, " ") : null;
+
+    if (wantName) {
+      // Without this the portal lists staff by email address, which is how
+      // "who agreed this booking?" becomes unanswerable a year later.
+      if (name.length < 2 || !/[A-Za-z\u00C0-\u024F]/.test(name)) {
+        return problem("Please enter your name, so the masjid knows who you are.");
+      }
+      if (name.length > 80) return problem("That name is too long.");
+    }
+
     if (a.length < 10) return problem("Please use at least 10 characters.");
     if (a !== b)       return problem("The two passwords are not the same.");
 
     btn.disabled = true; btn.textContent = "Saving…";
 
-    sb.auth.updateUser({ password: a }).then(function (res) {
+    // The password and the name go together. `data` sets the account's own
+    // metadata; the profiles row is written separately because the trigger
+    // that copies one into the other only runs when the account is created,
+    // and by now it has been.
+    var patch = wantName ? { password: a, data: { full_name: name } }
+                         : { password: a };
+
+    sb.auth.updateUser(patch).then(function (res) {
       if (res.error) throw new Error(res.error.message);
+      if (!wantName || !who || !who.id) return null;
+      return sb.from("profiles").update({ full_name: name }).eq("id", who.id);
+    }).then(function (prof) {
+      // A profile that would not save is worth knowing about but is not worth
+      // stopping for: the password is already set and the person can get on.
+      // The name shows as their email until somebody fixes it.
+      if (prof && prof.error && window.console) {
+        console.warn("profile name not saved:", prof.error.message);
+      }
       finish();
     }).catch(function (e2) {
       btn.disabled = false; btn.textContent = "Save my password";
@@ -211,6 +260,7 @@
     .then(function (res) {
       scrubUrl();
       if (res.error) throw new Error(res.error.message);
+      who = (res.data && res.data.user) || null;
       if (NEEDS_PASSWORD[type]) return askForPassword();
       finish();
     })
