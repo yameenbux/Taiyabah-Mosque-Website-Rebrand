@@ -33,7 +33,19 @@
 --    so this is enforced rather than merely written down.
 -- =============================================================================
 
-\set ON_ERROR_STOP on
+-- NOTE: there is deliberately no `\set ON_ERROR_STOP on` here.
+--
+-- That is a psql command, not SQL, and the Supabase SQL editor is not psql —
+-- it hands the text straight to Postgres, which has never heard of it. Pasting
+-- it produced `syntax error at or near "on"` and stopped the migration dead.
+--
+-- Nothing is lost by removing it. The editor stops at the first error anyway,
+-- and every statement below is idempotent: `create or replace`, `alter policy`,
+-- `grant` and `revoke` can all be run again over the top of themselves. If this
+-- ever stops half way through, the fix is to run the whole file again.
+--
+-- If you are running it through psql instead, pass the flag on the command
+-- line: psql -v ON_ERROR_STOP=1 -f 011_require_two_step.sql
 
 
 -- -----------------------------------------------------------------------------
@@ -103,9 +115,22 @@ create or replace function public.is_aal2()
 returns boolean
 language sql
 stable
+security definer
+set search_path = ''
 as $$
   select coalesce(auth.jwt() ->> 'aal', 'aal1') = 'aal2';
 $$;
+-- SECURITY DEFINER on purpose, and it grants nothing.
+--
+-- auth.jwt() reads a session setting that PostgREST puts there for the current
+-- request, so who executes it makes no difference to the answer. What it does
+-- change is the failure mode: if `authenticated` ever lost EXECUTE on
+-- auth.jwt(), a plain function would raise inside every policy on every table
+-- at once, and the whole staff side would go down with an error nobody could
+-- read. Running as the owner removes that possibility.
+--
+-- search_path is empty and every name below is schema-qualified, which is what
+-- stops a SECURITY DEFINER function being hijacked by a shadowing object.
 
 comment on function public.is_aal2() is
   'True only when this session has passed two-step verification (JWT aal claim = aal2).';
@@ -150,109 +175,124 @@ revoke all on function public.verified_office() from anon;
 -- -----------------------------------------------------------------------------
 -- 2. Point every staff-facing policy at the verified versions
 --
+--    Only the ones that exist. Migrations 008, 009 and 010 are not applied yet
+--    on the masjid's project, so their tables are not there — and an
+--    `alter policy` naming a missing table stops the whole migration dead. It
+--    did exactly that the first time this was run, because it had only ever
+--    been tested against a database where every later migration was present.
+--
+--    So the list is walked rather than written out as statements. Anything not
+--    yet created is skipped and named in a notice, and re-running this file
+--    after applying 008, 009 or 010 picks up the new policies.
+--
+--    >>> RE-RUN THIS FILE AFTER APPLYING 008, 009 OR 010. <<<
+--    011_PRECHECK.sql tells you at any time whether anything has been missed.
+--
 --    `alter policy` rather than drop-and-create, so there is never a moment
 --    where a table is readable with no policy at all.
 -- -----------------------------------------------------------------------------
+do $$
+declare
+  p        record;
+  done     int := 0;
+  skipped  text[] := '{}';
+begin
+  for p in
+    select * from (values
+      -- table                        policy                          using                      with check
+      ('hall_bookings',              'office reads every request',    'public.verified_office()', null),
+      ('hall_bookings',              'office updates requests',       'public.verified_office()', 'public.verified_office()'),
 
--- Hall bookings -------------------------------------------------------------
-alter policy "office reads every request"  on public.hall_bookings
-  using (public.verified_office());
-alter policy "office updates requests"     on public.hall_bookings
-  using (public.verified_office())
-  with check (public.verified_office());
+      ('nikah_requests',             'office_read_nikah',             'public.verified_office()', null),
+      ('nikah_requests',             'office_update_nikah',           'public.verified_office()', 'public.verified_office()'),
 
--- Nikāḥ requests ------------------------------------------------------------
-alter policy office_read_nikah   on public.nikah_requests
-  using (public.verified_office());
-alter policy office_update_nikah on public.nikah_requests
-  using (public.verified_office())
-  with check (public.verified_office());
+      -- Admissions: the most sensitive data on the site.
+      ('admission_applications',     'admin_read_applications',       'public.verified_admin()',  null),
+      ('admission_applications',     'admin_update_applications',     'public.verified_admin()',  'public.verified_admin()'),
+      ('admission_students',         'admin_read_students',           'public.verified_admin()',  null),
+      ('admission_contacts',         'admin_read_contacts',           'public.verified_admin()',  null),
+      ('admission_student_choices',  'admin_read_choices',            'public.verified_admin()',  null),
 
--- Admissions — the most sensitive data on the site --------------------------
-alter policy admin_read_applications   on public.admission_applications
-  using (public.verified_admin());
-alter policy admin_update_applications on public.admission_applications
-  using (public.verified_admin())
-  with check (public.verified_admin());
-alter policy admin_read_students on public.admission_students
-  using (public.verified_admin());
-alter policy admin_read_contacts on public.admission_contacts
-  using (public.verified_admin());
-alter policy admin_read_choices  on public.admission_student_choices
-  using (public.verified_admin());
+      ('course_registrations',       'admin_read_registrations',      'public.verified_admin()',  null),
+      ('course_registrations',       'admin_update_registrations',    'public.verified_admin()',  'public.verified_admin()'),
+      ('courses',                    'admin_read_courses',            'public.verified_admin()',  null),
 
--- Course sign-ups -----------------------------------------------------------
-alter policy admin_read_registrations   on public.course_registrations
-  using (public.verified_admin());
-alter policy admin_update_registrations on public.course_registrations
-  using (public.verified_admin())
-  with check (public.verified_admin());
-alter policy admin_read_courses on public.courses
-  using (public.verified_admin());
+      -- Profiles and roles. "read own" and "update own" are left alone on
+      -- purpose — see the header. Everything that reaches ACROSS accounts now
+      -- needs the code, and that includes granting roles, which is the single
+      -- most dangerous thing an administrator can do.
+      ('profiles',                   'profiles: admins read all',     'public.verified_admin()',  null),
+      ('profiles',                   'profiles: admins manage all',   'public.verified_admin()',  'public.verified_admin()'),
+      ('user_roles',                 'user_roles: admins read all',   'public.verified_admin()',  null),
+      ('user_roles',                 'user_roles: admins manage',     'public.verified_admin()',  'public.verified_admin()'),
 
--- Profiles and roles --------------------------------------------------------
---   "read own" and "update own" are left alone on purpose — see the header.
---   Everything that reaches ACROSS accounts now needs the code, and that
---   includes granting roles, which is the single most dangerous thing an
---   administrator can do.
-alter policy "profiles: admins read all" on public.profiles
-  using (public.verified_admin());
-alter policy "profiles: admins manage all" on public.profiles
-  using (public.verified_admin())
-  with check (public.verified_admin());
-alter policy "user_roles: admins read all" on public.user_roles
-  using (public.verified_admin());
-alter policy "user_roles: admins manage" on public.user_roles
-  using (public.verified_admin())
-  with check (public.verified_admin());
+      -- The audit trail. Reading it needs the code. Writing to it does not:
+      -- the insert policy is `auth.uid() is not null`, and SECURITY DEFINER
+      -- functions write here as part of ordinary work. An audit trail that can
+      -- fail to record is worse than one read by the wrong person.
+      ('admin_audit',                'admin_audit: admins read',      'public.verified_admin()',  null)
+    ) as t(tbl, pol, using_expr, check_expr)
+  loop
+    if to_regclass('public.' || quote_ident(p.tbl)) is null then
+      -- name each missing table once, not once per policy on it
+      if not (p.tbl = any (skipped)) then
+        skipped := skipped || p.tbl;
+      end if;
+      continue;
+    end if;
 
--- The audit trail -----------------------------------------------------------
---   Reading it needs the code. Writing to it does not: the insert policy is
---   `auth.uid() is not null`, and SECURITY DEFINER functions write here as
---   part of ordinary work. An audit trail that can fail to record is worse
---   than one that can be read by the wrong person.
-alter policy "admin_audit: admins read" on public.admin_audit
-  using (public.verified_admin());
+    if not exists (select 1 from pg_policies
+                    where schemaname = 'public'
+                      and tablename  = p.tbl
+                      and policyname = p.pol) then
+      skipped := skipped || (p.tbl || '.' || p.pol || ' (policy not found)');
+      continue;
+    end if;
+
+    execute format(
+      'alter policy %I on public.%I using (%s)%s',
+      p.pol, p.tbl, p.using_expr,
+      case when p.check_expr is null then ''
+           else ' with check (' || p.check_expr || ')' end);
+    done := done + 1;
+  end loop;
+
+  raise notice '% policies now require two-step verification.', done;
+
+  if array_length(skipped, 1) > 0 then
+    raise notice 'SKIPPED, because these do not exist here yet: %',
+      array_to_string(skipped, ', ');
+    raise notice 'That is expected while 008, 009 and 010 are unapplied. '
+                 'RUN THIS FILE AGAIN after applying any of them, or those '
+                 'tables will be readable with a password alone.';
+  end if;
+end $$;
 
 
 -- =============================================================================
 --  IF THIS LOCKS SOMEBODY OUT
 --
 --  It should not — section 0 refuses to apply while any staff account lacks a
---  verified authenticator. But if you need the old behaviour back in a hurry,
---  this puts every policy exactly as it was. Run it from the Supabase SQL
---  editor, which is not subject to RLS:
+--  verified authenticator. If it happens anyway, run `011_ROLLBACK.sql` in the
+--  SQL editor. It puts every policy back exactly as it was, immediately, and
+--  skips anything not yet created in the same way this file does.
 --
---    alter policy "office reads every request" on public.hall_bookings
---      using (public.can_see_bookings());
---    alter policy "office updates requests" on public.hall_bookings
---      using (public.can_see_bookings()) with check (public.can_see_bookings());
---    alter policy office_read_nikah on public.nikah_requests
---      using (public.is_admin() or public.has_role(auth.uid(),'hall_office'));
---    alter policy office_update_nikah on public.nikah_requests
---      using (public.is_admin() or public.has_role(auth.uid(),'hall_office'))
---      with check (public.is_admin() or public.has_role(auth.uid(),'hall_office'));
---    alter policy admin_read_applications   on public.admission_applications using (public.is_admin());
---    alter policy admin_update_applications on public.admission_applications using (public.is_admin()) with check (public.is_admin());
---    alter policy admin_read_students on public.admission_students using (public.is_admin());
---    alter policy admin_read_contacts on public.admission_contacts using (public.is_admin());
---    alter policy admin_read_choices  on public.admission_student_choices using (public.is_admin());
---    alter policy admin_read_registrations   on public.course_registrations using (public.is_admin());
---    alter policy admin_update_registrations on public.course_registrations using (public.is_admin()) with check (public.is_admin());
---    alter policy admin_read_courses on public.courses using (public.is_admin());
---    alter policy "profiles: admins read all"   on public.profiles using (public.is_admin());
---    alter policy "profiles: admins manage all" on public.profiles using (public.is_admin()) with check (public.is_admin());
---    alter policy "user_roles: admins read all" on public.user_roles using (public.is_admin());
---    alter policy "user_roles: admins manage"   on public.user_roles using (public.is_admin()) with check (public.is_admin());
---    alter policy "admin_audit: admins read"    on public.admin_audit using (public.is_admin());
+--  Do not paste the old policy definitions out of a comment block by hand.
+--  That is how the first attempt at this migration failed: statements naming
+--  tables that do not exist on this project stop everything dead.
 --
 --  Reverting reopens the hole. Treat it as buying an hour, not as a fix.
+--
+--  The SQL editor runs as `postgres`, a superuser, and superusers ignore row
+--  level security entirely — so no policy change here can ever lock you out of
+--  the editor itself. Whatever else happens, you can always get back in and
+--  paste the rollback.
 --
 --
 --  ONE THING THIS DOES NOT SOLVE
 --
---  A person who is signed in at aal2 in a real browser session is trusted for
---  as long as that session lasts. Two-step verification stops a stolen
---  password; it does not stop a borrowed, unlocked laptop. The office still
---  needs to lock its screens.
+--  A person signed in at aal2 in a real browser session is trusted for as long
+--  as that session lasts. Two-step verification stops a stolen password; it
+--  does not stop a borrowed, unlocked laptop. The office still needs to lock
+--  its screens.
 -- =============================================================================
