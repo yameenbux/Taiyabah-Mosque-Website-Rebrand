@@ -49,9 +49,36 @@ exclude:
   - DEPLOY.md
   - DONATIONS.md
 
+  # Working notes that keep appearing in the repository root. Deleting them is
+  # the real fix — these patterns are here so that the next one somebody drops
+  # in is not silently a page on the masjid's website.
+  #
+  # UPLOAD-THIS.txt and DO-THIS.txt are the instruction files that come inside
+  # the upload zips. They are meant to be read and thrown away, not committed
+  # — but one of them was committed on 7 September and sat on the live site
+  # until the next review found it. The pattern is cheaper than remembering.
+  - "READ-ME*.txt"
+  - "READ-THIS*.txt"
+  - "WHAT-*.txt"
+  - "UPLOAD-THIS*.txt"
+  - "DO-THIS*.txt"
+  - "DELETE-THESE*.txt"
+  - "*.bak"
+  - "test"
+  - "*/test"
+
   # Test scratch: a copy of the form with the preview flag off, written by
   # _test/apply_test.py and normally deleted again. Never publish it.
   - apply/_open.html
+  - "*/_nkpay.html"
+  - "*/_nkblank.html"
+  - _nkpay.html
+  - _nkblank.html
+  - _nkopen.html
+
+  # NOTE: auth/ IS published, deliberately. It is where every link in an email
+  # from the masjid lands. Excluding it would break every invitation, password
+  # reset and email confirmation the website sends.
 
   # NOTE: apply/ is NO LONGER excluded. It is published deliberately, as a
   # preview that cannot send: PREVIEW_ONLY in apply/index.html disables the
