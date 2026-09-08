@@ -1,596 +1,364 @@
-# Taiyabah Masjid — Website, Accounts & Staff Portals
+# Taiyabah Masjid — website, accounts and staff portals
 
-**Prayer times, the new build appeal and donations, community information,
-madrasah admissions and a holiday planner, adult courses, hall hire bookings,
-Nikāḥ date requests, visitor accounts and three staff portals for Taiyabah Masjid,
-Bolton.**
+Prayer times, the new build appeal, donations, community information, madrasah
+admissions, adult courses, hall hire with online payment, nikāḥ date requests,
+visitor accounts and four staff areas.
 
-Bolton Central Islamic Society · Registered charity 1041569 · 31a Draycott Street, Bolton BL1 8HD
+**Bolton Central Islamic Society** · Registered charity 1041569 ·
+31a Draycott Street, Bolton BL1 8HD
 
 ![The Taiyabah Masjid website home page](docs/screenshot-home.jpg)
 
-## What this is
+> **Not live yet.** `robots.txt` blocks every search engine. See
+> [Launch day](#launch-day) before that changes.
 
-Taiyabah Masjid has served Bolton's Muslim community since 1967 — one of the
-first masjids in the city. This repository holds six things:
+---
+
+## Start here
+
+Three commands cover almost everything.
+
+```bash
+# 1. Change the site
+#    Edit index_template.html — NEVER index.html, which is generated.
+python3 verify_structure.py && python3 build.py
+
+# 2. Change the database
+#    Paste the migration into the Supabase SQL editor, then ALWAYS:
+#    paste 011_require_two_step.sql again.
+
+# 3. Prove it still works
+cd db/harness && ./run-all.sh
+```
+
+If you only remember three things about this repository:
+
+1. **`index.html` is generated.** Editing it works until the next build wipes it.
+2. **Re-run `011_require_two_step.sql` after every migration.** It only protects
+   the policies that exist at the moment it runs, so a new table arrives
+   unprotected until you do.
+3. **Pushing to GitHub *is* deploying.** Pages serves this repository's root.
+   `_config.yml` is the only thing standing between a file and the public web.
+
+---
+
+## What is in here
 
 | | |
 |---|---|
-| **The public website** | Prayer times, the new build appeal and donations, services, the madrasah, hall hire with online booking, and contact details. |
-| **`account/`** | Where a visitor registers, confirms their email and signs in. Public-facing, ready for the shop and the membership area. |
-| **`portal/`** | The **Madrasah Portal** — authenticated, for parents, teaching staff and administrators. Reached from the Madrasah page. |
-| **`venue/`** | **Hall Hire & Nikāḥ** — authenticated, for the office staff who handle hall bookings and nikāḥ date requests. Reached from the Hall Hire page, or from `portals/` if you are an administrator. |
-| **`courses/`** | **Adult Classes** — authenticated, administrators only. Who has signed up for Arabic and the Ghusl workshop, how many places are left, and who is waiting. Reached from `portals/`. |
-| **`portals/`** | The signpost. An administrator signing in at `account/` gets a second button to here, and here lists the staff areas their account can open. Holds no data of its own. |
-| **`apply/`** | The **madrasah application form**. Published as a **preview that cannot send** — `PREVIEW_ONLY` disables the button and removes the network call, so nothing about a child leaves the browser. See [Things behind a switch](#things-behind-a-switch). |
+| **The public website** | One document, one template. Prayer times, the appeal, services, madrasah, hall hire, contact. |
+| **`account/`** | Where a visitor registers, confirms their email and signs in. |
+| **`auth/`** | Where every link in an email from the masjid lands — invitations, password resets, email confirmations. Sets a password, asks for a display name, and enrols the authenticator **before** letting anyone through. |
+| **`portals/`** | The signpost. Lists the staff areas your account can open. Holds no data of its own. |
+| **`venue/`** | **Hall hire & nikāḥ** — the office's working screen. |
+| **`courses/`** | **Adult classes** — who signed up, places left, who is waiting. |
+| **`portal/`** | **Madrasah portal** — for parents, teachers and administrators. |
+| **`apply/`** | The madrasah application form, published as a **preview that cannot send**. |
 
-**Roles as of September 2026.** `teacher` is a live, continuing role for madrasah staff and is deliberately separate from `admin`. `hall_office` is no longer granted to anyone — the people who handled hall bookings are administrators now — but the role and every policy that honours it are intact, so restoring the separation is a single grant.
+All sign-in areas share one Supabase project, one set of accounts and one
+two-factor setup. A person sees only what their role allows.
 
-All four sign-in areas share one Supabase project, one set of accounts and one
-two-factor setup, but a person only sees what their role allows.
-
-> **The site is not live yet.** `robots.txt` currently blocks all search
-> engines. See [Launch day](#launch-day) before that changes.
+**Roles.** `admin` sees everything. `teacher` reaches madrasah data and not hall
+bookings. `hall_office` reaches hall bookings and provably nothing else — it is
+currently granted to nobody, because those duties folded into `admin`, but every
+policy that honours it is intact, so separating them again is one `grant`.
 
 ---
 
 ## Repository layout
 
 ```
-index_template.html     the SOURCE of the website — edit this, never index.html
+index_template.html     THE SOURCE of the website. Edit this.
 404_template.html       the source of the 404 page
-build.py                substitutes {{PLACEHOLDERS}} -> writes index.html and 404.html
-verify_structure.py     static checks; run BEFORE build.py, every time
-index.html              GENERATED. Do not edit by hand.
-404.html                GENERATED. Do not edit by hand.
+build.py                substitutes {{PLACEHOLDERS}} -> index.html, 404.html
+verify_structure.py     static checks. Run BEFORE build.py, every time.
+optimise-images.py      only when a photograph changed
+index.html              GENERATED — do not edit
+404.html                GENERATED — do not edit
 
-robots.txt              currently blocks all crawlers (staging)
-robots.live.txt         rename to robots.txt on launch day
+_config.yml             what is in git but NOT on the web. Read it before
+                        adding any file to the root.
+robots.txt              blocks all crawlers (staging)
+robots.live.txt         becomes robots.txt on launch day
 sitemap.xml
 og-image.jpg            link preview picture — must sit in the web ROOT
-favicon.ico             16/32/48 in one file. The mark is the girih star drawn
-                        AT those sizes, not the logo lock-up shrunk down
-site.webmanifest        name, colours and the home-screen icons
-apple-touch-icon.png    180px, iOS home screen
-icon-192.png            }  referenced by the manifest; the full logo, which
-icon-512.png            }  reads perfectly well at these sizes
+favicon.ico             the girih star drawn at 16/32/48, not a shrunk logo
+site.webmanifest        name, colours, home-screen icons
 
-account/                Visitor accounts  (index.html, app.js, config.js)
-portal/                 Madrasah Portal   (index.html, app.js, config.js)
-venue/                  Hall Hire & Nikāḥ (index.html, app.js, config.js)
-courses/                Adult Classes     (index.html, app.js, config.js)
-portals/                Admin signpost    (index.html, app.js, config.js)
-assets/                 MUST be uploaded — see DEPLOY.md
-  img/                  every photograph (33 files, 3.1 MB), generated by
-                        optimise-images.py, fetched only when its page opens
-  fonts/                amiri.woff2 — the Arabic face, served as a file
-optimise-images.py      base64 sources -> img/. Run when an image changes
-apply/                  Madrasah application form — uploaded as a PREVIEW that
-                        cannot send. See Things behind a switch
-build-inputs/           the 44 files build.py reads: fonts, compressed photos,
-                        the prayer timetable, QR codes. Committed, so a fresh
-                        clone can rebuild the site.
-db/                     migrations 008-019 and their local test harness
-supabase/functions/     Edge Functions. stripe-webhook records a paid deposit;
-                        its README has the deployment steps. Never uploaded
+account/  auth/  portals/  venue/  courses/  portal/  apply/
+                        each: index.html, app.js, config.js
 
-DEPLOY.md               what gets uploaded and what never does
-DONATIONS.md            the Stripe setup, and why Gift Aid is not on the site
-brand/                  logo and icon files for Stripe, and the script that
-                        generates them from assets/ — never uploaded
-docs/                   screenshots for this README — never uploaded
+img/     photographs, fetched only when their page opens
+fonts/   self-hosted woff2 — no Google Fonts, so no visitor IP leaves the UK
+build-inputs/  base64 sources inlined at build time
+
+db/            migrations, read-only check scripts, and the SQL test suites
+db/harness/    builds a throwaway local Postgres and runs every suite
+supabase/      Edge Functions (notify, stripe-webhook) — deployed, not served
+docs/          setup guides and screenshots — not published
 ```
 
-`DEPLOY.md` is the file to read before putting anything on a server. Roughly half
-of what is in this repository is source and tooling that must **not** be
-uploaded.
+**`img/` and `fonts/` sit at the root on purpose.** The repository already
+contains a folder committed as `Assets` with a capital A. Adding `assets`
+alongside it collides on Windows and macOS, where the filesystem cannot tell
+them apart, and GitHub Pages — which is case-sensitive — then 404s every
+photograph.
 
 ### Building
 
-```bash
-python3 verify_structure.py && python3 build.py     # every time
-python3 optimise-images.py                          # only when an image changed
-```
+`verify_structure.py` exists because one missing `</div>` once nested seven
+pages inside another. Navigation highlighted correctly, the URL changed, and
+nothing rendered. It checks div balance, dead `data-nav` targets, unresolved
+anchors, duplicate ids and undefined placeholders. **Exit 0 is clean.**
 
-`verify_structure.py` exists because a single missing `</div>` once left seven
-pages nested inside another one — the navigation highlighted correctly, the URL
-changed, and nothing rendered. It checks div balance per page and document-wide,
-dead `data-nav` targets, unresolved anchors, duplicate ids, and placeholders the
-template uses that `build.py` does not define. **Exit 0 is clean.**
+It also shouts about two things that would otherwise ship silently and cost the
+masjid money: a donate link still pointing at the old WordPress site, and a
+Stripe link containing `test_`. A test-mode link is a complete, convincing
+checkout that takes nothing at all, and nothing on screen tells you.
 
-It also prints a loud, unmissable banner for two things that would otherwise
-ship silently and cost the masjid money: a donate link still pointing at the old
-WordPress site, and a Stripe link containing `test_`. A test-mode link is a
-complete, convincing checkout that takes nothing at all, and nothing on screen
-would tell you. Neither is fatal — the build still runs, so the site can be
-previewed — but you will not forget.
+Fonts and a few always-needed graphics are inlined as data URIs from
+`build-inputs/`. **Photographs are not** — they are files under `img/`, marked
+`loading="lazy"`, so a browser fetches one only when its page is opened. That
+took the home page from 10.3 MB to about 615 KB on first load.
 
-Fonts and a handful of small always-needed graphics — the favicon, the header
-logo, the QR codes, two girih tiles — are base64 data URIs substituted at build
-time from `build-inputs/`. The favicon is declared **twice**, deliberately: as a
-data URI so it paints instantly and survives a `file://` URL, and as
-`/favicon.ico` because Safari has never handled data-URI favicons reliably and
-bookmarks, crawlers and older browsers ask for `/favicon.ico` whatever the page
-says. **Photographs are not.** They are files under
-`img/`, referenced by path and marked `loading="lazy"`, so a browser
-fetches one only when the page using it is actually shown.
-
-Nothing is fetched from another server at runtime either way.
-
-Those inputs used to be read from `/tmp`, which meant the "edit the template and
-rebuild" rule only worked on the one machine that still had the temp files — a
-fresh clone could not rebuild the site at all, and the generated `index.html`
-was the only real copy. They are committed now, and the way to check that claim
-is still true is to make it fail:
+To check a fresh clone can still rebuild the site, make it fail:
 
 ```bash
 rm index.html 404.html && python3 verify_structure.py && python3 build.py
 ```
 
-Both files should come back byte-identical.
+Both should come back byte-identical.
 
 ---
 
-## Tech stack
+## Deploying
 
-| Layer | What's used | Why |
-| --- | --- | --- |
-| **Frontend** | HTML5, CSS3, vanilla JavaScript | No framework and no bundler. One self-contained file a browser runs directly — fewer moving parts on a site a volunteer may have to edit years from now |
-| **CSS** | Custom properties, Grid, Flexbox, `clamp()` fluid type | One layout from a 390px phone to a desktop with no breakpoint sprawl. Verified: zero horizontal overflow on all 27 pages |
-| **Routing** | Hash-based, single document | Every page is one HTTP response. No server, no router library, and the whole site works from a file:// URL |
-| **Build** | Python 3, standard library only | Substitutes `{{PLACEHOLDER}}` tokens into the template. `verify_structure.py` runs first and refuses to build a broken document |
-| **Typography** | Fraunces, Hanken Grotesk, Amiri — self-hosted woff2 | Google Fonts would send every visitor's IP to Google before they consented. Subset with fontTools; Arabic keeps its full shaping tables |
-| **Images** | Pillow — resize, progressive JPEG, files under `img/` | Each photograph is fetched only when its page is opened. Inlining them all made the document 10.3 MB; first load is now about 615 KB |
-| **Backend** | Supabase — Postgres 15, GoTrue auth, PostgREST | Managed Postgres in **London**, so booking data never leaves the UK |
-| **Access control** | Row Level Security + column-level `GRANT` | The anon key can insert seven named columns and cannot read a single row back. Office staff can change seven named columns — the booking's status, notes, when it was handled, its deposit and balance state, and the extras they add — and no others |
-| **Authentication** | Supabase Auth with TOTP two-factor | Roles live in their own table, never on the user's own row, so nobody can promote themselves |
-| **Notifications** | Supabase Edge Functions (Deno) + Resend | A booking that arrives on a Friday night should not wait until Tuesday |
-| **Payments** | Stripe Payment Links | Donations are four fixed tiers plus a donor-chooses amount. No server code and no card data anywhere near this repository — Stripe hosts the checkout |
-| **Testing** | Playwright (Python) for the browser, `psql` for the database | Policies are proved against a real Postgres with a Supabase stub *before* they reach the live project |
-| **Hosting** | Any static host | The built files are uploaded to the web root; there is no server-side anything. See `DEPLOY.md` for exactly which files |
+**GitHub Pages serves the repository root, so pushing is deploying.** There is
+no build step on the server and no staging environment. `_config.yml`'s
+`exclude:` list is the entire boundary between "committed" and "on the
+internet" — `db/`, `supabase/`, `docs/`, the templates and the build inputs are
+all in git and none of them are pages.
 
-## What it looks like
-
-**Hall hire** — real availability read from the database, two sessions a day, a
-twelve-month horizon, and terms that must be agreed before a slot unlocks.
-
-![The hall hire booking calendar, showing session availability for a chosen date](docs/screenshot-hallhire.jpg)
-
-**The venue portal** — where the office works through requests. Staff signed in
-here can see bookings and provably nothing else; they may change a request's
-status and notes, but never the applicant's own details.
-
-![The venue hire portal listing new booking requests](docs/screenshot-venue-portal.jpg)
-
-## Engineering notes
-
-Each of these came from something that actually went wrong.
-
-**Almost nothing reaches another company.** The site sets no cookies, carries no
-analytics and embeds no third-party widget — fonts are self-hosted and the Google
-Maps iframe was replaced with an address card. Two pages reach outside, and both
-are named in the privacy notice: hall hire asks the booking database (ours,
-hosted in London) which dates are taken, deferred so that reading the prayer
-times contacts nobody; and the media page loads each video's still image from
-YouTube, sent with `referrerpolicy="no-referrer"` and `loading="lazy"`. The
-masjid chose that trade-off knowingly — plain cards read as broken. All of this
-is asserted by a test against the rendered page, so a change that reintroduces a
-tracker fails the build rather than the privacy notice.
-
-**A structural checker that runs before every build.** One missing `</div>`
-once left seven pages nested inside another. Navigation highlighted correctly,
-the URL changed, and nothing rendered — because the pages were still in the DOM,
-which is exactly what the tests were checking. `verify_structure.py` now checks
-div balance per page and document-wide, dead `data-nav` targets, unresolved
-anchors, duplicate ids, and placeholders `build.py` does not define.
-
-**Special category data that is asked for and then thrown away.** The booking
-form asks whether the enquirer is a masjid member, because that decides the rate
-quoted. Membership of a mosque discloses religious belief — Article 9 data. The
-answer is used on screen and never transmitted; the resulting price is withheld
-too, since with two possible figures storing one would disclose the answer just
-as plainly.
-
-**Least privilege between two audiences sharing one login system.** Venue office
-staff and madrasah staff sign in through the same Supabase project, but a
-`hall_office` role sees bookings and provably nothing else — a test asserts they
-can read zero other profiles and zero other role rows.
-
-**Failing honestly when the truth is unknown.** If availability cannot be
-fetched, every date stays "unknown" rather than claiming to be free. If a
-booking cannot be submitted, the screen says so and gives the office number
-instead of showing a false confirmation. Both paths are tested by aborting the
-request.
-
-**Tests that ask the right question.** Three bugs shipped because tests checked
-the DOM rather than what a person can see. The suite now attaches
-`page.on("pageerror")` (console listeners do not catch uncaught exceptions),
-navigates by clicking real links rather than calling the hoisted `showPage()`,
-and asserts visibility and rendered height rather than presence.
-
-**A menu that was slid away but not hidden.** The burger drawer was moved
-off-screen with `transform` alone, which leaves its twenty links focusable and in
-the accessibility tree — a keyboard user tabbing across the header fell into a
-menu they could not see. It now sets `visibility:hidden` when closed, with the
-flip delayed to the end of the slide so nothing blinks out mid-animation. Fixing
-that broke focus-into-menu on open, because a hidden element cannot take focus;
-the test caught it in the same run.
-
-**Reaching the account area at all.** Account, Basket, Login and Register
-appeared only at 1340px and up, and the drawer had no account link — so on every
-phone, every tablet and every laptop window below 1340px there was no route to
-`account/` from anywhere on the site. The header controls now appear from 1080px,
-exactly where the burger disappears, and the drawer carries the same four. A test
-opens the site at thirteen widths and fails if no account link is on screen.
-
-**Transparent artwork disappears on a matching background.** The Stripe logo was
-supplied as plum-on-transparent, the masjid set the checkout background to plum,
-and the result was an invisible logo that looked like a failed upload. `brand/`
-now ships both inks and names the files for the *background* they belong on
-rather than for their own colour.
+Anything not excluded is live the moment it is pushed. That includes stray
+notes dropped in the root, which is why `_config.yml` carries patterns like
+`READ-ME*.txt` and `DO-THIS*.txt` as well as named files.
 
 ---
 
 ## The database
 
-Migrations live in a separate directory and are applied by pasting them into the
-Supabase SQL editor, in order.
+Supabase — Postgres in **London**, so booking data never leaves the UK.
+Migrations are pasted into the SQL editor in order.
 
 | Migration | What it does |
 |---|---|
-| `001_foundation.sql` | Roles, profiles, `has_role()`, `is_admin()`, RLS, audit table |
-| `002_grants.sql` | Table privileges for `authenticated` |
-| `003_hall_bookings.sql` | The bookings table, flood control, retention function |
-| `004_hall_office_role.sql` | The `hall_office` role — **run in two parts** |
-| `005_availability_by_hall.sql` | Superseded by 006; keep for history |
-| `006_halls_and_kitchen.sql` | Named halls, the kitchen option, whole-venue availability |
-| `007_retention_and_cleanup.sql` | Schedules the deletion job, drops `whoami()` |
-| `008_admissions.sql` | Madrasah applications. Applied. The form itself is still a preview — see [Things behind a switch](#things-behind-a-switch) |
-| `009_courses.sql` | Adult courses and their sign-ups. Applied and live |
-| `010_nikah_requests.sql` | Nikāḥ date requests. Applied and live |
-| `011_require_two_step.sql` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Re-run it after applying any later migration** — it only alters policies that exist when it runs |
-| `012_remove_ethnicity.sql` | Drops the ethnicity column from admissions. Refuses to run if any value is present |
-| `013_course_admin.sql` | `promote_from_waiting()` — lets an administrator give a waiting person a place *without* being able to overfill the session. Needs 009 and 011 |
-| `014_whole_day_hire.sql` | Hall hire by the DAY and by the NUMBER of halls, not by session and room. Retires `session_slot`, `hall` and `kitchen` without dropping them, adds kitchen-only hire, and moves every insert-time rule out of CHECK constraints and into a trigger. Needs 003 and 006 |
-| `015_retention.sql` | Makes the nikāḥ and course purges delete **everything** past twelve months rather than only the rows that were declined or withdrawn, adds a `dry_run` mode, and puts both on a weekly `pg_cron` job. Needs 009 and 010 |
-| `016_deposit_holds_the_date.sql` | Paying the £100 deposit is what reserves a date. Adds a booking reference, deposit state, a 30-minute hold while the hirer is in Stripe's checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. Also fixes a grant the README had described but nobody had made. Needs 014 |
-| `017_paid_is_booked.sql` | A paid deposit **is** the confirmation. `mark_deposit_paid()` now also sets the booking to confirmed, so nobody in the office has to agree to a date the masjid has already sold. Stores the hall rate against the booking (`base_amount_p`) at the price in force on the day it was taken, lets the office add `extras_p` for utensils and catering, and tracks the balance. Undoing a paid booking is no longer a Decline button but `cancel_paid_booking()`, which demands a written reason and audits it. Needs 016 |
-| `018_nikah_fee_online.sql` | The nikāḥ fee can be paid online. Deliberately the OPPOSITE of 017: `mark_nikah_fee_paid()` records money and does **not** touch `status`, because the masjid does not publish its nikāḥ diary and the site therefore cannot know whether a date is free. Paying is a way to settle the fee without coming in with cash; the office still agrees the date. Adds `fee_status`, `fee_amount_p`, `fee_paid_at` and the Stripe session, keeps a second payment from overwriting the first, and lets the office record a fee taken in cash. Needs 010 |
-| `019_weekly_digest.sql` | The Monday morning summary. `outstanding_summary()` counts what still needs a human — unanswered nikāḥ requests and how long the oldest has waited, refunds owed, balances due inside 30 days, what is on this week — and `send_weekly_digest()` posts it to the notify function on a weekly `pg_cron` job. **It sends nothing when nothing is outstanding**, which is the whole point: a weekly email that always arrives stops being read. Adds `app_settings`, which holds the notify endpoint and its shared secret and is readable by nobody but the owner. Needs 010, 016-018 and `pg_net` |
+| `001`–`007` | Foundation: roles, profiles, RLS, audit, hall bookings, the `hall_office` role, retention. In the sister repo. |
+| `008_admissions` | Madrasah applications. Applied; the form is still a preview. |
+| `009_courses` | Adult courses and sign-ups. Live. |
+| `010_nikah_requests` | Nikāḥ date requests. Live. |
+| `011_require_two_step` | Makes the database refuse staff data to a session that has not entered its authenticator code. **Re-run after every later migration.** |
+| `012_remove_ethnicity` | Drops the ethnicity column. Refuses to run if any value is present. |
+| `013_course_admin` | `promote_from_waiting()` — give a waiting person a place without being able to overfill the session. |
+| `014_whole_day_hire` | Hall hire by the **day** and by the **number of halls**, not by session and room. Moves every insert-time rule out of CHECK constraints into a trigger. |
+| `015_retention` | Purges everything past twelve months, adds `dry_run`, puts both purges on weekly `pg_cron` jobs. |
+| `016_deposit_holds_the_date` | Paying the £100 deposit reserves the date. Booking references, a 30-minute hold during checkout, a submit function that refuses a date somebody is already paying for, and `mark_deposit_paid()` for the webhook. |
+| `017_paid_is_booked` | **A paid deposit is the confirmation.** Nobody in the office agrees to a date the masjid has already sold. Stores the rate on the booking at the price in force that day, lets the office add extras, tracks the balance. Undoing a paid booking is `cancel_paid_booking()`, which demands a written reason and audits it. |
+| `018_nikah_fee_online` | The nikāḥ fee can be paid online — and deliberately **books nothing**. See [Two payment flows](#two-payment-flows-that-look-alike-and-must-not-behave-alike). |
+| `019_weekly_digest` | The Monday summary. `outstanding_summary()` counts what still needs a human; `send_weekly_digest()` posts it on a weekly `pg_cron` job. **Sends nothing when nothing is outstanding.** Adds `app_settings`, readable by nobody but the owner. |
+| `020_digest_auth_header` | Fixes the digest: `019` sent no `Authorization` header, so Supabase's gateway refused every send with `401` before the function ever ran. |
 
-`CHECK_retention.sql` is read-only and answers the question the trustees will
-ask: what is about to be deleted, are the jobs actually scheduled, and have
-they been running. Section 2 uses `dry_run`, so it touches nothing.
+**Read-only scripts, safe in the SQL editor:**
+`CHECK_retention.sql` answers what is about to be deleted and whether the jobs
+are running. `CHECK_course_registrations.sql` shows what has actually arrived
+from the website — it exists because "the sign-up never reached the database"
+and "it arrived and nothing read it back" look identical from outside, and that
+ambiguity cost an evening. `STAFF_give_someone_a_role.sql` grants a role by
+email and prints the staff list.
 
-**Each `_test_` file needs a freshly built database.** They insert fixtures and
-delete rows, so running two of them against the same database will fail in ways
-that look like faults in the migrations and are not.
+**Files beginning `_test_` are LOCAL ONLY.** They create roles, reassign
+ownership, insert fixtures and delete rows. Never run one against Supabase.
 
-`CHECK_course_registrations.sql` is read-only and safe to run in the SQL editor
-whenever you want to know what has actually arrived from the website — it exists
-because "the sign-up never reached the database" and "it did, and nothing read it
-back" look identical from the outside, and that ambiguity cost an evening.
+---
 
-`STAFF_give_someone_a_role.sql` is the one you will reuse — it grants a role to
-an account by email address and prints the full staff list.
+## Sign-in and two-step
 
-Files beginning `_test_` are **local only**. They insert junk rows and call
-`set role`. Never run one against Supabase. `_test_supabase_stub.sql` (and
-`db/_test_stubs.sql` for 008-013) recreates enough of Supabase on a throwaway
-Postgres to prove policies before they ship.
+```
+email link  ->  auth/  ->  set password  ->  give a display name  ->
+enrol authenticator  ->  portals/  ->  the area you have a role for
+```
 
-Every harness in `db/` reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS`
-role before asserting anything. Skip that and the tests run as a superuser,
-which ignores RLS — and a broken policy set passes. That is not hypothetical:
-it is how both of the failures above got as far as they did.
+`auth/` completes every kind of email link, then **enrols the authenticator
+before handing over a session**. It used to happen the other way round: staff
+reached the portal first and were only challenged when they clicked something,
+which reads as a locked door behind an open one.
 
-### Five rules that were learned the hard way
+Two policies are deliberately left at `aal1`: `profiles: read own` and
+`user_roles: read own`. The signpost has to know which buttons to show before it
+can ask for anything sensitive. Everything with real data behind it is `aal2`.
 
-**GRANT and RLS are different things and you need both.** Postgres checks table
-privileges *before* it evaluates any policy. Migration 002 shipped with policies
-but no grants, and every signed-in query failed with `permission denied`.
+`011_require_two_step.sql` **refuses to run** while any account holding `admin`,
+`hall_office` or `teacher` has no verified authenticator. That is intentional:
+it stops you locking a colleague out by tightening the policies before they have
+set their phone up.
 
-**`INSERT … RETURNING` is checked against the SELECT policies.** With
-`FORCE ROW LEVEL SECURITY` on and no read policy for the function's owner, a
-`SECURITY DEFINER` insert that used `returning id into …` failed with *"new row
-violates row-level security policy"* — pointing at the WITH CHECK clause, which
-was fine. It passed locally at first because the objects were owned by a
-superuser, and a superuser ignores RLS entirely. Generate the uuid in the
-function instead, and keep the read gate shut.
+---
 
-**A count inside a `SECURITY DEFINER` function returns nothing under FORCE.**
-Same trap, worse symptom: no error at all. The fifteen-place cap on the adult
-courses silently counted zero every time and handed out unlimited places. `009`
-and `010` therefore enable RLS but do **not** force it, with the reasoning
-written above the line so nobody "tidies" it to match `008`. Anon still holds no
-privileges on those tables, so nothing is weaker.
+## Money
 
-**A check that only exists in JavaScript does not exist.** The staff portals
-asked for an authenticator code from the day they were built, and for months
-that code was checked in the browser and nowhere else. Anybody holding a staff
-email address and password could have skipped the page entirely and read hall
-bookings, nikāḥ requests and admission applications straight from the API.
-Migration `011` moves the check into the policies, where it cannot be walked
-around. The rule generalises: if a control is not in the database, assume it is
-decoration.
+Two payment flows share one Stripe webhook, which routes on the reference
+prefix — `HH-` to `mark_deposit_paid()`, `NK-` to `mark_nikah_fee_paid()`.
 
-**A CHECK constraint must be true forever, not just today.** Migration 003
-wrote three rules as CHECK constraints: the booking date must not be in the
-past, must be within twelve months, and — added later — one hall is not sold at
-the weekend. None of those is a property of a row; they are rules about what
-may be *taken*. Postgres re-evaluates every constraint whenever a row is
-UPDATED, so each one froze a booking the moment it stopped satisfying it. The
-office could not add a note to a booking after the event, and nobody had
-noticed because nobody had tried. Migration 014's backfill tried to touch every
-row and was refused in production by a real, confirmed, paid booking. `NOT
-VALID` does not help: it skips the one-off validation scan, but the constraint
-is still checked on every update. All three now live in a `BEFORE INSERT`
-trigger. If a rule contains `now()` or describes what somebody is *allowed to
-do*, it is not a constraint.
+### Hall hire
 
-**A grant is the control; a comment is not.** Migration 003 ended with
-`grant select, update on public.hall_bookings to authenticated` — UPDATE on the
-whole table. This README said for months that the office "may only change
-status, office_notes and handled_at", and `venue/app.js` said the same in a
-comment. Neither was true. Nothing had gone wrong, because the portal only ever
-wrote those three columns — but the database was not what stopped it. RLS
-decided *who* could write; nothing decided *what*. Migration 016 makes the
-documentation true, which mattered the moment `stripe_session_id` and
-`deposit_paid_at` existed. If you find yourself writing down a restriction,
-check that something enforces it.
+1. The hirer picks a whole day and how many halls, and agrees the terms.
+2. `request_hall_booking()` takes an advisory lock, refuses a date already held
+   or taken, and **holds the date for thirty minutes** while they are in Stripe.
+   The public calendar closes it immediately.
+3. Paying the £100 deposit **confirms the booking**. No office step.
+4. The office adds extras (utensils, catering) in `venue/`; the line reads
+   `£500 base + £154 extras − £100 deposit = £554 outstanding`.
 
-**Two payment flows that look alike and must not behave alike.** Paying the
-hall deposit books the date (017). Paying the nikāḥ fee books nothing (018).
-The difference is not a preference — it is whether the site can see what is
-free. `hall_availability` is computed from real bookings; the masjid does not
+The base rate is computed and **stored on the booking**, so one taken in March
+keeps March's price. An unpaid hold releases itself. A repeated webhook delivery
+changes nothing. A payment for a date somebody else took is marked
+`refund_due` and logged.
+
+**What is deliberately not stored:** the form no longer asks whether the hirer
+is a member. It existed only to choose between two prices, there is now one
+rate for everybody, and asking somebody whether they belong to a mosque is
+asking about their religion — Article 9 data under UK GDPR. **Do not put the
+question back without a second rate to justify it.**
+
+**The website does not work out a total.** Two charges depend on what happens on
+the day. Any figure the page produced would be incomplete and argued about at
+the door. The rate card is printed as the masjid prints it; the office quotes.
+
+### Nikāḥ
+
+Paying the fee records money and **does not touch `status`**. This is not an
+inconsistency — it is the difference between a diary the site can see and one it
+cannot. `hall_availability` is computed from real bookings; the masjid does not
 publish its nikāḥ diary, so every day on that calendar looks identical because
-as far as the website knows it is. Making the nikāḥ behave "consistently" would
-mean selling dates the imam may not be free for. Both migrations say so in
-their headers, `mark_nikah_fee_paid()` has a comment on the exact UPDATE that
-would do it, and `_test_nikah_fee.sql` section 03 fails the moment `status`
-moves. If a future change makes that section fail, the change is wrong, not
-the assertion.
+as far as the website knows it is. Making nikāḥ behave "consistently" would mean
+selling dates the imam may not be free for.
 
-**A test that cannot fail is worse than no test.** `/portal/`'s suite installed
-its fake Supabase client by intercepting a request for
-`vendor/supabase-2.112.4.js`. When that library was vendored *inline* into the
-page instead, the interception stopped matching, the real library loaded, and
-every scenario in the suite quietly began asserting against a sign-in screen it
-could never get past. It still printed PASS lines. Two of its scenarios also
-depended on `portal/config.js` still containing `PASTE_YOUR_URL_HERE`, so
-filling in the masjid's real settings made them "fail" — noise that trained
-whoever ran it to ignore the output. Both are fixed: the stub is now installed
-with `Object.defineProperty(..., { writable: false })` before the page's own
-scripts run, and the placeholder config is served by the test rather than
-assumed. The general rule this bought: **deliberately break the code and check
-the suite notices.** Every suite in this repository has been negative-controlled
-that way, and it is how the null-rate bug in 014 and the missing audit row in
-016 were both caught before they reached the masjid.
-
-**Blanket default privileges are a foot-gun.** Migration 002 ends with
-`alter default privileges … grant … on tables to authenticated`, which applies
-to tables created *afterwards*. `hall_bookings` therefore arrived with DELETE
-and unrestricted INSERT for every signed-in user. RLS held, so nothing leaked,
-but migration 006 takes those privileges back explicitly. Check the grants on
-any new table rather than assuming.
+`_test_nikah_fee.sql` section 03 fails the moment `status` moves. **If a future
+change makes that section fail, the change is wrong, not the assertion.**
 
 ---
 
-## Hall bookings
+## Email
 
-1. Someone fills in the form on the Hall Hire page.
-2. The request is inserted into `hall_bookings` with status `new`. The anon key
-   can insert seven named columns and **cannot read a single row back**.
-3. Office staff see it in `venue/`, ring the enquirer, and confirm or decline.
-   They may only change `status`, `office_notes` and `handled_at` — never the
-   applicant's name, address or requested date.
-4. A **confirmed** booking closes that session for everyone, whichever hall it
-   was for. The public calendar reads `hall_availability`, a view containing
-   nothing but a date and a session.
+```
+stripe-webhook  ─┐
+database webhook ─┼─► notify ──(SMTP)──► send.one.com:465 ──► the office
+weekly pg_cron   ─┘
+```
 
-### What is deliberately not stored
+`supabase/functions/notify/` sends through **one.com SMTP** — the masjid's own
+mail, no third-party sending service. Port 465, implicit TLS, a fresh
+connection per message. `messages.ts` holds pure message builders and is tested
+with no network at all.
 
-The form asks whether the enquirer is a member of the masjid, because the answer
-decides which rate they are quoted. **That answer is never transmitted or
-stored**, and neither is the resulting price. Membership of a mosque discloses
-religious belief, which is special category data under Article 9 of the UK GDPR;
-with only two possible prices, storing one would disclose the answer just as
-plainly.
+**Subjects must be plain ASCII.** The first live alert arrived showing
+`=?utf-8?Q?Nik=c4=81...` because RFC 2047 caps a MIME encoded-word at 75
+characters and three non-ASCII characters pushed it to 78. Fixed at the root:
+every subject goes through `ascii()`, and a test fails if any character above
+U+007E appears in one. Bodies are unaffected — they are HTML with a charset, so
+`nikāḥ` renders properly where the masjid's own words matter.
 
-The consequence the office must know: when they ring back, they cannot see which
-rate the website quoted. They quote it themselves.
+**"ATTENTION REQUIRED" appears only where a human must act** — ring the family,
+issue a refund. A paid deposit does not carry it: the payment already did the
+work. If everything shouts, nothing does.
 
-### Charges
+**The hirer's home address is never in an email.** Most sensitive thing on the
+form, least useful for ringing somebody back. A test fails if it appears.
 
-The masjid's published rate card (Astley Hall, effective 1 January 2024,
-confirmed by the committee 7 September 2026) is printed on the page as it is
-printed on the masjid's sheet. **The website does not work out a total.** Two
-of the charges — £100 for utensils if they are used, 45p per person if the
-hirer cooks — depend on what actually happens on the day, so any figure the
-page produced would be incomplete and would be argued about at the door. The
-office quotes.
+**The Monday digest** lists only what is still outstanding, and sends nothing
+when there is nothing. A weekly email that always arrives becomes furniture
+within a month; one that only arrives when something needs doing is still being
+read a year later.
 
-There is no member rate, which is why the "are you a member of the masjid?"
-question was removed in September 2026. It existed only to choose between two
-prices, and asking somebody whether they belong to a mosque is asking about
-their religion. **Do not put it back without a second rate to justify it.**
-
-### Retention
-
-`purge_old_hall_bookings()` deletes requests six months after the event date, and
-declined or cancelled ones after three. Migration 007 puts it on a weekly
-schedule. **Those periods are also written into the privacy notice on the
-website** — change one and you must change all three.
-
-**Nikāḥ requests and class sign-ups are deleted after twelve months, whatever
-their status.** The privacy notice says so, and since migration 015 the code
-does it. Both purges previously removed only the rows that had been closed off —
-declined or withdrawn — so a confirmed nikāḥ request or an attended class was
-kept for ever while the website said otherwise. The committee decided on
-7 September 2026 that everything goes at twelve months, and 015 makes it true.
-
-Both are now on a weekly `pg_cron` job alongside the hall booking purge, at
-03:30, 03:40 and 03:50 on a Monday.
-
-**The is_admin() check had to come out to make that work**, and that is worth
-understanding rather than reversing. Both purges began by refusing anyone who
-was not an administrator. `is_admin()` answers by looking up `auth.uid()`, and a
-pg_cron job holds no JWT — so the scheduled purge would have raised an exception
-every Monday and deleted nothing, silently, because a failed cron job rings
-nobody's phone. Access is now controlled by the EXECUTE grant instead: revoked
-from `anon` and `authenticated`, so only the owner and the scheduler can call
-them. An administrator can no longer trigger a purge from a browser, which is
-correct — deleting every record older than a year is not an errand you should be
-able to run by clicking.
-
-**Twelve is written in three places** — the privacy notice, the purge functions
-and the cron jobs. There is no single source for it. Change one and you must
-change all three; `CHECK_retention.sql` will tell you whether they still agree.
-
-**Madrasah admissions is deliberately not fixed yet.**
-`purge_old_admission_applications()` has both the same faults. Its table is
-empty (the form cannot send), and the retention period for a child's
-application is a DPIA question rather than a copy of the twelve months agreed
-for adults' contact details. Fix it in the same work that signs the DPIA and
-turns the form on — and do not turn that form on before it is done.
+The shared notify secret lives in **three places** — the function's
+`NOTIFY_SECRET`, the nikāḥ webhook's header, and `app_settings.notify_secret` —
+and nothing keeps them in step. **After ever changing it, run
+`select public.send_weekly_digest(force => true);` and check
+`net._http_response` for a `200`.** That one test exercises all three.
 
 ---
 
-## Donations
+## Testing
 
-Four fixed tiers (£250 / £500 / £1,000 / £5,000) plus one link where the donor
-sets the amount, all **Stripe Payment Links**. The five `href`s live in the
-`.nb-give-card` block on the New Build page and are the whole integration —
-there is no server code, no webhook and no secret key. Bank transfer details sit
-directly beneath them and cost the masjid nothing.
+```bash
+cd db/harness && ./run-all.sh          # 11 SQL suites, 348 assertions
+deno test supabase/functions/notify/messages_test.ts    # 33 assertions
+python3 _test/<name>.py                # browser suites, 17 of them
+```
 
-They replaced five WooCommerce links on the masjid's old WordPress site, which
-would have become 404s the moment the domain moved — while still looking
-perfectly fine on screen. `verify_structure.py` now guards against both that and
-test-mode links; see `DONATIONS.md` for the Stripe settings.
+`db/harness/` builds a throwaway Postgres, stubs `pg_net` and `pg_cron`
+(`net.http_post` records into `net._sent` instead of sending), applies the right
+migrations for each suite, and reports one line per suite. It needs the sister
+repo `taiyabah-madrasah-db` beside this one for migrations 001–007; override
+with `MADRASAH_DB=/path/to/it`.
 
-### Two claims that were taken off the page
+**Every harness reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS` role
+before asserting anything.** Skip that and the tests run as a superuser, which
+ignores RLS entirely — and a broken policy set passes.
 
-**Gift Aid.** The donate card used to promise *"add Gift Aid — 25p to every £1"*.
-Stripe cannot produce or store a valid HMRC declaration, so the promise came off
-rather than being made and not kept. Gift Aid is off the *page*, not off the
-table: the masjid can still claim on bank transfers, standing orders and cash
-with a declaration held at the office.
+Three browser-test habits, each bought with a bug:
 
-**"100% Donation Policy."** Card payments carry a processing fee, so it was not
-true. The tick on the home page now reads *Registered charity 1041569*, which is
-verifiable.
-
-Neither claim can drift back: a test walks all 23 pages plus the header, drawer
-and footer looking for both phrases.
-
----
-
-## Navigation
-
-The whole site is one document, so "pages" are `.page[data-page]` blocks toggled
-by `showPage()`. Two things about that are worth knowing before changing it.
-
-**Back means *up*, not *previously*.** Every child page carries a `.back-link` at
-the top pointing at its parent — *‹ Services*, *‹ Birth, Marriage & Death*. All
-eight child pages have one and all twelve top-level pages deliberately do not; a
-test checks every one and that clicking it lands on the right parent.
-
-A floating "Back" button was tried and removed. It followed browser history
-rather than the site's structure, so arriving back at Home still counted as
-"you can go back" and it appeared on the front page.
-
-**The browser's own back button works.** Navigation calls `history.pushState`,
-and a `popstate` listener restores the page. It used to call `replaceState`,
-which overwrites the current entry instead of adding one — so the back button
-and the back gesture on a phone did nothing between pages, or dumped the visitor
-off the site entirely. That was the real bug; the floating control was a bad
-answer to it.
-
----
-
-## Privacy
-
-The site sets **no cookies**, uses no analytics, and carries no advertising or
-tracking. Fonts are self-hosted and the Google Maps embed was replaced with an
-address card, so no page loads a third-party script, iframe or font.
-
-Exactly one third party is contacted, on exactly one page: the **media** page
-loads each video's still image from `i.ytimg.com`, which means Google sees a
-visitor's IP address there. The requests carry no referrer and are lazy-loaded,
-and the privacy notice states this plainly rather than claiming otherwise.
-Everything else that reaches another company does so only when a visitor
-chooses to click it.
-
-This is asserted by an automated test against the rendered page, not just
-believed. If a future change contacts a host other than the masjid's own
-Supabase project or YouTube's image host, that test fails.
-
-**The 404 page counts too.** It was still pulling Fraunces and Hanken Grotesk
-from Google Fonts long after every other page had them built in — quietly
-contradicting the notice. Its fonts are now inlined and it is generated by
-`build.py` from `404_template.html`, so it cannot drift back.
-
-The privacy notice lives at the `privacy` page and is linked from the footer.
+- **Attach `page.on("pageerror")`.** Console listeners do not catch uncaught
+  exceptions. A null reference once killed the whole script block, including
+  the navigation binding, and the tests passed.
+- **Navigate by clicking real links**, never by calling `showPage()`. That
+  function is hoisted, so it works even when the click handler is broken.
+- **Assert what is visible**, not what is in the DOM. `text_content` reads
+  hidden nodes.
 
 ---
 
 ## Security
 
-- **Only the anon (publishable) key ever reaches a browser.** It is safe to
-  commit. RLS is the real boundary.
-- **The `service_role` key must never appear in this repo**, in any file, ever.
-  If GitHub secret scanning blocks a push, do **not** click "Allow secret" —
-  cancel, remove the key, and rotate it in Supabase.
-- **Roles live in their own table**, never as a column on `profiles`, so a user
-  cannot promote themselves by updating their own row.
-- **`hall_office` cannot reach madrasah data.** Venue staff see bookings and
-  nothing else — proved by a test that asserts they see zero other profiles.
-- **Keep two administrators.** Deleting the only admin account destroys its
-  roles and profile by cascade, and nobody can then grant the role back.
-- **Who can reach a child's record.** `teacher` reaches madrasah data and not
-  hall bookings; `hall_office` reaches hall bookings and provably nothing else;
-  `admin` reaches everything. That separation is the point of migration `004`
-  and it is intact — the change in September 2026 was only that hall office
-  duties folded into `admin`, not that teachers became administrators.
+- **Only the anon (publishable) key reaches a browser.** It is safe to commit.
+  RLS is the real boundary.
+- **The `service_role` key must never appear in this repository, in any file,
+  ever.** If GitHub secret scanning blocks a push, do **not** click "Allow
+  secret" — cancel, remove the key, and rotate it in Supabase.
+- **Roles live in their own table**, never as a column on `profiles`, so nobody
+  can promote themselves by updating their own row.
+- **Keep two administrators.** Deleting the only admin destroys its roles and
+  profile by cascade, and nobody can grant the role back.
+- **Secrets live in Supabase**, never in `config.js` or this repository.
+  Edge Function secrets are **project-wide**, not per-function.
+- **`STRIPE_SECRET_KEY` is not in Supabase.** The webhook needs only
+  `STRIPE_WEBHOOK_SECRET`.
+- **The SMTP credential is the `noreply@` mailbox only.** It holds no mail, so a
+  leak exposes nothing to read.
 
-  `admin` is therefore the role to be sparing with, because it is the only one
-  that opens roughly 800 children's records — names, dates of birth, and in time
-  medical and special-educational-needs notes, which are special-category data
-  under UK GDPR. The question to revisit annually is whether every person
-  holding `admin` is somebody the masjid would be content to name in an ICO
-  response as having lawful access to every child's file. If the answer is ever
-  "not quite", grant the narrower role instead: one line in
-  `STAFF_give_someone_a_role.sql`.
+`admin` is the role to be sparing with: it is the only one that opens roughly
+800 children's records — names, dates of birth, and in time medical and SEND
+notes, which are special-category data. **The question to revisit annually** is
+whether every person holding `admin` is somebody the masjid would be content to
+name in an ICO response as having lawful access to every child's file. If the
+answer is ever "not quite", grant the narrower role instead.
 
 ---
 
 ## Things behind a switch
 
-Three features each write personal data to the masjid's own database. Two are now
-live; one is still held back.
-
 | Feature | Where | Switch | State |
 |---|---|---|---|
-| Nikāḥ date requests | Marriage page | `REQUESTS_OPEN` | **live** (September 2026) |
-| Course sign-ups (Arabic, Ghusl) | Education pages | `REGISTRATION_OPEN` | **live** (September 2026) |
+| Nikāḥ date requests | Marriage page | `REQUESTS_OPEN` | **live** |
+| Course sign-ups | Education pages | `REGISTRATION_OPEN` | **live** |
 | Madrasah application form | `apply/` | `PREVIEW_ONLY` | **preview only** |
 
 **Apply the migration before flipping the switch, never the other way round.**
-With the switch on and the tables missing, a visitor fills in a form and is
-handed an error — which is worse than the honest "ring the office".
+With the switch on and the table missing, a visitor fills in a form and is
+handed an error — worse than an honest "ring the office".
 
-The three were never equally gated. `009` and `010` hold adults' names, emails
-and phone numbers: personal data needing ICO registration (done — ZB906019), a
-lawful basis, a retention period and a line in the privacy notice. All four were
-in place before the switches were flipped, and the privacy notice was rewritten
-first, because leaving it saying *"the only thing this website collects is a hall
-hire request"* would have made it false the moment they went on.
-
-`008` is different. It holds children's medical conditions, SEND and EHCP status
-— Article 9 data — so the form is published but **cannot send**: `PREVIEW_ONLY`
-disables the button and removes the network call, so nothing about a child leaves
-the browser. It stays that way until the DPIA is signed.
+`008` holds children's medical conditions, SEND and EHCP status — Article 9 data
+— so the form is published but **cannot send**: `PREVIEW_ONLY` disables the
+button and removes the network call. It stays that way until the DPIA is signed.
 
 **Turning a form on is only half the job.** Course sign-ups went live and landed
 correctly in `course_registrations` — where no administrator could see them,
@@ -600,225 +368,126 @@ back.
 
 ---
 
-## Testing
-
-Browser tests use Playwright. Three habits, each from a bug that shipped:
-
-- **Attach `page.on("pageerror")`.** Console listeners do not catch uncaught
-  exceptions. A null reference once killed the whole script block, including the
-  navigation binding, and the tests passed.
-- **Navigate by clicking real links**, never by calling `showPage()`. That
-  function is hoisted, so it works even when the click handler is broken.
-- **Assert what is visible**, not what is in the DOM. `text_content` reads
-  hidden nodes, so a block that rendered on the wrong page still passed.
-
-The suite is a set of standalone scripts rather than a framework. Each one prints
-PASS/FAIL lines and exits non-zero on failure, so any of them can be run alone
-while working on that area:
-
-| Covers | Asserts, in short |
-|---|---|
-| Full-site sweep | every page renders with real height, no broken images, no dead nav targets, no cookies, no console errors, no overflow at 390 / 768 / 1440 |
-| Donations | each tier reaches its own Stripe link, exactly five distinct links, **none in test mode**, no `/product/` link surviving, bank details untouched |
-| Unbackable claims | "Gift Aid" and "100% donation" appear on no page, and not in the header, drawer or footer |
-| Account reachability | an account link is on screen at thirteen widths from 360px to 1920px, signed in and signed out |
-| Back navigation | all eight child pages link to the right parent, all twelve top-level pages have none, browser back/forward still work |
-| Drawer | eleven sections with icons and no numbers, 44px tap targets, no focusable controls while closed |
-| Hall hire | whole-day booking only, 1/2/3 halls or kitchen-only, one hall refused on Fri/Sat/Sun with a reason rather than a grey box, the whole-venue rule, URL normalisation, the 12-month horizon, and — the assertion that matters — the exact seven fields the form puts on the wire and nothing else |
-| Venue portal | a new whole-day booking, a kitchen-only booking and a booking taken under the old session model all render correctly, and the office still writes only `status`, `office_notes` and `handled_at` |
-| Whole-day hire (SQL) | old bookings survive the migration and keep what they asked for, one hall is refused at the weekend, kitchen-only carries no room count, the retired columns are unreachable from a browser, flood control still fires, and the public calendar publishes a date and nothing else |
-| Frozen history (SQL) | a confirmed one-hall booking on a Friday that has already passed — a row every retired constraint would refuse — can still have its notes and status changed by the office. This is the section that would have caught the production failure |
-| Deposits (SQL) | asking for a date holds it for thirty minutes and the calendar closes immediately; a **second person is refused** while the first is in checkout; an unpaid hold releases itself; a repeated webhook delivery changes nothing; a payment for a date somebody else took is marked `refund_due` and logged; and the office cannot edit a reference, a Stripe session or a payment time |
-| Retention (SQL) | a **confirmed** nikāḥ request and an **attended** class sign-up older than twelve months are both deleted — the two the old code kept for ever — while eleven-month-old records survive; `dry_run` counts without deleting; an audit line is written even on a run that finds nothing; and neither purge can be called by `anon` or by a verified administrator at aal2 |
-| Privacy | no third-party fonts, only `i.ytimg.com` loaded from elsewhere, every thumbnail lazy and referrer-free |
-| Link previews | Open Graph tags present, image 1200×630 and under WhatsApp's fetch limit |
-| Articles | four articles reachable from the hub, heroes and thumbnails load, cross-links resolve |
-| Madrasah admissions | fees, times and rules on the page, no unconfirmed dates published, and the published form is a preview that sends nothing — proved by entering a complete valid application, re-enabling the disabled button from the console, and asserting zero requests leave the page |
-| Holiday planner | twelve month grids, closures painted, every Islamic date tagged as an estimate, "closed today" correct against a fixed clock |
-| Education | tiles reach both course pages, forms hidden while closed, place cap and waiting list wording |
-| Admin signpost | the button appears for administrators and nobody else, fails closed when the role lookup errors, and the hub itself reads no data at all |
-| Two-step (SQL) | staff read nothing at aal1 and everything at aal2, an administrator can still see their own role before entering the code, the public can still submit, and a scan of `pg_policies` fails if any staff policy skips the check |
-| Nikāḥ requests | two weeks' notice enforced, **no availability colouring anywhere**, prayer times read from the masjid's own timetable, Saturday 11am offered only on Saturdays, first and second choice, request wording never promises a booking |
-| Venue portal | hall bookings and nikāḥ requests in one list, each write going to its own table and its own timestamp column, and no error shown to the office when the nikāḥ table has not been created yet |
-| Adult classes | the register groups by class and cohort, capacity counts only live places, a withdrawal frees a seat, waiting positions renumber, and — the assertion that matters — the page writes **only** `status`, `office_notes`, `reviewed_by` and `reviewed_at`, never `outcome` |
-| Giving out a place (SQL) | a verified administrator cannot overfill a session, an unverified one cannot act at all, a withdrawn registration cannot be reinstated by the back door, and the `outcome` column is still unreachable from the browser |
-
-Two of those assert an absence rather than a presence, which is the point:
-nothing may publish a date the masjid has not confirmed, and nothing may paint a
-nikāḥ day as free when the site has no idea whether it is.
-
-Database policies are proved separately, against a throwaway Postgres with
-`_test_supabase_stub.sql` standing in for Supabase, before anything reaches the
-live project.
-
----
-
 ## Launch day
 
 In this order:
 
-1. **Decide what happens to the madrasah form preview link.** The Admissions
-   page links to `apply/`, labelled as a preview. That is fine on the staging
-   address, where crawlers are blocked and the form says it will not send
-   anything. It is not fine on the public domain. Either finish the `008`
-   pre-flight list and make the link a real Apply button, or take the link out.
-   Do not skip this one — it is the item most likely to be forgotten.
-2. Upload the files listed in `DEPLOY.md` to the web root. `og-image.jpg` must
-   sit in the root itself — the site refers to it by absolute address, and one
-   folder deeper means every shared link loses its picture.
-3. Point `taiyabahmasjid.com` at this site. The canonical tag and sitemap
+1. **Decide what happens to the madrasah preview link.** Fine on a staging
+   address where crawlers are blocked. Not fine on the public domain. Either
+   finish the `008` pre-flight and make it a real Apply button, or remove the
+   link. Most likely item to be forgotten.
+2. **Transfer the GitHub repository to a masjid-owned organisation** — before
+   pointing DNS, not after.
+3. Point `taiyabahmasjid.com` at the Pages site. The canonical tag and sitemap
    already name that domain.
 4. **Delete `robots.txt` and rename `robots.live.txt` to `robots.txt`.** Miss
-   this and the site works perfectly but never appears in Google. Doing it
-   *before* step 2 lets Google index the temporary address, after which the old
-   and new sites compete with each other.
-5. Update `PORTAL_URL` in the Edge Function settings, and the QR code if the app
-   has moved to its own domain by then.
+   this and the site works perfectly and never appears in Google. Doing it
+   *before* step 3 lets Google index the temporary address, after which the two
+   compete with each other.
+5. Move `PORTAL_URL` in the Edge Function settings to the live address.
+6. **Transfer the Supabase project** — transfer, not migrate.
 
-The donate links need nothing on launch day — they already point at Stripe, not
-at the old site.
+Stripe and the domain are already in the masjid's name. GitHub and Supabase are
+not, which is what steps 2 and 6 fix.
 
 ---
 
-## Page weight
+## Rules learned the hard way
 
-The document used to contain every photograph, base64-encoded. It reached
-10.3 MB, which is roughly six seconds before anything appears on a typical UK
-4G connection — on a site whose audience is overwhelmingly on phones.
+**GRANT and RLS are different things and you need both.** Postgres checks table
+privileges *before* it evaluates any policy. Migration 002 shipped with policies
+and no grants; every signed-in query failed with `permission denied`.
 
-| | before | after |
-|---|---|---|
-| `index.html` | 10.3 MB | 622 KB (253 KB gzipped) |
-| photographs in the document | 9.0 MB | none |
-| **first load, home page** | **~10.5 MB** | **~615 KB** |
-| requests on first load | 1 | 7 |
-| images fetched before you navigate anywhere | all 33 | 5 |
+**A grant is the control; a comment is not.** Migration 003 granted UPDATE on
+the whole of `hall_bookings`. This README claimed for months that the office
+"may only change status, notes and handled_at", and the code said the same in a
+comment. Neither was true — the portal simply never wrote anything else.
+Migration 016 made the documentation true. **If you find yourself writing down a
+restriction, check that something enforces it.**
 
-Three separate things were wrong, and all three are worth knowing about
-because they come back:
+**A CHECK constraint must be true forever, not just today.** Three booking rules
+were written as CHECK constraints. Postgres re-evaluates every constraint on
+UPDATE, so each froze a booking the moment it stopped satisfying it — the office
+could not add a note to a booking after the event, and nobody had noticed
+because nobody had tried. `NOT VALID` does not help. **If a rule contains
+`now()`, or describes what somebody is allowed to do, it is not a constraint.**
 
-**Base64 costs 33% before you start.** Encoding a 300 KB photograph into the
-document writes 400 KB, and gzip cannot compress it back because JPEG data is
-already compressed. That overhead applies to every image on every page load.
+**A check that only exists in JavaScript does not exist.** The staff portals
+asked for an authenticator code for months, and it was checked in the browser
+and nowhere else. Anybody with a staff password could have read hall bookings
+and admission applications straight from the API. `011` moved the check into the
+policies. **If a control is not in the database, assume it is decoration.**
 
-**Several images were simply too large.** The Shop masthead was 1800×2700 at
-2.1 MB — a photograph rendered behind a 50%-opacity scrim in a banner about
-480 px tall. `optimise-images.py` caps each image by role: 1400 px for
-mastheads, 800 px for cards, 700 px for the phone screenshots. Nothing is
-cropped and no aspect ratio changes, so every `object-fit` and
-`object-position` rule behaves exactly as it did. The Shop masthead is now
-341 KB and looks identical.
+**A count inside a `SECURITY DEFINER` function returns nothing under FORCE.** No
+error at all. The fifteen-place cap on adult courses silently counted zero and
+handed out unlimited places. `009` and `010` therefore enable RLS but do not
+force it, with the reasoning written above the line so nobody "tidies" it.
 
-**Everything loaded whether it was needed or not.** Every page lives in the
-same document, so a visitor reading the prayer times had already downloaded the
-shop, the articles and the madrasah. The images are `loading="lazy"` now, and
-the pages are `display:none` until navigated to, so a browser fetches an image
-only when its page is actually shown. The home page hero is the deliberate
-exception — `fetchpriority="high"`, no lazy attribute, because it is the first
-thing anyone sees.
+**Two payment flows that look alike and must not behave alike.** Paying the hall
+deposit books the date. Paying the nikāḥ fee books nothing. The difference is
+whether the site can see what is free — see [Money](#money).
 
-The Arabic typeface moved out too. Amiri is 74 KB and was 100 KB of
-incompressible base64 in every copy of the document; as `fonts/amiri.woff2`
-it is cached across deploys instead of being re-downloaded every time the HTML
-changes. Fraunces and Hanken Grotesk stay inline, because they set every word
-on the site and a separate request would show a flash of fallback text.
+**Access control for scheduled jobs is by GRANT, not `is_admin()`.** pg_cron
+holds no JWT, so `auth.uid()` is null and such a check fails silently every
+week.
 
-**What was deliberately not done:** WebP. It would be roughly 25% smaller
-again, but it is a compatibility bet — Safari only gained it in 2020 — and the
-win here came from not shipping the images at all until they are needed, not
-from the codec. Changing `FORMAT` in `optimise-images.py` is a one-line
-decision if someone later decides the trade is worth it.
+**`pg_net` is asynchronous.** `net.http_post` queues the request and returns, so
+a function calling it cannot know what happened. The digest reported
+`{"sent": true}` while every send was being refused at the door. **The truth is
+in `net._http_response`** — and the shape of the error body says which layer
+rejected it: JSON with a `code` field is Supabase's gateway, a plain string is
+our own function.
+
+**A test that cannot fail is worse than no test.** One browser suite installed
+its fake Supabase client by intercepting a file that no longer existed, so every
+scenario silently began asserting against a sign-in screen — and still printed
+PASS. Separately, four SQL suites had stopped running altogether: one had been
+dead for a fortnight because a migration made a column NOT NULL and its fixture
+did not supply one. The folder still had eleven test files in it the whole time.
+
+The root cause was that the scripts building the test databases lived in a
+scratch directory on one machine. **They are in `db/harness/` now.** And the
+general rule this bought: **deliberately break the code and check the suite
+notices.** Every suite here has been negative-controlled that way.
+
+**Vacuous passes are the failure mode to watch for.** An `eok()` on an UPDATE
+that matched zero rows "passes". An `expect_fail()` on an `INSERT … SELECT` that
+matched no rows "passes", because inserting nothing raises nothing. And until
+September 2026 a `NULL` assertion printed as FAIL but was counted as neither
+passed nor failed — a suite could have reported "0 failed" while proving
+nothing. **After an `eok` on a write, read the row back.**
 
 ---
 
 ## Known limitations
 
-- **The site is no longer one self-contained file.** That was the point — see
-  [Page weight](#page-weight) — but it means `index.html` alone is not the
-  website. Upload it without `img/` and every page loads, reads
-  correctly, and shows a broken icon where each photograph should be.
-  `build.py` refuses to build if a photograph is missing locally, which catches
-  it before it ships, but nothing can catch a folder left out of the upload.
-- **`assets/` is committed as `Assets/` with a capital A.** GitHub Pages serves
-  from a case-sensitive filesystem, so `assets/logo-cream.png` 404s. The 404
-  page now points at the copies in the web root instead, which do not depend on
-  how that folder happens to be capitalised. Worth renaming properly one day.
-- **Several published figures are still unconfirmed by the masjid**: the
-  madrasah academic year, date-of-birth windows and deadline in
-  `apply/config.js`; which evening the Arabic class runs; the place cap on the
-  Ghusl workshop; and whether either course has a fee. The pages are written so
-  that nothing unconfirmed is stated as fact, but they are thinner than they
-  should be until those answers come back.
-- **The office is not emailed when a request arrives.** Hall bookings, nikāḥ
-  requests and class sign-ups all land silently in their portals, so somebody has
-  to look. Sending email needs a verified domain and DNS records; until that is
-  done the portals are the only notification there is.
-- **Two retention promises are not yet kept by the code.** The privacy notice
-  says nikāḥ requests and class sign-ups are deleted after twelve months; the
-  purge functions only remove rows that were declined, withdrawn or marked as a
-  no-show. It is a trustees' decision, on the agenda for 11 September 2026 — see
-  [Retention](#retention). Neither purge is on a schedule yet either; only hall
-  bookings are.
-- **`012_remove_ethnicity.sql` is not in the repository** and it is not clear
-  whether it was ever applied. The admissions form no longer asks for ethnicity,
-  so nothing is being collected, but the column may still exist on
-  `admission_applications`. Settle it before that form is switched on.
-- **The prayer timetable holds 2026 only.** It degrades honestly — the header
-  falls back to "open the app" — but it needs the 2027 timetable before
-  1 January 2027.
-- **Hall hire prices are still marked as placeholders in the code**
-  (`member 100/120`, `non-member 150/180`) and the calculation runs in the
-  browser, so both tiers are readable via View Source. The masjid has been asked
-  to confirm or correct the figures.
-- **The funerals page carries no prices at all.** The masjid has been asked what
-  to publish, member and non-member.
-- **The Imams' Advice form does not send anything itself.** It hands the message
-  to the visitor's own email app via `mailto:` — so the visitor must still press
-  send, and a device with no mail app configured does nothing at all. The wording
-  on the page says both of those plainly rather than promising delivery. Phase 2
-  replaces it with an Edge Function that emails the office and stores nothing:
-  deliberately *not* a database table, because "ask the imam" collects marital,
-  health and bereavement matters that would be Article 9 data the moment they
-  were written down.
-- **Booking emails are not connected.** The Edge Function is written and tested;
-  it needs a verified sending domain. Until then a request waits in the portal.
-- **The app is still served from a personal GitHub Pages address**, which the QR
-  code and five links resolve to.
-- **The notification function always replies OK to Supabase, even on failure.**
-  That prevents a retry loop emailing the office repeatedly, but it means a
-  silent failure stays silent. Send a test booking every few months.
-- **YouTube thumbnails are blocked by some ad blockers.** `i.ytimg.com` is on
-  several tracker blocklists, so a visitor running uBlock Origin or Brave sees
-  the plum fallback panel rather than the video still. Inlining the twelve images
-  would remove the dependency entirely and restore the zero-third-party position.
+- **The Stripe payment path has never recorded a real payment.** Everything is
+  proved against fixtures and a local signature check. One test-mode card
+  through the booking form proves the webhook, the database, the office alert
+  and the hirer's confirmation together. Until then the masjid is taking
+  deposits on trust.
+- **Prayer times end 31 December 2026.** The 2027 timetable must be supplied.
+- **Adult class fees** are still "ring the office".
+- **`MAIL_TO` has one address.** One inbox is a single point of failure the
+  first time somebody is on holiday.
+- **The madrasah portal is a shell.** No DPIA, no real pupil data.
+- **No shop, no mobile app, no in-mosque screens yet.** All separate work; none
+  of it blocks the website.
+
+## For the committee
+
+1. **Cancelling a paid booking refunds in full**, while the published terms call
+   the deposit non-refundable. The asymmetry is right — it only applies when the
+   *masjid* cancels — but it should be minuted.
+2. **Retention versus accounting records.** Bookings are deleted six months
+   after the date, nikāḥ requests twelve months after they are sent; both now
+   carry Stripe payments, and charities are generally expected to keep
+   transaction records for six years. Likely answer: keep a minimal financial
+   record for six years, delete the personal data on the published schedule.
 
 ---
 
-## About this project
-
-Part of a wider *Taiyabah Masjid — Complete Overhaul*, alongside the
-[prayer times app](https://github.com/yameenbux/Taiyabah-Mosque-App) and the
-[home smart screen](https://github.com/yameenbux/Taiyabah-Masjid-HomeSmartScreen).
-Branding, fonts and prayer data are shared with those sibling repositories
-rather than reinvented here.
-
 ## Credits
 
-Built for Bolton Central Islamic Society. The Taiyabah Masjid name, the masjid's
-logo and the prayer timetable belong to the charity — the timetable is the
-masjid's own published times, not calculated by this site and not taken from a
-third-party aggregator.
-
-Typefaces are [Fraunces](https://github.com/undercasetype/Fraunces),
-[Hanken Grotesk](https://github.com/globalfoundries/HankenGrotesk) and
-[Amiri](https://github.com/aliftype/amiri), all under the SIL Open Font License
-1.1, self-hosted here as that licence expressly permits. Photography of the
-masjid and the new build was supplied by the masjid. Shop category images are
-stock photography standing in until the masjid's own product photographs are
-available.
-
-Bolton Council of Mosques contact details on the funeral services page were
-taken from BCoM's own published information and **confirmed with the masjid on
-28 August 2026**.
-
-Designed and built by **[YSB Designs](https://ysbdesigns.uk)**.
+Built for Bolton Central Islamic Society. Fraunces, Hanken Grotesk and Amiri are
+self-hosted under their open licences. Photographs by the masjid.
