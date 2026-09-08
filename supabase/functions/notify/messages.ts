@@ -65,6 +65,41 @@ export function longDate(iso?: string | null): string {
   });
 }
 
+/* SUBJECT LINES ARE PURE ASCII. THIS IS NOT A STYLE CHOICE.
+
+   The first live nikāḥ alert arrived with its subject shown as
+       =?utf-8?Q?Nik=c4=81=e1=b8=a5 date requested =e2=80=94 Sunday 27 Sep...
+   because it contained ā, ḥ and an em dash. Non-ASCII in a subject has to be
+   MIME encoded, RFC 2047 caps a single encoded-word at 75 characters, and the
+   result was 78 — so the client refused to decode it and printed the raw
+   encoding instead.
+
+   Rather than rely on every mail client folding long encoded-words correctly,
+   subjects are written in plain ASCII and this strips anything that slips
+   through. The email BODY is unaffected: it is HTML with a charset, so ā and
+   ḥ render properly there and the masjid's own words are not flattened where
+   it matters. */
+export function ascii(v: string): string {
+  return v
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // ā -> a, ḥ -> h
+    .replace(/[\u2010-\u2015]/g, "-")                   // – — ‒ -> -
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\u2026/g, "...")
+    .replace(/[^\x20-\x7E]/g, "");                      // anything left
+}
+
+/* Short form for subject lines: "Sat 26 Sep 2026". The long form is fine in
+   the body but eats the subject, and clients truncate what they show. */
+export function shortDate(iso?: string | null): string {
+  if (!iso) return "";
+  const parts = String(iso).split("-").map(Number);
+  if (parts.length !== 3 || parts.some((n) => !isFinite(n))) return String(iso);
+  return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", year: "numeric",
+  }).replace(/,/g, "");
+}
+
 export function money(p?: number | null): string {
   if (p === null || p === undefined || !isFinite(p)) return "";
   return "£" + (p / 100).toFixed(2).replace(/\.00$/, "");
@@ -158,7 +193,10 @@ export function officeMessage(e: Event): Message | null {
       ["Deposit", esc(money(e.amount_p) || "£100")],
     ];
     return {
-      subject: `Astley Hall booked — ${longDate(e.booking_date)} (${ref})`,
+      // Informational. A human does not have to DO anything — the payment
+      // already did it. Reserving the loud words for the two that need
+      // acting on is what keeps them meaning something.
+      subject: ascii(`Hall booked and paid - ${shortDate(e.booking_date)} (${ref})`),
       html: shell(
         "A date has been booked and paid for",
         "The deposit has gone through, so this booking is <strong>confirmed</strong>. " +
@@ -186,9 +224,9 @@ export function officeMessage(e: Event): Message | null {
       ["Why", esc(e.reason ?? "see the portal")],
     ];
     return {
-      // Said plainly in the subject line, because this is the one that must
-      // not be skimmed past. The masjid is holding money it cannot keep.
-      subject: `ACTION NEEDED — refund owed, ${ref}`,
+      // Somebody must act, and until they do the masjid is holding money it
+      // cannot keep.
+      subject: ascii(`Refund owed - ATTENTION REQUIRED - ${ref}`),
       html: shell(
         "Money needs refunding",
         "Somebody has paid the masjid for something it cannot give them. " +
@@ -215,7 +253,14 @@ export function officeMessage(e: Event): Message | null {
       ["Reference", esc(ref)],
     ];
     return {
-      subject: `Nikāḥ date requested — ${longDate(e.booking_date)} (${ref})`,
+      // Somebody must ring the family. Nothing else in the system will.
+      //
+      // It says REQUEST, not booking, on purpose. A nikāḥ request is not a
+      // booking — the masjid does not publish its diary and the website
+      // cannot know whether the date is free. If the subject line says
+      // "booking" the office starts treating it as one, which is the exact
+      // confusion the body of the email exists to prevent.
+      subject: ascii(`Nikah request - ATTENTION REQUIRED - ${shortDate(e.booking_date)} (${ref})`),
       html: shell(
         "Somebody has asked for a nikāḥ date",
         "This is a <strong>request</strong>, not a booking. The masjid does not " +
@@ -241,7 +286,7 @@ export function officeMessage(e: Event): Message | null {
       ["Paid", `<strong>${esc(money(e.amount_p))}</strong>`],
     ];
     return {
-      subject: `Nikāḥ fee paid — ${ref}`,
+      subject: ascii(`Nikah fee paid - ${ref}`),
       html: shell(
         "A nikāḥ fee has been paid online",
         "The money has arrived. <strong>This does not agree the date</strong> — " +
@@ -281,7 +326,7 @@ export function publicMessage(e: Event): Message | null {
       ["Deposit paid", esc(money(e.amount_p) || "£100")],
     ];
     return {
-      subject: `Your booking is confirmed — ${longDate(e.booking_date)} (${ref})`,
+      subject: ascii(`Your booking is confirmed - ${shortDate(e.booking_date)} (${ref})`),
       html: shell(
         "Your booking is confirmed",
         "Thank you — your deposit has gone through and <strong>the date is yours</strong>. " +
@@ -307,7 +352,7 @@ export function publicMessage(e: Event): Message | null {
       ["Reference", `<strong>${esc(ref)}</strong>`],
     ];
     return {
-      subject: `We have your nikāḥ request — ${ref}`,
+      subject: ascii(`We have your nikah request - ${ref}`),
       html: shell(
         "We have your request",
         "Thank you. <strong>This is not a booking yet.</strong> The masjid will " +

@@ -25,7 +25,7 @@ function assertStringIncludes(got: string, want: string, msg?: string): void {
 
 import {
   type Event, officeMessage, publicMessage,
-  longDate, money, whatWasHired, slotLabel, esc,
+  longDate, shortDate, money, whatWasHired, slotLabel, esc, ascii,
 } from "./messages.ts";
 
 const HALL: Event = {
@@ -123,7 +123,7 @@ Deno.test("refund due: shouts, because it is the one nobody must skim past", () 
     ...HALL, kind: "refund_due", amount_p: 10000,
     reason: "Paid twice — the first payment is the one on file",
   })!;
-  assertStringIncludes(m.subject, "ACTION NEEDED");
+  assertStringIncludes(m.subject, "ATTENTION REQUIRED");
   assertStringIncludes(m.subject, "HH-26-0007");
   assertStringIncludes(m.html, "£100");
   assertStringIncludes(m.html, "Paid twice");
@@ -191,6 +191,91 @@ Deno.test("nothing is sent without a reference to quote", () => {
 
 Deno.test("a refund is a conversation, so no template is sent to the payer", () => {
   assertEquals(publicMessage({ ...HALL, kind: "refund_due" }), null);
+});
+
+/* ---------------------------------------------------- subject lines ----- */
+
+Deno.test("EVERY SUBJECT IS PURE ASCII", () => {
+  // The first live alert arrived showing
+  //   =?utf-8?Q?Nik=c4=81=e1=b8=a5 date requested =e2=80=94 Sunday 27 Sep...
+  // because the subject held ā, ḥ and an em dash. Non-ASCII must be MIME
+  // encoded, RFC 2047 caps one encoded-word at 75 characters, the result was
+  // 78, and the client gave up and printed the raw encoding.
+  //
+  // Body text is not affected and is not checked here — it is HTML with a
+  // charset, so the masjid's own words render properly there.
+  const events: Event[] = [
+    HALL, { ...HALL, kind: "refund_due" }, NIKAH,
+    { ...NIKAH, kind: "nikah_fee_paid", amount_p: 10000 },
+  ];
+  for (const e of events) {
+    for (const m of [officeMessage(e), publicMessage(e)]) {
+      if (!m) continue;
+      const bad = [...m.subject].filter((c) => c.charCodeAt(0) > 126);
+      assert(bad.length === 0,
+        `non-ASCII in subject ${JSON.stringify(m.subject)}: ` +
+        bad.map((c) => `U+${c.charCodeAt(0).toString(16)}`).join(" "));
+    }
+  }
+});
+
+Deno.test("no subject is long enough to be truncated", () => {
+  // Most clients show around 70 characters. Past that the reference — the one
+  // thing the office needs to quote — falls off the end.
+  const events: Event[] = [
+    HALL, { ...HALL, kind: "refund_due" }, NIKAH,
+    { ...NIKAH, kind: "nikah_fee_paid", amount_p: 10000 },
+  ];
+  for (const e of events) {
+    for (const m of [officeMessage(e), publicMessage(e)]) {
+      if (!m) continue;
+      assert(m.subject.length <= 72,
+        `subject is ${m.subject.length} chars: ${m.subject}`);
+    }
+  }
+});
+
+Deno.test("ATTENTION REQUIRED means a human must act, and only then", () => {
+  // If everything shouts, nothing does. Only the two that need somebody to
+  // pick up a phone or issue a refund carry it.
+  const shouts = (e: Event) => (officeMessage(e)?.subject ?? "").includes("ATTENTION REQUIRED");
+  assert(shouts(NIKAH), "a nikah request does not flag that somebody must ring");
+  assert(shouts({ ...HALL, kind: "refund_due" }), "a refund owed does not flag for attention");
+  assert(!shouts(HALL), "a paid deposit shouts, but nobody has to do anything");
+  assert(!shouts({ ...NIKAH, kind: "nikah_fee_paid" }), "a paid fee shouts unnecessarily");
+});
+
+Deno.test("a nikah request subject says REQUEST, never booking", () => {
+  // The office reads the subject and acts on it. Calling a request a booking
+  // in the subject undoes what the whole email exists to say.
+  const sub = officeMessage(NIKAH)!.subject.toLowerCase();
+  assertStringIncludes(sub, "request");
+  assert(!sub.includes("booking"), `subject calls it a booking: ${sub}`);
+});
+
+Deno.test("the reference is in every subject that has one", () => {
+  assertStringIncludes(officeMessage(HALL)!.subject, "HH-26-0007");
+  assertStringIncludes(officeMessage(NIKAH)!.subject, "NK-26-0004");
+  assertStringIncludes(publicMessage(HALL)!.subject, "HH-26-0007");
+  assertStringIncludes(publicMessage(NIKAH)!.subject, "NK-26-0004");
+});
+
+Deno.test("ascii() flattens what a subject cannot carry", () => {
+  assertEquals(ascii("Nikāḥ — 'quoted' “curly”"), "Nikah - 'quoted' \"curly\"");
+  assertEquals(ascii("plain text"), "plain text");
+});
+
+Deno.test("the short date is short, and still the right day", () => {
+  // Not the exact month spelling — en-GB gives "Sep" on some ICU versions and
+  // "Sept" on others, and pinning it makes this fail on a Deno upgrade rather
+  // than on a real fault. What matters is the DAY and that it stays short.
+  const d = shortDate("2026-09-26");
+  assertStringIncludes(d, "26");
+  assertStringIncludes(d, "2026");
+  assert(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)/.test(d), `no weekday: ${d}`);
+  assert(d.length <= 18, `short date is ${d.length} chars: ${d}`);
+  // And it must be the 26th, not the 25th — the UTC off-by-one again.
+  assert(!d.includes("25"), `off by one: ${d}`);
 });
 
 /* ------------------------------------------------------------ shape ----- */
