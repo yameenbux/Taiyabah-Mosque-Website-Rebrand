@@ -19,7 +19,8 @@ export type Kind =
   | "deposit_paid"
   | "refund_due"
   | "nikah_requested"
-  | "nikah_fee_paid";
+  | "nikah_fee_paid"
+  | "digest";
 
 export interface Event {
   kind: Kind;
@@ -34,6 +35,13 @@ export interface Event {
   slot?: string | null;           // nikāḥ prayer slot
   reason?: string | null;         // why a refund is owed
   portal?: string | null;         // link to the right portal page
+
+  // The Monday digest only. Counts, never people.
+  new_nikah?: number;
+  oldest_nikah_days?: number;
+  refunds_due?: number;
+  balances_due?: number;
+  this_week?: number;
 }
 
 export interface Message {
@@ -177,6 +185,8 @@ function plain(heading: string, lead: string, rows: [string, string][],
    -------------------------------------------------------------------------- */
 
 export function officeMessage(e: Event): Message | null {
+  if (e.kind === "digest") return digestMessage(e);
+
   const ref = e.reference ?? "(no reference)";
   const tel = String(e.phone ?? "").replace(/\s/g, "");
   const phoneCell = e.phone
@@ -305,6 +315,78 @@ export function officeMessage(e: Event): Message | null {
   }
 
   return null;
+}
+
+/* --------------------------------------------------------------------------
+   THE MONDAY DIGEST
+
+   Counts, and nothing else. No names, no phone numbers, no references — the
+   portal holds all of that and this only has to get somebody to open it.
+
+   The database decides whether to send at all: send_weekly_digest() returns
+   without posting when nothing is outstanding. A weekly email that always
+   arrives becomes furniture within a month, and then the week it says a
+   refund is owed gets skimmed past with the rest.
+   -------------------------------------------------------------------------- */
+
+function digestMessage(e: Event): Message {
+  const nikah    = e.new_nikah ?? 0;
+  const refunds  = e.refunds_due ?? 0;
+  const balances = e.balances_due ?? 0;
+  const week     = e.this_week ?? 0;
+  const oldest   = e.oldest_nikah_days ?? 0;
+
+  const rows: [string, string][] = [];
+
+  if (refunds > 0) {
+    rows.push(["Refunds owed",
+      `<strong style="color:#8B2E2E;">${refunds}</strong> ` +
+      `&mdash; the masjid is holding money it cannot keep`]);
+  }
+  if (nikah > 0) {
+    // The number that makes a shared inbox honest. "2 requests" is easy to
+    // assume somebody else has handled; "waiting 9 days" is not.
+    rows.push(["Nikah requests unanswered",
+      `<strong>${nikah}</strong>` +
+      (oldest > 0
+        ? ` &mdash; the oldest has been waiting <strong>${oldest} day${oldest === 1 ? "" : "s"}</strong>`
+        : "")]);
+  }
+  if (balances > 0) {
+    rows.push(["Balances due within 30 days", `<strong>${balances}</strong>`]);
+  }
+  rows.push(["Booked this week", String(week)]);
+
+  // The subject carries the headline so it can be judged without opening it.
+  const headline = refunds > 0
+    ? `${refunds} refund${refunds === 1 ? "" : "s"} owed`
+    : nikah > 0
+      ? `${nikah} nikah request${nikah === 1 ? "" : "s"} waiting`
+      : balances > 0
+        ? `${balances} balance${balances === 1 ? "" : "s"} due`
+        : "this week at the masjid";
+
+  const needsAction = refunds > 0 || nikah > 0;
+
+  return {
+    subject: ascii(`Masjid weekly - ${headline}` +
+                   (needsAction ? " - ATTENTION REQUIRED" : "")),
+    html: shell(
+      "Still waiting for somebody",
+      "This only arrives when something needs doing. Everything below is in " +
+      "the portal now and will stay there until somebody deals with it.",
+      rows,
+      "If nobody has time this week, the refunds are the ones that matter — " +
+      "that is somebody else's money.",
+      e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+    text: plain(
+      "Still waiting for somebody",
+      "This only arrives when something needs doing.",
+      rows,
+      "If nobody has time this week, the refunds matter most — that is " +
+      "somebody else's money.",
+      e.portal ?? undefined),
+  };
 }
 
 /* --------------------------------------------------------------------------

@@ -278,6 +278,82 @@ Deno.test("the short date is short, and still the right day", () => {
   assert(!d.includes("25"), `off by one: ${d}`);
 });
 
+/* ------------------------------------------------------ the digest ----- */
+
+const DIGEST: Event = {
+  kind: "digest",
+  new_nikah: 2, oldest_nikah_days: 9,
+  refunds_due: 1, balances_due: 3, this_week: 2,
+  portal: "https://example.test/venue/",
+};
+
+Deno.test("the digest leads with refunds — somebody else's money", () => {
+  const m = officeMessage(DIGEST)!;
+  assertStringIncludes(m.subject, "refund");
+  assertStringIncludes(m.subject, "ATTENTION REQUIRED");
+  assertStringIncludes(m.html, "cannot keep");
+});
+
+Deno.test("it says how long the oldest request has waited", () => {
+  // "2 requests" is easy to assume somebody else has handled. "waiting 9 days"
+  // is not. This is the whole answer to a shared inbox.
+  const m = officeMessage(DIGEST)!;
+  assertStringIncludes(m.html, "9 days");
+});
+
+Deno.test("it counts one day as a day, not 1 days", () => {
+  const m = officeMessage({ ...DIGEST, refunds_due: 0, new_nikah: 1,
+                            oldest_nikah_days: 1 })!;
+  assertStringIncludes(m.html, "1 day");
+  assert(!m.html.includes("1 days"), "said '1 days'");
+  assertStringIncludes(m.subject, "1 nikah request waiting");
+});
+
+Deno.test("a quiet-ish week does not shout", () => {
+  // Balances are a chore, not an emergency. Nobody has to act today.
+  const m = officeMessage({ kind: "digest", new_nikah: 0, refunds_due: 0,
+                            balances_due: 2, this_week: 1 })!;
+  assert(!m.subject.includes("ATTENTION REQUIRED"),
+         `balances alone should not shout: ${m.subject}`);
+  assertStringIncludes(m.subject, "2 balances due");
+});
+
+Deno.test("what is not outstanding is not listed at all", () => {
+  // An email full of zeroes teaches people it says nothing.
+  const m = officeMessage({ kind: "digest", new_nikah: 0, refunds_due: 0,
+                            balances_due: 2, this_week: 1 })!;
+  assert(!/refunds owed/i.test(m.html), "listed refunds when there are none");
+  assert(!/unanswered/i.test(m.html), "listed nikah requests when there are none");
+});
+
+Deno.test("THE DIGEST CARRIES NO PERSONAL DATA", () => {
+  // It is counts and nothing else. Names, phones and references live in the
+  // portal; an email that travels through a mail server should not carry them
+  // when a number will do.
+  const m = officeMessage({ ...DIGEST,
+    // deliberately smuggled in — they must be ignored
+    name: "Yusuf Patel", phone: "07700 900555",
+    reference: "NK-26-0004", email: "yusuf@example.test" } as Event)!;
+  for (const leak of ["Yusuf", "07700", "NK-26-0004", "yusuf@"]) {
+    assert(!m.html.includes(leak), `digest leaked ${leak}`);
+    assert(!m.text.includes(leak), `digest leaked ${leak} into the text`);
+    assert(!m.subject.includes(leak), `digest leaked ${leak} into the subject`);
+  }
+});
+
+Deno.test("the digest subject is ASCII and short like the others", () => {
+  for (const e of [DIGEST, { kind: "digest", balances_due: 2 } as Event]) {
+    const m = officeMessage(e)!;
+    assert([...m.subject].every((c) => c.charCodeAt(0) <= 126),
+           `non-ASCII: ${m.subject}`);
+    assert(m.subject.length <= 72, `${m.subject.length} chars: ${m.subject}`);
+  }
+});
+
+Deno.test("nothing is sent to the public in a digest", () => {
+  assertEquals(publicMessage(DIGEST), null);
+});
+
 /* ------------------------------------------------------------ shape ----- */
 
 Deno.test("every message has all three parts, and the text one is readable", () => {
