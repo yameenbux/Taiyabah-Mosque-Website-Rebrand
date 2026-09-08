@@ -4,10 +4,15 @@
 --  Proves migration 011: a staff session that has not passed two-step
 --  verification can read nothing, and one that has works exactly as before.
 --
---  Run against a database built from, in order:
---      _test_supabase_stub.sql (madrasah-db)
---      001 .. 007  (madrasah-db)
---      008, 009, 010, 011  (this folder)
+--  Run against a FRESHLY BUILT database:  bash /tmp/build_dep.sh t_2s
+--  (001 .. 007 from madrasah-db, then 008 .. 017 here, then 011 again)
+--
+--  It USED to say "008, 009, 010, 011" and that stopped being true at 016,
+--  which made `reference` NOT NULL — so this file errored out on its own
+--  fixture and proved nothing at all from 016 until 8 September 2026. This is
+--  the file that guards two-step verification on seventeen policies; a test
+--  suite that cannot start is worse than no test suite, because the folder
+--  still looks covered.
 --
 --  Every assertion runs as the `authenticated` role, never as a superuser.
 --  Test 00 proves that role really is subject to RLS — without it the whole
@@ -21,7 +26,13 @@ grant all on r to anon, authenticated;
 
 create or replace function pg_temp.note(l text, cond boolean, d text default '')
 returns void language plpgsql as $$
-begin insert into r values (l, cond, d); end $$;
+begin
+  -- coalesce: a NULL assertion (comparing against a column that turned out
+  -- to be NULL) used to display as FAIL but was counted as neither passed
+  -- nor failed, so the summary line could read "0 failed" over a broken
+  -- suite. NULL is not a pass.
+  insert into r values (l, coalesce(cond, false), d);
+end $$;
 
 create or replace function pg_temp.efail(l text, s text) returns void language plpgsql as $$
 begin begin execute s; insert into r values (l,false,'unexpectedly SUCCEEDED');
@@ -75,9 +86,12 @@ on conflict do nothing;
 -- Whole-day hire, by the number of halls (migration 014). The old
 -- session/hall/kitchen shape is refused by halls_count_valid now, which is
 -- how this fixture found out the model had changed.
+-- `reference` became NOT NULL in 016, when paying started to hold the date.
 insert into public.hall_bookings
-  (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
-values (current_date + 40, 'halls', 2, 'Imran', 'Ali', '4 Mill St', '07700900111');
+  (booking_date, hire_type, halls_count, first_name, last_name, address, phone,
+   reference)
+values (current_date + 40, 'halls', 2, 'Imran', 'Ali', '4 Mill St', '07700900901',
+        'HH-TEST-0001');
 
 insert into public.nikah_requests
   (reference, preferred_date, slot, preferred_time, contact_name, contact_role,
@@ -113,17 +127,20 @@ select pg_temp.note('office at aal1 reads no nikah requests',
 
 select set_config('test.aal', 'aal2', false);
 select pg_temp.note('office at aal2 reads hall bookings',
-  (select count(*) from public.hall_bookings) = 1);
+  (select count(*) from public.hall_bookings where phone = '07700900901') = 1,
+  (select count(*)::text from public.hall_bookings));
 select pg_temp.note('office at aal2 reads nikah requests',
   (select count(*) from public.nikah_requests) = 1);
 
 -- Writing is gated the same way as reading.
 select set_config('test.aal', 'aal1', false);
 select pg_temp.changed('office at aal1 changes nothing',
-  $$update public.hall_bookings set status = 'confirmed'$$, 0);
+  $$update public.hall_bookings set status = 'confirmed'
+     where phone = '07700900901'$$, 0);
 select set_config('test.aal', 'aal2', false);
 select pg_temp.changed('office at aal2 can record an outcome',
-  $$update public.hall_bookings set status = 'confirmed'$$, 1);
+  $$update public.hall_bookings set status = 'confirmed'
+     where phone = '07700900901'$$, 1);
 reset role;
 
 
@@ -219,10 +236,24 @@ select pg_temp.eok('the public can still request a nikah date',
       'contact_phone','07700900123','contact_email','p@example.test',
       'privacy_accepted', true))$$);
 
-select pg_temp.eok('the public can still submit a hall booking',
+-- 016 took the INSERT grant away from anon and put the booking behind
+-- request_hall_booking(), which is the only thing that can take the advisory
+-- lock and the thirty-minute hold. A browser that could still insert directly
+-- would be a way to book a date without ever holding it — so the old
+-- assertion here (a bare INSERT succeeding) is now exactly backwards.
+select pg_temp.efail('the public can no longer insert a booking directly',
   $$insert into public.hall_bookings
-      (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
-    values (current_date + 60, 'halls', 2, 'Sara', 'Bi', '9 Green St', '07700900444')$$);
+      (booking_date, hire_type, halls_count, first_name, last_name, address, phone,
+       reference)
+    values (current_date + 60, 'halls', 2, 'Sara', 'Bi', '9 Green Street, Bolton',
+            '07700900444', 'HH-TEST-0009')$$);
+
+select pg_temp.eok('but can still request one through the front door',
+  $$select public.request_hall_booking(jsonb_build_object(
+      'booking_date', (current_date + 60)::text,
+      'hire_type', 'halls', 'halls_count', 2,
+      'first_name', 'Sara', 'last_name', 'Bi',
+      'address', '9 Green Street, Bolton', 'phone', '07700900444'))$$);
 
 -- anon holds no SELECT grant at all, so this is refused before RLS is even
 -- consulted. Two locks on the same door, which is the intended shape.

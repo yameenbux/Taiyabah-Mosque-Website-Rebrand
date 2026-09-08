@@ -21,7 +21,13 @@ grant all on r to anon, authenticated;
 
 create or replace function pg_temp.note(l text, cond boolean, d text default '')
 returns void language plpgsql as $$
-begin insert into r values (l, cond, d); end $$;
+begin
+  -- coalesce: a NULL assertion (comparing against a column that turned out
+  -- to be NULL) used to display as FAIL but was counted as neither passed
+  -- nor failed, so the summary line could read "0 failed" over a broken
+  -- suite. NULL is not a pass.
+  insert into r values (l, coalesce(cond, false), d);
+end $$;
 
 create or replace function pg_temp.efail(l text, s text) returns void language plpgsql as $$
 begin begin execute s; insert into r values (l,false,'unexpectedly SUCCEEDED');

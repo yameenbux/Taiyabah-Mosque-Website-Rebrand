@@ -26,6 +26,13 @@ do $$ begin
   end if;
 end $$;
 
+-- 013 made these functions write to admin_audit. In production one role owns
+-- everything, so a SECURITY DEFINER function is exempt from RLS on the audit
+-- table; locally it is not unless admin_audit moves too. Without this the
+-- submission fails, no application row exists, and the expect_fail() checks
+-- below "pass" because INSERT ... SELECT with no matching rows inserts
+-- nothing and raises nothing. A vacuous pass in the opposite direction.
+alter table public.admin_audit               owner to app_owner;
 alter table public.admission_applications    owner to app_owner;
 alter table public.admission_students        owner to app_owner;
 alter table public.admission_student_choices owner to app_owner;
@@ -134,7 +141,11 @@ reset role;
 -- 4. an admin can read, and can only update the workflow columns
 -- ---------------------------------------------------------------------------
 set role authenticated;
+-- 011: the admin policies are verified_admin() = is_admin() AND is_aal2(),
+-- and is_aal2() reads test.aal. app.is_admin alone leaves this at aal1.
 set app.is_admin = 'on';
+select set_config('test.uid', '11111111-1111-1111-1111-111111111111', false);
+select set_config('test.aal', 'aal2', false);
 insert into results
 select 'admin reads the application', count(*) = 1, count(*)::text
   from public.admission_applications;
@@ -182,6 +193,10 @@ select pg_temp.expect_fail('an application must name a child', $q$
 -- 6. retention purge is admin-only
 -- ---------------------------------------------------------------------------
 set role authenticated;
+-- test.uid/test.aal are session-scoped and outlive `reset role`; put them
+-- back or a non-admin block inherits the admin identity.
+select set_config('test.uid', '', false);
+select set_config('test.aal', 'aal1', false);
 set app.is_admin = 'off';
 select pg_temp.expect_fail('non-admin cannot purge',
   'select public.purge_old_admission_applications(24)');

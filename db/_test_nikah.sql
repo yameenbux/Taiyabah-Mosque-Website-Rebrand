@@ -6,10 +6,17 @@
 \set ON_ERROR_STOP on
 do $$ begin if not exists (select 1 from pg_roles where rolname='app_owner')
   then create role app_owner nosuperuser nobypassrls login; end if; end $$;
+-- 013 made these functions write to admin_audit. In production every object
+-- shares one owner, so a SECURITY DEFINER function is exempt from RLS on the
+-- audit table. Locally it is not unless admin_audit moves too — without this
+-- line the suite dies on "new row violates row-level security policy" and
+-- proves nothing.
+alter table public.admin_audit owner to app_owner;
 alter table public.nikah_requests owner to app_owner;
 alter sequence public.nikah_reference_seq owner to app_owner;
 alter function public.request_nikah_date(jsonb)        owner to app_owner;
-alter function public.purge_old_nikah_requests(int)    owner to app_owner;
+-- 015 added a dry_run flag. See the note in _test_courses.sql.
+alter function public.purge_old_nikah_requests(int, boolean) owner to app_owner;
 grant insert on public.admin_audit to app_owner;
 grant usage, select on sequence public.admin_audit_id_seq to app_owner;
 grant usage on schema public to anon, authenticated, app_owner;
@@ -115,7 +122,13 @@ select pg_temp.eok('two couples may request the same date',
 reset role;
 
 -- 5. admin workflow
+-- 011 made the admin policies verified_admin() = is_admin() AND is_aal2().
+-- Without test.aal this session sat at aal1, RLS matched zero rows, and the
+-- eok() below "passed" on an UPDATE that changed nothing — the vacuous pass
+-- this project has now been bitten by three times.
 set role authenticated; set app.is_admin='on';
+select set_config('test.uid', '11111111-1111-1111-1111-111111111111', false);
+select set_config('test.aal', 'aal2', false);
 insert into r select 'admin can read requests', count(*) >= 5, count(*)::text from public.nikah_requests;
 select pg_temp.eok('admin can confirm a request',
   $q$update public.nikah_requests set status='confirmed', agreed_date=preferred_date
@@ -123,13 +136,23 @@ select pg_temp.eok('admin can confirm a request',
 select pg_temp.efail('admin cannot rewrite the requested date',
   'update public.nikah_requests set preferred_date = current_date + 999');
 reset role;
+-- test.uid/test.aal are SESSION settings and survive `reset role`; put them
+-- back or this block inherits the admin identity and proves the opposite.
+select set_config('test.uid', '', false);
+select set_config('test.aal', 'aal1', false);
 set role authenticated; set app.is_admin='off';
 insert into r select 'non-admin reads nothing', count(*)=0, count(*)::text from public.nikah_requests;
-select pg_temp.efail('non-admin cannot purge','select public.purge_old_nikah_requests(12)');
+select pg_temp.efail('non-admin cannot purge','select public.purge_old_nikah_requests(12, true)');
 reset role;
 
 -- 6. a withdrawn request frees the same date for the same person
+-- 011 made the admin policies verified_admin() = is_admin() AND is_aal2().
+-- Without test.aal this session sat at aal1, RLS matched zero rows, and the
+-- eok() below "passed" on an UPDATE that changed nothing — the vacuous pass
+-- this project has now been bitten by three times.
 set role authenticated; set app.is_admin='on';
+select set_config('test.uid', '11111111-1111-1111-1111-111111111111', false);
+select set_config('test.aal', 'aal2', false);
 update public.nikah_requests set status='withdrawn'
  where contact_email='couple9@example.com';
 reset role;

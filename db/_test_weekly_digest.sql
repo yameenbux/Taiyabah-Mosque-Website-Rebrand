@@ -1,7 +1,7 @@
 -- ===========================================================================
 --  _test_weekly_digest.sql — LOCAL ONLY. NEVER RUN AGAINST SUPABASE.
 --
---  Proves migration 019.
+--  Proves migrations 019 and 020.
 --
 --  Run against a FRESHLY BUILT database:  bash /tmp/build_dg.sh t_dg
 --  (that harness stubs net.http_post and cron.schedule, so nothing leaves the
@@ -19,7 +19,13 @@ grant all on r to anon, authenticated;
 
 create or replace function pg_temp.note(l text, cond boolean, d text default '')
 returns void language plpgsql as $$
-begin insert into r values (l, cond, d); end $$;
+begin
+  -- coalesce: a NULL assertion (comparing against a column that turned out
+  -- to be NULL) used to display as FAIL but was counted as neither passed
+  -- nor failed, so the summary line could read "0 failed" over a broken
+  -- suite. NULL is not a pass.
+  insert into r values (l, coalesce(cond, false), d);
+end $$;
 
 create or replace function pg_temp.efail(l text, s text) returns void language plpgsql as $$
 begin begin execute s; insert into r values (l,false,'unexpectedly SUCCEEDED');
@@ -27,10 +33,15 @@ exception when others then insert into r values (l,true,left(sqlerrm,70)); end; 
 
 \o /dev/null
 
--- The settings the scheduled job needs.
+-- The settings the scheduled job needs. notify_key is the anon/publishable key
+-- — the Supabase gateway will not pass a request through without an
+-- Authorization header, and 019 shipped without one, so every Monday's post
+-- died at the door with 401 UNAUTHORIZED_NO_AUTH_HEADER and the function was
+-- never reached. 020 fixed it; section 04 is what stops it coming back.
 insert into public.app_settings (key, value) values
   ('notify_url',    'https://example.test/functions/v1/notify'),
-  ('notify_secret', 'test-secret-value')
+  ('notify_secret', 'test-secret-value'),
+  ('notify_key',    'sb_publishable_TESTKEY')
 on conflict (key) do update set value = excluded.value;
 
 
@@ -146,6 +157,19 @@ select pg_temp.note('to the address in app_settings',
 select pg_temp.note('carrying the shared secret',
   (select headers ->> 'x-notify-secret' from net._sent limit 1) = 'test-secret-value');
 
+-- THE BUG 020 FIXED. Without this header the Supabase API gateway answers 401
+-- UNAUTHORIZED_NO_AUTH_HEADER and notify is never invoked — while
+-- send_weekly_digest still returns {"sent": true}, because pg_net is
+-- asynchronous and cannot know. Nothing else in this suite would notice.
+select pg_temp.note('CARRYING AN AUTHORIZATION HEADER FOR THE GATEWAY',
+  (select headers ->> 'authorization' from net._sent limit 1) = 'Bearer sb_publishable_TESTKEY',
+  coalesce((select headers ->> 'authorization' from net._sent limit 1), '(no such header)'));
+
+-- Bearer, not the raw key, and not Basic. The gateway rejects the others the
+-- same way it rejected nothing at all.
+select pg_temp.note('as a bearer token',
+  (select headers ->> 'authorization' from net._sent limit 1) like 'Bearer %');
+
 select pg_temp.note('and saying which kind of message it is',
   (select body ->> 'kind' from net._sent limit 1) = 'digest');
 
@@ -162,17 +186,47 @@ select pg_temp.note('NO NAMES, PHONE NUMBERS OR ADDRESSES ARE POSTED',
 -- ===========================================================================
 --  05. WHEN IT IS NOT CONFIGURED
 -- ===========================================================================
+--  Each of the three settings is checked separately and NAMED in the answer.
+--  A generic "not configured" would have been as unhelpful as {"sent": true}
+--  was — the whole cost of this bug was a message that did not say what was
+--  wrong.
 delete from net._sent;
 delete from public.app_settings where key = 'notify_url';
 
-select pg_temp.note('missing settings do not raise, they explain',
-  (public.send_weekly_digest() ->> 'why') like '%missing%');
+select pg_temp.note('a missing url does not raise, it explains',
+  (public.send_weekly_digest() ->> 'why') like 'notify_url missing%',
+  public.send_weekly_digest() ->> 'why');
 
 select pg_temp.note('and nothing is posted into the void',
   (select count(*) from net._sent) = 0);
 
 insert into public.app_settings (key, value)
 values ('notify_url', 'https://example.test/functions/v1/notify');
+
+delete from public.app_settings where key = 'notify_secret';
+select pg_temp.note('a missing secret says so by name',
+  (public.send_weekly_digest() ->> 'why') like 'notify_secret missing%',
+  public.send_weekly_digest() ->> 'why');
+insert into public.app_settings (key, value)
+values ('notify_secret', 'test-secret-value');
+
+-- And the one that actually bit. If somebody restores this database, or
+-- rebuilds app_settings from the 019 instructions, notify_key is the row they
+-- will forget. It must refuse rather than post a request the gateway bins.
+delete from public.app_settings where key = 'notify_key';
+select pg_temp.note('a missing gateway key REFUSES TO SEND rather than 401',
+  (public.send_weekly_digest() ->> 'sent') = 'false'
+  and (public.send_weekly_digest() ->> 'why') like 'notify_key missing%',
+  public.send_weekly_digest() ->> 'why');
+
+select pg_temp.note('and it says what would have happened',
+  (public.send_weekly_digest() ->> 'why') like '%401%');
+
+select pg_temp.note('still nothing posted',
+  (select count(*) from net._sent) = 0);
+
+insert into public.app_settings (key, value)
+values ('notify_key', 'sb_publishable_TESTKEY');
 
 
 -- ===========================================================================

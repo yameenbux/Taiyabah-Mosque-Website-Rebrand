@@ -8,11 +8,20 @@
 do $$ begin
   if not exists (select 1 from pg_roles where rolname='app_owner') then
     create role app_owner nosuperuser nobypassrls login; end if; end $$;
+-- 013 made these functions write to admin_audit. In production every object
+-- shares one owner, so a SECURITY DEFINER function is exempt from RLS on the
+-- audit table. Locally it is not unless admin_audit moves too — without this
+-- line the suite dies on "new row violates row-level security policy" and
+-- proves nothing.
+alter table public.admin_audit owner to app_owner;
 alter table public.courses               owner to app_owner;
 alter table public.course_registrations  owner to app_owner;
 alter sequence public.course_reference_seq owner to app_owner;
 alter function public.register_for_course(jsonb)            owner to app_owner;
-alter function public.purge_old_course_registrations(int)   owner to app_owner;
+-- 015 added a dry_run flag to this signature. This line said (int) and so
+-- the whole file errored on line 15 against any database with 015 applied —
+-- i.e. production's shape — from 7 September until 8 September.
+alter function public.purge_old_course_registrations(int, boolean) owner to app_owner;
 grant insert on public.admin_audit to app_owner;
 grant usage, select on sequence public.admin_audit_id_seq to app_owner;
 grant usage on schema public to anon, authenticated, app_owner;
@@ -96,7 +105,14 @@ reset role;
 set role app_owner; update public.courses set is_open = true where key='ghusl'; reset role;
 
 -- 5. withdrawal frees the seat
+-- 011 added the two-step requirement: the admin policies are now
+-- verified_admin() = is_admin() AND is_aal2(), and is_aal2() reads test.aal.
+-- Setting only app.is_admin left this session at aal1, so RLS matched zero
+-- rows and BOTH assertions below failed — the second only because the first
+-- silently changed nothing. A stale admin stub, not a fault in the code.
 set role authenticated; set app.is_admin='on';
+select set_config('test.uid', '11111111-1111-1111-1111-111111111111', false);
+select set_config('test.aal', 'aal2', false);
 insert into r select 'admin can read the register', count(*) > 15, count(*)::text
   from public.course_registrations;
 update public.course_registrations set status='withdrawn'
@@ -108,12 +124,18 @@ select pg_temp.eok('re-registering after withdrawal is allowed',
 reset role;
 
 -- 6. non-admins see nothing
+-- test.uid and test.aal are SESSION settings and survive `reset role`, so they
+-- have to be put back or this block inherits the admin identity set above and
+-- reports that a non-admin can read everything. That is how a suite ends up
+-- proving the opposite of what it says.
+select set_config('test.uid', '', false);
+select set_config('test.aal', 'aal1', false);
 set role authenticated; set app.is_admin='off';
 insert into r select 'non-admin reads zero registrations', count(*)=0, count(*)::text
   from public.course_registrations;
 insert into r select 'non-admin reads zero courses', count(*)=0, count(*)::text
   from public.courses;
-select pg_temp.efail('non-admin cannot purge','select public.purge_old_course_registrations(12)');
+select pg_temp.efail('non-admin cannot purge','select public.purge_old_course_registrations(12, true)');
 reset role;
 
 \echo ''

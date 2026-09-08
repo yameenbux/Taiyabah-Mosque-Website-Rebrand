@@ -25,7 +25,13 @@ grant all on r to anon, authenticated;
 
 create or replace function pg_temp.note(l text, cond boolean, d text default '')
 returns void language plpgsql as $$
-begin insert into r values (l, cond, d); end $$;
+begin
+  -- coalesce: a NULL assertion (comparing against a column that turned out
+  -- to be NULL) used to display as FAIL but was counted as neither passed
+  -- nor failed, so the summary line could read "0 failed" over a broken
+  -- suite. NULL is not a pass.
+  insert into r values (l, coalesce(cond, false), d);
+end $$;
 
 create or replace function pg_temp.efail(l text, s text) returns void language plpgsql as $$
 begin begin execute s; insert into r values (l,false,'unexpectedly SUCCEEDED');
@@ -103,8 +109,76 @@ select pg_temp.eok('kitchen-only hire is accepted',
 
 
 -- ===========================================================================
+--  02b. History stays editable
+--
+--  This is the section that would have caught the production failure. Three
+--  rules were written as CHECK constraints in earlier migrations — the date
+--  must not be past, the date must be within twelve months, one hall is not
+--  sold at the weekend. All three are rules about what may be TAKEN, and a
+--  CHECK constraint is re-evaluated on every UPDATE, so each of them froze a
+--  booking the moment it stopped satisfying them.
+--
+--  The office has to be able to record what happened AFTER an event. If any
+--  of these starts failing again, somebody has moved an insert-time rule back
+--  into a constraint.
+-- ===========================================================================
+reset role;
+
+-- A booking taken under the old rates: one hall, on a Friday, on a date that
+-- has since passed. It cannot be created today and that is the point — the
+-- trigger refuses all three things. It could only have arrived when those
+-- rules did not apply, which is exactly the situation the office is left
+-- holding. The trigger is switched off to plant it, which is the honest
+-- stand-in for "time passed".
+alter table public.hall_bookings disable trigger hall_bookings_date_window_trg;
+
+-- Wrapped rather than run bare: if one of these rules has been moved back
+-- into a CHECK constraint, a bare insert aborts the whole file under
+-- ON_ERROR_STOP and reports nothing useful. This way the suite says which
+-- rule is wrong and carries on.
+select pg_temp.eok('a historic booking can still exist in the table',
+  $$insert into public.hall_bookings
+      (created_at, booking_date, session_slot, hall, kitchen, first_name, last_name,
+       address, phone, status, office_notes, hire_type, halls_count)
+    values (now() - interval '30 days',
+            (current_date - ((extract(dow from current_date)::int + 2) % 7) - 7)::date,
+            'morning', '1', false, 'Historic', 'Booking', '1 Old Street, Bolton',
+            '07700900800', 'confirmed', 'Taken under the old rates', 'halls', 1)$$);
+
+alter table public.hall_bookings enable trigger hall_bookings_date_window_trg;
+
+select pg_temp.note('the fixture really is a past Friday, one hall',
+  (select extract(dow from booking_date) = 5 and booking_date < current_date
+          and halls_count = 1
+     from public.hall_bookings where phone = '07700900800'),
+  (select booking_date::text || ' ' || to_char(booking_date,'Day')
+     from public.hall_bookings where phone = '07700900800'));
+
+set role authenticated;
+select set_config('test.uid', '11111111-1111-1111-1111-111111111111', false);
+select set_config('test.aal', 'aal2', false);
+
+select pg_temp.eok('the office can still record notes on a past booking',
+  $$update public.hall_bookings set office_notes = 'Rang afterwards'
+     where phone = '07700900800'$$);
+
+select pg_temp.eok('the office can still change the status of a past booking',
+  $$update public.hall_bookings set status = 'cancelled', handled_at = now()
+     where phone = '07700900800'$$);
+
+select pg_temp.note('and the change actually stuck',
+  (select status from public.hall_bookings where phone = '07700900800') = 'cancelled');
+reset role;
+
+
+-- ===========================================================================
 --  03. The rules on the price list
 -- ===========================================================================
+-- Stated rather than inherited. Section 02b has to drop to the owner to plant
+-- history, and a section that silently relies on whatever role the one above
+-- it left behind will one day run as a superuser and pass every "cannot"
+-- assertion below for the wrong reason. It did exactly that once.
+set role anon;
 
 -- Friday, Saturday and Sunday have no one-hall rate. This is the assertion
 -- that would have caught the form offering a booking the masjid does not sell.
@@ -156,6 +230,17 @@ select pg_temp.efail('kitchen-only with a room count is refused',
       (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
     values (%L, 'kitchen_only', 2, 'Kitchen', 'Count', '1 Test St, Bolton', '07700900310')$$,
     pg_temp.next_dow(2)));
+
+-- The date window, now enforced by the trigger rather than a constraint.
+select pg_temp.efail('a date in the past is refused',
+  $$insert into public.hall_bookings
+      (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
+    values (current_date - 1, 'halls', 2, 'Too', 'Late', '1 Test Street, Bolton', '07700900316')$$);
+
+select pg_temp.efail('a date beyond twelve months is refused',
+  $$insert into public.hall_bookings
+      (booking_date, hire_type, halls_count, first_name, last_name, address, phone)
+    values (current_date + 400, 'halls', 2, 'Too', 'Early', '1 Test Street, Bolton', '07700900317')$$);
 
 select pg_temp.efail('an invented hire type is refused',
   format($$insert into public.hall_bookings
