@@ -125,7 +125,18 @@
     // able to read what those hirers were promised.
     var LEGACY_SLOTS = { morning: "Morning · 9:00am – 4:00pm", evening: "Evening · 5:00pm – 11:00pm" };
     var rows = [];
-    var filter = "new";
+    // "Recent" is the landing tab, not "New requests".
+    //
+    // Before migration 017 every booking arrived as a request and waited for
+    // somebody here to confirm it, so a queue of `status = 'new'` WAS the
+    // day's work. 017 ended that: paying the deposit confirms the booking
+    // outright, so a paid hall booking is 'confirmed' the instant the money
+    // lands and never passes through 'new' at all. Meanwhile a hirer who
+    // opened the checkout and walked away leaves a row at 'new' for ever.
+    //
+    // Landing on "New requests" therefore showed the office the people who did
+    // NOT pay and hid the people who did — the exact opposite of the truth.
+    var filter = "recent";
     var query = "";
     var mounted = false;
 
@@ -253,6 +264,19 @@
         who: (r.first_name || "") + " " + (r.last_name || ""),
         phone: r.phone, email: null, sub: r.address,
         fee: null, feeAmount: null,
+        paid_at: r.deposit_paid_at,
+        // A hirer who opened the checkout and never came back. The thirty
+        // minutes are up, the date has already released itself, and nothing
+        // in the database ever moves this row again — so the office is
+        // deliberately still shown it (they may want to ring), but it is
+        // never allowed to look like a live request.
+        abandoned: r.status === "new" && r.deposit_status === "awaiting" &&
+                   !!r.hold_expires_at &&
+                   new Date(r.hold_expires_at).getTime() < Date.now(),
+        // When something last HAPPENED to this booking, which is what the
+        // office is scanning for. The money arriving is the event that
+        // matters, so it outranks the day the form was filled in.
+        activity_at: r.deposit_paid_at || r.balance_paid_at || r.handled_at || r.created_at,
         status: r.status, notes: r.office_notes, handled_at: r.handled_at
       };
     }
@@ -277,6 +301,8 @@
         phone: r.contact_phone, email: r.contact_email,
         sub: "Contact is the " + (r.contact_role === "family" ? "family" : r.contact_role) +
              (r.notes ? " \u00B7 " + r.notes : ""),
+        paid_at: r.fee_paid_at, abandoned: false,
+        activity_at: r.fee_paid_at || r.reviewed_at || r.submitted_at,
         status: r.status, notes: r.office_notes, handled_at: r.reviewed_at
       };
     }
@@ -287,7 +313,7 @@
       // gets missed.
       return Promise.all([
         sb.from("hall_bookings")
-          .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,base_amount_p,extras_p,balance_status,balance_paid_at,first_name,last_name,address,phone,status,office_notes,handled_at")
+          .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,deposit_paid_at,hold_expires_at,base_amount_p,extras_p,balance_status,balance_paid_at,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
         sb.from("nikah_requests")
           .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at,fee_status,fee_amount_p,fee_paid_at")
@@ -316,6 +342,7 @@
     function visible() {
       var today = todayISO();
       var out = rows.filter(function (r) {
+        if (filter === "recent")   return true;
         if (filter === "new")      return r.status === "new";
         if (filter === "upcoming") return r.status === "confirmed" && r.date >= today;
         if (filter === "halls")    return r.kind === "hall";
@@ -343,8 +370,15 @@
                  (digits.length >= 3 && phone.indexOf(digits) !== -1);
         });
       }
-      // Newest requests first when triaging; soonest first when looking ahead.
-      if (filter === "new") {
+      // Most recent thing that HAPPENED first — a payment landing, a date
+      // agreed, a refund raised. Not the day the form was filled in, which is
+      // why a deposit paid this morning for a booking requested last week
+      // still comes top.
+      if (filter === "recent") {
+        out.sort(function (a, b) {
+          return new Date(b.activity_at) - new Date(a.activity_at);
+        });
+      } else if (filter === "new") {
         out.sort(function (a, b) { return new Date(b.created_at) - new Date(a.created_at); });
       } else {
         out.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
@@ -354,6 +388,15 @@
 
     function counts() {
       var today = todayISO();
+      // "Since I last looked" in practice, without pretending to know when
+      // that was. Seven days is long enough that somebody off for a week
+      // still sees what they missed.
+      var rn = el("bk-n-recent");
+      if (rn) {
+        rn.textContent = rows.filter(function (r) {
+          return (Date.now() - new Date(r.activity_at).getTime()) <= 7 * 86400000;
+        }).length;
+      }
       el("bk-n-new").textContent = rows.filter(function (r) { return r.status === "new"; }).length;
       el("bk-n-up").textContent  = rows.filter(function (r) {
         return r.status === "confirmed" && r.date >= today;
@@ -386,7 +429,8 @@
 
     function emptyLine() {
       if (query) return "Nothing matches “" + esc(query) + "”.";
-      if (filter === "new")      return "No new requests. Anything that comes in from the website — a hall booking or a nikāḥ date — appears here.";
+      if (filter === "recent")   return "Nothing yet. Everything that happens — a deposit paid, a nikāḥ date requested, a refund owed — appears here, newest first.";
+      if (filter === "new")      return "No new requests. A hall booking that has been PAID for does not appear here — paying confirms it, so look under Recent or Upcoming.";
       if (filter === "upcoming") return "Nothing confirmed coming up.";
       if (filter === "halls")    return "No hall bookings yet.";
       if (filter === "nikah")    return "No nikāḥ requests yet.";
@@ -491,16 +535,25 @@
         var paidUp = r.kind === "hall" && r.deposit === "paid";
         return '' +
           '<article class="bk-item s-' + esc(r.status) + ' k-' + esc(r.kind) +
-            '" data-id="' + esc(r.id) + '" data-kind="' + esc(r.kind) + '">' +
+            (r.abandoned ? ' bk-gone' : '') +
+            '" data-id="' + esc(r.id) + '" data-kind="' + esc(r.kind) +
+            // Exposed so the test can assert the ORDER is really by activity
+            // rather than infer it from which fixture happens to be on top.
+            '" data-activity="' + esc(r.activity_at || '') + '">' +
             '<div class="bk-when">' +
               '<span class="d">' + esc(longDate(r.date)) + '</span>' +
               '<span class="s">' + esc(r.detail) + '</span>' +
               '<span class="bk-kind t-' + esc(r.kind) + '">' +
                 (r.kind === "nikah" ? "Nik\u0101\u1E25" : "Hall") + '</span>' +
-              (r.deposit
-                ? '<span class="bk-dep d-' + esc(r.deposit) + '">' +
-                  esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>'
-                : '') +
+              // "sent to pay" is true only while the clock is running. Once
+              // the hold has lapsed it is no longer information, it is a lie
+              // by implication — nobody is about to pay.
+              (r.abandoned
+                ? '<span class="bk-dep d-gone">checkout abandoned</span>'
+                : r.deposit
+                  ? '<span class="bk-dep d-' + esc(r.deposit) + '">' +
+                    esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>'
+                  : '') +
               (r.fee && r.fee !== "unpaid"
                 ? '<span class="bk-fee-pill f-' + esc(r.fee) + '">' +
                   esc(FEE_WORDS[r.fee] || r.fee) + '</span>'
@@ -515,7 +568,17 @@
             '</div>' +
             '<div class="bk-addr">' + esc(r.sub) + '</div>' +
             (r.kind === "hall" ? moneyLine(r) : feeLine(r)) +
+            // When the money landed, in words. The whole complaint this was
+            // built from was "there is no way to know they have paid" — and
+            // the single most reassuring thing to read is not a badge but a
+            // time: paid two hours ago.
             '<div class="bk-meta">Requested ' + esc(ago(r.created_at)) +
+              (r.paid_at
+                ? ' · <strong class="bk-paidat">' +
+                  (r.kind === "nikah" ? "fee paid " : "paid ") +
+                  esc(ago(r.paid_at)) + '</strong>'
+                : '') +
+              (r.abandoned ? ' · never paid, date released' : '') +
               (r.handled_at ? ' · decided ' + esc(ago(r.handled_at)) : '') + '</div>' +
             '<textarea class="bk-notes" data-notes rows="1" placeholder="Notes — what was agreed, fee quoted, who called">' +
               esc(r.notes || "") + '</textarea>' +

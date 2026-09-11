@@ -241,6 +241,19 @@
   .bk-dep.d-paid{background:rgba(63,122,70,.16);color:var(--success);}
   .bk-dep.d-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
   .bk-dep.d-refund_due{background:var(--danger);color:#fff;}
+  /* A hirer who opened the checkout and walked away. Still listed — the office
+     may want to ring them — but it must never read as a live request waiting
+     for a decision, which is what it looked like before 11 September 2026.
+     Muted rather than hidden: the information is real, the urgency is not. */
+  .bk-item.bk-gone{opacity:.62;}
+  .bk-item.bk-gone:hover,.bk-item.bk-gone:focus-within{opacity:1;}
+  .bk-dep.d-gone{
+    background:transparent;border:1px dashed var(--line);color:var(--muted);
+    font-weight:700;
+  }
+  /* When the money landed. The reassuring thing is a time, not a badge. */
+  .bk-paidat{color:#1D6B3F;font-weight:800;}
+
   .bk-tab.bk-tab-refund.on,.bk-tab.bk-tab-refund{border-color:var(--danger);color:var(--danger);}
   .bk-tab.bk-tab-refund.on{background:var(--danger);color:#fff;}
   .bk-tab.bk-tab-balance{border-color:var(--gold);color:#7A5B10;}
@@ -482,7 +495,8 @@
         </div>
 
         <div class="bk-tabs" id="bk-tabs">
-          <button type="button" class="bk-tab on" data-filter="new">New requests <span class="n" id="bk-n-new">0</span></button>
+          <button type="button" class="bk-tab on" data-filter="recent">Recent <span class="n" id="bk-n-recent">0</span></button>
+          <button type="button" class="bk-tab" data-filter="new">New requests <span class="n" id="bk-n-new">0</span></button>
           <button type="button" class="bk-tab" data-filter="upcoming">Upcoming <span class="n" id="bk-n-up">0</span></button>
           <button type="button" class="bk-tab" data-filter="nikah">Nik&#0257;&#7717; <span class="n" id="bk-n-nk">0</span></button>
           <!-- Hidden until there is one. Somebody has paid for a date they
