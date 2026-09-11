@@ -182,6 +182,13 @@
     padding:7px 14px;border-radius:999px;border:1px solid var(--line);
     background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;gap:7px;
   }
+  /* `.bk-tab` sets display:inline-flex, and ANY author display rule beats the
+     browser's own [hidden]{display:none} — so the Refund due and Balance due
+     tabs were showing "0" permanently even though counts() sets .hidden on
+     them. The design says a tab that is always zero teaches the office to stop
+     looking at it; that intent was silently defeated for four days. Same fault
+     as `.field` in /auth/, and the same fix. */
+  .bk-tab[hidden]{display:none !important;}
   .bk-tab:hover{border-color:var(--gold);}
   .bk-tab.on{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
   .bk-tab .n{
@@ -506,19 +513,25 @@
           <span class="bk-sub" id="bk-sub">Hall bookings and nik&#0257;&#7717; dates from the website, in one list. Ring the enquirer, then record what was agreed.</span>
         </div>
 
+        <!-- Order asked for by the masjid, 12 September 2026.
+             NOTE: the tab carrying `on` is the one the page OPENS on, and it is
+             Recent regardless of where it sits in this row. First in the list
+             is not the default — see the reasoning above `var filter` in
+             app.js, which is a bug fix, not a preference. Moving `on` would
+             put paid bookings back off the opening screen. -->
         <div class="bk-tabs" id="bk-tabs">
-          <button type="button" class="bk-tab on" data-filter="recent">Recent <span class="n" id="bk-n-recent">0</span></button>
+          <button type="button" class="bk-tab" data-filter="all">All</button>
+          <button type="button" class="bk-tab" data-filter="nikah">Nik&#0257;&#7717; <span class="n" id="bk-n-nk">0</span></button>
           <button type="button" class="bk-tab" data-filter="new">New requests <span class="n" id="bk-n-new">0</span></button>
           <button type="button" class="bk-tab" data-filter="upcoming">Upcoming <span class="n" id="bk-n-up">0</span></button>
-          <button type="button" class="bk-tab" data-filter="nikah">Nik&#0257;&#7717; <span class="n" id="bk-n-nk">0</span></button>
-          <!-- Hidden until there is one. Somebody has paid for a date they
-               cannot have and the masjid is holding their money. -->
-          <button type="button" class="bk-tab bk-tab-refund" data-filter="refunds" id="bk-tab-refunds" hidden>Refund due <span class="n" id="bk-n-rf">0</span></button>
           <!-- Balances are due 30 days before the event and are paid at the
                office. Nothing else in the system would ever surface one, so
                this tab is the whole mechanism. Hidden when nobody owes. -->
           <button type="button" class="bk-tab bk-tab-balance" data-filter="balance" id="bk-tab-balance" hidden>Balance due <span class="n" id="bk-n-bal">0</span></button>
-          <button type="button" class="bk-tab" data-filter="all">All</button>
+          <!-- Hidden until there is one. Somebody has paid for a date they
+               cannot have and the masjid is holding their money. -->
+          <button type="button" class="bk-tab bk-tab-refund" data-filter="refunds" id="bk-tab-refunds" hidden>Refund due <span class="n" id="bk-n-rf">0</span></button>
+          <button type="button" class="bk-tab on" data-filter="recent">Recent <span class="n" id="bk-n-recent">0</span></button>
         </div>
 
         <label class="sr-only" for="bk-search">Search bookings by name or phone number</label>
