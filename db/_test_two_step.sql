@@ -4,8 +4,8 @@
 --  Proves migration 011: a staff session that has not passed two-step
 --  verification can read nothing, and one that has works exactly as before.
 --
---  Run against a FRESHLY BUILT database:  bash /tmp/build_dep.sh t_2s
---  (001 .. 007 from madrasah-db, then 008 .. 017 here, then 011 again)
+--  Run against a FRESHLY BUILT database:  bash db/harness/build.sh t_2s full
+--  (or just db/harness/run-all.sh, which knows the profile)
 --
 --  It USED to say "008, 009, 010, 011" and that stopped being true at 016,
 --  which made `reference` NOT NULL — so this file errored out on its own
@@ -138,8 +138,13 @@ select pg_temp.changed('office at aal1 changes nothing',
   $$update public.hall_bookings set status = 'confirmed'
      where phone = '07700900901'$$, 0);
 select set_config('test.aal', 'aal2', false);
+-- Declining, not confirming. Migration 021 refuses to move a booking to
+-- confirmed unless a deposit has been recorded — paying is what confirms a
+-- booking now — so confirming an unpaid fixture stopped being a legal write
+-- and this assertion started failing for the right reason. Declining is the
+-- same policy, the same columns and the same proof.
 select pg_temp.changed('office at aal2 can record an outcome',
-  $$update public.hall_bookings set status = 'confirmed'
+  $$update public.hall_bookings set status = 'declined'
      where phone = '07700900901'$$, 1);
 reset role;
 
