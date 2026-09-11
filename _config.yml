@@ -33,6 +33,13 @@ exclude:
   # Database migrations and their local-only test harness
   - db/
 
+  # Browser test suites. Jekyll ignores underscore-prefixed directories anyway,
+  # but this is stated because the cost of being wrong is publishing test code
+  # on the masjid's website — and because these scripts used to live only in a
+  # scratch directory, where four of them quietly stopped running and nobody
+  # could tell. A suite nobody can run looks exactly like a suite that passes.
+  - _test/
+
   # Edge Function source. No keys in it — the secrets live in Supabase, not
   # here — but the masjid's website is not the place to publish server code.
   - supabase/
