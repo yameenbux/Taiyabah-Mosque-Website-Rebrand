@@ -214,13 +214,29 @@
     // has to be able to see it at a glance. 'refund_due' especially: it means
     // Stripe has somebody's £100 for a date they cannot have, and until a
     // human sends it back nothing else will.
+    //
+    // Reported 11 September 2026: "it's not clear whether I have paid the
+    // deposit or not". It was not. "sent to pay" reads like a step that has
+    // been completed, and next to a CONFIRMED pill it read as done. The
+    // words now say the state of the money and nothing else — and the one
+    // that matters most is the one that says NO MONEY HAS ARRIVED.
     var DEPOSIT_WORDS = {
-      unpaid:     "no deposit",
-      awaiting:   "sent to pay",
+      unpaid:     "DEPOSIT NOT PAID",
+      awaiting:   "DEPOSIT NOT PAID",
       paid:       "deposit paid",
       refund_due: "REFUND DUE",
       refunded:   "refunded"
     };
+
+    // How long the hirer has left in Stripe's checkout. Only meaningful while
+    // the clock is running: it is the difference between "they are paying
+    // right now, leave it alone" and "they are not coming back".
+    function holdLeft(ts) {
+      if (!ts) return null;
+      var mins = Math.round((new Date(ts).getTime() - Date.now()) / 60000);
+      if (mins <= 0) return null;
+      return mins === 1 ? "1 min left to pay" : mins + " mins left to pay";
+    }
 
     // A nikāḥ fee, in the office's words. "fee paid" and nothing more — no
     // wording here may suggest the date is settled, because paying a nikāḥ fee
@@ -265,6 +281,7 @@
         phone: r.phone, email: null, sub: r.address,
         fee: null, feeAmount: null,
         paid_at: r.deposit_paid_at,
+        hold_left: r.deposit_status === "awaiting" ? holdLeft(r.hold_expires_at) : null,
         // A hirer who opened the checkout and never came back. The thirty
         // minutes are up, the date has already released itself, and nothing
         // in the database ever moves this row again — so the office is
@@ -552,7 +569,10 @@
                 ? '<span class="bk-dep d-gone">checkout abandoned</span>'
                 : r.deposit
                   ? '<span class="bk-dep d-' + esc(r.deposit) + '">' +
-                    esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>'
+                    esc(DEPOSIT_WORDS[r.deposit] || r.deposit) + '</span>' +
+                    (r.hold_left
+                      ? '<span class="bk-hold">' + esc(r.hold_left) + '</span>'
+                      : '')
                   : '') +
               (r.fee && r.fee !== "unpaid"
                 ? '<span class="bk-fee-pill f-' + esc(r.fee) + '">' +
@@ -590,7 +610,21 @@
                     : '<button type="button" class="bk-btn go" data-act="balance_paid">Balance received</button>') +
                   '<button type="button" class="bk-btn no" data-act="cancel_refund">Cancel &amp; refund</button>'
                 : isOpen
-                  ? '<button type="button" class="bk-btn go" data-act="confirmed">' + go + '</button>' +
+                  // A hall booking nobody has paid for HAS NO CONFIRM BUTTON.
+                  // On 11 September 2026 it had one, and pressing it sold a
+                  // date with no money behind it — HH-26-0009 showed as
+                  // CONFIRMED thirty seconds after it was requested. Paying
+                  // confirms a booking (017); the office's part is taking the
+                  // money, not agreeing the date.
+                  //
+                  // The button is gone AND migration 021 refuses the UPDATE
+                  // behind it. Removing only the button would leave the rule
+                  // living in JavaScript, which on this project means it does
+                  // not exist.
+                  ? (r.kind === "hall"
+                      ? '<button type="button" class="bk-btn go" data-act="cash_deposit">' +
+                        '&pound;100 deposit taken in cash</button>'
+                      : '<button type="button" class="bk-btn go" data-act="confirmed">' + go + '</button>') +
                     '<button type="button" class="bk-btn no" data-act="declined">Decline</button>'
                   : '<button type="button" class="bk-btn" data-act="save">Save notes</button>' +
                     (r.status === "confirmed"
@@ -656,6 +690,33 @@
       } else if (act === "balance_unpaid") {
         patch.balance_status = "unpaid";
         patch.balance_paid_at = null;
+      } else if (act === "cash_deposit") {
+        // Not an UPDATE either. "The money arrived" and "the date is sold" are
+        // one event and must not be able to drift apart, so they happen in one
+        // audited function — which also records WHO said the money exists.
+        // This is the only path where a person, rather than Stripe, asserts a
+        // payment, and it is confirmed first because it cannot be undone
+        // without issuing a refund.
+        if (!window.confirm(
+              "Record £100 taken in cash for " + row.reference + "?\n\n" +
+              "This books the date immediately and cannot be undone except by " +
+              "cancelling and refunding. Only do this if the masjid has the money.")) {
+          said.textContent = "";
+          Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+          return;
+        }
+        return sb.rpc("record_cash_deposit",
+                      { p_reference: row.reference, p_amount_p: 10000 })
+          .then(function (out) {
+            if (out.error) throw new Error(out.error.message);
+            setError(null);
+            return load().then(render);
+          })
+          .catch(function (e) {
+            said.textContent = "";
+            setError("Couldn't record that — " + (e && e.message) + ". Nothing was changed.");
+            Array.prototype.forEach.call(btns, function (b) { b.disabled = false; });
+          });
       } else if (act === "cancel_refund") {
         // Not an UPDATE. Undoing a paid booking always means money going back,
         // so it goes through cancel_paid_booking(), which insists on a written

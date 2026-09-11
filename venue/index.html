@@ -236,8 +236,20 @@
     font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     padding:3px 8px;border-radius:3px;
   }
-  .bk-dep.d-unpaid{background:rgba(110,97,106,.14);color:var(--muted);}
-  .bk-dep.d-awaiting{background:rgba(198,162,76,.2);color:#7A5B10;}
+  /* "DEPOSIT NOT PAID" has to be readable across the room and impossible to
+     mistake for a completed step. It sits next to a CONFIRMED pill often
+     enough that a quiet grey chip was being read as "done" — which is exactly
+     what was reported on 11 September 2026. */
+  .bk-dep.d-unpaid,.bk-dep.d-awaiting{
+    background:rgba(176,58,46,.12);color:var(--danger);
+    border:1px solid rgba(176,58,46,.35);
+  }
+  /* The clock, only while it is running. */
+  .bk-hold{
+    font-size:.63rem;font-weight:700;letter-spacing:.04em;
+    padding:3px 8px;border-radius:3px;
+    background:rgba(198,162,76,.2);color:#7A5B10;
+  }
   .bk-dep.d-paid{background:rgba(63,122,70,.16);color:var(--success);}
   .bk-dep.d-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
   .bk-dep.d-refund_due{background:var(--danger);color:#fff;}
