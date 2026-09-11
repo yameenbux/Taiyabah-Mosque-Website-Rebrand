@@ -64,7 +64,16 @@ su postgres -c "psql -q -X -d $db" >/dev/null 2>&1 <<'SQL'
 alter table public.hall_bookings drop constraint date_not_past;
 insert into public.hall_bookings
   (created_at, booking_date, session_slot, hall, kitchen, first_name, last_name, address, phone, status)
-values (now() - interval '12 days', current_date - interval '10 days',
+-- A FRIDAY, always. This used to be `current_date - interval '10 days'`,
+-- which lands on a different weekday every day of the week — and the point of
+-- the fixture is that ONE HALL ON A FRIDAY is a combination the current price
+-- list does not sell, so there is no rate to backfill it with. Run on the
+-- wrong day it became a weekday booking with a perfectly good £350 rate, and
+-- _test_paid_is_booked failed for a reason that had nothing to do with the
+-- code. A fixture whose meaning depends on what day you run it is not a
+-- fixture.
+values (now() - interval '12 days',
+        current_date - ((extract(dow from current_date)::int + 2) % 7) - 7,
         'evening', '2', false, 'Old', 'Booking', '4 Mill Street', '07700900111', 'confirmed');
 alter table public.hall_bookings
   add constraint date_not_past check (booking_date >= (now() at time zone 'Europe/London')::date) not valid;
@@ -76,7 +85,7 @@ case "$profile" in
   hall)      list="014_whole_day_hire" ;;
   admin)     list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 011_require_two_step" ;;
   retention) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 011_require_two_step" ;;
-  deposit|full) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 016_deposit_holds_the_date 017_paid_is_booked 018_nikah_fee_online 019_weekly_digest 020_digest_auth_header 011_require_two_step" ;;
+  deposit|full) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 016_deposit_holds_the_date 017_paid_is_booked 018_nikah_fee_online 019_weekly_digest 020_digest_auth_header 021_unpaid_is_not_booked 011_require_two_step" ;;
   *) echo "unknown profile: $profile" >&2; exit 1 ;;
 esac
 

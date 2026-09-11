@@ -19,6 +19,7 @@ _test_deposit:full
 _test_paid_is_booked:full
 _test_two_step:full
 _test_weekly_digest:full
+_test_unpaid_not_booked:full
 _test_retention:retention
 _test_whole_day_hire:hall
 _test_course_admin:admin
