@@ -196,6 +196,20 @@ STUB = r"""
       fee_status:"unpaid", fee_amount_p:null, fee_paid_at:null }
   ];
 
+  // A quiet week, on demand. The Refund due and Balance due tabs are supposed
+  // to disappear when there is nothing in them, and the fixtures above always
+  // have something — so without this the assertion about hiding them could
+  // never fail, which is how the display:inline-flex bug survived.
+  if (location.search.indexOf("quiet") !== -1) {
+    DB.halls.forEach(function (h) {
+      if (h.deposit_status === "refund_due") h.deposit_status = "unpaid";
+      h.balance_status = "paid";
+    });
+    DB.nikah.forEach(function (n) {
+      if (n.fee_status === "refund_due") n.fee_status = "unpaid";
+    });
+  }
+
   function copy(v){ return JSON.parse(JSON.stringify(v)); }
 
   function makeQ(table) {
@@ -366,6 +380,49 @@ with sync_playwright() as p:
     # The count is "what happened this week", not the size of the table.
     check(pg.inner_text("#bk-n-recent").strip().isdigit(),
           "the Recent tab has no count")
+
+    # The order the masjid asked for, 12 September 2026. Asserted because a tab
+    # row is the kind of thing that gets "tidied" by whoever touches it next.
+    order_tabs = pg.eval_on_selector_all("#bk-tabs .bk-tab", "els=>els.map(e=>e.dataset.filter)")
+    check(order_tabs == ["all", "nikah", "new", "upcoming", "balance", "refunds", "recent"],
+          "the tab order is %r" % order_tabs)
+
+    # FIRST IS NOT THE DEFAULT. Recent sits last and is still the tab the page
+    # opens on, because landing on anything status-based hides paid bookings —
+    # the bug this whole screen was rebuilt for.
+    check(pg.eval_on_selector("#bk-tabs .bk-tab.on", "e=>e.dataset.filter") == "recent",
+          "the page no longer opens on Recent")
+
+    # A tab that is always zero teaches the office to stop looking at it, so
+    # Refund due and Balance due are hidden until there is one. `.bk-tab` sets
+    # display:inline-flex, which beats the browser's own [hidden] rule — so
+    # setting .hidden in JavaScript did nothing and both tabs showed "0"
+    # permanently. Asserted on VISIBILITY, never on the attribute, because the
+    # attribute was set correctly the whole time it was broken.
+    for tab_id, label in (("#bk-tab-refunds", "Refund due"), ("#bk-tab-balance", "Balance due")):
+        node = pg.query_selector(tab_id)
+        check(node is not None and node.is_visible(),
+              "the %s tab is hidden even though there is one" % label)
+
+    # Now the same two tabs on a week with nothing owed. Asserted on VISIBILITY,
+    # never on the hidden attribute: the attribute was set correctly the whole
+    # time the tabs were showing, because .bk-tab's display:inline-flex beats
+    # the browser's own [hidden] rule.
+    pg.goto(PAGE + "?quiet=1")
+    pg.wait_for_timeout(900)
+    for tab_id, label in (("#bk-tab-refunds", "Refund due"), ("#bk-tab-balance", "Balance due")):
+        node = pg.query_selector(tab_id)
+        if node is None:
+            fails.append("%s tab is missing entirely" % label)
+            continue
+        check(pg.inner_text(tab_id + " .n").strip() == "0",
+              "%s should be zero on a quiet week, shows %r"
+              % (label, pg.inner_text(tab_id + " .n").strip()))
+        check(not node.is_visible(),
+              "THE %s TAB SHOWS A PERMANENT 0 — a tab that is always zero "
+              "teaches the office to stop looking at it" % label.upper())
+    pg.goto(PAGE)
+    pg.wait_for_timeout(900)
 
     # And the structural fact underneath the whole complaint: New requests
     # contains no paid hall booking, because paying confirms it.
