@@ -343,6 +343,8 @@ with sync_playwright() as p:
               "a lapsed hold still claims the hirer is on their way to pay")
         check("never paid, date released" in g,
               "the office is not told the date went back on sale")
+        check("left to pay" not in g,
+              "a lapsed hold still counts down as though somebody were paying")
         check("bk-gone" in (gone.get_attribute("class") or ""),
               "an abandoned checkout is styled identically to a live request")
 
@@ -352,7 +354,10 @@ with sync_playwright() as p:
     check(live is not None, "a live checkout is missing from the list")
     if live is not None:
         l = live.inner_text().lower()
-        check("sent to pay" in l, "a LIVE hold is no longer shown as sent to pay")
+        check("deposit not paid" in l,
+              "a live checkout does not say the deposit is NOT paid")
+        check("left to pay" in l,
+              "a live hold does not say how long the hirer has left: %r" % l[:160])
         check("checkout abandoned" not in l,
               "a hold with eighteen minutes left is called abandoned")
         check("bk-gone" not in (live.get_attribute("class") or ""),
@@ -573,8 +578,11 @@ with sync_playwright() as p:
     #    Done on the UNPAID booking, because the paid one no longer has a
     #    Confirm button at all — which is the point of this migration.
     item = pg.query_selector('.bk-item[data-id="h2"]')
-    item.query_selector("[data-notes]").fill("Rang, agreed the date")
-    b_conf = button(pg, "h2", "confirmed")
+    item.query_selector("[data-notes]").fill("Rang, they are not going ahead")
+    # Declining, not confirming. A hall booking nobody has paid for no longer
+    # HAS a Confirm button — see 6c — so the column-grant check rides on the
+    # action the office does still have.
+    b_conf = button(pg, "h2", "declined")
     if b_conf: b_conf.click()
     pg.wait_for_timeout(500)
     w = pg.evaluate("window.__DB.writes")
@@ -589,20 +597,83 @@ with sync_playwright() as p:
                      "phone", "address", "base_amount_p", "reference", "stripe"]:
             check(gone not in blob, "the portal tried to write %r" % gone)
 
+    # ========================================================================
+    #  6c. THE OFFICE CANNOT SELL A DATE NOBODY HAS PAID FOR
+    #
+    #  Reported 11 September 2026: a test booking with no deposit showed as
+    #  CONFIRMED. It had been confirmed thirty seconds after it was requested
+    #  — by somebody pressing Confirm. Migration 017 made paying the
+    #  confirmation and removed the office's NEED to confirm; it did not
+    #  remove the button, and nothing in the database refused the write.
+    #
+    #  The button is gone here AND migration 021 refuses the UPDATE. Both, not
+    #  either: on this project a check that only exists in JavaScript does not
+    #  exist. _test_unpaid_not_booked.sql is the other half.
+    # ========================================================================
+    unpaid = pg.query_selector('.bk-item[data-id="h6"]')     # in checkout now
+    check(unpaid is not None, "the live-checkout booking is missing")
+    if unpaid is not None:
+        uacts = [x.inner_text().strip() for x in unpaid.query_selector_all(".bk-btn")]
+        check("Confirm" not in uacts,
+              "AN UNPAID HALL BOOKING STILL OFFERS CONFIRM: %s" % uacts)
+        check(any("cash" in a.lower() for a in uacts),
+              "no way to record a deposit taken at the counter: %s" % uacts)
+        check("Decline" in uacts,
+              "an unpaid request can no longer be declined: %s" % uacts)
+        u = unpaid.inner_text().lower()
+        check("deposit not paid" in u,
+              "an unpaid booking does not plainly say the deposit is not paid")
+
+    # A nikāḥ request is NOT a hall booking and still needs a human decision —
+    # the masjid does not publish its nikāḥ diary, so nothing can agree a date
+    # except a person. Removing that button would be a different bug.
+    nk = pg.query_selector('.bk-item[data-id="n3"]')
+    if nk is not None:
+        nacts = [x.inner_text().strip() for x in nk.query_selector_all(".bk-btn")]
+        check("Agree date" in nacts,
+              "a nikāḥ request lost the office's decision button: %s" % nacts)
+
+    # Taking cash is an RPC, not an UPDATE. "The money arrived" and "the date
+    # is sold" are one event; splitting them into a status write is how they
+    # drift apart, and it would also lose who recorded the payment.
+    pg.evaluate("window.__DB.writes = []; window.__DB.rpcs = [];")
+    b_cash = pg.query_selector('.bk-item[data-id="h6"] .bk-btn[data-act="cash_deposit"]')
+    check(b_cash is not None, "no cash-deposit button to press")
+    if b_cash is not None:
+        b_cash.click()
+        pg.wait_for_timeout(600)
+        rpcs = pg.evaluate("window.__DB.rpcs")
+        writes = pg.evaluate("window.__DB.writes")
+        names = [c["name"] for c in rpcs]
+        check("record_cash_deposit" in names,
+              "taking cash did not go through record_cash_deposit: %r" % names)
+        check(len(writes) == 0,
+              "taking cash also wrote columns directly: %r" % writes)
+        if "record_cash_deposit" in names:
+            args = [c["args"] for c in rpcs if c["name"] == "record_cash_deposit"][0]
+            check(args.get("p_reference") == "HH-26-0006",
+                  "the cash deposit was recorded against %r" % args.get("p_reference"))
+            check(args.get("p_amount_p") == 10000,
+                  "the cash deposit was not £100: %r" % args.get("p_amount_p"))
+
+    pg.evaluate("window.__DB.writes = []; window.__DB.rpcs = [];")
+    pg.click('.bk-tab[data-filter="all"]'); pg.wait_for_timeout(300)
+
     # 6b. recording the balance writes the balance columns and nothing else.
     pg.wait_for_timeout(300)
     b_bal = button(pg, "h1", "balance_paid")
     if b_bal: b_bal.click()
     pg.wait_for_timeout(500)
+    # The write log was cleared at the end of 6c, so this is the only one.
     w = pg.evaluate("window.__DB.writes")
-    check(len(w) == 2, "recording a balance did not write, saw %d writes" % len(w))
-    if len(w) > 1:
-        keys = sorted(w[1]["patch"].keys())
+    check(len(w) == 1, "recording a balance did not write, saw %d writes" % len(w))
+    if w:
+        keys = sorted(w[0]["patch"].keys())
         check(keys == ["balance_paid_at", "balance_status", "extras_p", "office_notes"],
               "recording a balance wrote %s" % keys)
-        check(w[1]["patch"]["balance_status"] == "paid",
-              "the balance was not marked paid: %r" % w[1]["patch"])
-        check("status" not in w[1]["patch"],
+        check(w[0]["patch"]["balance_status"] == "paid",
+              "the balance was not marked paid: %r" % w[0]["patch"])
+        check("status" not in w[0]["patch"],
               "recording a balance also moved the booking's status — it is already confirmed")
 
     # 6c. every write, across every action, stays inside the granted set.
