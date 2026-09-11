@@ -61,8 +61,20 @@ begin;
 --
 --  'awaiting' means one thing: the hirer is in Stripe's checkout right now.
 --  A CONFIRMED booking in that state is not a real state — it is a date sold
---  against a payment that never arrived. Put it back to a request and release
---  the hold so the purge below can take it.
+--  against a payment that never arrived. Put it back to a request.
+--
+--  IT UNDOES THE CONFIRMATION AND NOTHING ELSE. The first version of this
+--  block also set deposit_status to 'unpaid' and cleared hold_expires_at, on
+--  the reasoning that it was tidying up. It was not: those two fields are
+--  exactly what section 4 reads to decide whether a booking was abandoned in
+--  checkout, so "tidying" them put the row into the one shape the purge is
+--  built to SPARE — an unpaid booking the office is handling by hand. The
+--  repaired row then sat in the list for ever, which is the thing this file
+--  exists to stop. Reported within the hour: "this booking should have
+--  deleted as the deposit has not been paid and it's 34 mins old?"
+--
+--  A repair must put a row back into a state the rest of the system already
+--  understands, not into a new one that happens to look tidy.
 --
 --  Deliberately narrow. A booking confirmed against deposit_status 'unpaid' is
 --  left exactly as it is: that is most likely a genuine booking somebody paid
@@ -75,10 +87,12 @@ declare v_n int;
 begin
   with fixed as (
     update public.hall_bookings
-       set status          = 'new',
-           handled_at      = null,
-           deposit_status  = 'unpaid',
-           hold_expires_at = null
+       set status     = 'new',
+           handled_at = null
+       --  deposit_status and hold_expires_at are deliberately UNTOUCHED, so
+       --  section 4 can see this for what it is: a checkout nobody came back
+       --  from. If the hold is still live the hirer may yet pay; if it has
+       --  lapsed, the purge takes the row within ten minutes.
      where status = 'confirmed'
        and deposit_status = 'awaiting'
        and deposit_paid_at is null

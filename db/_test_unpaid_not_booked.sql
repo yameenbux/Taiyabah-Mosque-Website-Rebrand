@@ -97,12 +97,24 @@ values
 
 
 -- ===========================================================================
---  01. NOTHING WAS ALREADY BROKEN
+--  01. THE REPAIR LEFT NOTHING BEHIND
 -- ===========================================================================
 select pg_temp.note('no booking is confirmed while the hirer is mid-checkout',
   not exists (select 1 from public.hall_bookings
                where status = 'confirmed' and deposit_status = 'awaiting'
                  and deposit_paid_at is null));
+
+-- The repair in section 1 of the migration undoes the confirmation and NOTHING
+-- ELSE. Its first version also cleared deposit_status and hold_expires_at,
+-- which are the two fields the purge reads — so a repaired row landed in the
+-- one shape the purge is built to spare, and sat in the office's list for ever.
+-- HH-T-0002 below is that exact shape (new + awaiting + lapsed) and section 06
+-- proves the purge collects it, which is what makes the repair safe.
+select pg_temp.note('a repaired booking is left in a shape the purge understands',
+  exists (select 1 from public.hall_bookings
+           where reference = 'HH-T-0002'
+             and status = 'new' and deposit_status = 'awaiting'
+             and hold_expires_at < now()));
 
 
 -- ===========================================================================
