@@ -85,7 +85,7 @@ case "$profile" in
   hall)      list="014_whole_day_hire" ;;
   admin)     list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 011_require_two_step" ;;
   retention) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 011_require_two_step" ;;
-  deposit|full) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 016_deposit_holds_the_date 017_paid_is_booked 018_nikah_fee_online 019_weekly_digest 020_digest_auth_header 021_unpaid_is_not_booked 011_require_two_step" ;;
+  deposit|full) list="008_admissions 009_courses 010_nikah_requests 011_require_two_step 013_course_admin 014_whole_day_hire 015_retention 016_deposit_holds_the_date 017_paid_is_booked 018_nikah_fee_online 019_weekly_digest 020_digest_auth_header 021_unpaid_is_not_booked 022_donations_and_gift_aid 023_foodbank_volunteers 011_require_two_step" ;;
   *) echo "unknown profile: $profile" >&2; exit 1 ;;
 esac
 
