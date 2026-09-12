@@ -482,14 +482,36 @@ window.TAIYABAH_PUBLIC = {
   .glance-wa .gp-qr:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(43,7,26,.26);}
   .glance-wa .gp-qr img{width:122px;height:122px;display:block;}
   .glance-wa .gp-when{margin-bottom:9px;}
-  .gl-link{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;}
-  .gl-link:last-child{border-bottom:none;}
-  .gl-ic{width:28px;height:28px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .gl-ic svg{width:13px;height:13px;}
-  .gl-text{flex:1;min-width:0;}
-  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.82rem;color:var(--ink);display:block;}
-  .gl-text .s{font-size:.71rem;color:var(--muted);line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .gl-arrow{color:var(--muted);flex-shrink:0;}
+  /* Food bank card. Replaced the Quick Links card on 12 September 2026 — every
+     link in it (Shop, Services, Madrasah, Contact) is also in the top bar, the
+     mobile menu and the footer, so nothing became unreachable.
+
+     Deliberately NOT a link and deliberately without cursor:pointer. There is
+     nothing behind it yet, and a card that looks tappable and goes nowhere
+     reads as a broken website rather than as an announcement. */
+  .fb-art{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 4px;min-height:0;}
+  .fb-art svg{width:100%;max-width:230px;height:auto;display:block;}
+  .fb-copy{font-size:.79rem;color:var(--muted);line-height:1.5;text-align:center;margin:0 auto 12px;max-width:30ch;}
+  .fb-soon{
+    align-self:center;display:inline-flex;align-items:center;gap:6px;
+    padding:5px 13px;border-radius:999px;background:rgba(198,162,76,.16);
+    border:1px solid rgba(198,162,76,.4);color:var(--brand-800);
+    font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  }
+  .fb-soon::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);}
+  /* The card was deliberately not clickable while there was nothing behind it.
+     There is now: a registration form. The link is a link — visibly, and to a
+     screen reader — rather than the whole card being made tappable, because
+     "Coming soon" and "Register as a volunteer" are two different statements
+     and only one of them leads anywhere. */
+  .fb-vol{
+    display:inline-flex;align-items:center;gap:7px;align-self:center;margin-top:11px;
+    font-size:.82rem;font-weight:700;color:var(--brand-700);text-decoration:none;
+    border-bottom:1px solid rgba(94,24,68,.28);padding-bottom:2px;
+  }
+  .fb-vol svg{width:13px;height:13px;transition:transform .18s ease;}
+  .fb-vol:hover{color:var(--brand-900);border-bottom-color:var(--brand-900);}
+  .fb-vol:hover svg{transform:translateX(3px);}
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
   .glance-donate .gd-ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
   .glance-donate .gd-ic svg{width:14px;height:14px;}
@@ -616,6 +638,27 @@ window.TAIYABAH_PUBLIC = {
   .ph-p{color:rgba(243,239,227,.78);line-height:1.7;margin-bottom:18px;}
   .needs{display:flex;flex-wrap:wrap;gap:8px;}
   .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:600;}
+
+  /* ---------- NEW BUILD: the appeal meter ---------------------------------
+     One ratio against one limit, so a meter — not a chart, and not a pie of
+     two slices. The track is the same gold as the fill at low opacity, so
+     "how far along" reads across the whole bar rather than as two unrelated
+     colours.
+
+     The figure is in the body sans, not Fraunces. A serif display number
+     beside real money reads as decoration, and this number is not decoration.
+     No tabular-nums either — at 1.8rem it makes £350,000 look gappy; tabular
+     figures are for the columns in the ledger below, where digits must line
+     up. ------------------------------------------------------------------ */
+  .ph-meter{margin:20px 0 4px;}
+  .ph-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .ph-raised{font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;font-size:1.8rem;line-height:1;color:#F3EFE3;}
+  .ph-raised .of{display:block;font-size:.8rem;font-weight:500;color:rgba(243,239,227,.72);margin-top:6px;letter-spacing:.01em;}
+  .ph-pct{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);}
+  .ph-track{height:11px;border-radius:999px;background:rgba(198,162,76,.2);overflow:hidden;}
+  .ph-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));}
+  .ph-left{margin-top:11px;font-size:.82rem;line-height:1.55;color:rgba(243,239,227,.8);}
+  .ph-left b{color:var(--gold-bright);font-weight:700;}
 
   /* ---------- NEW BUILD: status + plan side by side ---------- */
   .nb-status-grid{display:grid;grid-template-columns:1fr;gap:20px;}
@@ -1903,30 +1946,38 @@ window.TAIYABAH_PUBLIC = {
           <a class="btn btn-gold" href="https://chat.whatsapp.com/GUU82kvhjNmCXNksk5iRwm" target="_blank" rel="noopener">Or tap to join →</a>
         </div>
 
-        <div class="glance-card">
+        <div class="glance-card glance-foodbank">
           <div class="glance-head">
-            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg> Quick Links</span>
+            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg> Taiyabah Food Bank</span>
           </div>
-          <a class="gl-link" data-nav="shop">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg></span>
-            <span class="gl-text"><span class="n">Shop</span><span class="s">Books, oils, fragrances &amp; more</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="services">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3.5h6v3.4l2 3.2v8.4a2 2 0 01-2 2H9a2 2 0 01-2-2v-8.4l2-3.2z"/><path d="M7.5 15c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"/></svg></span>
-            <span class="gl-text"><span class="n">Services</span><span class="s">Hall hire, funerals &amp; marriage</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="madrasah">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
-            <span class="gl-text"><span class="n">Madrasah</span><span class="s">Islamic education for children</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="contact">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-            <span class="gl-text"><span class="n">Contact</span><span class="s">Get in touch with the office</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
+          <div class="fb-art">
+            <!-- Crescent and star. Replaced a drawn bag of groceries on 12 September
+                 2026 — the committee wanted something Islamic rather than literal, and
+                 the card's title carries the word "food bank" on its own.
+
+                 The crescent is a filled circle with a second, offset circle masked out
+                 of it. Drawing it as a single path means hand-tuning two arc radii until
+                 the horns look right, and anybody adjusting it later has to do that
+                 again; two circles and a mask can be nudged by changing one number. The
+                 mask id has to stay unique — the whole site is inlined into one file. -->
+            <svg viewBox="0 0 240 150" role="img" aria-label="A crescent moon and star.">
+              <circle cx="120" cy="75" r="58" fill="#C6A24C" opacity=".13"/>
+              <circle cx="120" cy="75" r="49" fill="none" stroke="#C6A24C" stroke-width="1.4" opacity=".45" stroke-dasharray="1 7" stroke-linecap="round"/>
+              <mask id="fbCrescentMask">
+                <rect width="240" height="150" fill="#000"/>
+                <circle cx="116" cy="77" r="33" fill="#fff"/>
+                <circle cx="133" cy="65" r="27.5" fill="#000"/>
+              </mask>
+              <circle cx="116" cy="77" r="33" fill="#4B1136" mask="url(#fbCrescentMask)"/>
+              <g fill="#C6A24C" transform="translate(146,52) scale(.22) translate(-50,-50)">
+                <polygon points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/>
+              </g>
+            </svg>
+          </div>
+          <p class="fb-copy">A new service for families across Bolton who need a little help. Details to follow, insh&#0257;&#702;All&#0257;h.</p>
+          <span class="fb-soon">Coming soon</span>
+          <a class="fb-vol" href="#" data-nav="volunteer">Register as a volunteer
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
         </div>
 
         <div class="glance-card glance-donate">
@@ -2055,7 +2106,29 @@ window.TAIYABAH_PUBLIC = {
           <div class="phase-card">
             <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
             <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
-            <p class="ph-p">Help make the masjid ready for salah, Qur'an and remembrance for generations to come.</p>
+            <p class="ph-p">Masjid internal fixtures and fittings &mdash; tiling, carpets, heating, electrical works, lighting and d&eacute;cor, completed to a full finish.</p>
+
+            <!-- Figures from the masjid's New Build Update board, September 2026.
+                 THESE ARE THE ONLY NUMBERS ON THE PAGE THAT MOVE. When the board
+                 is updated, three things change together and must not drift:
+                 the two figures here, the width of .ph-fill, and the matching
+                 row in the ledger below. The percentage is stated in words as
+                 well as drawn, because a 14% bar is easy to misread as an empty
+                 one. -->
+            <div class="ph-meter">
+              <div class="ph-meter-top">
+                <span class="ph-raised">&pound;350,000
+                  <span class="of">raised towards &pound;2,500,000</span>
+                </span>
+                <span class="ph-pct">14% funded</span>
+              </div>
+              <div class="ph-track" role="img" aria-label="14 per cent of the £2,500,000 target raised so far.">
+                <div class="ph-fill" style="width:14%;"></div>
+              </div>
+              <p class="ph-left"><b>&pound;2,150,000 still to raise.</b> Every contribution
+                takes the masjid closer to being ready for salah, Qur'an and remembrance.</p>
+            </div>
+
             <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
           </div>
           <div class="card nb-plan-card">
@@ -2069,6 +2142,7 @@ window.TAIYABAH_PUBLIC = {
         </div>
       </div>
 
+
       <div class="subsection">
         <div class="subhead"><span class="idx">02</span><h3>Our journey so far &amp; how to give</h3><span class="rule"></span></div>
         <div class="nb-journey-grid">
@@ -2079,15 +2153,28 @@ window.TAIYABAH_PUBLIC = {
                 <div class="nb-tl-body">
                   <div class="nb-tl-date">2018 &ndash; Ramadhan 2019</div>
                   <h4>Phase 1 <span class="nb-tl-status done">Completed</span></h4>
-                  <p>Construction of the new building got underway, with Phase 1 completed and marked with a site time-lapse shared with the community.</p>
+                  <p>Ground works and superstructure &mdash; piling and steel. Funded in full at &pound;800,000, and marked with a site time-lapse shared with the community.</p>
                 </div>
               </div>
+
+              <!-- Phase 2. The date was wrong before 12 September 2026: the page
+                   said "Completed · December 2021", but the Media page calls
+                   December 2021 the Phase 2 START, so the entry now reads "from"
+                   that date.
+
+                   The works ARE complete — confirmed by Yameen, 12 September
+                   2026. The £450,000 the board shows in the bank is therefore
+                   described as a figure and nothing more. It deliberately no
+                   longer says the money is there "to see it through to
+                   completion": that sentence beside the word Completed is the
+                   page contradicting itself, and a contradiction about money on
+                   a charity's own site is the kind a donor notices. -->
               <div class="nb-tl-item nb-tl-done">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
-                  <div class="nb-tl-date">December 2021</div>
+                  <div class="nb-tl-date">From December 2021</div>
                   <h4>Phase 2 <span class="nb-tl-status done">Completed</span></h4>
-                  <p>The next phase of the building got underway and was carried through to completion.</p>
+                  <p>Watertight and boundary wall, including the domes, windows and doors. Of an anticipated &pound;2,600,000, &pound;2,150,000 had been paid by December 2025, and the remaining &pound;450,000 is in the bank.</p>
                 </div>
               </div>
               <div class="nb-tl-item nb-tl-done">
@@ -2098,24 +2185,32 @@ window.TAIYABAH_PUBLIC = {
                   <p>A dedicated fundraising campaign held to help carry the build forward.</p>
                 </div>
               </div>
+              <div class="nb-tl-item nb-tl-done">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">Phases 3.1 &amp; 3.2</div>
+                  <h4>Madrasah &amp; drainage <span class="nb-tl-status done">Fully funded</span></h4>
+                  <p>Classrooms and internal works for the madrasah building at &pound;490,000, and the external drainage installation at &pound;125,000 &mdash; both raised in full and in the bank.</p>
+                </div>
+              </div>
               <div class="nb-tl-item nb-tl-active">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
                   <div class="nb-tl-date">Now &middot; Phase 3.3</div>
-                  <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">In Progress</span></h4>
-                  <p>The current appeal — tiling, carpets, heating, lighting, electrical and decor, to make the masjid ready for salah, Qur'an and remembrance.</p>
+                  <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">Current appeal</span></h4>
+                  <p>Tiling, carpets, heating, electrical works, lighting and d&eacute;cor, to a full finish. &pound;350,000 raised of an anticipated &pound;2,500,000 &mdash; this is what the masjid is raising for now.</p>
                 </div>
               </div>
               <div class="nb-tl-item nb-tl-upcoming">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
-                  <div class="nb-tl-date">What's next</div>
-                  <h4>Full facilities complete <span class="nb-tl-status upcoming">Upcoming</span></h4>
-                  <p>Large prayer hall, modern ablution areas, integrated kitchen, additional lecture rooms and an educational centre for the whole community.</p>
+                  <div class="nb-tl-date">What's next &middot; Phases 3.4, 3.5 &amp; 4</div>
+                  <h4>Facilities &amp; grounds <span class="nb-tl-status upcoming">Not yet costed</span></h4>
+                  <p>Wu&#7693;&#363;&#702; kh&#257;na, toilets and showers; the jam&#257;&#703;at kitchen and jan&#257;zah kh&#257;na; then car parking, landscaping, external lighting, the front and side boundary wall, gates and railings. Costs for these are still to be confirmed.</p>
                 </div>
               </div>
             </div>
-            <p class="nb-tl-note">Dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
+            <p class="nb-tl-note">Figures are as displayed on the masjid's New Build Update board, September 2026; dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
           </div>
 
           <div class="nb-journey-col nb-give-card" id="give">
@@ -4119,6 +4214,150 @@ window.TAIYABAH_PUBLIC = {
 
 <!-- ================= CONTACT ================= -->
 <!-- ================= PRIVACY ================= -->
+<!-- ================= FOOD BANK: REGISTER AS A VOLUNTEER =================
+     Added 12 September 2026. The food bank is not open. This page exists so
+     that somebody willing to help can say so while they are thinking about
+     it, and so the committee can see how many people are actually willing
+     before they commit to opening.
+
+     EVERY FIELD HERE HAS A REASON, and the reason is written down in
+     db/023_foodbank_volunteers.sql. Under Article 5(1)(c) "it was on the
+     paper form" is not one. There is no address, no date of birth and no
+     ethnicity, because none of them help ring somebody about a Sunday.
+
+     The checks below are for the person filling the form in, NOT for the
+     database. Everything that matters — sixteen or over, consent given, a
+     contact method that can actually be used — is a constraint in 023 as
+     well, because the anon key is in this page's source and anybody can post
+     straight at the API. A check that only exists in JavaScript does not
+     exist. ================================================================ -->
+<div class="page" data-page="volunteer">
+  <section class="page-masthead">
+    <div class="container">
+      <a class="back-link" href="#" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Home</a>
+      <div class="section-head on-dark">
+        <div class="eyebrow">Taiyabah Food Bank</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Register as a volunteer</h1>
+        <p>The food bank has not opened yet. Leave your details and the masjid will be in touch when it does.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-split is-rail">
+        <div class="svc-detail-facts">
+          <p style="color:var(--muted);font-size:.95rem;line-height:1.75;">
+            The Taiyabah Food Bank is being planned. Nothing is open yet and there is
+            nothing to turn up to &mdash; but knowing how many people are willing to
+            help, and when they are free, is what makes it possible to open at all.
+          </p>
+
+          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">What happens after you register</h3><span class="rule"></span></div>
+          <div class="soon-list">
+            <div class="soon-row"><span class="t">Right now</span><span style="font-weight:700;">Nothing to do</span></div>
+            <div class="soon-row"><span class="t">When it opens</span><span style="font-weight:700;">The masjid contacts you</span></div>
+            <div class="soon-row"><span class="t">Your details are kept</span><span style="font-weight:700;">12 months</span></div>
+          </div>
+          <p style="font-size:.82rem;color:var(--muted);margin-top:12px;line-height:1.7;">
+            The masjid will contact you the way you ask it to, about the food bank and
+            nothing else. Your details are deleted twelve months after you register,
+            automatically. You can ask to be taken off the list at any time &mdash;
+            ring the office on <a href="tel:01204535997" style="color:var(--brand-700);font-weight:600;">01204&nbsp;535&nbsp;997</a>
+            or see the <a href="#" data-nav="privacy" style="color:var(--brand-700);font-weight:600;">privacy notice</a>.
+          </p>
+
+          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">If you are under 16</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:.9rem;line-height:1.75;">
+            Please do not fill this in. Ask a parent to ring the office on
+            <a href="tel:01204535997" style="color:var(--brand-700);font-weight:600;">01204&nbsp;535&nbsp;997</a>
+            between 5pm and 7pm instead &mdash; that is a conversation worth having with
+            a person rather than a form.
+          </p>
+        </div>
+
+        <div class="svc-aside">
+          <div class="cform" id="vol-card">
+            <p class="cform-lead">It takes a minute. Nothing is sent until you press the button.</p>
+
+            <form id="vol-form" novalidate autocomplete="on">
+              <div class="hp-trap" aria-hidden="true"><label for="vol-web">Leave empty</label>
+                <input type="text" id="vol-web" tabindex="-1" autocomplete="off"></div>
+
+              <div class="cf-row" id="vw_name"><label for="vol-name">Name</label>
+                <input type="text" id="vol-name" autocomplete="name" maxlength="80">
+                <div class="hf-err">Please give your name.</div></div>
+
+              <div class="cf-row" id="vw_phone"><label for="vol-phone">Contact number</label>
+                <input type="tel" id="vol-phone" autocomplete="tel" maxlength="24" inputmode="tel">
+                <div class="hf-err">Please give a number the masjid can reach you on.</div></div>
+
+              <div class="cf-row" id="vw_email"><label for="vol-email">Email <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional unless you choose email below)</span></label>
+                <input type="email" id="vol-email" autocomplete="email" maxlength="120">
+                <div class="hf-err">That email address does not look right.</div></div>
+
+              <div class="cf-row" id="vw_gender"><label>Gender</label>
+                <div class="yn2">
+                  <label><input type="radio" name="vol-gender" value="male"> Male</label>
+                  <label><input type="radio" name="vol-gender" value="female"> Female</label>
+                </div>
+                <div class="hf-err">Please choose one.</div>
+                <p style="font-size:.74rem;color:var(--muted);margin-top:7px;line-height:1.5;">Asked only so the rota can be organised.</p></div>
+
+              <div class="cf-row" id="vw_age"><label for="vol-age">Age</label>
+                <input type="number" id="vol-age" min="16" max="110" inputmode="numeric" style="max-width:140px;">
+                <div class="hf-err">You need to be 16 or over to register online.</div></div>
+
+              <div class="cf-row" id="vw_pref"><label>Preferred method of contact</label>
+                <div class="yn2">
+                  <label><input type="radio" name="vol-pref" value="phone"> Phone</label>
+                  <label><input type="radio" name="vol-pref" value="text"> Text message</label>
+                  <label><input type="radio" name="vol-pref" value="email"> Email</label>
+                </div>
+                <div class="hf-err">Please choose one.</div></div>
+
+              <div class="cf-row" id="vw_sun"><label>Are you available on Sunday mornings?</label>
+                <div class="yn2">
+                  <label><input type="radio" name="vol-sun" value="yes"> Yes</label>
+                  <label><input type="radio" name="vol-sun" value="no"> No</label>
+                </div>
+                <div class="hf-err">Please choose one.</div></div>
+
+              <div class="cf-row" id="vw_freq"><label>How often are you available?</label>
+                <div class="yn2">
+                  <label><input type="radio" name="vol-freq" value="weekly"> Weekly</label>
+                  <label><input type="radio" name="vol-freq" value="fortnightly"> Fortnightly</label>
+                  <label><input type="radio" name="vol-freq" value="monthly"> Monthly</label>
+                </div>
+                <div class="hf-err">Please choose one.</div></div>
+
+              <div class="cf-row"><label for="vol-skills">Profession or skills <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
+                <input type="text" id="vol-skills" maxlength="140" placeholder="Driver, first aid, food hygiene&hellip;"></div>
+
+              <label class="declare2" id="vw_consent"><input type="checkbox" id="vol-consent">
+                <span>I am happy for Taiyabah Masjid to keep my details for up to twelve
+                  months and to contact me about the food bank. I can ask to be removed
+                  at any time.</span></label>
+
+              <div class="ar-problems" id="vol-problems" role="alert" aria-live="polite"></div>
+
+              <button type="submit" class="btn btn-gold cf-submit" id="vol-submit">Register as a volunteer</button>
+              <p class="cf-note">Nothing is sent until you press this. Questions? Ring
+                <a href="tel:01204535997">01204 535 997</a>, 5pm&ndash;7pm.</p>
+            </form>
+
+            <div class="ar-done" id="vol-done">
+              <h4 id="vol-doneH">&nbsp;</h4>
+              <p id="vol-doneP">&nbsp;</p>
+              <div class="ar-ref" id="vol-doneRef">&mdash;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <div class="page" data-page="privacy">
   <section class="page-masthead">
     <div class="container">
@@ -4144,7 +4383,7 @@ window.TAIYABAH_PUBLIC = {
         <p>Bolton Central Islamic Society, a registered charity (number 1041569), of 31a Draycott Street, Bolton BL1 8HD, operating as Taiyabah Masjid. We are the data controller for this website. You can reach us on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a> or at <a href="mailto:info@taiyabahmasjid.com">info@taiyabahmasjid.com</a>.</p>
 
         <h2>What this website collects</h2>
-        <p>Five things, and only the ones you choose to send.</p>
+        <p>Six things, and only the ones you choose to send.</p>
         <h3 class="legal-sub">A hall hire request</h3>
         <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date</strong> and <strong>what you asked to hire</strong> &mdash; one, two or three halls, or the kitchen on its own.</p>
         <p>If you pay the deposit on this website, the payment is taken by <strong>Stripe</strong>, who handle card payments for us. <strong>Your card details never reach this website</strong> &mdash; you are taken to Stripe's own secure page and back again. We are told only that your booking reference has been paid, and we keep that alongside your booking. Stripe holds the payment record itself under their own privacy policy, as they must for accounting and fraud prevention.</p>
@@ -4179,9 +4418,24 @@ window.TAIYABAH_PUBLIC = {
         website or the masjid.</p>
         <p><strong>Zakat is not taken through this website.</strong></p>
 
+        <h3 class="legal-sub">A food bank volunteer registration</h3>
+        <p>If you register to help at the food bank we receive your <strong>name, telephone
+        number, age, gender, how you would like to be contacted, whether you are free on Sunday
+        mornings and how often you are available</strong> &mdash; plus your <strong>email
+        address</strong> if you asked to be contacted that way, and anything you write in the
+        professions and skills box.</p>
+        <p><strong>Gender is asked for one reason: organising the rota.</strong> It is not used
+        for anything else. We do not ask for your address, your date of birth or anything about
+        your background, because none of those help us ring you about a Sunday morning.</p>
+        <p><strong>You must be 16 or over to register on this website.</strong> That is not
+        simply a message on the form &mdash; the database refuses a younger age, whichever way it
+        arrives. If you are younger and would like to help, please ask a parent to ring the
+        office.</p>
+
         <p>If you do not send any of those, this website collects nothing about you at all.</p>
 
         <h2>Why we need it, and what allows us to hold it</h2>
+        <p>For a <strong>food bank volunteer registration</strong> our lawful basis is your <strong>consent</strong> (UK GDPR Article 6(1)(a)). Nobody has to volunteer, so nothing else would be honest. You tick a box to say so, and the database will not store a registration where that box was not ticked. You can withdraw at any time by ringing the office, and we will delete your details.</p>
         <p>For a <strong>hall hire</strong> we need your name and telephone number so that the office can confirm the balance and the caretaker can arrange access with you before the day, and your address because a hall hire is a contract and we need to know who we are contracting with. Our lawful basis is <strong>performance of a contract, and taking steps at your request before entering into one</strong> (UK GDPR Article 6(1)(b)).</p>
         <p>For a <strong>nik&#0257;&#7717; date request</strong> the same basis applies: you are asking
         us to consider a date, which is a step towards an arrangement between you and the masjid.
@@ -4216,7 +4470,7 @@ window.TAIYABAH_PUBLIC = {
         we will not pass them to anyone else for marketing.</p>
 
         <h2>Who can see it</h2>
-        <p>Hall hire and nik&#0257;&#7717; requests are visible to the masjid office staff who handle them, and to nobody else. Class sign-ups are visible to masjid administrators. The website itself cannot read any of them back &mdash; it can only add new ones.</p>
+        <p>Hall hire and nik&#0257;&#7717; requests are visible to the masjid office staff who handle them, and to nobody else. Class sign-ups and <strong>food bank volunteer registrations</strong> are visible to masjid administrators and office staff. The website itself cannot read any of them back &mdash; it can only add new ones.</p>
         <p>Staff reach them through a private portal that requires a password <em>and</em> a code from an authenticator app. Since September 2026 that second step is enforced by the database itself rather than by the website, so a stolen password on its own opens nothing.</p>
         <p>All of it is stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes.</p>
         <p>So that a request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent through <strong>one.com</strong>, the masjid's own email provider &mdash; no other company handles it. It contains your name, your telephone number and the date and what you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
@@ -4224,6 +4478,7 @@ window.TAIYABAH_PUBLIC = {
         <h2>How long we keep it</h2>
         <p><strong>Hall hire requests</strong> are deleted six months after the date you asked about. Requests that were declined or cancelled are deleted after three months.</p>
         <p><strong>Nik&#0257;&#7717; date requests</strong> and <strong>class sign-ups</strong> are deleted twelve months after you send them &mdash; long enough to cover the year you asked about and answer any question afterwards, and no longer.</p>
+        <p><strong>Food bank volunteer registrations</strong> are deleted twelve months after you register. Nobody has to remember to do it &mdash; the database does it on a timer, every night.</p>
         <p><strong>Gift Aid records are kept for six years</strong> after the end of the financial year the donation falls in. That is longer than anything else on this page, and it is not our choice: HMRC can inspect a Gift Aid claim for that long, and a claim we cannot evidence has to be repaid. If you did not tick Gift Aid, there is no record of you to keep.</p>
         <p><strong>Shop accounts</strong> are kept until you ask us to close yours. Ring or email the office and we will delete it.</p>
 
@@ -5589,6 +5844,168 @@ window.TAIYABAH_PUBLIC = {
     });
   })();
 
+
+  /* ---------------- Registering to help at the food bank -------------------
+     Migration 023. The food bank is not open; this is a list of people to
+     ring when it is.
+
+     EVERYTHING CHECKED HERE IS ALSO CHECKED IN THE DATABASE. The anon key is
+     in this page's source, the API is public, and anybody can post straight
+     at register_foodbank_volunteer with whatever they like. So sixteen-or-
+     over, consent, and "email chosen means an email address given" are CHECK
+     constraints in 023 as well. What is below exists to tell a real person
+     what is missing before they press the button — not to protect the table.
+
+     The honeypot and the two-second trap are the same pair the course form
+     uses, and in the same order: a bot that fills every field gets a polite
+     thank-you and writes nothing.
+  ------------------------------------------------------------------------- */
+  (function(){
+    var form = document.getElementById('vol-form');
+    if(!form) return;
+
+    var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    var loadedAt = Date.now();
+    var $ = function(id){ return document.getElementById(id); };
+    function val(id){ return (($(id) || {}).value || '').trim(); }
+    function picked(name){
+      var el = form.querySelector('input[name="' + name + '"]:checked');
+      return el ? el.value : '';
+    }
+    function mark(row, bad){ var el = $(row); if(el) el.classList.toggle('bad', !!bad); }
+    function problems(list){
+      var box = $('vol-problems');
+      box.innerHTML = list.map(function(m){
+        return '• ' + m.replace(/[<>&]/g, function(c){
+          return ({'<':'&lt;','>':'&gt;','&':'&amp;'})[c]; });
+      }).join('<br>');
+      box.classList.add('on');
+      box.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      $('vol-problems').classList.remove('on');
+
+      /* Honeypot first, then the clock. Checked in this order and BEFORE the
+         real validation, so a bot never learns which field it got wrong — an
+         earlier form on this site had them the other way round and showed a
+         fake success screen to anybody who pressed the button quickly to see
+         what was required. */
+      if(val('vol-web') !== '' || (Date.now() - loadedAt) < 2000){
+        form.style.display = 'none';
+        $('vol-done').classList.add('on');
+        $('vol-doneH').textContent = 'Thank you';
+        $('vol-doneP').textContent = '';
+        $('vol-doneRef').textContent = '—';
+        return;
+      }
+
+      var bad = [];
+      var name = val('vol-name'), phone = val('vol-phone'), email = val('vol-email');
+      var gender = picked('vol-gender'), pref = picked('vol-pref');
+      var sun = picked('vol-sun'), freq = picked('vol-freq');
+      var age = parseInt(val('vol-age'), 10);
+      var consent = $('vol-consent').checked;
+
+      mark('vw_name', name.length < 2);
+      if(name.length < 2) bad.push('Please give your name.');
+
+      var digits = phone.replace(/\D/g, '');
+      mark('vw_phone', digits.length < 10);
+      if(digits.length < 10) bad.push('Please give a contact number the masjid can reach you on.');
+
+      /* An email address is only required when it is the way they have asked
+         to be contacted. Requiring it of everybody would turn away the people
+         most likely to have a free Sunday morning. */
+      var needEmail = (pref === 'email');
+      var badEmail = email !== '' ? !EMAIL.test(email) : needEmail;
+      mark('vw_email', badEmail);
+      if(badEmail) bad.push(needEmail && email === ''
+        ? 'You have chosen email, so please give your email address.'
+        : 'That email address does not look right.');
+
+      mark('vw_gender', !gender); if(!gender) bad.push('Please choose male or female, so the rota can be organised.');
+      mark('vw_pref', !pref);     if(!pref)   bad.push('Please say how you would like to be contacted.');
+      mark('vw_sun', !sun);       if(!sun)    bad.push('Please say whether you are free on Sunday mornings.');
+      mark('vw_freq', !freq);     if(!freq)   bad.push('Please say how often you are available.');
+
+      var badAge = !(age >= 16 && age <= 110);
+      mark('vw_age', badAge);
+      if(badAge) bad.push(age > 0 && age < 16
+        ? 'You need to be 16 or over to register online. Please ask a parent to ring the office instead.'
+        : 'Please give your age as a number.');
+
+      mark('vw_consent', !consent);
+      if(!consent) bad.push('The masjid cannot keep your details without your agreement.');
+
+      if(bad.length){ problems(bad); return; }
+
+      var btn = $('vol-submit');
+      btn.disabled = true; btn.textContent = 'Sending…';
+
+      var cfg = window.TAIYABAH_PUBLIC || {};
+      if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+         String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1){
+        btn.disabled = false; btn.textContent = 'Register as a volunteer';
+        problems(['Registering online is not connected yet. Please ring the office on 01204 535 997 between 5pm and 7pm.']);
+        return;
+      }
+
+      /* The dashboard shows the project URL with /rest/v1 already on the end,
+         and pasting it verbatim yields ".../rest/v1/rest/v1/...". Trimmed here
+         for the same reason the hall form trims it. */
+      var apiBase = String(cfg.SUPABASE_URL).trim()
+                      .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+
+      fetch(apiBase + '/rest/v1/rpc/register_foodbank_volunteer', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json',
+                  'apikey': cfg.SUPABASE_ANON_KEY,
+                  'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
+        body: JSON.stringify({ payload:{
+          full_name: name, phone: phone, email: email,
+          gender: gender, age: age, preferred_contact: pref,
+          sunday_mornings: (sun === 'yes'), frequency: freq,
+          /* The CHECKBOX, not a literal true. It was hard-coded at first, and
+             a negative control on _test/volunteer_test.py caught it: with the
+             browser's consent check removed, an unticked box still sent
+             consent:true and the database's fbv_consent_required constraint —
+             the actual backstop — would have accepted the row happily. A
+             literal here turns a two-layer guarantee into a one-layer one and
+             looks identical in the diff. */
+          skills: val('vol-skills'), consent: consent
+        }})
+      })
+      .then(function(r){ return r.text().then(function(t){ return { ok:r.ok, body:t }; }); })
+      .then(function(res){
+        if(!res.ok) throw new Error(res.body);
+        var d = JSON.parse(res.body);
+        form.style.display = 'none';
+        $('vol-done').classList.add('on');
+        $('vol-doneH').textContent = d.already
+          ? 'You are already on the list'
+          : 'Jazakallah — you are on the list';
+        $('vol-doneP').textContent = d.already
+          ? 'We already had your details, so nothing has been added twice. What you have just told us has been updated.'
+          : 'There is nothing to do now. The masjid will contact you when the food bank opens.';
+        $('vol-doneRef').textContent = d.reference || '—';
+        $('vol-done').scrollIntoView({ behavior:'smooth', block:'center' });
+      })
+      .catch(function(err){
+        btn.disabled = false; btn.textContent = 'Register as a volunteer';
+        /* The database's refusals are written to be read by the person who
+           caused them, so show them rather than a house error. Anything else
+           gets the phone number. */
+        var m = String(err.message || '');
+        var friendly = /16 or over|your agreement|as a number|reach you on|your name/.test(m)
+          ? (m.match(/"message":"([^"]+)"/) || [null, null])[1] || null
+          : null;
+        problems([friendly ||
+          'We could not register you just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
+      });
+    });
+  })();
 
   /* ---------------- Paying the nikāḥ fee online ----------------------------
      Migration 018. A way to PAY, not a way to BOOK.
