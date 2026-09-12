@@ -89,6 +89,17 @@
       needs: ["admin"]
     },
     {
+      // Added 12 September 2026 with the volunteer form on the Food Bank card.
+      // Built at the same time as the form, deliberately: this is the third
+      // time on this site that a form has been turned on, and the first two
+      // both went live with nowhere to read the answers back.
+      href:  "../volunteers/",
+      title: "Food Bank volunteers",
+      desc:  "Who has offered to help at the food bank before it opens \u2014 how many, " +
+             "when they are free, and who still needs ringing.",
+      needs: ["admin", "hall_office"]
+    },
+    {
       href:  "../portal/",
       title: "Madrasah portal",
       desc:  "Pupils, classes and staff. Holds children's records, so it is the " +
