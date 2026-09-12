@@ -74,6 +74,21 @@
       needs: ["admin"]
     },
     {
+      // Added 12 September 2026, with the Gift Aid dropdown on the donation
+      // links. Before this the only way to get a claim out of the database was
+      // to run SQL in the Supabase editor — which a masjid treasurer is never
+      // going to do, so the claim would simply not get made and every recorded
+      // declaration would have been for nothing. The same fault as the course
+      // sign-ups in September: giving the data somewhere to land and giving a
+      // human a way to read it back are two separate jobs.
+      href:  "../giftaid/",
+      title: "Gift Aid",
+      desc:  "Donations where the donor claimed Gift Aid and the masjid has not " +
+             "reclaimed the tax yet. Copy them into HMRC's spreadsheet, file the " +
+             "claim, then mark them done.",
+      needs: ["admin"]
+    },
+    {
       href:  "../portal/",
       title: "Madrasah portal",
       desc:  "Pupils, classes and staff. Holds children's records, so it is the " +
