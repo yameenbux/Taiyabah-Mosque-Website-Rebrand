@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Masjid Administration — Taiyabah Masjid</title>
 <style>
 /* Self-hosted webfonts — SIL Open Font License 1.1. Served from this file so
@@ -332,6 +334,164 @@
     .brand .pcredit{margin:auto auto 0 max(6vw,32px);}
   }
 </style>
+
+<style>
+  /* ---- THE DASHBOARD -----------------------------------------------------
+     /portals/ used to be a list of five links in a 420px card. It is now the
+     page an administrator lands on, so when the dashboard is showing the
+     shell drops to one column and the card widens. The sign-in side is
+     untouched: a form wants 420px, a dashboard does not.
+
+     The switch is a class on .shell rather than a second page, so signing in
+     does not throw away and rebuild the shell around you. --------------- */
+  /* ANY author `display` rule beats the browser's [hidden]{display:none}, so
+     an element toggled with .hidden = true stays on screen while every test
+     that asks for its `hidden` PROPERTY passes. This site has been caught by
+     it twice — `.field` in /auth/ and `.bk-tab` in /venue/ — and a third time
+     here: the automatic-jobs line rendered as an empty rule and a clock icon
+     on a quiet day. Stated once, at the top, for everything in the
+     dashboard. */
+  .dash [hidden], .dash-top [hidden]{display:none !important;}
+
+  .shell.dash-mode{grid-template-columns:1fr;}
+  .shell.dash-mode .brand{display:none;}
+  .shell.dash-mode .panel{align-items:flex-start;padding:0;}
+  .shell.dash-mode .card.dash{
+    width:100%;max-width:none;border:none;border-radius:0;box-shadow:none;
+    padding:0 0 40px;background:transparent;
+  }
+
+  .dash-top{
+    display:flex;align-items:center;gap:14px;background:var(--brand-900);
+    padding:15px clamp(16px,4vw,34px);margin-bottom:clamp(18px,3vw,26px);
+  }
+  .dash-mark{
+    width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.18);
+    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .dash-mark svg{width:15px;height:15px;}
+  .dash-who{flex:1;min-width:0;}
+  .dash-who strong{display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:#F3EFE3;}
+  .dash-who span{display:block;font-size:.74rem;color:rgba(243,239,227,.6);word-break:break-all;}
+  .dash-top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .dash-role{
+    font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;background:rgba(198,162,76,.2);
+    border:1px solid rgba(198,162,76,.45);color:var(--gold-bright);white-space:nowrap;
+  }
+  .dash-me{display:none;flex-direction:column;align-items:flex-end;line-height:1.3;}
+  @media (min-width:700px){ .dash-me{display:flex;} }
+  .dash-me b{font-size:.8rem;font-weight:700;color:rgba(243,239,227,.9);}
+  .dash-me i{font-style:normal;font-size:.7rem;color:rgba(243,239,227,.5);}
+  .dash-out{
+    background:none;border:none;font-family:inherit;font-size:.78rem;
+    color:rgba(243,239,227,.6);cursor:pointer;padding:6px 4px;
+  }
+  .dash-out:hover{color:#F3EFE3;}
+
+  .dash-body{padding:0 clamp(16px,4vw,34px);}
+  .dash-h{
+    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+    flex-wrap:wrap;margin-bottom:11px;
+  }
+  .dash-h h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.35rem;color:var(--brand-900);}
+  .dash-h .when{font-size:.76rem;color:var(--muted);}
+  .dash-lab{
+    font-size:.66rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:11px;
+  }
+
+  /* needs you */
+  .needs{display:grid;grid-template-columns:1fr;gap:11px;margin-bottom:26px;}
+  @media (min-width:760px){ .needs{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media (min-width:1120px){ .needs{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  .need{
+    background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
+    border-radius:12px;padding:14px 16px;display:block;text-decoration:none;color:inherit;
+  }
+  .need:hover{border-color:var(--gold);background:#fff;}
+  .need.now{border-left-color:var(--danger);}
+  .need .flag{
+    display:flex;align-items:center;gap:7px;font-size:.63rem;font-weight:800;
+    letter-spacing:.1em;text-transform:uppercase;color:#8a6c1f;margin-bottom:6px;
+  }
+  .need.now .flag{color:#8f3f22;}
+  .need .flag svg{width:13px;height:13px;flex-shrink:0;}
+  .need .t{display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:.98rem;color:var(--ink);line-height:1.35;}
+  .need .d{display:block;font-size:.8rem;color:var(--muted);margin-top:4px;line-height:1.45;}
+  .need .go{font-size:.78rem;font-weight:700;color:var(--brand-700);margin-top:9px;display:block;}
+
+  /* the calm state — a line, not a grid of noughts */
+  .all-clear{
+    display:flex;align-items:center;gap:11px;background:rgba(63,122,70,.09);
+    border:1px solid rgba(63,122,70,.35);color:#2C5E33;border-radius:11px;
+    padding:14px 17px;font-size:.9rem;margin-bottom:26px;
+  }
+  .all-clear svg{width:17px;height:17px;flex-shrink:0;}
+
+  /* the estate */
+  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:26px;}
+  @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,minmax(0,1fr));} }
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;}
+  .tile .k{font-size:.63rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);}
+  .tile .v{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;
+    font-size:1.75rem;line-height:1.1;color:var(--brand-900);margin-top:6px;
+  }
+  .tile .s{font-size:.75rem;color:var(--muted);margin-top:3px;}
+
+  /* areas */
+  .areas{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:26px;}
+  @media (min-width:760px){ .areas{grid-template-columns:repeat(2,minmax(0,1fr));} }
+  @media (min-width:1120px){ .areas{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  .area{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px 18px;display:flex;flex-direction:column;gap:8px;
+    text-decoration:none;color:inherit;transition:.18s ease;
+  }
+  .area:hover{border-color:var(--gold);background:#fff;}
+  .area .h{display:flex;align-items:center;gap:9px;}
+  .area .h svg{width:17px;height:17px;color:var(--brand-700);flex-shrink:0;}
+  .area .h .n{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);min-width:0;}
+  .area .h .chip{
+    margin-left:auto;font-size:.6rem;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap;
+    background:rgba(198,162,76,.18);border:1px solid rgba(198,162,76,.5);color:#8a6c1f;
+  }
+  .area .h .chip.hot{background:rgba(180,83,47,.12);border-color:rgba(180,83,47,.4);color:#8f3f22;}
+  .area .h .chip.good{background:rgba(63,122,70,.13);border-color:rgba(63,122,70,.35);color:#2C5E33;}
+  .area .nums{display:flex;gap:15px;flex-wrap:wrap;font-size:.79rem;color:var(--muted);}
+  .area .nums b{color:var(--ink);}
+  .area .can{font-size:.77rem;color:var(--muted);line-height:1.45;}
+
+  /* log + housekeeping */
+  .dash-2col{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media (min-width:900px){ .dash-2col{grid-template-columns:1.5fr 1fr;} }
+  .pane{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px 19px;}
+  .pane h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);}
+  .pane .why{font-size:.75rem;color:var(--muted);margin:5px 0 13px;line-height:1.5;}
+  .logrow{display:flex;gap:13px;padding:9px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  .logrow:last-child{border-bottom:none;}
+  .logrow .at{color:var(--muted);font-size:.76rem;width:104px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+  .logrow .wt{font-size:.83rem;flex:1;min-width:0;}
+  .logrow .wt b{color:var(--brand-900);}
+  .logrow .wh{font-size:.76rem;color:var(--muted);white-space:nowrap;}
+  .logauto{
+    display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:12px;
+    border-top:1px solid var(--line);font-size:.78rem;color:var(--muted);
+  }
+  .logauto svg{width:14px;height:14px;flex-shrink:0;}
+  .hkrow{display:flex;align-items:flex-start;gap:9px;font-size:.82rem;line-height:1.5;margin-bottom:11px;}
+  .hkdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;background:var(--success);}
+  .hkdot.bad{background:var(--danger);}
+  .hknote{margin-top:15px;padding-top:13px;border-top:1px solid var(--line);font-size:.76rem;color:var(--muted);line-height:1.6;}
+  .dash-foot{
+    display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+    margin-top:26px;font-size:.8rem;
+  }
+  .dash-skel{color:var(--muted);font-size:.86rem;padding:18px 2px;}
+</style>
+
 </head>
 <body>
 
@@ -381,29 +541,79 @@
       </div>
     </div>
 
-    <!-- signed in as an administrator -->
-    <div class="card" id="view-list" hidden>
-      <div class="who">
-        <div class="avatar" aria-hidden="true">&#10003;</div>
-        <div class="who-t">
-          <strong id="list-name">&mdash;</strong>
-          <span id="list-email">&mdash;</span>
+    <!-- ================= THE DASHBOARD =================================
+         Was a list of five links in a 420px card. It is now the page an
+         administrator lands on. Everything below is filled by app.js from
+         ONE call to admin_dashboard(); nothing here is decided in the
+         browser. The skeleton text is what shows while that call is in
+         flight, so the page never flashes an empty dashboard that looks
+         like a quiet day. ============================================ -->
+    <div class="card dash" id="view-list" hidden>
+
+      <div class="dash-top">
+        <div class="dash-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/></svg>
+        </div>
+        <div class="dash-who">
+          <strong>Masjid Administration</strong>
+          <span>Taiyabah Masjid &middot; Bolton</span>
+        </div>
+        <div class="dash-top-right">
+          <span class="dash-me">
+            <b id="list-name">&mdash;</b>
+            <i id="list-email">&mdash;</i>
+          </span>
+          <span id="list-roles" class="dash-top-right" style="padding:0;"></span>
+          <button type="button" class="dash-out" id="list-signout">Sign out</button>
         </div>
       </div>
 
-      <div class="roles" id="list-roles"></div>
+      <div class="dash-body">
+        <div class="err" id="dash-error" hidden></div>
 
-      <div class="dests" id="list-dests"></div>
+        <div class="dash-h">
+          <h2>Needs you</h2>
+          <span class="when" id="dash-when">&nbsp;</span>
+        </div>
+        <div id="dash-needs"><p class="dash-skel">Looking&hellip;</p></div>
 
-      <p class="note" style="margin-top:0;">
-        More areas appear here as they are built. Nothing on this page can read or
-        change anything on its own &mdash; each portal checks who you are again, and
-        asks for your authenticator code, when you open it.
-      </p>
+        <div class="tiles" id="dash-tiles"></div>
 
-      <div class="card-actions">
-        <a class="btn btn-ghost" href="../index.html">Back to the website</a>
-        <button type="button" class="btn btn-ghost" id="list-signout">Sign out</button>
+        <div class="dash-lab">Everywhere you can go</div>
+        <div class="areas" id="dash-areas"></div>
+
+        <div class="dash-2col">
+          <div class="pane">
+            <div class="dash-h" style="margin-bottom:0;">
+              <h3>Daily log</h3>
+              <span class="when">Last 7 days</span>
+            </div>
+            <p class="why">What people did, and what the public sent in. Automatic jobs are counted at the bottom rather than listed.</p>
+            <div id="dash-log"><p class="dash-skel">Looking&hellip;</p></div>
+            <div class="logauto" id="dash-auto" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 1.5"/><circle cx="12" cy="12" r="9"/></svg>
+              <span id="dash-auto-t"></span>
+            </div>
+          </div>
+
+          <div class="pane" id="dash-house-pane">
+            <h3>Looking after itself</h3>
+            <div id="dash-house"><p class="dash-skel">Looking&hellip;</p></div>
+            <p class="hknote">Nothing is kept longer than the website promises. Hall
+              requests go at six months, nik&#257;&#7717; and classes at twelve,
+              volunteers at twelve, Gift Aid at six years.</p>
+          </div>
+        </div>
+
+        <p class="note" style="margin-top:22px;">
+          Nothing on this page can read or change anything on its own &mdash; each
+          area checks who you are again, and asks for your authenticator code,
+          when you open it.
+        </p>
+
+        <div class="dash-foot">
+          <a class="btn btn-ghost" href="../index.html">Back to the website</a>
+        </div>
       </div>
     </div>
 
