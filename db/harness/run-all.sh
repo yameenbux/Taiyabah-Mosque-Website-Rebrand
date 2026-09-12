@@ -22,6 +22,7 @@ _test_weekly_digest:full
 _test_unpaid_not_booked:full
 _test_donations:full
 _test_volunteers:full
+_test_dashboard:full
 _test_retention:retention
 _test_whole_day_hire:hall
 _test_course_admin:admin
