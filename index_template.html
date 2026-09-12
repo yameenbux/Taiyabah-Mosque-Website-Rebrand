@@ -659,6 +659,46 @@ window.TAIYABAH_PUBLIC = {
   .nb-give-card .dc-note{margin-bottom:0;}
   .nb-give-divider{height:1px;background:var(--line);margin:24px 0 20px;}
 
+  /* ---------- GIFT AID ----------------------------------------------------
+     Asked for by the committee, 12 September 2026.
+
+     A tick box on its own is NOT a Gift Aid declaration. HMRC requires the
+     donor's name, their home address with postcode, the charity's name, what
+     the donation is, and — the part usually missed — a statement that they
+     have paid enough UK tax to cover what the charity will reclaim, and are
+     responsible for any shortfall. That statement may be given separately
+     from the tick box only if the charity can DEMONSTRATE the donor was
+     shown it. So it is on the page, in full, above the button, and the
+     wording carries a version date that is also on the Stripe product.
+
+     The donor ANSWERS on Stripe's checkout — a dropdown custom field, with
+     this same wording in the product description beside it. Name and postcode
+     are collected there too. This block only explains. ------------------- */
+  .ga{
+    border:1px solid var(--gold);border-radius:14px;background:rgba(198,162,76,.07);
+    padding:16px 17px;margin-bottom:18px;
+  }
+  .ga-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px;}
+  .ga-head h5{font-family:"Fraunces",serif;font-weight:600;font-size:.98rem;color:var(--brand-900);}
+  .ga-head .ga-boost{font-size:.68rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7A5B10;white-space:nowrap;}
+  .ga-lead{font-size:.84rem;line-height:1.6;color:var(--ink);}
+  .ga-lead b{color:var(--brand-900);}
+  .ga-more{margin-top:11px;}
+  .ga-more summary{
+    font-size:.76rem;font-weight:700;color:var(--brand-800);cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .ga-more summary::marker{color:var(--gold);}
+  .ga-decl{
+    font-size:.78rem;line-height:1.65;color:var(--muted);margin-top:9px;
+    border-left:2px solid var(--gold);padding-left:12px;
+  }
+  .ga-decl p{margin:0 0 8px;}
+  .ga-decl p:last-child{margin-bottom:0;}
+  .ga-decl strong{color:var(--ink);}
+  .ga-ver{display:block;margin-top:10px;font-size:.68rem;letter-spacing:.04em;color:var(--muted);}
+  .ga[hidden]{display:none !important;}
+
   .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
   .tier{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1.5px solid;border-radius:14px;padding:20px 8px;transition:.2s ease;}
   .tier:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
@@ -2080,6 +2120,53 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="nb-journey-col nb-give-card" id="give">
             <div class="nb-give-head"><h4>Give online</h4><span class="tag">Apple &amp; Google Pay</span></div>
+
+            <!-- Hidden until GIFT_AID_OPEN is switched on, which happens once the
+                 five Payment Links carry the Gift Aid dropdown. A page that
+                 explains Gift Aid and then sends the donor to a checkout with
+                 no dropdown on it is worse than saying nothing.
+
+                 THE DONOR ANSWERS ON STRIPE'S PAGE, NOT HERE. A dropdown on
+                 the checkout, with this same declaration in the product
+                 description beside it. This block exists so somebody can read
+                 the wording before they decide, and so the masjid can show
+                 what was on screen — but it collects nothing. -->
+            <div class="ga" id="ga-block" data-ga-version="2026-09-12" hidden>
+              <div class="ga-head">
+                <h5>Gift Aid</h5>
+                <span class="ga-boost">+25p per &pound;1, at no cost to you</span>
+              </div>
+
+              <p class="ga-lead">If you are a UK taxpayer, the masjid can reclaim
+                25p of tax for every &pound;1 you give. <b>You will be asked on the
+                payment page</b> &mdash; choose <b>Yes</b> under Gift Aid, and give
+                your name and home address including postcode. HMRC will not allow
+                the claim without them.</p>
+
+              <details class="ga-more">
+                <summary>The declaration you are agreeing to</summary>
+                <div class="ga-decl">
+                  <p><strong>I am a UK taxpayer and understand that if I pay less
+                    Income Tax and/or Capital Gains Tax in the current tax year than
+                    the amount of Gift Aid claimed on all my donations it is my
+                    responsibility to pay any difference.</strong></p>
+                  <p>Gift Aid lets <strong>Bolton Central Islamic Society</strong>
+                    (Taiyabah Masjid, registered charity 1041569) reclaim the basic
+                    rate tax you have already paid on your gift. It costs you nothing.</p>
+                  <p>Please tell the masjid if you want to cancel this declaration,
+                    if you change your name or home address, or if you no longer pay
+                    enough Income Tax or Capital Gains Tax.</p>
+                  <p>If you pay Income Tax at the higher or additional rate and want
+                    to receive the additional relief due to you, you must include all
+                    your Gift Aid donations on your Self Assessment tax return or ask
+                    HMRC to adjust your tax code.</p>
+                  <p><strong>Gift Aid applies to donations to the masjid itself.</strong>
+                    Zakat is not taken through this page &mdash; speak to the office.</p>
+                  <span class="ga-ver">Declaration wording version 2026-09-12</span>
+                </div>
+              </details>
+            </div>
+
             <div class="tiers">
               <a class="tier t-bronze" href="https://buy.stripe.com/eVqaEX0Z63PGb3E2cSf3a01" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name">Bronze</span></a>
               <a class="tier t-silver" href="https://buy.stripe.com/3cI7sLgY4fyo2x8eZEf3a02" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name">Silver</span></a>
@@ -4057,7 +4144,7 @@ window.TAIYABAH_PUBLIC = {
         <p>Bolton Central Islamic Society, a registered charity (number 1041569), of 31a Draycott Street, Bolton BL1 8HD, operating as Taiyabah Masjid. We are the data controller for this website. You can reach us on <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a> or at <a href="mailto:info@taiyabahmasjid.com">info@taiyabahmasjid.com</a>.</p>
 
         <h2>What this website collects</h2>
-        <p>Four things, and only the ones you choose to send.</p>
+        <p>Five things, and only the ones you choose to send.</p>
         <h3 class="legal-sub">A hall hire request</h3>
         <p>We receive your <strong>first name, surname, address, telephone number</strong>, and the <strong>date</strong> and <strong>what you asked to hire</strong> &mdash; one, two or three halls, or the kitchen on its own.</p>
         <p>If you pay the deposit on this website, the payment is taken by <strong>Stripe</strong>, who handle card payments for us. <strong>Your card details never reach this website</strong> &mdash; you are taken to Stripe's own secure page and back again. We are told only that your booking reference has been paid, and we keep that alongside your booking. Stripe holds the payment record itself under their own privacy policy, as they must for accounting and fraud prevention.</p>
@@ -4082,6 +4169,16 @@ window.TAIYABAH_PUBLIC = {
         password which is stored only in a scrambled form that nobody at the masjid can read. The
         shop is not open yet; the account exists so that it is ready when it is.</p>
 
+        <h3 class="legal-sub">A donation with Gift Aid</h3>
+        <p>If you donate by card <strong>without</strong> ticking Gift Aid, this website receives
+        <strong>nothing at all</strong> about you. The payment is taken on Stripe&rsquo;s own page and
+        the masjid sees only that a donation arrived.</p>
+        <p>If you <strong>do</strong> tick Gift Aid, Stripe asks you for your <strong>name and home
+        address including postcode</strong> on that same page, and passes them to the masjid. HMRC
+        will not allow a Gift Aid claim without them. Your card details still never reach this
+        website or the masjid.</p>
+        <p><strong>Zakat is not taken through this website.</strong></p>
+
         <p>If you do not send any of those, this website collects nothing about you at all.</p>
 
         <h2>Why we need it, and what allows us to hold it</h2>
@@ -4095,6 +4192,12 @@ window.TAIYABAH_PUBLIC = {
         again.</p>
         <p>For a <strong>shop account</strong> we hold your name and email address because you
         asked us to create an account, which is also Article 6(1)(b).</p>
+        <p>For <strong>Gift Aid</strong> we hold your name and home address because you asked us
+        to reclaim the tax on your gift &mdash; you tick a box to say so, and you can tell us at
+        any time to stop. Once we have made a claim, <strong>HMRC requires us to keep the record
+        for six years</strong>, and at that point we are holding it to meet a legal obligation
+        (UK GDPR Article 6(1)(c)) rather than because you asked. We do not use it for anything
+        else, and it is not added to any mailing list.</p>
         <h2>Emails we send you</h2>
         <p>If you <strong>pay a hall hire deposit</strong>, we send one confirmation email
         containing your booking reference and the date you have booked. The address used is
@@ -4116,11 +4219,12 @@ window.TAIYABAH_PUBLIC = {
         <p>Hall hire and nik&#0257;&#7717; requests are visible to the masjid office staff who handle them, and to nobody else. Class sign-ups are visible to masjid administrators. The website itself cannot read any of them back &mdash; it can only add new ones.</p>
         <p>Staff reach them through a private portal that requires a password <em>and</em> a code from an authenticator app. Since September 2026 that second step is enforced by the database itself rather than by the website, so a stolen password on its own opens nothing.</p>
         <p>All of it is stored in a database hosted by Supabase, on servers in <strong>London, United Kingdom</strong>. Supabase acts as our processor: they hold the data on our behalf and do not use it for their own purposes.</p>
-        <p>So that a hall hire request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent for us by <strong>Resend</strong>, an email delivery service acting as our processor. It contains your name, your telephone number and the date, slot and hall you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
+        <p>So that a request doesn't sit unnoticed, an alert is emailed to the office when one arrives. That email is sent through <strong>one.com</strong>, the masjid's own email provider &mdash; no other company handles it. It contains your name, your telephone number and the date and what you asked about. <strong>Your address is deliberately left out of it</strong> and stays in the booking system, so that it isn't copied into inboxes or handled by the email provider at all.</p>
 
         <h2>How long we keep it</h2>
         <p><strong>Hall hire requests</strong> are deleted six months after the date you asked about. Requests that were declined or cancelled are deleted after three months.</p>
         <p><strong>Nik&#0257;&#7717; date requests</strong> and <strong>class sign-ups</strong> are deleted twelve months after you send them &mdash; long enough to cover the year you asked about and answer any question afterwards, and no longer.</p>
+        <p><strong>Gift Aid records are kept for six years</strong> after the end of the financial year the donation falls in. That is longer than anything else on this page, and it is not our choice: HMRC can inspect a Gift Aid claim for that long, and a claim we cannot evidence has to be repaid. If you did not tick Gift Aid, there is no record of you to keep.</p>
         <p><strong>Shop accounts</strong> are kept until you ask us to close yours. Ring or email the office and we will delete it.</p>
 
         <h2>Cookies and tracking</h2>
@@ -4463,6 +4567,66 @@ window.TAIYABAH_PUBLIC = {
 
   renderChip(); renderLive(); renderSnapshot(); renderGlance(); renderMonth(); renderHeaderBar();
   setInterval(() => { renderChip(); renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
+
+  /* ---------------- Gift Aid ----------------
+     Committee decision, 12 September 2026: offer Gift Aid on card donations.
+
+     THE DONOR ANSWERS ON STRIPE'S PAGE, NOT THIS ONE.
+
+     Each donation Payment Link carries a Stripe custom field — a dropdown
+     labelled "Gift Aid", Yes or No — with the full declaration in the product
+     description beside it, which is the panel the donor is reading while they
+     answer. Stripe collects the name and address on the same screen and sends
+     all of it, signed, to the webhook. Nothing here collects anything.
+
+     Three routes were considered and this is the third. A tick box on this
+     page with a second set of Payment Links to carry the answer meant ten
+     links and left the six-year record in Stripe. A donation platform
+     (Donorbox) wanted £150 a month plus 1.75% before Stripe's own fees. A
+     masjid down the road does exactly this with a dropdown — the only thing
+     missing from theirs is the declaration, which is why ours is in the
+     product description rather than nowhere.
+
+     ALL THIS SCRIPT DOES is put a reference on each donation link, so the
+     webhook can tell a donation from a hall deposit and record it against a
+     row the masjid owns. The prefix is what the webhook routes on; the rest
+     only has to be unique.
+     ------------------------------------------------------------------ */
+  (function () {
+    // Leave false until all five Payment Links carry the Gift Aid dropdown AND
+    // the declaration in their product description. Explaining Gift Aid and
+    // then sending somebody to a checkout that does not offer it is worse than
+    // saying nothing at all.
+    var GIFT_AID_OPEN = true;
+
+    var block = document.getElementById('ga-block');
+    if (block && GIFT_AID_OPEN) block.hidden = false;
+
+    // A reference per click, not per page load: somebody who opens the page,
+    // donates, and donates again has made two donations and the office needs
+    // to see two. Time plus randomness — it identifies a payment, it does not
+    // protect anything, so it does not need to be unguessable.
+    function reference() {
+      return 'DN-' + Date.now().toString(36).toUpperCase() + '-' +
+             Math.random().toString(36).slice(2, 7).toUpperCase();
+    }
+
+    var links = [].slice.call(
+      document.querySelectorAll('.nb-give-card .tier, .nb-give-card .donate-cta'));
+
+    links.forEach(function (el) {
+      el.addEventListener('click', function () {
+        var base = el.dataset.plainHref || el.getAttribute('href');
+        if (!base || base.indexOf('stripe.com') === -1) return;
+        el.dataset.plainHref = base;
+        // client_reference_id is Stripe's own parameter and comes back on the
+        // webhook untouched. The same mechanism hall bookings already use.
+        el.setAttribute('href',
+          base + (base.indexOf('?') === -1 ? '?' : '&') +
+          'client_reference_id=' + encodeURIComponent(reference()));
+      });
+    });
+  })();
 
   /* ---------------- page switching ---------------- */
   const pages = document.querySelectorAll('.page');

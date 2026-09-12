@@ -82,6 +82,11 @@ exclude:
   - _nkpay.html
   - _nkblank.html
   - _nkopen.html
+  # Copies of the home page with the Gift Aid switch flipped on, written by
+  # _test/giftaid_test.py and normally deleted again. One of these on the live
+  # site would offer Gift Aid through links that take no money.
+  - "_gaopen*.html"
+  - "_gaoff*.html"
 
   # NOTE: auth/ IS published, deliberately. It is where every link in an email
   # from the masjid lands. Excluding it would break every invitation, password
