@@ -42,7 +42,29 @@
     background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
     padding:46px 0 44px;display:flex;flex-direction:column;justify-content:center;
   }
-  @media (min-width:940px){ .brand{padding:64px 0;} }
+  /* The booking list on the right runs to hundreds of rows. Before this, the
+     whole page scrolled as one, so the logo, the heading and — the one that
+     matters — "Back to the admin centre" scrolled off the top and the office
+     had no visible way back. On a wide screen the left panel is pinned to the
+     viewport and only the list moves.
+
+     The height is the load-bearing part, not the sticky: a grid item stretches
+     to the height of its row, and `position:sticky` on an element already as
+     tall as the row has nothing to stick to and moves nothing — tested, it
+     fails identically to having no rule at all. Giving it an explicit 100dvh
+     stops the stretch and fills the screen; align-self:start says the same
+     thing again so the two cannot drift apart. overflow-y lets the panel
+     scroll inside itself on a short laptop screen rather than cutting the back
+     link off. Below 940px the two columns stack, and pinning
+     a full-height panel above the list would push the list off the phone
+     entirely — so this only applies to the wide layout. */
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
   .brand::after{
     content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
     border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
