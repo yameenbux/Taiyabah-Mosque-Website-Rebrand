@@ -634,6 +634,84 @@ window.TAIYABAH_PUBLIC = {
   .needs{display:flex;flex-wrap:wrap;gap:8px;}
   .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:600;}
 
+  /* ---------- NEW BUILD: the appeal meter ---------------------------------
+     One ratio against one limit, so a meter — not a chart, and not a pie of
+     two slices. The track is the same gold as the fill at low opacity, so
+     "how far along" reads across the whole bar rather than as two unrelated
+     colours.
+
+     The figure is in the body sans, not Fraunces. A serif display number
+     beside real money reads as decoration, and this number is not decoration.
+     No tabular-nums either — at 1.8rem it makes £350,000 look gappy; tabular
+     figures are for the columns in the ledger below, where digits must line
+     up. ------------------------------------------------------------------ */
+  .ph-meter{margin:20px 0 4px;}
+  .ph-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+  .ph-raised{font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;font-size:1.8rem;line-height:1;color:#F3EFE3;}
+  .ph-raised .of{display:block;font-size:.8rem;font-weight:500;color:rgba(243,239,227,.72);margin-top:6px;letter-spacing:.01em;}
+  .ph-pct{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);}
+  .ph-track{height:11px;border-radius:999px;background:rgba(198,162,76,.2);overflow:hidden;}
+  .ph-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));}
+  .ph-left{margin-top:11px;font-size:.82rem;line-height:1.55;color:rgba(243,239,227,.8);}
+  .ph-left b{color:var(--gold-bright);font-weight:700;}
+
+  /* ---------- NEW BUILD: the phase ledger ---------------------------------
+     Eight phases, each carrying money. Past about seven rows that all matter,
+     the honest form is a table, not eight little progress bars — a bar at
+     100% eight times over tells the reader nothing they cannot read faster
+     in a word.
+
+     Below 720px the table stops being a table: headers are hidden and each
+     row becomes a small block with its own labels, because a horizontally
+     scrolling table of somebody's donations is a bad way to read them on a
+     phone. ---------------------------------------------------------------- */
+  .nb-ledger{width:100%;border-collapse:collapse;}
+  .nb-ledger caption{caption-side:top;text-align:left;font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:14px;max-width:76ch;}
+  .nb-ledger col.c-work{width:46%;}
+  .nb-ledger col.c-cost{width:17%;}
+  .nb-ledger col.c-stand{width:37%;}
+  .nb-ledger th{
+    text-align:left;font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);padding:0 14px 9px 0;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  .nb-ledger td{padding:14px 14px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;font-size:.88rem;color:var(--ink);}
+  .nb-ledger tr:last-child td{border-bottom:none;}
+  .nb-ledger .num{font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .nb-ledger .money{font-weight:700;color:var(--brand-800);}
+  .nb-ledger tr.live td{background:rgba(198,162,76,.08);}
+  .nb-ph{display:block;font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:.95rem;color:var(--brand-800);margin-bottom:4px;}
+  .nb-work{display:block;line-height:1.5;max-width:46ch;}
+  .nb-chip{
+    display:inline-flex;align-items:center;gap:6px;margin-top:8px;
+    font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 10px;border-radius:999px;
+  }
+  .nb-chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+  .nb-chip.funded{background:rgba(63,122,70,.13);color:var(--success);border:1px solid rgba(63,122,70,.35);}
+  .nb-chip.live{background:rgba(198,162,76,.18);color:#8a6c1f;border:1px solid rgba(198,162,76,.5);}
+  .nb-chip.later{background:var(--paper);color:var(--muted);border:1px solid var(--line);}
+  .nb-tbc{color:var(--muted);font-style:italic;}
+  @media (max-width:719px){
+    /* The table stops being a table below 720px. The caption has to be told
+       so too: a display:table-caption box inside a display:block parent gets
+       wrapped in an anonymous table and shrinks to a ~60px column of single
+       words. Caught on a phone screenshot, not in the markup. */
+    .nb-ledger,.nb-ledger tbody,.nb-ledger tr,.nb-ledger td{display:block;width:100%;}
+    .nb-ledger caption{display:block;}
+    .nb-ledger colgroup{display:none;}
+    .nb-ledger thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+    .nb-ledger tr{border-bottom:1px solid var(--line);padding:16px 0;}
+    .nb-ledger tr:last-child{border-bottom:none;}
+    .nb-ledger td{border:none;padding:0;}
+    .nb-ledger td + td{margin-top:9px;}
+    .nb-ledger td[data-l]::before{
+      content:attr(data-l) " ";display:block;font-size:.62rem;font-weight:800;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;
+    }
+    .nb-ledger tr.live td{background:none;}
+    .nb-ledger tr.live{background:rgba(198,162,76,.08);border-radius:12px;padding:16px 14px;}
+  }
+
   /* ---------- NEW BUILD: status + plan side by side ---------- */
   .nb-status-grid{display:grid;grid-template-columns:1fr;gap:20px;}
   @media (min-width:860px){
@@ -2078,7 +2156,29 @@ window.TAIYABAH_PUBLIC = {
           <div class="phase-card">
             <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
             <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
-            <p class="ph-p">Help make the masjid ready for salah, Qur'an and remembrance for generations to come.</p>
+            <p class="ph-p">Masjid internal fixtures and fittings &mdash; tiling, carpets, heating, electrical works, lighting and d&eacute;cor, completed to a full finish.</p>
+
+            <!-- Figures from the masjid's New Build Update board, September 2026.
+                 THESE ARE THE ONLY NUMBERS ON THE PAGE THAT MOVE. When the board
+                 is updated, three things change together and must not drift:
+                 the two figures here, the width of .ph-fill, and the matching
+                 row in the ledger below. The percentage is stated in words as
+                 well as drawn, because a 14% bar is easy to misread as an empty
+                 one. -->
+            <div class="ph-meter">
+              <div class="ph-meter-top">
+                <span class="ph-raised">&pound;350,000
+                  <span class="of">raised towards &pound;2,500,000</span>
+                </span>
+                <span class="ph-pct">14% funded</span>
+              </div>
+              <div class="ph-track" role="img" aria-label="14 per cent of the £2,500,000 target raised so far.">
+                <div class="ph-fill" style="width:14%;"></div>
+              </div>
+              <p class="ph-left"><b>&pound;2,150,000 still to raise.</b> Every contribution
+                takes the masjid closer to being ready for salah, Qur'an and remembrance.</p>
+            </div>
+
             <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
           </div>
           <div class="card nb-plan-card">
@@ -2092,8 +2192,114 @@ window.TAIYABAH_PUBLIC = {
         </div>
       </div>
 
+      <!-- ================= THE PHASE LEDGER ==================================
+           Added 12 September 2026 from the New Build Update board on display in
+           the masjid. Every figure below appears on that board. Nothing here is
+           derived, added up or estimated by the website — in particular there is
+           deliberately no "total raised so far" line, because that would be a
+           number the trustees have not published and would have to stand behind.
+
+           Costs the board marks "to be confirmed" are shown as to be confirmed.
+           Filling them in with a guess would be the single worst thing this page
+           could do: a donor reads an estimate on a charity's website as a
+           commitment. ==================================================== -->
       <div class="subsection">
-        <div class="subhead"><span class="idx">02</span><h3>Our journey so far &amp; how to give</h3><span class="rule"></span></div>
+        <div class="subhead"><span class="idx">02</span><h3>The build, phase by phase</h3><span class="rule"></span></div>
+        <table class="nb-ledger">
+          <caption>Every phase of the new build, with what it costs and where the money stands.
+            Figures are as displayed on the masjid's New Build Update board, September 2026.
+            Anticipated costs are estimates and may change as work is tendered.</caption>
+          <colgroup><col class="c-work"><col class="c-cost"><col class="c-stand"></colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Phase &amp; works</th>
+              <th scope="col">Anticipated cost</th>
+              <th scope="col">Where the money stands</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 1</span>
+                <span class="nb-work">Ground works and superstructure &mdash; piling and steel works.</span>
+                <span class="nb-chip funded">Fully funded</span>
+              </td>
+              <td class="num money" data-l="Anticipated cost">&pound;800,000</td>
+              <td data-l="Where the money stands">Raised in full.</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 2</span>
+                <span class="nb-work">Watertight and boundary wall &mdash; including domes, windows and doors.</span>
+                <span class="nb-chip live">Funded &middot; works finishing</span>
+              </td>
+              <td class="num money" data-l="Anticipated cost">&pound;2,600,000</td>
+              <td data-l="Where the money stands"><span class="num">&pound;2,150,000</span> paid to December 2025.
+                The remaining <span class="num">&pound;450,000</span> is in the bank to see it through to completion.</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 3.1</span>
+                <span class="nb-work">Madrasah building &mdash; classrooms and internal works.</span>
+                <span class="nb-chip funded">Fully funded</span>
+              </td>
+              <td class="num money" data-l="Anticipated cost">&pound;490,000</td>
+              <td data-l="Where the money stands"><span class="num">&pound;490,000</span> in the bank.</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 3.2</span>
+                <span class="nb-work">External drainage installation.</span>
+                <span class="nb-chip funded">Fully funded</span>
+              </td>
+              <td class="num money" data-l="Anticipated cost">&pound;125,000</td>
+              <td data-l="Where the money stands"><span class="num">&pound;125,000</span> in the bank.</td>
+            </tr>
+            <tr class="live">
+              <td>
+                <span class="nb-ph">Phase 3.3</span>
+                <span class="nb-work">Masjid internal fixtures and fittings &mdash; tiling, carpets, heating
+                  system, electrical works, lighting and d&eacute;cor, completed to a full finish.</span>
+                <span class="nb-chip live">Current appeal</span>
+              </td>
+              <td class="num money" data-l="Anticipated cost">&pound;2,500,000<br><span class="nb-tbc">approximate</span></td>
+              <td data-l="Where the money stands"><span class="num">&pound;350,000</span> in the bank &mdash;
+                <span class="num">&pound;2,150,000</span> still to raise.</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 3.4</span>
+                <span class="nb-work">Masjid and madrasah wu&#7693;&#363;&#702; kh&#257;na (ablution areas), toilets and showers.</span>
+                <span class="nb-chip later">Not yet costed</span>
+              </td>
+              <td class="nb-tbc" data-l="Anticipated cost">To be confirmed</td>
+              <td class="nb-tbc" data-l="Where the money stands">&mdash;</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 3.5</span>
+                <span class="nb-work">Jam&#257;&#703;at kitchen and jan&#257;zah kh&#257;na.</span>
+                <span class="nb-chip later">Not yet costed</span>
+              </td>
+              <td class="nb-tbc" data-l="Anticipated cost">To be confirmed</td>
+              <td class="nb-tbc" data-l="Where the money stands">&mdash;</td>
+            </tr>
+            <tr>
+              <td>
+                <span class="nb-ph">Phase 4</span>
+                <span class="nb-work">Car parking, landscaping and external lighting works; front and side
+                  boundary wall; entrance and pedestrian gates; railings.</span>
+                <span class="nb-chip later">Not yet costed</span>
+              </td>
+              <td class="nb-tbc" data-l="Anticipated cost">To be confirmed</td>
+              <td class="nb-tbc" data-l="Where the money stands">&mdash;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <div class="subhead"><span class="idx">03</span><h3>Our journey so far &amp; how to give</h3><span class="rule"></span></div>
         <div class="nb-journey-grid">
           <div class="nb-journey-col">
             <div class="nb-timeline">
@@ -2102,15 +2308,21 @@ window.TAIYABAH_PUBLIC = {
                 <div class="nb-tl-body">
                   <div class="nb-tl-date">2018 &ndash; Ramadhan 2019</div>
                   <h4>Phase 1 <span class="nb-tl-status done">Completed</span></h4>
-                  <p>Construction of the new building got underway, with Phase 1 completed and marked with a site time-lapse shared with the community.</p>
+                  <p>Ground works and superstructure &mdash; piling and steel. Funded in full at &pound;800,000, and marked with a site time-lapse shared with the community.</p>
                 </div>
               </div>
-              <div class="nb-tl-item nb-tl-done">
+
+              <!-- Phase 2 used to say "Completed · December 2021". The Media page
+                   calls December 2021 the Phase 2 START, and the masjid's own
+                   update board shows £450,000 still banked for completion — so
+                   the money is raised and the work is not finished. Those are
+                   two different claims and the page now keeps them apart. -->
+              <div class="nb-tl-item nb-tl-active">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
-                  <div class="nb-tl-date">December 2021</div>
-                  <h4>Phase 2 <span class="nb-tl-status done">Completed</span></h4>
-                  <p>The next phase of the building got underway and was carried through to completion.</p>
+                  <div class="nb-tl-date">December 2021 onwards</div>
+                  <h4>Phase 2 <span class="nb-tl-status active">Funded &middot; works finishing</span></h4>
+                  <p>Watertight and boundary wall, including the domes, windows and doors. &pound;2,150,000 paid to December 2025, with the remaining &pound;450,000 already in the bank to see it through.</p>
                 </div>
               </div>
               <div class="nb-tl-item nb-tl-done">
@@ -2121,24 +2333,32 @@ window.TAIYABAH_PUBLIC = {
                   <p>A dedicated fundraising campaign held to help carry the build forward.</p>
                 </div>
               </div>
+              <div class="nb-tl-item nb-tl-done">
+                <div class="nb-tl-dot"></div>
+                <div class="nb-tl-body">
+                  <div class="nb-tl-date">Phases 3.1 &amp; 3.2</div>
+                  <h4>Madrasah &amp; drainage <span class="nb-tl-status done">Fully funded</span></h4>
+                  <p>Classrooms and internal works for the madrasah building at &pound;490,000, and the external drainage installation at &pound;125,000 &mdash; both raised in full and in the bank.</p>
+                </div>
+              </div>
               <div class="nb-tl-item nb-tl-active">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
                   <div class="nb-tl-date">Now &middot; Phase 3.3</div>
-                  <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">In Progress</span></h4>
-                  <p>The current appeal — tiling, carpets, heating, lighting, electrical and decor, to make the masjid ready for salah, Qur'an and remembrance.</p>
+                  <h4>Internal fixtures &amp; fittings <span class="nb-tl-status active">Current appeal</span></h4>
+                  <p>Tiling, carpets, heating, electrical works, lighting and d&eacute;cor, to a full finish. &pound;350,000 raised of an anticipated &pound;2,500,000 &mdash; this is what the masjid is raising for now.</p>
                 </div>
               </div>
               <div class="nb-tl-item nb-tl-upcoming">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
-                  <div class="nb-tl-date">What's next</div>
-                  <h4>Full facilities complete <span class="nb-tl-status upcoming">Upcoming</span></h4>
-                  <p>Large prayer hall, modern ablution areas, integrated kitchen, additional lecture rooms and an educational centre for the whole community.</p>
+                  <div class="nb-tl-date">What's next &middot; Phases 3.4, 3.5 &amp; 4</div>
+                  <h4>Facilities &amp; grounds <span class="nb-tl-status upcoming">Not yet costed</span></h4>
+                  <p>Wu&#7693;&#363;&#702; kh&#257;na, toilets and showers; the jam&#257;&#703;at kitchen and jan&#257;zah kh&#257;na; then car parking, landscaping, external lighting, the front and side boundary wall, gates and railings. Costs for these are still to be confirmed.</p>
                 </div>
               </div>
             </div>
-            <p class="nb-tl-note">Dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
+            <p class="nb-tl-note">Figures are as displayed on the masjid's New Build Update board, September 2026; dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
           </div>
 
           <div class="nb-journey-col nb-give-card" id="give">
