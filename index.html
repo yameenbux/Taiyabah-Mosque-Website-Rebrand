@@ -490,14 +490,23 @@ window.TAIYABAH_PUBLIC = {
   .glance-wa .gp-qr:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(43,7,26,.26);}
   .glance-wa .gp-qr img{width:122px;height:122px;display:block;}
   .glance-wa .gp-when{margin-bottom:9px;}
-  .gl-link{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer;}
-  .gl-link:last-child{border-bottom:none;}
-  .gl-ic{width:28px;height:28px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .gl-ic svg{width:13px;height:13px;}
-  .gl-text{flex:1;min-width:0;}
-  .gl-text .n{font-family:"Fraunces",serif;font-weight:600;font-size:.82rem;color:var(--ink);display:block;}
-  .gl-text .s{font-size:.71rem;color:var(--muted);line-height:1.3;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .gl-arrow{color:var(--muted);flex-shrink:0;}
+  /* Food bank card. Replaced the Quick Links card on 12 September 2026 — every
+     link in it (Shop, Services, Madrasah, Contact) is also in the top bar, the
+     mobile menu and the footer, so nothing became unreachable.
+
+     Deliberately NOT a link and deliberately without cursor:pointer. There is
+     nothing behind it yet, and a card that looks tappable and goes nowhere
+     reads as a broken website rather than as an announcement. */
+  .fb-art{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 4px;min-height:0;}
+  .fb-art svg{width:100%;max-width:230px;height:auto;display:block;}
+  .fb-copy{font-size:.79rem;color:var(--muted);line-height:1.5;text-align:center;margin:0 auto 12px;max-width:30ch;}
+  .fb-soon{
+    align-self:center;display:inline-flex;align-items:center;gap:6px;
+    padding:5px 13px;border-radius:999px;background:rgba(198,162,76,.16);
+    border:1px solid rgba(198,162,76,.4);color:var(--brand-800);
+    font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+  }
+  .fb-soon::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);}
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
   .glance-donate .gd-ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
   .glance-donate .gd-ic svg{width:14px;height:14px;}
@@ -1911,30 +1920,40 @@ window.TAIYABAH_PUBLIC = {
           <a class="btn btn-gold" href="https://chat.whatsapp.com/GUU82kvhjNmCXNksk5iRwm" target="_blank" rel="noopener">Or tap to join →</a>
         </div>
 
-        <div class="glance-card">
+        <div class="glance-card glance-foodbank">
           <div class="glance-head">
-            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg> Quick Links</span>
+            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg> Taiyabah Food Bank</span>
           </div>
-          <a class="gl-link" data-nav="shop">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V6a3 3 0 016 0v2"/></svg></span>
-            <span class="gl-text"><span class="n">Shop</span><span class="s">Books, oils, fragrances &amp; more</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="services">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3.5h6v3.4l2 3.2v8.4a2 2 0 01-2 2H9a2 2 0 01-2-2v-8.4l2-3.2z"/><path d="M7.5 15c1.2-1 2.3-1 3.5 0s2.3 1 3.5 0"/></svg></span>
-            <span class="gl-text"><span class="n">Services</span><span class="s">Hall hire, funerals &amp; marriage</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="madrasah">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></span>
-            <span class="gl-text"><span class="n">Madrasah</span><span class="s">Islamic education for children</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
-          <a class="gl-link" data-nav="contact">
-            <span class="gl-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></span>
-            <span class="gl-text"><span class="n">Contact</span><span class="s">Get in touch with the office</span></span>
-            <span class="gl-arrow">›</span>
-          </a>
+          <div class="fb-art">
+            <svg viewBox="0 0 240 150" role="img" aria-label="A paper bag of groceries: an apple, a tin and a loaf.">
+              <!-- The drawing is built on a comfortable 240x150 board and then
+                   scaled up around its own centre to fill the card. Scaling the
+                   group rather than shrinking the viewBox keeps the coordinates
+                   readable if anyone ever needs to move a loaf. 1.18 is as far
+                   as it goes before the bag's base leaves the board. -->
+              <g transform="translate(120,78) scale(1.18) translate(-120,-78)">
+              <circle cx="120" cy="78" r="57" fill="#C6A24C" opacity=".13"/>
+              <g fill="none" stroke="#4B1136" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <g transform="rotate(19 141 44)">
+                  <rect x="134" y="16" width="14" height="50" rx="7"/>
+                  <path d="M137.5 27l4 4M137.5 37l4 4M137.5 47l4 4"/>
+                </g>
+                <path d="M105 34v34h25V34"/>
+                <ellipse cx="117.5" cy="34" rx="12.5" ry="4.8"/>
+                <path d="M105 45h25" opacity=".45"/>
+                <circle cx="90" cy="48" r="12.5"/>
+                <path d="M90 35.5c1-4 3.5-6.2 7-6.8"/>
+                <path d="M88 62h64v70a4.5 4.5 0 01-4.5 4.5h-55A4.5 4.5 0 0188 132z" fill="#FCFAF3"/>
+                <path d="M88 75h64" opacity=".45"/>
+              </g>
+              <g fill="#C6A24C" transform="translate(120,106) scale(.21) translate(-50,-50)">
+                <polygon points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/>
+              </g>
+              </g>
+            </svg>
+          </div>
+          <p class="fb-copy">A new service for families across Bolton who need a little help. Details to follow, insh&#0257;&#702;All&#0257;h.</p>
+          <span class="fb-soon">Coming soon</span>
         </div>
 
         <div class="glance-card glance-donate">
