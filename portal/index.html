@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Madrasah Portal — Taiyabah Masjid</title>
 <style>
 /* Self-hosted webfonts — SIL Open Font License 1.1. Served from this file so
@@ -40,7 +42,18 @@
     background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
     padding:46px 0 44px;display:flex;flex-direction:column;justify-content:center;
   }
-  @media (min-width:940px){ .brand{padding:64px 0;} }
+  /* The list on the right can run to hundreds of rows, and the only link out
+     of this page lives in the left panel. Pinned on a wide screen so the way
+     back stays on screen; see the longer note in venue/index.html. The height
+     is what stops the grid item stretching to its row — sticky alone does
+     nothing here. Below 940px the columns stack and it scrolls normally. */
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
   .brand::after{
     content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
     border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
