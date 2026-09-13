@@ -81,7 +81,10 @@ BUSY = {
         {"kind": "hall_hold", "urgency": "now", "ref": "HH-26-0009",
          "title": "Hall held, deposit not paid",
          "detail": "Ismail Desai - Sat 04 Oct", "where": "venue",
-         "expires_at": None},
+         #  A real hold, 19 hours out. It used to be None, so nothing ever
+         #  exercised the countdown and it happily printed "expires in 1139
+         #  minutes" on the most urgent line of the page.
+         "expires_at": (_now + timedelta(hours=19)).isoformat()},
         {"kind": "nikah_new", "urgency": "soon", "ref": "NK-26-0004",
          "title": "Nikah date needs a call",
          "detail": "Fatima Patel - 07700900118", "where": "venue",
@@ -89,6 +92,13 @@ BUSY = {
         {"kind": "volunteers", "urgency": "soon", "ref": None,
          "title": "2 food bank volunteers not yet rung",
          "detail": "1 free Sunday mornings", "where": "volunteers"},
+        #  This row is what db/024 actually returns for unclaimed Gift Aid.
+        #  It was missing here, so the ONLY place the page showed money
+        #  waiting at HMRC was a badge on the rail — and when the badges went,
+        #  the test that caught it was pointing at the wrong element.
+        {"kind": "giftaid", "urgency": "later", "ref": None,
+         "title": "Gift Aid ready to claim",
+         "detail": "9 donations - about 312 pounds", "where": "giftaid"},
     ],
     "estate": {"bookings_ahead": 6, "next_booking": "2026-09-20",
                "owed_p": 125000, "owed_count": 2, "owed_unknown": 1,
@@ -217,7 +227,21 @@ with sync_playwright() as p:
     #  2. NEEDS YOU
     # =====================================================================
     needs = pg.eval_on_selector_all(".need", "els => els.map(e => e.innerText)")
-    check(len(needs) == 3, "expected three things waiting, drew %d" % len(needs))
+    #  Named, not counted. A bare number is "fixed" by changing the 3 to a 4
+    #  without looking at which row went missing.
+    for want in ["Hall held", "Nikah date", "volunteers not yet rung",
+                 "Gift Aid ready to claim"]:
+        check(any(want.lower() in n.lower() for n in needs),
+              "%r is not in Needs you: %r" % (want, needs))
+    check(len(needs) == 4, "expected four things waiting, drew %d: %r" % (len(needs), needs))
+    #  HOW LONG IS LEFT, in a unit somebody can act on. A hold lasts 48 hours,
+    #  so counting in minutes gives "expires in 2841 minutes" — true, and
+    #  useless, on the one line meant to convey urgency.
+    joined_needs = " ".join(needs).lower()
+    check("19 hours" in joined_needs,
+          "the countdown is not in hours: %r" % joined_needs[:200])
+    check(not re.search(r"\b\d{3,}\s*minutes", joined_needs),
+          "the countdown is printing a raw minute count: %r" % joined_needs[:200])
     check(pg.eval_on_selector(".need", "e => e.className").find("now") != -1,
           "the expiring hold is not marked urgent")
     check("HH-26-0009" in " ".join(needs), "the hold's reference is not shown")
@@ -243,7 +267,7 @@ with sync_playwright() as p:
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
     joined = " ".join(areas)
     for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah",
-                 "Who can get in"]:
+                 "User access"]:
         check(name in joined, "%r is missing from the areas" % name)
     #  WHAT YOU CAN DO THERE, which is the difference between a dashboard and a
     #  list of links. Moving the areas into a rail took the sentence off the
@@ -253,6 +277,13 @@ with sync_playwright() as p:
           "the page no longer says what you can DO in an area. That sentence is "
           "the most useful text here at handover, and it is the first thing a "
           "navigation rail quietly throws away: %r" % raw(pg, "#dash-whatfor"))
+    #  THE CORNER. The masjid's own wordmark, and the page's name under it.
+    #  A broken <img> in a dark rail looks like a missing file, not a design.
+    check(pg.eval_on_selector(".rail-top img.logo",
+          "e => e.complete && e.naturalWidth > 0") is True,
+          "the masjid logo in the rail corner did not load")
+    check("Admin Centre" in raw(pg, ".rail-top"),
+          "the rail corner does not say what this page is: %r" % raw(pg, ".rail-top"))
     check(pg.query_selector("details.whatfor") is not None,
           "the descriptions are not behind a details element, so they are "
           "either missing or permanently in the way")
@@ -270,14 +301,27 @@ with sync_playwright() as p:
     #  get rid of.
     check(pg.eval_on_selector("details.whatfor", "e => e.open") is False,
           "the descriptions are open by default, which puts the wall back")
-    check("£312" in joined, "the Gift Aid card does not show what is worth claiming")
-    #  lowercased: the chip is uppercased by CSS and innerText returns the
-    #  transformed text. Third time today.
-    check("without 2fa" in joined.lower(),
-          "the access card does not flag the account with no authenticator: %r" % joined[:200])
+    #  THE RAIL IS NAMES ONLY. Asked for, and right — but the two warnings
+    #  that used to ride on it as badges must still be SOMEWHERE, or this was
+    #  a redesign that quietly deleted them. Both assertions below were on the
+    #  rail; they now point at the places that actually carry the information.
+    check(not any(ch.isdigit() for ch in joined),
+          "the rail rows are carrying figures again. They belong in the "
+          "working column, where they are not read twice: %r" % joined[:200])
+    #  Money sitting at HMRC. Nothing else on this page mentions it.
+    needs = text(pg, "#dash-needs")
+    check("312" in needs,
+          "nothing on the page says there is Gift Aid waiting to be claimed. "
+          "That is money the masjid is owed and the only thing that ever "
+          "mentions it: %r" % needs[:300])
+    #  The account with no authenticator. This is the one that blocks
+    #  011_require_two_step.sql from being re-run.
+    house = text(pg, "#dash-house")
+    check("authenticator" in house.lower(),
+          "nothing flags the staff account with no authenticator: %r" % house[:300])
     hrefs = pg.eval_on_selector_all(".area", "els => els.map(e => e.getAttribute('href'))")
     check("../access/" in hrefs,
-          "the Who can get in card does not link to the access screen: %r" % hrefs)
+          "the User access row does not link to the access screen: %r" % hrefs)
 
     # =====================================================================
     #  4. THE MONEY
@@ -356,7 +400,7 @@ with sync_playwright() as p:
     check("Gift Aid" not in areas, "AN OFFICE ACCOUNT WAS DRAWN GIFT AID: %r" % areas)
     check("Adult classes" not in areas, "an office account was drawn adult classes")
     check("Madrasah" not in areas, "an office account was drawn the madrasah portal")
-    check("Who can get in" not in areas,
+    check("User access" not in areas,
           "AN OFFICE ACCOUNT WAS DRAWN THE ACCESS SCREEN")
     check("Hall Hire" in areas, "an office account cannot see hall hire")
     check("Food Bank" in areas, "an office account cannot see the volunteers")
