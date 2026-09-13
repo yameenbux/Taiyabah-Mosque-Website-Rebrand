@@ -190,7 +190,15 @@
     if (isNaN(mins)) return "";
     if (mins <= 0) return "expired";
     if (mins === 1) return "expires in 1 minute";
-    return "expires in " + mins + " minutes";
+    //  A hold lasts 48 hours, so the honest answer in minutes is "expires in
+    //  2,841 minutes" — a number nobody converts in their head, on the one
+    //  line of this page that is supposed to convey urgency. Minutes only
+    //  while minutes are what somebody would say out loud.
+    if (mins < 90) return "expires in " + mins + " minutes";
+    var hrs = Math.round(mins / 60);
+    if (hrs < 36) return "expires in " + hrs + " hours";
+    var days = Math.round(hrs / 24);
+    return "expires in " + days + " day" + (days === 1 ? "" : "s");
   }
 
   function sinceWhen(iso) {
@@ -285,10 +293,16 @@
      seven undifferentiated rows would only be a shorter version of the same
      problem.
 
-     WHAT WAS LOST, and it is worth naming: the "what you can do" sentence no
-     longer fits on a nav row. It is carried as the row's title, and the
-     COUNTS stay visible underneath the name — a row that says only "Hall
-     Hire" is a menu, and this is supposed to be a dashboard.
+     A NAME AND NOTHING ELSE. The rail carried counts and badges for a day.
+     Every one of them was a second copy of something already on this same
+     screen: the queues are in "Needs you" with a link straight through, the
+     figures are in the tiles, and the accounts-with-no-authenticator warning
+     is in "Looking after itself". The rail is where you GO; the column is
+     what is HAPPENING. Numbers in both means reading both.
+
+     The "what you can do" sentence is the row's title and is also printed in
+     full in "What each area is for" at the foot of the column — a hover title
+     alone is no use on a touchscreen.
 
      Groups with no members are not drawn at all, so an office account gets a
      shorter rail rather than empty headings. */
@@ -305,7 +319,7 @@
   var SAYS = {};
   function remember(k, n, d) { SAYS[k] = { n: n, d: d }; return d; }
 
-  function drawAreas(areas, roles, house) {
+  function drawAreas(areas, roles) {
     var box = el("dash-areas");
     if (!box) return;
     var has = function (r) { return roles.indexOf(r) !== -1; };
@@ -313,55 +327,46 @@
     SAYS = {};
 
     if (areas.venue) {
-      var v = areas.venue;
       made.venue = area("../venue/", ICON.hall, "Hall Hire & Nikāḥ",
-        v.new > 0 ? chip(v.new + " new", "hot") : "",
-        [["upcoming", v.upcoming], ["holding", v.holding], ["balance due", v.balance]],
         remember("venue", "Hall Hire & Nikāḥ",
           "Confirm, decline, take a cash deposit, cancel and refund"));
     }
     if (areas.courses) {
-      var c = areas.courses;
       made.courses = area("../courses/", ICON.book, "Adult classes",
-        c.waiting > 0 ? chip(c.waiting + " waiting") : "",
-        [["open", c.open], ["signed up", c.signed]],
         remember("courses", "Adult classes",
           "Offer a place from the waiting list, record who came"));
     }
     if (areas.giftaid) {
-      var g = areas.giftaid;
       made.giftaid = area("../giftaid/", ICON.heart, "Gift Aid",
-        g.to_claim > 0 ? chip(money(g.worth_p) + " to claim", "good") : "",
-        [["declarations", g.to_claim], ["incomplete", g.incomplete]],
         remember("giftaid", "Gift Aid",
           "Copy the rows for HMRC, then mark them claimed"));
     }
     if (areas.volunteers) {
-      var f = areas.volunteers;
       made.volunteers = area("../volunteers/", ICON.basket, "Food Bank volunteers",
-        f.to_ring > 0 ? chip(f.to_ring + " to ring") : "",
-        [["willing", f.willing], ["free Sundays", f.sundays]],
         remember("volunteers", "Food Bank volunteers",
           "Mark rung, helping or withdrawn; download the list"));
     }
     if (has("admin") || has("teacher")) {
-      made.madrasah = area("../portal/", ICON.people, "Madrasah portal", "", [],
+      made.madrasah = area("../portal/", ICON.people, "Madrasah portal",
         remember("madrasah", "Madrasah portal",
           "Pupils, classes and staff — the most tightly held area on the site"));
     }
     // The one page on this website that goes out of date on its own.
     if (has("admin")) {
-      made.newbuild = area("../newbuild/", ICON.crane, "The new build page", "", [],
+      made.newbuild = area("../newbuild/", ICON.crane, "The new build page",
         remember("newbuild", "The new build page",
           "Change the appeal figure, what it pays for, and the timeline of phases"));
     }
     // It deliberately had no card before /access/ existed: a link that goes
     // nowhere reads as a broken site.
-    if (has("admin") && house) {
-      made.access = area("../access/", ICON.lock, "Who can get in",
-        house.no_2fa > 0 ? chip(house.no_2fa + " without 2FA", "hot") : "",
-        [["accounts", house.accounts], ["administrators", house.admins]],
-        remember("access", "Who can get in",
+    //
+    // No `&& house` any more. That guard existed only because the row used to
+    // print house.no_2fa and house.accounts. Left in place it would hide this
+    // row when the dashboard call FAILS — on the one page whose stated job in
+    // that state is "the areas below still work, open one directly".
+    if (has("admin")) {
+      made.access = area("../access/", ICON.lock, "User access",
+        remember("access", "User access",
           "Invite somebody, change what they can do, suspend an account"));
     }
 
@@ -389,28 +394,13 @@
     }
   }
 
-  function chip(text, cls) {
-    return '<span class="chip ' + (cls || "") + '">' + esc(text) + "</span>";
-  }
-
-  function area(href, icon, name, chipHtml, nums, can) {
-    //  Joined with a middle dot rather than laid out in columns: at 254px
-    //  wide there is no room for columns, and "0 upcoming · 0 holding" reads
-    //  in one glance where three aligned cells do not.
-    var numHtml = nums.filter(function (n) {
-      return n[1] !== null && n[1] !== undefined;
-    }).map(function (n) {
-      return "<b>" + esc(n[1]) + "</b> " + esc(n[0]);
-    }).join(" · ");
-    //  `can` becomes the title. It was a visible sentence on the old cards and
-    //  a nav row cannot carry it — a hover hint is a poorer place for it, and
-    //  that is the price of the rail rather than something to pretend away.
+  function area(href, icon, name, can) {
+    //  A name and nothing else. `can` becomes the title, and the same
+    //  sentence is printed in full in "What each area is for" at the foot of
+    //  the working column — a hover hint alone would be no use on a phone.
     return '<a class="area" href="' + esc(href) + '" title="' + esc(can) + '">' +
       '<span class="ic">' + icon + "</span>" +
-      '<span class="bd">' +
-        '<span class="n">' + esc(name) + chipHtml + "</span>" +
-        (numHtml ? '<span class="nums">' + numHtml + "</span>" : "") +
-      "</span></a>";
+      '<span class="bd"><span class="n">' + esc(name) + "</span></span></a>";
   }
 
   function drawLog(log, autoCount) {
@@ -492,7 +482,7 @@
     }
     drawNeeds(d.needs);
     drawTiles(d.estate);
-    drawAreas(d.areas || {}, identity.roles, d.housekeeping);
+    drawAreas(d.areas || {}, identity.roles);
     drawLog(d.log, Number(d.auto_count || 0));
     drawHousekeeping(d.housekeeping);
   }
@@ -557,7 +547,7 @@
       // where they were going.
       drawNeeds([]);
       el("dash-tiles").innerHTML = "";
-      drawAreas({ venue: {}, volunteers: {} }, identity.roles, null);
+      drawAreas({ venue: {}, volunteers: {} }, identity.roles);
       el("dash-log").innerHTML = '<p class="dash-skel">Not available just now.</p>';
       drawHousekeeping(null);
     });
