@@ -1,5 +1,5 @@
 /* ===========================================================================
-   Taiyabah Masjid — Who can get in
+   Taiyabah Masjid — User access
    Bolton Central Islamic Society · Registered charity 1041569
 
    WHY THIS EXISTS
