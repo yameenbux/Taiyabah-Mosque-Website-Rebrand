@@ -45,9 +45,12 @@ def _today(hh, mm):
     return _now.replace(hour=hh, minute=mm, second=0, microsecond=0).isoformat()
 
 
-def _ago(days, hh=9, mm=0):
-    d = _now - timedelta(days=days)
-    return d.replace(hour=hh, minute=mm, second=0, microsecond=0).isoformat()
+def _ago(days):
+    #  EXACTLY N*24h before now, with the time of day left alone. Pinning it to
+    #  09:00 made "waiting 2 days" true before 09:00 and "waiting 3 days" after,
+    #  so the suite passed or failed depending on what time somebody ran it —
+    #  the same fault as the hard-coded date, one layer down.
+    return (_now - timedelta(days=days)).isoformat()
 
 ROOT = os.environ.get("SITE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
@@ -205,14 +208,23 @@ with sync_playwright() as p:
     check("Ismail Desai" in " ".join(needs), "the hirer's name is not shown")
     check(pg.eval_on_selector(".need", "e => e.getAttribute('href')") == "../venue/",
           "the hold does not link to the venue portal")
-    check("waiting 2 days" in " ".join(needs).lower(),
+    check("waiting 3 days" in " ".join(needs).lower(),
           "the nikah request does not say how long it has been waiting: %r" % needs)
 
     # =====================================================================
     #  3. WHAT YOU CAN DO, NOT JUST WHAT IS THERE
     # =====================================================================
     areas = pg.eval_on_selector_all(".area", "els => els.map(e => e.innerText)")
-    check(len(areas) == 6, "expected six areas for an admin, drew %d" % len(areas))
+    #  The SET, not the count. A bare number tells you something is wrong and
+    #  nothing about what — and it has to be edited every time an area is
+    #  added, which is how a real omission gets "fixed" by changing the 6 to a
+    #  7 without looking.
+    hrefs = pg.eval_on_selector_all(".area", "els => els.map(e => e.getAttribute('href'))")
+    want = ["../venue/", "../courses/", "../giftaid/", "../volunteers/",
+            "../portal/", "../newbuild/", "../access/"]
+    check(sorted(hrefs) == sorted(want),
+          "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
+          % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
     joined = " ".join(areas)
     for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah",
                  "Who can get in"]:

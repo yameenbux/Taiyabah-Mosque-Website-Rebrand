@@ -26,6 +26,12 @@ page:
   * 10  an account with no phone number is visibly incomplete, and can be
         fixed from that person's page
   * 11  the page goes full width and keeps a way back
+  * 12  THERE IS NOWHERE ON THIS PAGE TO TYPE SOMEBODY ELSE'S PASSWORD. An
+        administrator can send a reset link; an administrator can never set a
+        password. A password an administrator chose is one they know, and from
+        then on every sign-in by that person is deniable
+  * 13  a message about something that just worked survives the redraw that
+        follows it
 
 Nothing here reaches Supabase: the client is replaced before the page's own
 scripts run, and every call is answered from a stub.
@@ -122,6 +128,7 @@ def stub(payload, roles, emailed=True, email_note=""):
       getUser: function(){ return Promise.resolve({data:{user:{
         id:'%s', email:'yameen@example.test'}}}); },
       signOut: function(){ return Promise.resolve({}); },
+      updateUser: function(o){ window.__PWCHANGE = o; return Promise.resolve({data:{},error:null}); },
       mfa: { getAuthenticatorAssuranceLevel: function(){
                return Promise.resolve({data:{currentLevel:'aal2', nextLevel:'aal2'}}); },
              listFactors: function(){ return Promise.resolve({data:{totp:[{id:'f1'}]}}); } }
@@ -147,10 +154,20 @@ def stub(payload, roles, emailed=True, email_note=""):
   var realFetch = window.fetch;
   window.fetch = function(url, opts){
     if (String(url).indexOf('/functions/v1/invite-user') !== -1) {
-      window.__INVITE = JSON.parse((opts && opts.body) || '{}');
+      var sent = JSON.parse((opts && opts.body) || '{}');
+      if (sent.action === 'reset') {
+        window.__RESET = sent;
+        return Promise.resolve(new Response(JSON.stringify({
+          ok:true, action:'reset', email:sent.email, name:sent.full_name,
+          roles:[], kind:'existing',
+          link:'https://example.test/auth/v1/verify?token=RESET9',
+          emailed:EMAILED, email_note:NOTE
+        }), {status:200, headers:{'content-type':'application/json'}}));
+      }
+      window.__INVITE = sent;
       return Promise.resolve(new Response(JSON.stringify({
-        ok:true, email:window.__INVITE.email, name:window.__INVITE.full_name,
-        roles:window.__INVITE.roles, kind:'invite',
+        ok:true, email:sent.email, name:sent.full_name,
+        roles:sent.roles, kind:'invite',
         link:'https://example.test/auth/v1/verify?token=ABC123',
         emailed:EMAILED, email_note:NOTE
       }), {status:200, headers:{'content-type':'application/json'}}));
@@ -354,6 +371,127 @@ with sync_playwright() as p:
         check(pg.is_visible("#pp-edit-phone"),
               "you cannot correct your own phone number without finding another "
               "administrator — a contact detail is not a privilege")
+        click(pg, "#pp-back")
+        pg.wait_for_timeout(200)
+
+
+    # =====================================================================
+    #  12. PASSWORDS
+    #
+    #  The single rule: an administrator can SEND a reset, never SET one.
+    # =====================================================================
+    if open_tile(pg, ME):
+        check(pg.is_visible("#pp-pw-mine"),
+              "there is no way to change your own password")
+        check(not pg.is_visible("#pp-pw-theirs"),
+              "your own page offers to send YOU a reset link")
+
+        #  Too short, and it must not reach Supabase.
+        fill(pg, "#pp-pw-new", "short")
+        fill(pg, "#pp-pw-again", "short")
+        click(pg, "#pp-pw-save")
+        pg.wait_for_timeout(300)
+        check(pg.evaluate("window.__PWCHANGE") is None,
+              "a five-character password was sent to be saved")
+        check("twelve" in text(pg, "#pp-error").lower(),
+              "no useful message for a password that is too short: %r" % text(pg, "#pp-error"))
+
+        #  Mistyped, and it must not reach Supabase either.
+        fill(pg, "#pp-pw-new", "correct horse battery staple")
+        fill(pg, "#pp-pw-again", "correct horse battery stapel")
+        click(pg, "#pp-pw-save")
+        pg.wait_for_timeout(300)
+        check(pg.evaluate("window.__PWCHANGE") is None,
+              "A MISTYPED PASSWORD WAS SAVED. They would be locked out of their "
+              "own account by a typo they never saw")
+
+        fill(pg, "#pp-pw-again", "correct horse battery staple")
+        click(pg, "#pp-pw-save")
+        pg.wait_for_timeout(400)
+        got = pg.evaluate("window.__PWCHANGE")
+        check(got and got.get("password") == "correct horse battery staple",
+              "the password change never happened: %r" % got)
+        check("authenticator" in text(pg, "#pp-ok").lower(),
+              "it does not say the authenticator is unaffected: %r" % text(pg, "#pp-ok"))
+        #  And it is not left sitting in the box afterwards.
+        check(pg.input_value("#pp-pw-new") == "",
+              "the new password is still on screen after it was changed")
+        click(pg, "#pp-back")
+        pg.wait_for_timeout(200)
+
+    if open_tile(pg, TEACH):
+        check(pg.is_visible("#pp-pw-theirs"),
+              "there is no way to send somebody a reset link")
+        check(not pg.is_visible("#pp-pw-mine"),
+              "SOMEBODY ELSE'S PAGE HAS A PASSWORD BOX ON IT")
+
+        #  The assertion this whole section exists for, made against the page
+        #  rather than against one element: no visible password field anywhere
+        #  on a page that is not your own.
+        boxes = pg.eval_on_selector_all(
+            "#acc-person-view input[type=password]",
+            "els => els.filter(e => e.offsetParent !== null).length")
+        check(boxes == 0,
+              "there are %d password boxes on somebody else's page. An "
+              "administrator must never be able to set a password they will "
+              "then know" % boxes)
+
+        why = text(pg, "#pp-pw-why").lower()
+        check("cannot see or set" in why,
+              "the page does not say why there is no password box: %r" % why)
+
+        click(pg, "#pp-pw-send")
+        pg.wait_for_timeout(700)
+        sent = pg.evaluate("window.__RESET")
+        check(sent is not None, "the reset never reached the function")
+        if sent:
+            check(sent.get("action") == "reset",
+                  "the reset was not sent as a reset: %r" % sent)
+            check(sent.get("email") == "teacher@example.test",
+                  "the reset went to the wrong address: %r" % sent)
+            #  A reset must not carry roles. If it did, it would be a quiet
+            #  second route to changing what somebody can do.
+            check(not sent.get("roles"),
+                  "the reset carried roles with it: %r" % sent)
+
+        shown = text(pg, "#pp-pw-result")
+        check("emailed to teacher@example.test" in shown.lower(),
+              "the page does not say the reset was emailed: %r" % shown)
+        check("token=RESET9" in text(pg, "#pp-pw-url"),
+              "the reset link is not on screen: %r" % text(pg, "#pp-pw-url"))
+
+        # =================================================================
+        #  13. THE MESSAGE SURVIVES THE REDRAW
+        #
+        #  Every save calls load(), which redraws the page. The first version
+        #  cleared the messages and hid the reset link inside that redraw, so
+        #  "saved" appeared and vanished in the same frame and the link
+        #  flashed away before it could be copied. Drawing and resetting are
+        #  two jobs.
+        # =================================================================
+        pg.wait_for_timeout(600)
+        check(pg.is_visible("#pp-pw-result"),
+              "THE RESET LINK DISAPPEARED when the page redrew")
+        check("emailed" in text(pg, "#pp-ok").lower(),
+              "the confirmation vanished when the page redrew: %r" % text(pg, "#pp-ok"))
+
+        #  And the email address is where somebody would look for it.
+        check(pg.input_value("#pp-edit-email") == "teacher@example.test",
+              "the email address is not in the contact details")
+        check(pg.eval_on_selector("#pp-edit-email", "e => e.readOnly") is True,
+              "the email address is editable, which would put the sign-in and "
+              "the record at different addresses")
+        click(pg, "#pp-back")
+        pg.wait_for_timeout(200)
+
+    #  Contact details: the same redraw trap.
+    if open_tile(pg, MUB):
+        fill(pg, "#pp-edit-phone", "07700 900333")
+        click(pg, "#pp-save-contact")
+        pg.wait_for_timeout(700)
+        check("saved" in text(pg, "#pp-ok").lower(),
+              "'Contact details saved' vanished in the redraw that followed it: %r"
+              % text(pg, "#pp-ok"))
         click(pg, "#pp-back")
         pg.wait_for_timeout(200)
 
@@ -618,8 +756,15 @@ with sync_playwright() as p:
     #  a string the built file never contained — so each one below also proves
     #  it changed something.
     # =====================================================================
-    def control(name, script, before, after):
+    def control(name, script, before, after, setup=None):
         pg, _ = open_page(b, STAFF, ["admin"])
+        #  `before` is called TWICE — once for the state, once to prove the
+        #  script changed it — so anything that only makes sense once, like
+        #  opening a person's page, belongs in `setup`. The first version put
+        #  open_tile() inside `before`, and the second call went looking for a
+        #  tile on a page that was already showing one person.
+        if setup:
+            setup(pg)
         was = before(pg)
         pg.evaluate(script)
         pg.wait_for_timeout(200)
@@ -668,6 +813,19 @@ with sync_playwright() as p:
             "document.querySelectorAll('#acc-pending .no2fa').forEach(e => e.remove())",
             lambda pg: text(pg, "#acc-pending"),
             lambda pg: "Missing a name or a number" not in text(pg, "#acc-pending"))
+
+    control("a password box put on somebody else's page",
+            """(() => {
+                 document.getElementById('pp-pw-mine').hidden = false;
+                 document.getElementById('pp-pw-theirs').hidden = true;
+               })()""",
+            lambda pg: pg.eval_on_selector_all(
+                "#acc-person-view input[type=password]",
+                "els => els.filter(e => e.offsetParent !== null).length"),
+            lambda pg: pg.eval_on_selector_all(
+                "#acc-person-view input[type=password]",
+                "els => els.filter(e => e.offsetParent !== null).length") > 0,
+            setup=lambda pg: open_tile(pg, TEACH))
 
     control("the page kept in two columns",
             "document.querySelector('.shell').classList.remove('wide-mode')",
