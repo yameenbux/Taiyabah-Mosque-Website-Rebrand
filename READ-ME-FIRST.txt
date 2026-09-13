@@ -1,0 +1,79 @@
+TAIYABAH MASJID — files to upload to GitHub
+===========================================
+Branch this came from: access-screen (6 commits, 13 September 2026)
+
+This zip contains ONLY the 26 files that changed. Everything else in the
+repository is untouched and must be left alone.
+
+
+HOW TO UPLOAD (github.com, no command line needed)
+--------------------------------------------------
+1. Open https://github.com/yameenbux/Taiyabah-Mosque-Website-Rebrand
+2. Make sure you are on the branch you want to change (main).
+3. Click "Add file" -> "Upload files".
+4. Unzip this file first, then drag the CONTENTS of the "taiyabah-upload"
+   folder into the browser — not the folder itself, and not this text file.
+   The folder structure inside (access/, db/, newbuild/, ...) must be kept,
+   because GitHub uses it to decide which files to replace.
+5. Write a commit message, e.g.
+      Who can get in, the new build editor, the madrasah portal, and the
+      dashboard rail
+6. Commit.
+
+GitHub will replace the 26 files and leave the rest of the site alone.
+
+
+ONE THING THE UPLOADER CANNOT DO
+--------------------------------
+A web upload can add and replace files. It cannot DELETE one.
+
+This branch deletes exactly one file, which is now unused:
+
+    portal/supabase2.112.4.js
+
+Delete it by hand after uploading: open it on GitHub, click the bin icon
+(top right of the file view), then commit. The site works either way — it
+is dead weight, not a dependency — so this is tidiness, not urgency.
+
+
+WHAT IS IN HERE
+---------------
+New screens
+  access/          "Who can get in" — invite staff, tiles, person page,
+                   contact details, password reset
+  newbuild/        the new build page editor
+  portal/          the madrasah portal (admin console, teacher, parent)
+
+Database migrations — these are NOT uploaded anywhere, they have ALREADY
+been applied to the live Supabase project. They are in the repo so the
+next person can read what was done.
+  db/025_access_control.sql
+  db/026_invite_contact_details.sql
+  db/027_password_reset.sql
+  db/028_site_content.sql
+
+Changed pages
+  index.html            BUILT FILE — never edit by hand
+  index_template.html   the source it is built from
+  portals/              the admin dashboard, now a rail + working column
+  account/, apply/      small changes
+
+Edge Functions — like the migrations, these are ALREADY DEPLOYED. They are
+here so the repo matches what is live.
+  supabase/functions/invite-user/
+  supabase/functions/notify/
+
+Tests
+  _test/access_test.py, newbuild_test.py, portal_test.py, dashboard_test.py
+
+
+A NOTE ON THE KEYS IN THESE FILES
+---------------------------------
+access/config.js and newbuild/config.js contain a Supabase key. That key is
+the PUBLISHABLE (anon) one and it is meant to be visible — the real
+protection is Row Level Security inside the database. It is safe in a public
+repository.
+
+The service_role / secret key is NOT in any of these files, and must never
+be put in one. If GitHub ever warns you that a push contains a secret, do
+NOT click "Allow secret" — cancel, and get the key rotated.
