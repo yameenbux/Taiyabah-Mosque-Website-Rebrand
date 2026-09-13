@@ -26,6 +26,28 @@ Run:  python3 _test/dashboard_test.py
 """
 from playwright.sync_api import sync_playwright
 import sys, os, re, json, http.server, socketserver, threading, functools
+from datetime import datetime, timedelta, timezone
+
+#  The log renders "Today HH:MM" only for a row dated today, so a fixture with
+#  a hard-coded date passes on the day it was written and fails every day
+#  after. This one failed the morning after — 12 September became "Sat" and the
+#  assertion for "Today" went red with nothing wrong with the page.
+#
+#  A suite whose answer depends on the day it is run teaches people to ignore
+#  it, which costs more than the assertion is worth. The times below are now
+#  built from the clock. TODAY is deliberately mid-morning UTC rather than
+#  "now minus an hour": at 00:30 that would land on yesterday and the same bug
+#  would come back, once a night.
+_now = datetime.now(timezone.utc)
+
+
+def _today(hh, mm):
+    return _now.replace(hour=hh, minute=mm, second=0, microsecond=0).isoformat()
+
+
+def _ago(days, hh=9, mm=0):
+    d = _now - timedelta(days=days)
+    return d.replace(hour=hh, minute=mm, second=0, microsecond=0).isoformat()
 
 ROOT = os.environ.get("SITE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
@@ -51,7 +73,7 @@ def check(cond, msg):
 
 BUSY = {
     "allowed": True, "is_admin": True,
-    "as_at": "2026-09-12T18:41:00+00:00",
+    "as_at": _today(18, 41),
     "needs": [
         {"kind": "hall_hold", "urgency": "now", "ref": "HH-26-0009",
          "title": "Hall held, deposit not paid",
@@ -60,7 +82,7 @@ BUSY = {
         {"kind": "nikah_new", "urgency": "soon", "ref": "NK-26-0004",
          "title": "Nikah date needs a call",
          "detail": "Fatima Patel - 07700900118", "where": "venue",
-         "since": "2026-09-10T09:00:00+00:00"},
+         "since": _ago(3)},
         {"kind": "volunteers", "urgency": "soon", "ref": None,
          "title": "2 food bank volunteers not yet rung",
          "detail": "1 free Sunday mornings", "where": "volunteers"},
@@ -76,15 +98,15 @@ BUSY = {
         "volunteers": {"willing": 12, "sundays": 8, "to_ring": 2},
     },
     "log": [
-        {"at": "2026-09-12T13:20:00+00:00", "kind": "staff",
+        {"at": _today(13, 20), "kind": "staff",
          "what": "Deposit taken in cash", "ref": "HH-26-0008", "who": "Yameen Bux"},
-        {"at": "2026-09-12T08:38:00+00:00", "kind": "public",
+        {"at": _today(8, 38), "kind": "public",
          "what": "Hall booking came in", "ref": "HH-26-0009", "who": "from the website"},
     ],
     "auto_count": 120,
     "housekeeping": {"accounts": 7, "admins": 4, "no_2fa": 1,
-                     "last_holds": "2026-09-12T17:20:00+00:00",
-                     "last_purge": "2026-09-12T02:25:00+00:00"},
+                     "last_holds": _today(17, 20),
+                     "last_purge": _today(2, 25)},
 }
 
 QUIET = json.loads(json.dumps(BUSY))
