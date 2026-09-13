@@ -135,6 +135,10 @@
   var access = (function () {
     var data = { people: [], invites: [], admins: 0, me: null };
     var mounted = false;
+    // Which person's page is open, if any. Held here rather than in the DOM so
+    // that load(), which runs after every change, can redraw the open page with
+    // the new answer instead of leaving it showing what was true a moment ago.
+    var openId = null;
 
     function canSee(identity) { return identity.roles.indexOf("admin") !== -1; }
 
@@ -198,24 +202,57 @@
       if (lab) lab.hidden = false;
       box.innerHTML = data.invites.map(function (i) {
         return '<div class="acc-row" data-email="' + esc(i.email) + '">' +
-          '<div class="acc-top"><span class="acc-name">' + esc(i.email) + "</span>" +
+          '<div class="acc-top"><span class="acc-name">' + esc(i.name || i.email) + "</span>" +
             '<span class="acc-meta">' + (i.expired ? "expired" : "invited " + esc(when(i.invited_at))) + "</span></div>" +
+          '<div class="acc-mail">' + esc(i.email) +
+            (i.phone ? " &middot; " + esc(i.phone) : "") + "</div>" +
           '<div class="acc-chips">' +
             (i.roles || []).map(function (r) {
               return '<span class="can">' + esc(SAYS[r] || r) + "</span>"; }).join("") +
-            '<span>' + (i.expired ? "Link no longer works" : "Not accepted yet") + "</span></div>" +
-          '<div class="acc-meta">Nothing is granted until they sign in and set up an authenticator.</div>' +
+            '<span>' + (i.expired ? "Link no longer works" : "Not accepted yet") + "</span>" +
+            (i.incomplete ? '<span class="no2fa">Missing a name or a number</span>' : "") + "</div>" +
+          '<div class="acc-meta">' +
+            (i.incomplete
+              // The database refuses to grant roles from an invitation with no
+              // name and no number, which is every invitation made before that
+              // became a requirement. Saying so here beats somebody waiting a
+              // week for an invite that was never going to work.
+              ? "This was made before a name and a number were required, so it will " +
+                "not work. Cancel it and invite them again."
+              : "Nothing is granted until they sign in and set up an authenticator.") +
+          "</div>" +
           '<div class="acc-acts"><button type="button" data-act="cancel">Cancel this invitation</button></div>' +
         "</div>";
       }).join("");
     }
 
+    function staffOnly() {
+      return data.people.filter(function (p) {
+        return (p.roles || []).some(function (r) { return r !== "parent"; });
+      });
+    }
+
+    function person(id) {
+      return staffOnly().filter(function (p) { return p.id === id; })[0];
+    }
+
+    /* The last two administrators cannot have the role taken away. Said on the
+       screen rather than letting somebody press it and read an error: the
+       database refuses it either way, but being told first is better. */
+    function lastTwoAdmins(p) {
+      return (p.roles || []).indexOf("admin") !== -1 && data.admins <= 2;
+    }
+
+    /* ---- the tiles -------------------------------------------------------
+       A tile is a <button>, not a div with a click handler: that is what
+       gives it keyboard focus, Enter and Space, and a role a screen reader
+       announces. Everything that can be DONE to somebody lives on their own
+       page — a grid of tiles each carrying a Suspend button is a grid of
+       things to press by accident. */
     function renderPeople() {
       var box = el("acc-list");
       if (!box) return;
-      var staff = data.people.filter(function (p) {
-        return (p.roles || []).some(function (r) { return r !== "parent"; });
-      });
+      var staff = staffOnly();
       if (!staff.length) {
         box.innerHTML = '<div class="acc-empty">No staff accounts yet.</div>';
         return;
@@ -223,49 +260,143 @@
 
       box.innerHTML = staff.map(function (p) {
         var roles = (p.roles || []).filter(function (r) { return r !== "parent"; });
-        var isAdmin = roles.indexOf("admin") !== -1;
+        var needs = p.needs || [];
+        var noPhone = needs.indexOf("phone") !== -1;
 
-        // The last two administrators cannot have the role taken away. Said on
-        // the card, rather than letting somebody press it and read an error:
-        // the database refuses it either way, but being told first is better
-        // than being told after.
-        var lastTwo = isAdmin && data.admins <= 2;
-
-        return '<div class="acc-row' + (p.is_me ? " me" : "") + (p.active === false ? " off" : "") +
-               '" data-id="' + esc(p.id) + '">' +
-          '<div class="acc-top">' +
-            '<span class="acc-name">' + esc(p.name || "(no name yet)") +
-              (p.is_me ? ' <span style="font-size:.72rem;color:var(--muted);font-family:inherit;font-weight:400;">— you</span>' : "") +
-            "</span>" +
-            '<span class="acc-mail">' + esc(p.email) + "</span>" +
-          "</div>" +
-          '<div class="acc-chips">' +
+        return '<button type="button" class="acc-tile' + (p.is_me ? " me" : "") +
+                 (p.active === false ? " off" : "") + '" data-id="' + esc(p.id) + '">' +
+          '<span class="t-name">' + esc(p.name || "(no name yet)") +
+            (p.is_me ? ' <span class="t-you">&mdash; you</span>' : "") + "</span>" +
+          '<span class="acc-chips t-chips">' +
             (roles.length
               ? roles.map(function (r) { return '<span class="can">' + esc(SAYS[r] || r) + "</span>"; }).join("")
               : '<span>No access</span>') +
+            (p.active === false ? "<span>Suspended</span>" : "") +
+          "</span>" +
+          '<span class="t-lines">' +
+            '<span class="t-line">' + esc(p.email || "no email") + "</span>" +
+            '<span class="t-line">' +
+              (noPhone ? '<span class="gap">No phone number</span>' : "<b>" + esc(p.phone) + "</b>") +
+            "</span>" +
+          "</span>" +
+          '<span class="acc-chips t-chips">' +
             (p.two_step
               ? '<span class="ok2fa">Two-step on</span>'
               : '<span class="no2fa">No authenticator</span>') +
-            (p.active === false ? '<span>Suspended</span>' : "") +
-          "</div>" +
-          '<div class="acc-meta">Last signed in ' + esc(when(p.last_in)) +
-            (p.two_step ? "" :
-              ' &middot; <b style="color:#8f3f22;">blocks the next database change</b>') +
-          "</div>" +
-          '<div class="acc-acts">' +
-            (p.is_me
-              ? '<span class="acc-meta">You cannot change your own access &mdash; ask another administrator.</span>'
-              : '<button type="button" data-act="roles">Change what they can do</button>' +
-                (p.active === false
-                  ? '<button type="button" data-act="restore">Restore access</button>'
-                  : '<button type="button" data-act="suspend"' + (lastTwo ? " disabled" : "") + '>Suspend</button>') +
-                (lastTwo ? '<span class="acc-meta">One of the last two administrators.</span>' : "")) +
-          "</div>" +
-        "</div>";
+          "</span>" +
+          '<span class="t-more">Open &rarr;</span>' +
+        "</button>";
       }).join("");
     }
 
-    function render() { renderSummary(); renderPending(); renderPeople(); }
+    /* ---- one person ------------------------------------------------------ */
+    function showList() {
+      openId = null;
+      el("acc-list-view").hidden = false;
+      el("acc-person-view").hidden = true;
+      window.scrollTo(0, 0);
+    }
+
+    function showPerson(id) {
+      var p = person(id);
+      if (!p) return;
+      openId = id;
+      el("acc-list-view").hidden = true;
+      el("acc-person-view").hidden = false;
+      renderPerson();
+      window.scrollTo(0, 0);
+    }
+
+    function renderPerson() {
+      var p = person(openId);
+      // The person can vanish under us: load() runs after every change, and a
+      // suspended-then-role-stripped account drops out of the staff list. Going
+      // back to the list beats rendering a page of blanks.
+      if (!p) { showList(); return; }
+
+      say("pp-error", ""); say("pp-ok", "");
+
+      var roles = (p.roles || []).filter(function (r) { return r !== "parent"; });
+      var needs = p.needs || [];
+
+      el("pp-name").textContent = p.name || "(no name yet)";
+      el("pp-mail").textContent = p.email || "";
+
+      el("pp-chips").innerHTML =
+        (roles.length
+          ? roles.map(function (r) { return '<span class="can">' + esc(SAYS[r] || r) + "</span>"; }).join("")
+          : '<span>No access</span>') +
+        (p.two_step ? '<span class="ok2fa">Two-step on</span>'
+                    : '<span class="no2fa">No authenticator</span>') +
+        (p.active === false ? "<span>Suspended</span>" : "");
+
+      el("pp-edit-name").value  = p.name || "";
+      el("pp-edit-phone").value = p.phone || "";
+
+      var gap = el("pp-contact-gap");
+      if (needs.indexOf("phone") !== -1) {
+        gap.hidden = false;
+        gap.innerHTML = "There is no phone number on this account. The masjid needs one " +
+          "for every staff account &mdash; it is how somebody gets hold of them when an " +
+          "account is stuck, and it is what makes handover possible.";
+      } else {
+        gap.hidden = true;
+      }
+
+      // Your own roles: not editable, by the same rule the database enforces.
+      el("pp-roles-edit").hidden = !!p.is_me;
+      el("pp-roles-mine").hidden = !p.is_me;
+      Array.prototype.forEach.call(document.querySelectorAll(".pp-r"), function (c) {
+        c.checked = roles.indexOf(c.value) !== -1;
+      });
+
+      el("pp-signin").innerHTML =
+        fact("Two-step", p.two_step ? "On" : "Not set up", !p.two_step) +
+        fact("Last signed in", when(p.last_in)) +
+        fact("Account made", when(p.since)) +
+        (p.two_step ? "" :
+          '<div class="pp-warn">Until they set up an authenticator this account blocks ' +
+          'every future change to the database. Nobody can do it for them &mdash; they ' +
+          'have to sign in and scan the square.</div>');
+
+      el("pp-access").innerHTML =
+        fact("Status", p.active === false ? "Suspended" : "Active", p.active === false) +
+        fact("Email address", esc(p.email) || "&mdash;") +
+        fact("Phone", p.phone
+          ? '<a href="tel:' + esc(String(p.phone).replace(/[^0-9+]/g, "")) + '">' + esc(p.phone) + "</a>"
+          : "not on file", !p.phone);
+
+      var acts = el("pp-access-acts"), note = el("pp-access-note");
+      if (p.is_me) {
+        acts.innerHTML = "";
+        note.textContent = "You cannot suspend your own account.";
+      } else if (p.active === false) {
+        acts.innerHTML = '<button type="button" class="go" data-act="restore">Restore access</button>';
+        note.textContent = "";
+      } else {
+        var stuck = lastTwoAdmins(p);
+        acts.innerHTML = '<button type="button" class="no" data-act="suspend"' +
+          (stuck ? " disabled" : "") + ">Suspend this account</button>";
+        note.textContent = stuck
+          ? "One of the last two administrators. The masjid must keep two, so this " +
+            "cannot be suspended until somebody else is made an administrator."
+          : "";
+      }
+    }
+
+    /* `v` is HTML, not text — some facts carry a tel: link. Every caller is
+       responsible for escaping what it puts in, and each one does. Written
+       here so the next person reading it does not have to work that out from
+       the call sites. */
+    function fact(k, v, bad) {
+      return '<div class="pp-fact"><span class="k">' + esc(k) + "</span>" +
+             '<span class="v' + (bad ? " gap" : "") + '">' + v + "</span></div>";
+    }
+
+    function render() {
+      renderSummary(); renderPending(); renderPeople();
+      if (openId) renderPerson();
+    }
 
     function load() {
       say("acc-error", "");
@@ -314,7 +445,7 @@
         el("acc-invite").hidden = false;
         el("inv-result").hidden = true;
         say("acc-ok", "");
-        el("inv-email").focus();
+        el("inv-name").focus();
       });
       el("inv-cancel").addEventListener("click", function () {
         el("acc-invite").hidden = true;
@@ -325,11 +456,24 @@
 
       el("inv-send").addEventListener("click", function () {
         var email = (el("inv-email").value || "").trim().toLowerCase();
+        var name  = (el("inv-name").value || "").trim();
+        var phone = (el("inv-phone").value || "").trim();
         var roles = chosenRoles();
         say("acc-error", "");
 
+        if (name.length < 2) {
+          say("acc-error", "Put their full name in. An account nobody can put a " +
+              "name to is no use at handover.", true); return;
+        }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) {
           say("acc-error", "That does not look like an email address.", true); return;
+        }
+        // The same rule as pending_access.phone_shape and hall_bookings.phone_shape.
+        // Checked here only so the person is told before an account is created;
+        // the database is what actually enforces it.
+        if (!/^[0-9]{10,13}$/.test(phone.replace(/[^0-9]/g, ""))) {
+          say("acc-error", "That does not look like a phone number. Somebody has " +
+              "to be able to ring them.", true); return;
         }
         if (!roles.length) {
           say("acc-error", "Choose what they will be able to do.", true); return;
@@ -354,8 +498,11 @@
             headers: { "content-type": "application/json",
                        apikey: cfg.SUPABASE_ANON_KEY,
                        Authorization: "Bearer " + token },
-            body: JSON.stringify({ email: email, roles: roles,
-                                   note: (el("inv-note").value || "").trim() })
+            body: JSON.stringify({
+              email: email, full_name: name, phone: phone, roles: roles,
+              note: (el("inv-note").value || "").trim(),
+              send_email: !!el("inv-send-email").checked
+            })
           });
         }).then(function (r) {
           return r.text().then(function (t) {
@@ -364,13 +511,35 @@
           });
         }).then(function (res) {
           if (!res.ok) throw new Error(res.body.error || "That did not work.");
-          el("inv-url").textContent = res.body.link;
+          var b = res.body;
+
+          el("inv-url").textContent = b.link;
           el("inv-result").hidden = false;
-          say("acc-ok", res.body.kind === "existing"
-            ? "That address already had an account, so this is a link for them to " +
-              "set a new password rather than a new account. What they can do has been recorded."
-            : "Invitation created. Send them the link below.");
+
+          /* The link is shown whether or not the email went, and the wording
+             says which happened. The failure mode this is written against is
+             the screen saying "emailed" while nothing was sent — which is
+             exactly what the old code would have done, because it treated a
+             200 from the mail step as delivery. */
+          if (b.emailed) {
+            el("inv-result-h").textContent = "Emailed to " + b.email;
+            el("inv-result-p").innerHTML =
+              "It has been sent from the masjid&rsquo;s address. The link below is the " +
+              "same one, in case they say it has not arrived &mdash; it works once, and " +
+              "stops working after 24 hours.";
+            say("acc-ok", "Invitation emailed to " + b.email + ".");
+          } else {
+            el("inv-result-h").textContent = "Send them this link";
+            el("inv-result-p").innerHTML =
+              "<strong>Nothing was emailed" +
+              (b.email_note ? " &mdash; " + esc(b.email_note) : "") + ".</strong> " +
+              "Copy this and give it to them however you normally reach them. " +
+              "It works once, and stops working after 24 hours.";
+            say("acc-ok", "Invitation created, but not emailed. The link is below.");
+          }
+
           el("inv-email").value = ""; el("inv-note").value = "";
+          el("inv-name").value = ""; el("inv-phone").value = "";
           el("inv-confirm").value = "";
           Array.prototype.forEach.call(document.querySelectorAll(".inv-r"),
             function (c) { c.checked = false; });
@@ -418,74 +587,110 @@
         });
       });
 
+      /* A tile opens that person's page. Nothing else. The old screen put
+         "Change what they can do" behind a window.prompt() asking somebody to
+         type "hall, madrasah" as a comma-separated list — which is a text
+         field pretending to be tick boxes, and the sort of thing that works
+         for the person who wrote it and nobody else. */
       el("acc-list").addEventListener("click", function (e) {
+        var tile = e.target.closest ? e.target.closest(".acc-tile") : null;
+        if (!tile) return;
+        var id = tile.getAttribute("data-id");
+        if (id) showPerson(id);
+      });
+
+      el("pp-back").addEventListener("click", showList);
+
+      el("pp-save-contact").addEventListener("click", function () {
+        var p = person(openId);
+        if (!p) return;
+        var name  = (el("pp-edit-name").value || "").trim();
+        var phone = (el("pp-edit-phone").value || "").trim();
+        say("pp-error", ""); say("pp-ok", "");
+
+        if (name.length < 2) {
+          say("pp-error", "Put their full name in.", true); return;
+        }
+        if (!/^[0-9]{10,13}$/.test(phone.replace(/[^0-9]/g, ""))) {
+          say("pp-error", "That does not look like a phone number.", true); return;
+        }
+
+        var btn = el("pp-save-contact");
+        btn.disabled = true; btn.textContent = "Saving…";
+        sb.rpc("set_person_contact", {
+          p_user: openId, p_full_name: name, p_phone: phone
+        }).then(function (res) {
+          if (res.error) throw res.error;
+          say("pp-ok", "Contact details saved.");
+          return load();
+        }).catch(function (err) {
+          say("pp-error", err.message || "That did not work.", true);
+        }).finally(function () {
+          btn.disabled = false; btn.textContent = "Save contact details";
+        });
+      });
+
+      el("pp-save-roles").addEventListener("click", function () {
+        var p = person(openId);
+        if (!p) return;
+        var current = (p.roles || []).filter(function (r) { return r !== "parent"; });
+        var want = Array.prototype.slice.call(document.querySelectorAll(".pp-r"))
+          .filter(function (c) { return c.checked; })
+          .map(function (c) { return c.value; });
+        say("pp-error", ""); say("pp-ok", "");
+
+        // Making somebody an administrator is the one change on this screen
+        // that cannot be walked back by the person who made it — they would
+        // then be able to change it themselves. It asks.
+        if (want.indexOf("admin") !== -1 && current.indexOf("admin") === -1) {
+          if (!window.confirm(
+                "Make " + (p.name || p.email) + " a full administrator?\n\n" +
+                "They will see every payment and every record, and be able to " +
+                "change what anybody else can do — including you.")) return;
+        }
+        if (!want.length && current.length) {
+          if (!window.confirm(
+                "Take away everything " + (p.name || p.email) + " can do?\n\n" +
+                "The account stays and so does the record of what they did. " +
+                "They just will not be able to reach anything.")) return;
+        }
+
+        var btn = el("pp-save-roles");
+        btn.disabled = true; btn.textContent = "Saving…";
+        sb.rpc("set_person_roles", { p_user: openId, p_roles: want }).then(function (res) {
+          if (res.error) throw res.error;
+          say("pp-ok", "Saved what " + (p.name || p.email) + " can do.");
+          return load();
+        }).catch(function (err) {
+          say("pp-error", err.message || "That did not work.", true);
+          return load();
+        }).finally(function () {
+          btn.disabled = false; btn.textContent = "Save what they can do";
+        });
+      });
+
+      el("pp-access-acts").addEventListener("click", function (e) {
         var btn = e.target.closest ? e.target.closest("button[data-act]") : null;
         if (!btn) return;
-        var row = btn.closest(".acc-row");
-        var id = row && row.getAttribute("data-id");
-        if (!id) return;
-        var person = data.people.filter(function (p) { return p.id === id; })[0];
-        if (!person) return;
-        var act = btn.getAttribute("data-act");
+        var p = person(openId);
+        if (!p) return;
+        var on = btn.getAttribute("data-act") === "restore";
 
-        if (act === "suspend" || act === "restore") {
-          var on = act === "restore";
-          if (!window.confirm(on
-                ? "Give " + person.email + " their access back?"
-                : "Suspend " + person.email + "? Their access stops immediately. " +
-                  "The account and the record of what they did are kept.")) return;
-          Array.prototype.forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = true; });
-          sb.rpc("set_person_active", { p_user: id, p_active: on }).then(function (res) {
-            if (res.error) throw res.error;
-            say("acc-ok", on ? "Access restored." : "Access suspended.");
-            return load();
-          }).catch(function (err) {
-            say("acc-error", err.message || "That did not work.", true);
-            return load();
-          });
-          return;
-        }
+        if (!window.confirm(on
+              ? "Give " + (p.name || p.email) + " their access back?"
+              : "Suspend " + (p.name || p.email) + "? Their access stops immediately. " +
+                "The account and the record of what they did are kept.")) return;
 
-        if (act === "roles") {
-          var current = (person.roles || []).filter(function (r) { return r !== "parent"; });
-          var answer = window.prompt(
-            "What should " + (person.name || person.email) + " be able to do?\n\n" +
-            "Type any of these, separated by commas:\n" +
-            "  hall      — hall bookings and nikah\n" +
-            "  madrasah  — the madrasah portal\n" +
-            "  everything — full administrator\n\n" +
-            "Leave it empty to take all access away.",
-            current.map(function (r) {
-              return r === "hall_office" ? "hall" : r === "teacher" ? "madrasah" : "everything";
-            }).join(", "));
-          if (answer === null) return;
-
-          var want = [];
-          answer.toLowerCase().split(",").forEach(function (w) {
-            w = w.trim();
-            if (w === "hall" || w === "hall_office") want.push("hall_office");
-            else if (w === "madrasah" || w === "teacher") want.push("teacher");
-            else if (w === "everything" || w === "admin") want.push("admin");
-            else if (w) want.push(w);   // let the database refuse it by name
-          });
-
-          if (want.indexOf("admin") !== -1 && current.indexOf("admin") === -1) {
-            if (!window.confirm(
-                  "Make " + person.email + " a full administrator?\n\n" +
-                  "They will see every payment and every record, and be able to " +
-                  "change what anybody else can do.")) return;
-          }
-
-          Array.prototype.forEach.call(row.querySelectorAll("button"), function (b) { b.disabled = true; });
-          sb.rpc("set_person_roles", { p_user: id, p_roles: want }).then(function (res) {
-            if (res.error) throw res.error;
-            say("acc-ok", "Updated what " + person.email + " can do.");
-            return load();
-          }).catch(function (err) {
-            say("acc-error", err.message || "That did not work.", true);
-            return load();
-          });
-        }
+        btn.disabled = true;
+        say("pp-error", ""); say("pp-ok", "");
+        sb.rpc("set_person_active", { p_user: openId, p_active: on }).then(function (res) {
+          if (res.error) throw res.error;
+          say("pp-ok", on ? "Access restored." : "Access suspended.");
+          return load();
+        }).catch(function (err) {
+          say("pp-error", err.message || "That did not work.", true);
+          return load();
+        });
       });
     }
 
@@ -510,6 +715,44 @@
         }
         if (noaccess) noaccess.hidden = true;
         if (panel) panel.hidden = false;
+
+        /* The page goes full width, and the brand panel goes with it. A list
+           of people wants the width; a sign-in form does not, which is why
+           this happens HERE and not in the markup — somebody who never gets
+           past the sign-in card should keep the two-column page. */
+        var shell = document.querySelector(".shell");
+        if (shell) shell.classList.add("wide-mode");
+
+        // The top bar now carries the way back, the masjid's name and sign
+        // out, so the three things it replaces are hidden rather than shown
+        // twice.
+        var top = el("app-top");
+        if (top) {
+          top.hidden = false;
+          el("app-top-email").textContent = identity.user.email;
+        }
+        ["app-who", "app-roles", "app-signout"].forEach(function (id) {
+          var n = el(id);
+          if (n) n.hidden = true;
+        });
+        var out = el("app-signout-top");
+        if (out && !out.wired) {
+          out.wired = true;
+          out.addEventListener("click", function () {
+            sb.auth.signOut().then(function () {
+              // Take the page back OUT of wide mode. Without this the sign-in
+              // card comes back full width with no brand panel beside it —
+              // signing out would visibly break the page you land on.
+              var s = document.querySelector(".shell");
+              if (s) s.classList.remove("wide-mode");
+              el("signin-email").value = "";
+              el("signin-password").value = "";
+              setError("signin-error", "");
+              show("view-signin");
+            });
+          });
+        }
+
         wire();
         load();
       }

@@ -438,6 +438,174 @@
   .ga-table .miss{color:var(--danger);font-weight:700;}
   .ga-empty{padding:26px 4px;color:var(--muted);font-size:.9rem;}
 </style>
+
+<style>
+/* ===========================================================================
+   WHO CAN GET IN — the full-width layout
+
+   Stated once, at the top, because it has now caught this project four times:
+   ANY author `display` rule beats `[hidden]{display:none}`, so an element that
+   is `display:grid` or `display:flex` in a rule of ours keeps rendering while
+   its `hidden` property is perfectly true. `.field` in /auth/, `.bk-tab` in
+   /venue/, `.logauto` in /portals/, and it would have been `.acc-grid` here.
+   =========================================================================== */
+.wide [hidden], .wide-top [hidden]{display:none !important;}
+
+/* The two-column sign-in shell is right for a form. It is wrong for a list of
+   people: at 940px it leaves the grid about 470px wide, which is one tile.
+   Once somebody is signed in and looking at accounts, the brand panel has
+   done its job and the page takes the whole width. */
+.shell.wide-mode{grid-template-columns:1fr;}
+.shell.wide-mode .brand{display:none;}
+.shell.wide-mode .panel{align-items:flex-start;padding:0;}
+.shell.wide-mode .card.wide{
+  width:100%;max-width:none;border:none;border-radius:0;box-shadow:none;
+  padding:0 0 48px;background:transparent;
+}
+
+/* The bar carries what the hidden brand panel used to: where you are, who you
+   are, and the way back. Without it, hiding .brand would strand somebody on a
+   page with no exit — which is the exact complaint that produced the sticky
+   left panel on /venue/. */
+.wide-top{
+  display:flex;align-items:center;gap:14px;background:var(--brand-900);
+  padding:15px clamp(16px,4vw,34px);margin-bottom:clamp(18px,3vw,26px);
+  flex-wrap:wrap;
+}
+.wide-top .wt-t{flex:1;min-width:180px;}
+.wide-top .wt-t strong{
+  display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;
+  font-size:1.02rem;color:#F3EFE3;
+}
+.wide-top .wt-t span{display:block;font-size:.74rem;color:rgba(243,239,227,.6);word-break:break-all;}
+.wide-top a, .wide-top button{
+  font-family:inherit;font-size:.74rem;font-weight:700;letter-spacing:.02em;
+  padding:7px 13px;border-radius:999px;text-decoration:none;cursor:pointer;
+  border:1px solid rgba(243,239,227,.3);background:none;color:rgba(243,239,227,.85);
+}
+.wide-top a:hover, .wide-top button:hover{border-color:var(--gold-bright);color:var(--gold-bright);}
+/* Only once the page has actually gone wide. Applied unconditionally it would
+   sit inside the sign-in card's own padding and indent everything twice. */
+.shell.wide-mode .wide-wrap{padding:0 clamp(16px,4vw,34px);}
+
+/* --- classes this page uses and never defined ---------------------------
+   `.cf-row`, `.field-hint` and `.ok-note` were all used in the markup of this
+   screen and defined in none of it. The invite form's inputs were unstyled,
+   its labels ran into their fields, and every "that worked" message was plain
+   black text. It worked, so it was never noticed — which is the point: HTML
+   with no matching CSS produces no error anywhere, and the only way to catch
+   it is to look. `.cf-row` is copied from index_template.html unchanged so the
+   invite form looks like every other form on the site; `.ok-note` had to be
+   written, since nothing on the site had a success note before. */
+.cf-row{margin-bottom:14px;}
+.cf-row label{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.cf-row input,.cf-row select,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.92rem;line-height:1.3;color:var(--ink);}
+.cf-row input:focus,.cf-row select:focus,.cf-row textarea:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
+/* The tick-box rows inside a .cf-row are laid out by .inv-role, which wants a
+   flex row and an inline label — the block-level uppercase label above would
+   stack the box on its own line and lose the text beside it. */
+.cf-row label.inv-role{display:flex;font-size:.88rem;letter-spacing:0;text-transform:none;font-weight:400;color:var(--ink);margin-bottom:0;}
+.cf-row label.inv-role input{width:16px;}
+.field-hint{font-size:.76rem;color:var(--muted);margin-top:5px;line-height:1.5;}
+.ok-note{
+  background:rgba(63,122,70,.11);border:1px solid rgba(63,122,70,.32);
+  color:#2C5E33;border-radius:10px;padding:10px 13px;font-size:.85rem;
+  line-height:1.55;margin-bottom:14px;
+}
+
+/* `.btn` is `width:100%` because it was written for the sign-in form, where a
+   full-width button is right. In a row of them it makes each one span the page
+   and wrap onto its own line — which is what "Invite somebody" was doing: a
+   pale bar across the whole screen with the words floating in the middle of
+   it. Buttons in an action row size to their text. */
+.ga-acts .btn{width:auto;}
+
+/* A form is not improved by being 1200px wide. The tiles want the width; the
+   fields want a readable measure, the same as every other form on the site. */
+.wide .inv, .wide .ga-sum{max-width:660px;}
+
+/* --- the tiles ---------------------------------------------------------- */
+.acc-grid{
+  display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(272px,1fr));
+}
+/* A tile is a <button>, not a div with a click handler. That is what gets it
+   keyboard focus, Enter and Space, and a role screen readers announce — none
+   of which a div gives you, and all of which somebody at the masjid will
+   eventually need. */
+.acc-tile{
+  font-family:inherit;text-align:left;cursor:pointer;width:100%;
+  border:1px solid var(--line);border-radius:13px;background:var(--card);
+  padding:15px 16px 14px;display:flex;flex-direction:column;gap:9px;
+  transition:border-color .12s, box-shadow .12s, transform .12s;
+}
+.acc-tile:hover{border-color:var(--gold);box-shadow:0 3px 14px rgba(59,30,56,.07);transform:translateY(-1px);}
+.acc-tile:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.acc-tile.me{border-color:var(--gold);background:#fff;}
+.acc-tile.off{opacity:.64;}
+.acc-tile .t-name{
+  font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1.02rem;
+  color:var(--ink);line-height:1.3;
+}
+.acc-tile .t-you{font-family:inherit;font-size:.7rem;font-weight:500;color:var(--muted);}
+.acc-tile .t-lines{display:flex;flex-direction:column;gap:3px;}
+.acc-tile .t-line{
+  font-size:.78rem;color:var(--muted);word-break:break-all;line-height:1.4;
+  display:flex;gap:7px;align-items:baseline;
+}
+.acc-tile .t-line b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+.acc-tile .t-line .gap{color:var(--danger);font-weight:700;}
+/* The chip styling lives on `.acc-chips span`, so a tile has to carry that
+   class as well as its own — otherwise the roles render as bare text and the
+   only thing distinguishing "Everything" from a line of prose is that somebody
+   knows what it means. */
+.acc-tile .acc-chips{margin:0;}
+.acc-tile .t-more{
+  font-size:.72rem;color:var(--brand-700);font-weight:700;margin-top:1px;
+}
+
+/* --- one person's page --------------------------------------------------- */
+.pp-back{
+  font-family:inherit;font-size:.76rem;font-weight:700;color:var(--brand-700);
+  background:none;border:none;cursor:pointer;padding:0;margin-bottom:14px;
+}
+.pp-back:hover{color:var(--brand-900);}
+.pp-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;
+}
+.pp-head h2{font-size:1.5rem;color:var(--brand-900);margin:0 0 5px;}
+.pp-head .pp-mail{font-size:.84rem;color:var(--muted);word-break:break-all;}
+.pp-grid{display:grid;gap:18px;grid-template-columns:1fr;}
+@media (min-width:860px){ .pp-grid{grid-template-columns:1fr 1fr;} }
+.pp-box{border:1px solid var(--line);border-radius:13px;background:var(--card);padding:17px 18px;}
+.pp-box h3{
+  font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+  color:var(--brand-900);margin:0 0 4px;
+}
+.pp-box .pp-why{font-size:.78rem;color:var(--muted);line-height:1.55;margin-bottom:13px;}
+.pp-facts{display:flex;flex-direction:column;gap:9px;}
+.pp-fact{display:flex;justify-content:space-between;gap:12px;font-size:.85rem;flex-wrap:wrap;}
+.pp-fact .k{color:var(--muted);}
+.pp-fact .v{color:var(--ink);font-weight:600;text-align:right;word-break:break-all;}
+.pp-fact .v a{color:var(--brand-700);text-decoration:none;}
+.pp-fact .v.gap{color:var(--danger);}
+.pp-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pp-acts button{
+  font-family:inherit;font-size:.76rem;font-weight:700;padding:8px 15px;
+  border-radius:999px;border:1px solid var(--line);background:var(--card);
+  color:var(--brand-800);cursor:pointer;
+}
+.pp-acts button:hover:not(:disabled){border-color:var(--brand-800);}
+.pp-acts button:disabled{opacity:.45;cursor:not-allowed;}
+.pp-acts button.go{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+.pp-acts button.no{color:var(--danger);border-color:rgba(176,58,46,.35);}
+.pp-note{font-size:.76rem;color:var(--muted);line-height:1.55;margin-top:10px;}
+.pp-warn{
+  font-size:.78rem;line-height:1.55;color:#8f3f22;background:rgba(180,83,47,.09);
+  border:1px solid rgba(180,83,47,.3);border-radius:9px;padding:9px 11px;margin-top:12px;
+}
+</style>
 </head>
 <body>
 
@@ -537,8 +705,24 @@
     </div>
 
     <!-- signed in -->
-    <div class="card" id="view-app" hidden>
-      <div class="who">
+    <div class="card wide" id="view-app" hidden>
+
+      <!-- Shown only once the page has gone full width, because that is when
+           the brand panel — which held the way back and the masjid's name —
+           disappears. Hiding the exit along with it is how somebody ends up
+           closing the tab to get out. -->
+      <div class="wide-top" id="app-top" hidden>
+        <div class="wt-t">
+          <strong>Who can get in</strong>
+          <span id="app-top-email">—</span>
+        </div>
+        <a href="../portals/">&larr; Admin centre</a>
+        <button type="button" id="app-signout-top">Sign out</button>
+      </div>
+
+      <div class="wide-wrap">
+
+      <div class="who" id="app-who">
         <div class="avatar" aria-hidden="true">✓</div>
         <div class="who-t">
           <strong id="app-name">—</strong>
@@ -556,9 +740,12 @@
       </div>
 
       <section class="bk" id="acc-panel" hidden>
+
+      <!-- ===================== THE LIST ===================== -->
+      <div id="acc-list-view">
         <div class="bk-head">
           <h2>Staff accounts</h2>
-          <span class="bk-sub">Everything here used to need somebody running SQL. Two-step status is the column that matters most &mdash; an account without it blocks the next database change.</span>
+          <span class="bk-sub">Everything here used to need somebody running SQL. Two-step status is the one that matters most &mdash; an account without it blocks the next database change.</span>
         </div>
 
         <div class="err" id="acc-error" hidden></div>
@@ -574,9 +761,25 @@
              button on the site and it should take a deliberate press. -->
         <div class="inv" id="acc-invite" hidden>
           <h3>Invite somebody</h3>
+
+          <!-- Name and number are REQUIRED, not nice-to-have. An account
+               nobody can put a name to and nobody can ring is no use at
+               handover, and this masjid already has three of them. -->
+          <div class="cf-row">
+            <label for="inv-name">Their full name</label>
+            <input type="text" id="inv-name" autocomplete="off" maxlength="80" placeholder="Abu Bakr Siddique">
+          </div>
           <div class="cf-row">
             <label for="inv-email">Their email address</label>
             <input type="email" id="inv-email" autocomplete="off" maxlength="120" placeholder="name@example.com">
+          </div>
+          <div class="cf-row">
+            <label for="inv-phone">Their contact number</label>
+            <input type="tel" id="inv-phone" autocomplete="off" maxlength="20" placeholder="07700 900123">
+            <div class="field-hint">So somebody can ring them. The sign-in link is
+              <strong>never</strong> sent by text &mdash; a text containing a link asking you
+              to sign in is what a phishing message looks like, and staff should not
+              be taught to trust one.</div>
           </div>
           <div class="cf-row">
             <label>What they will be able to do</label>
@@ -603,19 +806,24 @@
             <input type="text" id="inv-note" maxlength="140" placeholder="New hall bookings volunteer">
           </div>
 
+          <div class="cf-row">
+            <label class="inv-role" for="inv-send-email">
+              <input type="checkbox" id="inv-send-email" checked>
+              <span><b>Email it to them</b><i>Sent from the masjid&rsquo;s own address, saying who
+                invited them and what to do if they were not expecting it. If it cannot
+                be sent you will be told, and the link is shown either way.</i></span></label>
+          </div>
+
           <div class="ga-acts">
             <button type="button" class="btn" id="inv-send">Create the invitation</button>
             <button type="button" class="btn btn-ghost" id="inv-cancel">Cancel</button>
           </div>
 
-          <!-- The link, once it exists. No email is sent: Supabase's built-in
-               sender only reaches the project team, so an invite to a
-               volunteer would silently never arrive. -->
+          <!-- The link is shown WHETHER OR NOT the email went. An invitation
+               that silently fails to arrive is worse than one never offered. -->
           <div class="inv-link" id="inv-result" hidden>
-            <h4>Send them this link</h4>
-            <p>Nothing has been emailed. Copy this and send it however you normally
-              reach them &mdash; WhatsApp, text, or in person. It works once, and stops
-              working after 24 hours.</p>
+            <h4 id="inv-result-h">Send them this link</h4>
+            <p id="inv-result-p"></p>
             <div class="inv-url" id="inv-url"></div>
             <div class="ga-acts">
               <button type="button" class="btn" id="inv-copy">Copy the link</button>
@@ -631,10 +839,95 @@
         <div class="bk-list" id="acc-pending"></div>
 
         <div class="dash-lab">Accounts</div>
-        <div class="bk-list" id="acc-list"></div>
+        <div class="acc-grid" id="acc-list"></div>
+      </div>
+
+      <!-- ===================== ONE PERSON ===================== -->
+      <div id="acc-person-view" hidden>
+        <button type="button" class="pp-back" id="pp-back">&larr; All staff accounts</button>
+
+        <div class="err" id="pp-error" hidden></div>
+        <div class="ok-note" id="pp-ok" hidden></div>
+
+        <div class="pp-head">
+          <div>
+            <h2 id="pp-name">&mdash;</h2>
+            <div class="pp-mail" id="pp-mail">&mdash;</div>
+          </div>
+          <div class="acc-chips" id="pp-chips"></div>
+        </div>
+
+        <div class="pp-grid">
+
+          <!-- Contact details. Editable, INCLUDING your own: a phone number is
+               a contact detail, not a privilege, and making somebody find a
+               second administrator on a Sunday to correct their own number is
+               a rule with no upside. -->
+          <div class="pp-box">
+            <h3>Contact details</h3>
+            <p class="pp-why">The masjid needs a full name, a contact number and an email
+              address for everybody with a staff account. The email address is the
+              account itself and cannot be changed here.</p>
+            <div class="cf-row">
+              <label for="pp-edit-name">Full name</label>
+              <input type="text" id="pp-edit-name" maxlength="80" autocomplete="off">
+            </div>
+            <div class="cf-row">
+              <label for="pp-edit-phone">Contact number</label>
+              <input type="tel" id="pp-edit-phone" maxlength="20" autocomplete="off" placeholder="07700 900123">
+            </div>
+            <div class="pp-acts">
+              <button type="button" class="go" id="pp-save-contact">Save contact details</button>
+            </div>
+            <div class="pp-warn" id="pp-contact-gap" hidden></div>
+          </div>
+
+          <!-- What they can do. NOT editable for yourself, deliberately: it
+               stops accidental self-lockout and puts a second name against
+               every privilege change. The database refuses it either way. -->
+          <div class="pp-box">
+            <h3>What they can do</h3>
+            <p class="pp-why">Changes take effect the next time they sign in. Nobody can
+              change their own access &mdash; ask another administrator.</p>
+
+            <div id="pp-roles-edit">
+              <label class="inv-role"><input type="checkbox" value="hall_office" class="pp-r">
+                <span><b>Hall bookings and nik&#257;&#7717;</b><i>Hall hire requests and nik&#257;&#7717; dates, deposits, and the food bank volunteers.</i></span></label>
+              <label class="inv-role"><input type="checkbox" value="teacher" class="pp-r">
+                <span><b>Madrasah</b><i>The madrasah portal. Holds children&rsquo;s records.</i></span></label>
+              <label class="inv-role"><input type="checkbox" value="admin" class="pp-r">
+                <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do.</i></span></label>
+              <div class="pp-acts">
+                <button type="button" class="go" id="pp-save-roles">Save what they can do</button>
+              </div>
+            </div>
+            <div class="pp-note" id="pp-roles-mine" hidden>This is your own account, so you
+              cannot change what it can do. Ask another administrator.</div>
+          </div>
+
+          <div class="pp-box">
+            <h3>Signing in</h3>
+            <p class="pp-why">Two-step is not optional for a staff account. One account
+              without an authenticator blocks every future change to the database.</p>
+            <div class="pp-facts" id="pp-signin"></div>
+          </div>
+
+          <div class="pp-box">
+            <h3>Access</h3>
+            <p class="pp-why">Suspending an account leaves everything it has done in place
+              and simply stops it being used. Nothing is deleted.</p>
+            <div class="pp-facts" id="pp-access"></div>
+            <div class="pp-acts" id="pp-access-acts"></div>
+            <div class="pp-note" id="pp-access-note"></div>
+          </div>
+
+        </div>
+      </div>
+
       </section>
 
       <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+      </div>
     </div>
 
   </div>
