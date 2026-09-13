@@ -190,14 +190,22 @@ with sync_playwright() as p:
     #  3. WHAT YOU CAN DO, NOT JUST WHAT IS THERE
     # =====================================================================
     areas = pg.eval_on_selector_all(".area", "els => els.map(e => e.innerText)")
-    check(len(areas) == 5, "expected five areas for an admin, drew %d" % len(areas))
+    check(len(areas) == 6, "expected six areas for an admin, drew %d" % len(areas))
     joined = " ".join(areas)
-    for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah"]:
+    for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah",
+                 "Who can get in"]:
         check(name in joined, "%r is missing from the areas" % name)
     check("cash deposit" in joined,
           "the hall card does not say what you can do there — that is the "
           "difference between a dashboard and a list of links")
     check("£312" in joined, "the Gift Aid card does not show what is worth claiming")
+    #  lowercased: the chip is uppercased by CSS and innerText returns the
+    #  transformed text. Third time today.
+    check("without 2fa" in joined.lower(),
+          "the access card does not flag the account with no authenticator: %r" % joined[:200])
+    hrefs = pg.eval_on_selector_all(".area", "els => els.map(e => e.getAttribute('href'))")
+    check("../access/" in hrefs,
+          "the Who can get in card does not link to the access screen: %r" % hrefs)
 
     # =====================================================================
     #  4. THE MONEY
@@ -276,6 +284,8 @@ with sync_playwright() as p:
     check("Gift Aid" not in areas, "AN OFFICE ACCOUNT WAS DRAWN GIFT AID: %r" % areas)
     check("Adult classes" not in areas, "an office account was drawn adult classes")
     check("Madrasah" not in areas, "an office account was drawn the madrasah portal")
+    check("Who can get in" not in areas,
+          "AN OFFICE ACCOUNT WAS DRAWN THE ACCESS SCREEN")
     check("Hall Hire" in areas, "an office account cannot see hall hire")
     check("Food Bank" in areas, "an office account cannot see the volunteers")
     check(not pg.is_visible("#dash-house-pane"),
