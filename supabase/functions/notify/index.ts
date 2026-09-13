@@ -58,7 +58,9 @@
 
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { type Event, officeMessage, publicMessage } from "./messages.ts";
+import {
+  type Event, officeMessage, publicMessage, staffInviteMessage,
+} from "./messages.ts";
 
 const SECRET     = Deno.env.get("NOTIFY_SECRET") ?? "";
 const SMTP_HOST  = Deno.env.get("SMTP_HOST")     ?? "send.one.com";
@@ -68,6 +70,7 @@ const SMTP_PASS  = Deno.env.get("SMTP_PASS")     ?? "";
 const MAIL_FROM  = Deno.env.get("MAIL_FROM")     ?? SMTP_USER;
 const MAIL_TO    = Deno.env.get("MAIL_TO")       ?? "";
 const PORTAL_URL = Deno.env.get("PORTAL_URL")    ?? "";
+const SELF_URL   = Deno.env.get("SUPABASE_URL")  ?? "";
 
 // Used only to record a send that failed. Provided by the platform.
 const db = createClient(
@@ -180,7 +183,11 @@ Deno.serve(async (req) => {
 
   if (!SMTP_USER || !SMTP_PASS) {
     console.error("notify: not configured — set SMTP_USER and SMTP_PASS");
-    return ok("not configured");
+    // `sent:false` alongside the usual ok:true. The webhook callers ignore the
+    // body entirely, but invite-user reads it, and "ok" has to stop meaning
+    // "delivered" for a caller that then tells a human it was emailed.
+    return new Response(JSON.stringify({ ok: true, sent: false, note: "not configured" }),
+      { status: 200, headers: { "content-type": "application/json" } });
   }
 
   let body: Record<string, unknown>;
@@ -211,6 +218,58 @@ Deno.serve(async (req) => {
       note: r.ok ? `sent to ${officeList().join(", ")}` : r.why,
       host: `${SMTP_HOST}:${SMTP_PORT}`,
     }), { status: 200, headers: { "content-type": "application/json" } });
+  }
+
+  /* --- a staff invitation ------------------------------------------------
+     The only message this function sends to an address the CALLER supplies.
+     Everything else goes to MAIL_TO or to the contact on a booking that is
+     already in the database, so this one needs its own fence.
+
+     THE FENCE IS ON THE LINK, NOT ON THE RECIPIENT. Restricting who it can be
+     sent to would not help — an invitation is by definition for somebody not
+     yet in the database. What matters is that the thing being sent cannot be
+     attacker-chosen. So the link must be a one-time sign-in URL on THIS
+     project's own Supabase domain. With that rule in place, the worst anybody
+     holding a leaked NOTIFY_SECRET can send from the masjid's address is a
+     genuine Supabase link for this project — and making one of those already
+     requires the service key.
+
+     Without it, notify would be an open relay for "click here to sign in"
+     emails carrying the masjid's name, SPF and DKIM. That is a far worse
+     thing to leak than a booking alert. */
+  if (body.kind === "staff_invite") {
+    const to     = String(body.email ?? "").trim();
+    const link   = String(body.link ?? "").trim();
+    const name   = String(body.name ?? "").trim();
+    const byWhom = String(body.invited_by ?? "").trim();
+    const says   = Array.isArray(body.says) ? body.says.map(String) : [];
+
+    const bad = (why: string) => {
+      console.warn(`notify: staff_invite refused — ${why}`);
+      return new Response(JSON.stringify({ ok: true, sent: false, note: why }),
+        { status: 200, headers: { "content-type": "application/json" } });
+    };
+
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(to)) return bad("not an email address");
+    if (!name) return bad("no name");
+    // The `!SELF_URL` half is not belt and braces: if SUPABASE_URL were ever
+    // unset, `${undefined}/auth/v1/` would be the string "undefined/auth/v1/"
+    // and the fence would simply be a different, weaker rule rather than an
+    // error anybody notices.
+    if (!SELF_URL || !link.startsWith(`${SELF_URL}/auth/v1/`)) {
+      return bad("the link is not a sign-in link for this project");
+    }
+
+    const m = staffInviteMessage({
+      name, link, invitedBy: byWhom || "An administrator",
+      says: says.length ? says : ["the masjid portal"],
+      existing: body.existing === true,
+    });
+
+    const r = await send([to], m.subject, m.html, m.text);
+    if (!r.ok) await recordFailure("staff_invite", null, to, r.why);
+    return new Response(JSON.stringify({ ok: true, sent: r.ok, note: r.why }),
+      { status: 200, headers: { "content-type": "application/json" } });
   }
 
   const event = toEvent(body);

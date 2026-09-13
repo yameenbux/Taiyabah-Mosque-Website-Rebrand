@@ -457,3 +457,73 @@ export function publicMessage(e: Event): Message | null {
   // A refund is a conversation, not a template. The office rings.
   return null;
 }
+
+/* --------------------------------------------------------------------------
+   THE STAFF INVITATION
+
+   Kept apart from Event and from officeMessage/publicMessage on purpose. Every
+   other message here describes something that already happened and is safe to
+   read. This one CARRIES A CREDENTIAL — a link that signs somebody in — and
+   that difference should be visible in the code, not buried in a union.
+
+   Two things this email must do that the others need not:
+
+     1. Say who sent it and why, by name. A bare "you have been invited, click
+        here" is the exact shape of a phishing email, and telling masjid
+        volunteers to click those is how a charity loses its accounts. The name
+        of the administrator who did it is the one thing an attacker who does
+        not already have the database cannot supply.
+
+     2. Tell them what to do if they were NOT expecting it. That sentence costs
+        one line and is the only thing standing between a mis-typed address and
+        somebody quietly accepting an administrator account.
+
+   There is deliberately no plain "reply to confirm" instruction: noreply@ is
+   an unread mailbox. It points at the masjid's phone number instead.
+   -------------------------------------------------------------------------- */
+
+export interface Invite {
+  name: string;          // who the invitation is for
+  link: string;          // the one-time sign-in link
+  invitedBy: string;     // the administrator who created it, by name
+  says: string[];        // what they will be able to do, in plain English
+  existing: boolean;     // true when the address already had an account
+}
+
+export function staffInviteMessage(i: Invite): Message {
+  const rows: [string, string][] = [
+    ["For", `<strong>${esc(i.name)}</strong>`],
+    ["Given by", esc(i.invitedBy)],
+    ["You will be able to see", esc(i.says.join(", "))],
+  ];
+
+  const lead = i.existing
+    ? `<strong>${esc(i.invitedBy)}</strong> at Taiyabah Masjid has given your ` +
+      "existing account access to the masjid&rsquo;s portal. Use the button below " +
+      "to set a new password and sign in."
+    : `<strong>${esc(i.invitedBy)}</strong> at Taiyabah Masjid has set up an ` +
+      "account for you on the masjid&rsquo;s portal. Use the button below to " +
+      "choose a password and sign in.";
+
+  const footer =
+    "This link works <strong>once</strong> and stops working after 24 hours. " +
+    "You will be asked to set up an authenticator app the first time you sign " +
+    "in &mdash; you get nothing until you do, and that is deliberate.<br><br>" +
+    "<strong>If you were not expecting this, do not use the link.</strong> " +
+    "Ring the masjid on 01204&nbsp;535&nbsp;997 and say you received it.";
+
+  return {
+    subject: "Your Taiyabah Masjid portal account",
+    html: shell(
+      i.existing ? "Access to the masjid portal" : "An account has been set up for you",
+      lead, rows, footer,
+      { href: i.link, label: i.existing ? "Set a new password" : "Set your password" }),
+    text: plain(
+      i.existing ? "Access to the masjid portal" : "An account has been set up for you",
+      (i.existing
+        ? `${i.invitedBy} at Taiyabah Masjid has given your existing account access to the masjid portal.`
+        : `${i.invitedBy} at Taiyabah Masjid has set up an account for you on the masjid portal.`) +
+      " Open the link below to set a password and sign in.",
+      rows, footer.replace(/<br><br>/g, "\n\n"), i.link),
+  };
+}

@@ -24,7 +24,7 @@ function assertStringIncludes(got: string, want: string, msg?: string): void {
 }
 
 import {
-  type Event, officeMessage, publicMessage,
+  type Event, officeMessage, publicMessage, staffInviteMessage,
   longDate, shortDate, money, whatWasHired, slotLabel, esc, ascii,
 } from "./messages.ts";
 
@@ -378,4 +378,104 @@ Deno.test("every message has all three parts, and the text one is readable", () 
 Deno.test("an unknown kind sends nothing rather than an empty email", () => {
   // deno-lint-ignore no-explicit-any
   assertEquals(officeMessage({ kind: "something_else" as any }), null);
+});
+
+/* ===========================================================================
+   THE STAFF INVITATION
+
+   This is the only email the masjid sends that carries a credential, so what
+   is tested here is not "does it render" but "does it contain the things that
+   stop it working as a phishing email".
+   =========================================================================== */
+const INV = {
+  name: "Abu Bakr Siddique",
+  link: "https://phenbhmobxwyvdeshvqw.supabase.co/auth/v1/verify?token=abc&type=invite",
+  invitedBy: "Yameen Bux",
+  says: ["Hall bookings and nikah"],
+  existing: false,
+};
+
+Deno.test("the invitation names the administrator who sent it", () => {
+  const m = staffInviteMessage(INV);
+  assertStringIncludes(m.html, "Yameen Bux");
+  assertStringIncludes(m.text, "Yameen Bux");
+});
+
+Deno.test("it tells somebody who was NOT expecting it what to do", () => {
+  const m = staffInviteMessage(INV);
+  // Both parts, because a recipient reading the plain-text alternative is
+  // exactly the sort of person whose client strips HTML — and they need this
+  // sentence more than anyone.
+  assertStringIncludes(m.html.toLowerCase(), "if you were not expecting this");
+  assertStringIncludes(m.text.toLowerCase(), "if you were not expecting this");
+  assertStringIncludes(m.html, "01204");
+  assertStringIncludes(m.text, "01204");
+});
+
+Deno.test("the link is in both the HTML and the plain text", () => {
+  const m = staffInviteMessage(INV);
+  // ESCAPED in the HTML. The link carries a query string, so the ampersand
+  // before `type=invite` becomes `&amp;` in the href — which is correct, and
+  // which the first version of this test got wrong by looking for the raw
+  // string and failing. Worth keeping the note: a test that looks for the
+  // unescaped form would have to be "fixed" by removing the escaping.
+  assertStringIncludes(m.html, esc(INV.link));
+  assert(!m.html.includes("token=abc&type"), "the href is not HTML-escaped");
+  // RAW in the plain text, where there is nothing to escape and a mangled
+  // ampersand would give somebody a link that does not work.
+  assertStringIncludes(m.text, INV.link);
+});
+
+Deno.test("it says the link is single use and expires", () => {
+  const m = staffInviteMessage(INV);
+  assertStringIncludes(m.html.toLowerCase(), "24 hours");
+  assertStringIncludes(m.html.toLowerCase(), "once");
+});
+
+Deno.test("an existing account is told to set a NEW password, not that one was created", () => {
+  const fresh = staffInviteMessage(INV);
+  const again = staffInviteMessage({ ...INV, existing: true });
+  assertStringIncludes(again.html.toLowerCase(), "existing account");
+  assertStringIncludes(again.html.toLowerCase(), "new password");
+  // Telling somebody who already has an account that one "has been set up for
+  // you" reads as a second account and gets ignored. The two must differ.
+  assert(fresh.html !== again.html, "the two versions are identical");
+  assert(!again.html.includes("has set up an account for you"),
+    "an existing account is being told a new one was created");
+});
+
+Deno.test("a name with HTML in it cannot break out of the email", () => {
+  const m = staffInviteMessage({ ...INV, name: '<script>x</script>' });
+  assert(!m.html.includes("<script>"), "unescaped markup reached the HTML body");
+  assertStringIncludes(m.html, "&lt;script&gt;");
+});
+
+Deno.test("the subject is ASCII and short, like every other one", () => {
+  const s = staffInviteMessage(INV).subject;
+  // deno-lint-ignore no-control-regex
+  assert(/^[\x20-\x7E]*$/.test(s), `not ASCII: ${s}`);
+  assert(s.length <= 78, `too long: ${s.length}`);
+});
+
+Deno.test("CONTROL — these assertions bite", () => {
+  // An unchecked control certifies nothing. Each of these proves that the
+  // matching test above would actually fail if the message lost the thing it
+  // is checking for, rather than passing because the string happened to be
+  // somewhere else in a 3kB template.
+  const m = staffInviteMessage(INV);
+  const withoutWarning = m.html.replace(/If you were not expecting this/i, "Enjoy");
+  assert(withoutWarning !== m.html, "the control did not change the HTML");
+  assert(!withoutWarning.toLowerCase().includes("if you were not expecting this"),
+    "the warning appears more than once, so the test would pass without it");
+
+  const withoutName = m.html.split("Yameen Bux").join("somebody");
+  assert(withoutName !== m.html, "the control did not change the HTML");
+  assert(!withoutName.includes("Yameen Bux"));
+
+  const withoutLink = m.html.split(esc(INV.link)).join("#");
+  assert(withoutLink !== m.html, "the control did not change the HTML");
+  assert(!withoutLink.includes(esc(INV.link)));
+
+  const textWithoutLink = m.text.split(INV.link).join("#");
+  assert(textWithoutLink !== m.text, "the control did not change the plain text");
 });
