@@ -2103,33 +2103,40 @@ window.TAIYABAH_PUBLIC = {
       <div class="subsection">
         <div class="subhead"><span class="idx">01</span><h3>Where the build is now &amp; what's planned</h3><span class="rule"></span></div>
         <div class="nb-status-grid">
-          <div class="phase-card">
-            <div class="ph-tag">Current appeal &middot; Phase 3.3</div>
-            <h3 class="ph-h">Internal fixtures &amp; fittings</h3>
-            <p class="ph-p">Masjid internal fixtures and fittings &mdash; tiling, carpets, heating, electrical works, lighting and d&eacute;cor, completed to a full finish.</p>
+          <!-- THE FIGURES BELOW ARE A FALLBACK, NOT THE SOURCE.
 
-            <!-- Figures from the masjid's New Build Update board, September 2026.
-                 THESE ARE THE ONLY NUMBERS ON THE PAGE THAT MOVE. When the board
-                 is updated, three things change together and must not drift:
-                 the two figures here, the width of .ph-fill, and the matching
-                 row in the ledger below. The percentage is stated in words as
-                 well as drawn, because a 14% bar is easy to misread as an empty
-                 one. -->
+               They were the truth when this file was last built, and they are
+               here so that a visitor with no JavaScript, or one arriving while
+               Supabase is unreachable, still sees the masjid's appeal rather
+               than a blank space. `nbLoad()` further down replaces them from
+               site_content the moment it answers.
+
+               They used to be the only copy, which meant the appeal moved only
+               when somebody edited this file, rebuilt and pushed. A fundraising
+               figure that needs a developer to change is a fundraising figure
+               that goes stale. -->
+          <div class="phase-card" id="nb-appeal">
+            <div class="ph-tag" id="nb-tag">Current appeal &middot; Phase 3.3</div>
+            <h3 class="ph-h" id="nb-h">Internal fixtures &amp; fittings</h3>
+            <p class="ph-p" id="nb-p">Masjid internal fixtures and fittings &mdash; tiling, carpets, heating, electrical works, lighting and d&eacute;cor, completed to a full finish.</p>
+
             <div class="ph-meter">
               <div class="ph-meter-top">
-                <span class="ph-raised">&pound;350,000
-                  <span class="of">raised towards &pound;2,500,000</span>
+                <span class="ph-raised"><span id="nb-raised">&pound;350,000</span>
+                  <span class="of" id="nb-of">raised towards &pound;2,500,000</span>
                 </span>
-                <span class="ph-pct">14% funded</span>
+                <span class="ph-pct" id="nb-pct">14% funded</span>
               </div>
-              <div class="ph-track" role="img" aria-label="14 per cent of the £2,500,000 target raised so far.">
-                <div class="ph-fill" style="width:14%;"></div>
+              <div class="ph-track" id="nb-track" role="img" aria-label="14 per cent of the £2,500,000 target raised so far.">
+                <div class="ph-fill" id="nb-fill" style="width:14%;"></div>
               </div>
-              <p class="ph-left"><b>&pound;2,150,000 still to raise.</b> Every contribution
+              <!-- The percentage is written in words as well as drawn: a 14%
+                   bar is easy to misread as an empty one. -->
+              <p class="ph-left" id="nb-left"><b>&pound;2,150,000 still to raise.</b> Every contribution
                 takes the masjid closer to being ready for salah, Qur'an and remembrance.</p>
             </div>
 
-            <div class="needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
+            <div class="needs" id="nb-needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
           </div>
           <div class="card nb-plan-card">
             <div class="nb-plan-tag">What's planned</div>
@@ -2147,7 +2154,7 @@ window.TAIYABAH_PUBLIC = {
         <div class="subhead"><span class="idx">02</span><h3>Our journey so far &amp; how to give</h3><span class="rule"></span></div>
         <div class="nb-journey-grid">
           <div class="nb-journey-col">
-            <div class="nb-timeline">
+            <div class="nb-timeline" id="nb-timeline">
               <div class="nb-tl-item nb-tl-done">
                 <div class="nb-tl-dot"></div>
                 <div class="nb-tl-body">
@@ -2210,7 +2217,12 @@ window.TAIYABAH_PUBLIC = {
                 </div>
               </div>
             </div>
-            <p class="nb-tl-note">Figures are as displayed on the masjid's New Build Update board, September 2026; dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.</p>
+            <!-- This used to name a date — "as displayed on the board, September
+                 2026" — which was true while the figures could only be changed
+                 by rebuilding the site. Now that the office keeps them itself,
+                 a fixed date would be a claim the page cannot back up. The
+                 actual date is added by nbLoad() from the database. -->
+            <p class="nb-tl-note">Figures are kept up to date by the masjid office; dates are drawn from the masjid's own new-build update videos — see <a data-nav="media">Media</a> for the full story.<span id="nb-updated"></span></p>
           </div>
 
           <div class="nb-journey-col nb-give-card" id="give">
@@ -6546,6 +6558,164 @@ window.TAIYABAH_PUBLIC = {
       // A greeting must never take the page down with it.
       if(window.console && console.warn) console.warn('account greeting unavailable:', e);
     }
+  })();
+
+  /* =======================================================================
+     THE NEW BUILD APPEAL, FROM THE DATABASE
+
+     The masjid's appeal figure moves. Until migration 028 it lived only in
+     this file, so it moved only when somebody edited the template, ran
+     build.py and pushed — which meant the number on a charity's fundraising
+     page depended on one person being reachable.
+
+     PROGRESSIVE ENHANCEMENT, deliberately. The built HTML already carries the
+     last known figures, so a visitor with JavaScript off, or one arriving
+     while Supabase is unreachable, sees the appeal as it stood at the last
+     build. Possibly a version behind; never blank. The search engines index
+     that copy too, which a fetch-only version would have lost.
+
+     THE PERCENTAGE IS COMPUTED HERE AND NOWHERE ELSE. It used to be written
+     out three times — the words, the bar width and the caption — with a
+     comment warning that they must not drift. This reads two numbers and
+     derives the rest, which is the only version of that rule that cannot be
+     broken by someone updating two of the three.
+     ======================================================================= */
+  (function(){
+    var box = document.getElementById('nb-appeal');
+    if(!box) return;
+
+    var cfg = window.TAIYABAH_PUBLIC || {};
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
+
+    var base = String(cfg.SUPABASE_URL).trim()
+                 .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+
+    /* £350,000 — no pence. Every figure on this page is a round number in the
+       hundreds of thousands, and "£2,500,000.00" on an appeal reads like an
+       invoice. Pence are kept in the database because that is how money is
+       stored everywhere else on this site. */
+    function money(p){
+      var n = Math.round(Number(p) / 100);
+      return '£' + n.toLocaleString('en-GB');
+    }
+    function set(id, text){
+      var n = document.getElementById(id);
+      if(n) n.textContent = text;
+    }
+
+    fetch(base + '/rest/v1/site_content?key=eq.newbuild&select=body,updated_at', {
+      headers: {
+        'apikey': cfg.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
+      }
+    }).then(function(r){
+      if(!r.ok) throw new Error('site_content ' + r.status);
+      return r.json();
+    }).then(function(rows){
+      var row = rows && rows[0];
+      var d = row && row.body;
+      if(!d || !d.appeal || !d.timeline) return;   // leave the built copy alone
+
+      var a = d.appeal;
+      var raised = Number(a.raised_p) || 0;
+      var target = Number(a.target_p) || 0;
+      if(target <= 0) return;                      // never divide by it
+
+      var pct  = Math.round((raised / target) * 100);
+      var draw = Math.max(0, Math.min(100, pct));  // an overfunded bar stops at full
+      var left = Math.max(0, target - raised);
+
+      set('nb-tag', a.tag);
+      set('nb-h',   a.heading);
+      set('nb-p',   a.body);
+      set('nb-raised', money(raised));
+      set('nb-of', 'raised towards ' + money(target));
+      set('nb-pct', pct + '% funded');
+
+      var fill = document.getElementById('nb-fill');
+      if(fill) fill.style.width = draw + '%';
+      var track = document.getElementById('nb-track');
+      if(track) track.setAttribute('aria-label',
+        pct + ' per cent of the ' + money(target) + ' target raised so far.');
+
+      var leftEl = document.getElementById('nb-left');
+      if(leftEl){
+        leftEl.innerHTML = '';
+        var b = document.createElement('b');
+        b.textContent = left > 0
+          ? money(left) + ' still to raise.'
+          : 'This appeal is fully funded, alḥamdulillāh.';
+        leftEl.appendChild(b);
+        leftEl.appendChild(document.createTextNode(left > 0
+          ? ' Every contribution takes the masjid closer to being ready for salah, Qur’an and remembrance.'
+          : ' Thank you to everybody who gave.'));
+      }
+
+      var needs = document.getElementById('nb-needs');
+      if(needs && Array.isArray(a.needs)){
+        needs.innerHTML = '';
+        a.needs.forEach(function(n){
+          var sp = document.createElement('span');
+          sp.textContent = n;            // textContent, never innerHTML: this
+          needs.appendChild(sp);         // text is typed by a human into a form
+        });
+      }
+
+      var tl = document.getElementById('nb-timeline');
+      if(tl && d.timeline.length){
+        tl.innerHTML = '';
+        d.timeline.forEach(function(it){
+          var st = (it.status === 'active' || it.status === 'upcoming')
+                     ? it.status : 'done';
+          var item = document.createElement('div');
+          item.className = 'nb-tl-item nb-tl-' + st;
+
+          var dot = document.createElement('div');
+          dot.className = 'nb-tl-dot';
+          item.appendChild(dot);
+
+          var body = document.createElement('div');
+          body.className = 'nb-tl-body';
+
+          var date = document.createElement('div');
+          date.className = 'nb-tl-date';
+          date.textContent = it.date || '';
+          body.appendChild(date);
+
+          var h = document.createElement('h4');
+          h.appendChild(document.createTextNode((it.title || '') + ' '));
+          var tag = document.createElement('span');
+          tag.className = 'nb-tl-status ' + st;
+          tag.textContent = it.label ||
+            (st === 'active' ? 'Current appeal' : st === 'upcoming' ? 'Planned' : 'Completed');
+          h.appendChild(tag);
+          body.appendChild(h);
+
+          var p = document.createElement('p');
+          p.textContent = it.body || '';
+          body.appendChild(p);
+
+          item.appendChild(body);
+          tl.appendChild(item);
+        });
+      }
+      /* Said only when the page IS showing the database's copy. On the
+         fallback path there is no honest date to give, so it says nothing
+         rather than naming one. */
+      var upd = document.getElementById('nb-updated');
+      if(upd && row.updated_at){
+        var when = new Date(row.updated_at);
+        if(!isNaN(when)){
+          upd.textContent = ' Last updated ' + when.toLocaleDateString('en-GB',
+            { day:'numeric', month:'long', year:'numeric' }) + '.';
+        }
+      }
+    }).catch(function(e){
+      /* The built copy stays on screen. An appeal that is a version behind is
+         a great deal better than one that is not there. */
+      if(window.console && console.warn) console.warn('new build content:', e.message);
+    });
   })();
 
   document.querySelectorAll('[data-coming-soon]').forEach(btn => {
