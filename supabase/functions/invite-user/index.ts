@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
   }
 
   let body: {
+    action?: string;
     email?: string; full_name?: string; phone?: string;
     roles?: string[]; note?: string; send_email?: boolean;
   };
@@ -108,6 +109,19 @@ Deno.serve(async (req) => {
   } catch {
     return reply(400, { error: "Could not read the request." });
   }
+
+  /* TWO ACTIONS, ONE FUNCTION, because they share everything that matters:
+     the service key, the caller check, the link generation and the fence on
+     what notify will send. Splitting them would mean two copies of the part
+     that decides whether the caller may do this at all, and one of those
+     copies would eventually be the weaker one.
+
+     A RESET IS NOT A ROLE CHANGE. It writes nothing to pending_access and
+     nothing to user_roles. And an administrator can SEND one; an
+     administrator can never SET a password. A password an administrator chose
+     is a password an administrator knows, and from then on every sign-in by
+     that person is deniable. */
+  const reset = body.action === "reset";
 
   const email = String(body.email || "").trim().toLowerCase();
   const name  = String(body.full_name || "").trim();
@@ -119,24 +133,26 @@ Deno.serve(async (req) => {
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(email)) {
     return reply(400, { error: "That does not look like an email address." });
   }
-  if (name.length < 2) {
-    return reply(400, {
-      error: "Put their full name in. An account nobody can put a name to is " +
-             "no use at handover.",
-    });
-  }
-  if (!phoneLooksReal(phone)) {
-    return reply(400, {
-      error: "That does not look like a phone number. Somebody has to be able " +
-             "to ring them.",
-    });
-  }
-  if (roles.length === 0) {
-    return reply(400, { error: "Choose what they will be able to do." });
-  }
-  for (const r of roles) {
-    if (!GRANTABLE.includes(r)) {
-      return reply(400, { error: `${r} cannot be granted from this screen.` });
+  if (!reset) {
+    if (name.length < 2) {
+      return reply(400, {
+        error: "Put their full name in. An account nobody can put a name to is " +
+               "no use at handover.",
+      });
+    }
+    if (!phoneLooksReal(phone)) {
+      return reply(400, {
+        error: "That does not look like a phone number. Somebody has to be able " +
+               "to ring them.",
+      });
+    }
+    if (roles.length === 0) {
+      return reply(400, { error: "Choose what they will be able to do." });
+    }
+    for (const r of roles) {
+      if (!GRANTABLE.includes(r)) {
+        return reply(400, { error: `${r} cannot be granted from this screen.` });
+      }
     }
   }
 
@@ -175,7 +191,7 @@ Deno.serve(async (req) => {
      `data` seeds raw_user_meta_data, which the handle_new_user trigger reads
      into profiles.full_name. Without it the trigger falls back to the email
      address, and the account is called "someone@gmail.com" forever. */
-  let kind = "invite";
+  let kind = reset ? "existing" : "invite";
 
   const make = async (type: string) => {
     const res = await fetch(`${URL_BASE}/auth/v1/admin/generate_link`, {
@@ -187,7 +203,17 @@ Deno.serve(async (req) => {
     return { ok: res.ok, body: await res.json().catch(() => ({})) };
   };
 
-  let made = await make("invite");
+  /* A reset asks for a recovery link and nothing else. If it went through
+     `invite` first it would CREATE an account for any address that did not
+     have one — which turns "reset somebody's password" into a second, quieter
+     way of making accounts, with none of the name/number/role checks above. */
+  let made = reset ? await make("recovery") : await make("invite");
+  if (!made.ok && reset) {
+    return reply(502, {
+      error: "Supabase would not make a reset link for that address.",
+      detail: made.body,
+    });
+  }
   if (!made.ok) {
     const msg = JSON.stringify(made.body).toLowerCase();
     if (msg.includes("already been registered") || msg.includes("already exists") ||
@@ -219,18 +245,27 @@ Deno.serve(async (req) => {
 
      BEFORE the email, deliberately. If recording fails there is no record of
      who was given what, and an email has already gone out saying otherwise. */
-  const rec = await fetch(`${URL_BASE}/rest/v1/rpc/record_invite`, {
-    method: "POST",
-    headers: { "content-type": "application/json", apikey: ANON, Authorization: auth },
-    body: JSON.stringify({
-      p_email: email, p_full_name: name, p_phone: phone,
-      p_roles: roles, p_note: note,
-    }),
-  });
+  const rec = reset
+    ? await fetch(`${URL_BASE}/rest/v1/rpc/record_password_reset`, {
+        method: "POST",
+        headers: { "content-type": "application/json", apikey: ANON, Authorization: auth },
+        body: JSON.stringify({ p_email: email }),
+      })
+    : await fetch(`${URL_BASE}/rest/v1/rpc/record_invite`, {
+        method: "POST",
+        headers: { "content-type": "application/json", apikey: ANON, Authorization: auth },
+        body: JSON.stringify({
+          p_email: email, p_full_name: name, p_phone: phone,
+          p_roles: roles, p_note: note,
+        }),
+      });
   if (!rec.ok) {
     return reply(502, {
-      error: "The account was created but the invitation was not recorded. " +
-             "Tell whoever looks after the website.",
+      error: reset
+        ? "A reset link was made but the act was not recorded, so it has not " +
+          "been sent. Tell whoever looks after the website."
+        : "The account was created but the invitation was not recorded. " +
+          "Tell whoever looks after the website.",
       detail: await rec.text(),
     });
   }
@@ -259,10 +294,11 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           kind: "staff_invite",
-          email, name, link,
+          email, name: name || email, link,
           invited_by: invitedBy,
           says: roles.map((r) => SAYS[r] || r),
           existing: kind === "existing",
+          reset,
         }),
       });
       const out = await res.json().catch(() => ({}));
@@ -275,9 +311,10 @@ Deno.serve(async (req) => {
 
   return reply(200, {
     ok: true,
+    action: reset ? "reset" : "invite",
     email,
     name,
-    roles,
+    roles: reset ? [] : roles,
     kind,               // "invite" = new account, "existing" = they already had one
     link,               // ALWAYS returned, emailed or not
     emailed,
