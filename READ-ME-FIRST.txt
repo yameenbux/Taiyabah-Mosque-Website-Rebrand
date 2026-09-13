@@ -1,6 +1,6 @@
 TAIYABAH MASJID — files to upload to GitHub
 ===========================================
-Branch this came from: access-screen (6 commits, 13 September 2026)
+Branch this came from: access-screen (7 commits, 13 September 2026)
 
 This zip contains ONLY the 26 files that changed. Everything else in the
 repository is untouched and must be left alone.
@@ -16,8 +16,8 @@ HOW TO UPLOAD (github.com, no command line needed)
    The folder structure inside (access/, db/, newbuild/, ...) must be kept,
    because GitHub uses it to decide which files to replace.
 5. Write a commit message, e.g.
-      Who can get in, the new build editor, the madrasah portal, and the
-      dashboard rail
+      User access, the new build editor, the madrasah portal, and the
+      admin centre rail
 6. Commit.
 
 GitHub will replace the 26 files and leave the rest of the site alone.
@@ -39,7 +39,7 @@ is dead weight, not a dependency — so this is tidiness, not urgency.
 WHAT IS IN HERE
 ---------------
 New screens
-  access/          "Who can get in" — invite staff, tiles, person page,
+  access/          "User access" — invite staff, tiles, person page,
                    contact details, password reset
   newbuild/        the new build page editor
   portal/          the madrasah portal (admin console, teacher, parent)
@@ -55,7 +55,8 @@ next person can read what was done.
 Changed pages
   index.html            BUILT FILE — never edit by hand
   index_template.html   the source it is built from
-  portals/              the admin dashboard, now a rail + working column
+  portals/              the admin centre: a rail of names, and a working
+                        column holding everything that changes
   account/, apply/      small changes
 
 Edge Functions — like the migrations, these are ALREADY DEPLOYED. They are
