@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Madrasah Portal — Taiyabah Masjid</title>
+<title>Madrasah — Taiyabah Masjid</title>
 <style>
 /* Self-hosted webfonts — SIL Open Font License 1.1. Served from this file so
    that staff signing in do not have their IP address sent to a third party. */
@@ -175,7 +175,97 @@
 
   .diag{margin-bottom:18px;border:1px solid var(--line);border-radius:10px;background:var(--paper);}
 
+  /* ---------- Hall bookings ----------
+     The sign-in card is 420px because a login form should be narrow. A list of
+     bookings is not a login form, so the shell widens once there is something
+     to show. */
+  .card.is-wide{width:min(880px,94%);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
+  .bk{margin:22px 0 18px;}
+  .bk-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .bk-head h2{font-size:1.15rem;color:var(--brand-900);}
+  .bk-head .bk-sub{font-size:.8rem;color:var(--muted);}
+
+  .bk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .bk-tab{
+    font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;
+    padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;gap:7px;
+  }
+  .bk-tab:hover{border-color:var(--gold);}
+  .bk-tab.on{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+  .bk-tab .n{
+    font-size:.7rem;font-weight:800;min-width:19px;padding:1px 6px;border-radius:999px;
+    background:rgba(198,162,76,.24);color:var(--brand-900);
+  }
+  .bk-tab.on .n{background:var(--gold-bright);color:var(--brand-900);}
+
+  .bk-search{
+    font:inherit;font-size:.85rem;padding:9px 13px;border-radius:9px;
+    border:1px solid var(--line);background:var(--card);color:var(--ink);
+    width:100%;max-width:280px;margin-bottom:16px;
+  }
+  .bk-search:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold);}
+
+  .bk-list{display:flex;flex-direction:column;gap:11px;}
+
+  .bk-item{
+    border:1px solid var(--line);border-radius:12px;background:var(--card);
+    padding:15px 17px;display:flex;flex-direction:column;gap:10px;
+  }
+  .bk-item.s-new{border-left:3px solid var(--gold);}
+  .bk-item.s-confirmed{border-left:3px solid var(--success);}
+  .bk-item.s-declined,.bk-item.s-cancelled{border-left:3px solid var(--line);opacity:.72;}
+
+  .bk-when{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
+  .bk-when .d{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);}
+  .bk-when .s{font-size:.83rem;color:var(--muted);}
+  .bk-kind{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-right:6px;}
+  .bk-kind.t-hall{background:rgba(94,22,56,.10);color:#5E1638;}
+  .bk-kind.t-nikah{background:rgba(165,122,34,.16);color:#7A5A16;}
+  .bk-item.k-nikah{border-left:3px solid rgba(165,122,34,.5);}
+  .bk-pill{
+    font-size:.63rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;margin-left:auto;white-space:nowrap;
+  }
+  .p-new{background:rgba(198,162,76,.2);color:#7A5B10;}
+  .p-confirmed{background:rgba(63,122,70,.16);color:var(--success);}
+  .p-declined,.p-cancelled{background:rgba(110,97,106,.14);color:var(--muted);}
+
+  .bk-who{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.87rem;}
+  .bk-who .nm{font-weight:700;color:var(--ink);}
+  .bk-who a{color:var(--brand-700);font-weight:600;}
+  .bk-addr{font-size:.83rem;color:var(--muted);line-height:1.55;}
+  .bk-meta{font-size:.74rem;color:var(--muted);}
+
+  .bk-notes{
+    font:inherit;font-size:.83rem;padding:8px 11px;border-radius:8px;
+    border:1px solid var(--line);background:var(--paper);color:var(--ink);
+    width:100%;resize:vertical;min-height:38px;
+  }
+  .bk-notes:focus{outline:2px solid var(--gold);outline-offset:1px;}
+
+  .bk-acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+  .bk-btn{
+    font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;
+    padding:7px 14px;border-radius:999px;border:1px solid var(--line);
+    background:var(--paper);color:var(--brand-800);
+  }
+  .bk-btn:hover:not(:disabled){border-color:var(--brand-800);}
+  .bk-btn:disabled{opacity:.5;cursor:default;}
+  .bk-btn.go{background:var(--success);border-color:var(--success);color:#fff;}
+  .bk-btn.no{color:var(--danger);}
+  .bk-said{font-size:.76rem;color:var(--muted);margin-left:2px;}
+
+  .bk-empty{
+    text-align:center;padding:30px 20px;color:var(--muted);font-size:.88rem;
+    background:var(--paper);border:1px dashed var(--line);border-radius:12px;
+  }
+  @media (max-width:560px){
+    .bk-pill{margin-left:0;}
+    .bk-acts .bk-btn{flex:1 1 auto;}
   }
   .diag summary{
     cursor:pointer;padding:11px 14px;font-size:.78rem;font-weight:700;
@@ -214,6 +304,449 @@
     .brand .pcredit{margin:auto auto 0 max(6vw,32px);}
   }
 </style>
+<style>
+  /* ---------- The register ----------
+     Reuses the venue portal's card, pill, button and note styles so the two
+     areas do not look like they came from different websites. Only what is
+     genuinely new is here: the group headings, the capacity bar, and the two
+     badges that replace hall/nikāḥ. */
+  .cr-controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .cr-controls .bk-search{margin-bottom:0;}
+  .cr-toggle{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:.8rem;color:var(--muted);cursor:pointer;user-select:none;
+  }
+  .cr-toggle input{accent-color:var(--brand-900);width:15px;height:15px;cursor:pointer;}
+
+  .cr-group{margin:0 0 26px;}
+  .cr-group:last-child{margin-bottom:0;}
+  .cr-ghead{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    padding:0 0 9px;margin-bottom:11px;border-bottom:1px solid var(--line);
+  }
+  .cr-ghead h3{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+    color:var(--brand-900);margin:0;
+  }
+  .cr-gsub{font-size:.78rem;color:var(--muted);}
+
+  /* Deliberately plain: it is a hint at how full the room is, not a
+     measurement anybody should read a number off. The number is in the
+     sentence beside it. */
+  .cr-bar{
+    display:inline-block;width:78px;height:5px;border-radius:999px;
+    background:var(--line);overflow:hidden;margin-left:auto;flex:0 0 auto;
+  }
+  .cr-bar i{display:block;height:100%;background:var(--gold);border-radius:999px;}
+
+  .cr-item.o-waiting{border-left:3px solid rgba(165,122,34,.5);}
+  .cr-item.s-withdrawn,.cr-item.s-no_show{border-left:3px solid var(--line);opacity:.72;}
+  .cr-item.s-attended{border-left:3px solid var(--success);opacity:.85;}
+  .bk-kind.t-place{background:rgba(63,122,70,.14);color:#2F5D35;}
+  .bk-kind.t-wait{background:rgba(165,122,34,.16);color:#7A5A16;}
+  .p-active{background:rgba(198,162,76,.2);color:#7A5B10;}
+  .p-attended{background:rgba(63,122,70,.16);color:var(--success);}
+  .p-withdrawn,.p-no_show{background:rgba(110,97,106,.14);color:var(--muted);}
+  .cr-ref{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem;
+    font-weight:700;color:var(--brand-900);
+  }
+  @media (max-width:560px){
+    .cr-bar{margin-left:0;}
+    .cr-controls{gap:11px;}
+  }
+
+  /* ---------- GIFT AID ---------------------------------------------------
+     Built 12 September 2026. The office had one way to get a claim out of
+     the database — running SQL in the Supabase editor — which is not
+     something a masjid treasurer should have to do, and not something they
+     WOULD do. A claim nobody can extract is a claim nobody makes. */
+  .ga-sum{
+    display:flex;gap:22px;flex-wrap:wrap;align-items:baseline;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:15px 18px;margin-bottom:14px;
+  }
+  .ga-sum .n{font-family:"Fraunces",Georgia,serif;font-size:1.5rem;font-weight:700;color:var(--brand-900);}
+  .ga-sum .k{font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;}
+  .ga-sum .big .n{color:var(--success);}
+  .ga-acts{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;}
+    border:1px solid var(--danger);border-radius:12px;background:rgba(176,58,46,.06);
+    padding:14px 16px;margin-bottom:14px;font-size:.85rem;line-height:1.6;
+  }
+  .dash-lab{font-size:.66rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:22px 0 11px;}
+  .inv{border:1px solid var(--gold);border-radius:12px;background:rgba(198,162,76,.06);padding:18px 20px;margin-bottom:18px;}
+  .inv h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.05rem;color:var(--brand-900);margin-bottom:14px;}
+  .inv-role{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:11px 13px;margin-bottom:8px;cursor:pointer;text-transform:none;letter-spacing:0;}
+  .inv-role input{margin-top:3px;accent-color:var(--brand-700);width:16px;height:16px;flex-shrink:0;}
+  .inv-role b{display:block;font-size:.88rem;color:var(--ink);font-weight:700;}
+  .inv-role i{display:block;font-style:normal;font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:2px;}
+  .inv-role:has(input:checked){border-color:var(--gold);background:#fff;}
+  .inv-link{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;}
+  .inv-link h4{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:.98rem;color:var(--brand-900);margin-bottom:6px;}
+  .inv-link p{font-size:.82rem;color:var(--muted);line-height:1.55;margin-bottom:11px;}
+  .inv-url{background:var(--brand-900);color:#F3EFE3;border-radius:9px;padding:11px 13px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.74rem;word-break:break-all;
+    line-height:1.5;margin-bottom:11px;}
+  .inv-small{font-size:.76rem;color:var(--muted);margin-top:10px;margin-bottom:0;line-height:1.5;}
+  .acc-row{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;background:var(--card);}
+  .acc-row.me{border-color:var(--gold);background:#fff;}
+  .acc-row.off{opacity:.62;}
+  .acc-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .acc-name{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1rem;color:var(--ink);}
+  .acc-mail{font-size:.78rem;color:var(--muted);word-break:break-all;}
+  .acc-chips{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 4px;}
+  .acc-chips span{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;
+    background:var(--paper);border:1px solid var(--line);color:var(--muted);}
+  .acc-chips span.can{background:rgba(198,162,76,.16);border-color:rgba(198,162,76,.45);color:#8a6c1f;}
+  .acc-chips span.no2fa{background:rgba(180,83,47,.12);border-color:rgba(180,83,47,.4);color:#8f3f22;}
+  .acc-chips span.ok2fa{background:rgba(63,122,70,.13);border-color:rgba(63,122,70,.35);color:#2C5E33;}
+  .acc-meta{font-size:.77rem;color:var(--muted);}
+  .acc-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;}
+  .acc-acts button{font-family:inherit;font-size:.74rem;font-weight:700;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--paper);color:var(--brand-800);cursor:pointer;}
+  .acc-acts button:hover{border-color:var(--brand-800);}
+  .acc-acts button:disabled{opacity:.45;cursor:not-allowed;}
+  .acc-empty{padding:22px 4px;text-align:center;color:var(--muted);font-size:.88rem;}
+  .bk [hidden], .inv [hidden]{display:none !important;}
+  .vol-retain{font-size:.76rem;color:var(--muted);margin:-6px 0 14px;line-height:1.5;}
+  .vol-row{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:10px;background:var(--card);}
+  .vol-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  .vol-name{font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1rem;color:var(--ink);}
+  .vol-ref{font-size:.7rem;letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .vol-facts{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 10px;}
+  .vol-facts span{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--paper);border:1px solid var(--line);color:var(--muted);}
+  .vol-facts span.hi{background:rgba(198,162,76,.16);border-color:rgba(198,162,76,.45);color:#8a6c1f;}
+  .vol-contact{font-size:.85rem;color:var(--ink);margin-bottom:4px;}
+  .vol-contact a{color:var(--brand-700);font-weight:600;text-decoration:none;}
+  .vol-skills{font-size:.8rem;color:var(--muted);line-height:1.5;}
+  .vol-note{font-size:.78rem;color:var(--muted);font-style:italic;margin-top:5px;}
+  .vol-acts{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;}
+  .vol-acts button{font-family:inherit;font-size:.74rem;font-weight:700;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--paper);color:var(--brand-800);cursor:pointer;}
+  .vol-acts button:hover{border-color:var(--brand-800);}
+  .vol-acts button:disabled{opacity:.5;cursor:not-allowed;}
+  .vol-empty{padding:26px 4px;text-align:center;color:var(--muted);font-size:.88rem;}
+  .ga-note{font-size:.8rem;color:var(--muted);margin-top:9px;}
+  .ga-table{width:100%;border-collapse:collapse;font-size:.83rem;min-width:720px;}
+  .ga-table th{
+    text-align:left;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  .ga-table td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .ga-table tr.bad td{background:rgba(176,58,46,.07);}
+  .ga-table .miss{color:var(--danger);font-weight:700;}
+  .ga-empty{padding:26px 4px;color:var(--muted);font-size:.9rem;}
+</style>
+
+<style>
+/* ===========================================================================
+   WHO CAN GET IN — the full-width layout
+
+   Stated once, at the top, because it has now caught this project four times:
+   ANY author `display` rule beats `[hidden]{display:none}`, so an element that
+   is `display:grid` or `display:flex` in a rule of ours keeps rendering while
+   its `hidden` property is perfectly true. `.field` in /auth/, `.bk-tab` in
+   /venue/, `.logauto` in /portals/, and it would have been `.acc-grid` here.
+   =========================================================================== */
+.wide [hidden], .wide-top [hidden]{display:none !important;}
+
+/* The two-column sign-in shell is right for a form. It is wrong for a list of
+   people: at 940px it leaves the grid about 470px wide, which is one tile.
+   Once somebody is signed in and looking at accounts, the brand panel has
+   done its job and the page takes the whole width. */
+.shell.wide-mode{grid-template-columns:1fr;}
+.shell.wide-mode .brand{display:none;}
+.shell.wide-mode .panel{align-items:flex-start;padding:0;}
+.shell.wide-mode .card.wide{
+  width:100%;max-width:none;border:none;border-radius:0;box-shadow:none;
+  padding:0 0 48px;background:transparent;
+}
+
+/* The bar carries what the hidden brand panel used to: where you are, who you
+   are, and the way back. Without it, hiding .brand would strand somebody on a
+   page with no exit — which is the exact complaint that produced the sticky
+   left panel on /venue/. */
+.wide-top{
+  display:flex;align-items:center;gap:14px;background:var(--brand-900);
+  padding:15px clamp(16px,4vw,34px);margin-bottom:clamp(18px,3vw,26px);
+  flex-wrap:wrap;
+}
+.wide-top .wt-t{flex:1;min-width:180px;}
+.wide-top .wt-t strong{
+  display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;
+  font-size:1.02rem;color:#F3EFE3;
+}
+.wide-top .wt-t span{display:block;font-size:.74rem;color:rgba(243,239,227,.6);word-break:break-all;}
+.wide-top a, .wide-top button{
+  font-family:inherit;font-size:.74rem;font-weight:700;letter-spacing:.02em;
+  padding:7px 13px;border-radius:999px;text-decoration:none;cursor:pointer;
+  border:1px solid rgba(243,239,227,.3);background:none;color:rgba(243,239,227,.85);
+}
+.wide-top a:hover, .wide-top button:hover{border-color:var(--gold-bright);color:var(--gold-bright);}
+/* Only once the page has actually gone wide. Applied unconditionally it would
+   sit inside the sign-in card's own padding and indent everything twice. */
+.shell.wide-mode .wide-wrap{padding:0 clamp(16px,4vw,34px);}
+
+/* --- classes this page uses and never defined ---------------------------
+   `.cf-row`, `.field-hint` and `.ok-note` were all used in the markup of this
+   screen and defined in none of it. The invite form's inputs were unstyled,
+   its labels ran into their fields, and every "that worked" message was plain
+   black text. It worked, so it was never noticed — which is the point: HTML
+   with no matching CSS produces no error anywhere, and the only way to catch
+   it is to look. `.cf-row` is copied from index_template.html unchanged so the
+   invite form looks like every other form on the site; `.ok-note` had to be
+   written, since nothing on the site had a success note before. */
+.cf-row{margin-bottom:14px;}
+.cf-row label{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
+.cf-row input,.cf-row select,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.92rem;line-height:1.3;color:var(--ink);}
+.cf-row input:focus,.cf-row select:focus,.cf-row textarea:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
+/* The tick-box rows inside a .cf-row are laid out by .inv-role, which wants a
+   flex row and an inline label — the block-level uppercase label above would
+   stack the box on its own line and lose the text beside it. */
+.cf-row label.inv-role{display:flex;font-size:.88rem;letter-spacing:0;text-transform:none;font-weight:400;color:var(--ink);margin-bottom:0;}
+.cf-row label.inv-role input{width:16px;}
+.field-hint{font-size:.76rem;color:var(--muted);margin-top:5px;line-height:1.5;}
+.ok-note{
+  background:rgba(63,122,70,.11);border:1px solid rgba(63,122,70,.32);
+  color:#2C5E33;border-radius:10px;padding:10px 13px;font-size:.85rem;
+  line-height:1.55;margin-bottom:14px;
+}
+
+/* `.btn` is `width:100%` because it was written for the sign-in form, where a
+   full-width button is right. In a row of them it makes each one span the page
+   and wrap onto its own line — which is what "Invite somebody" was doing: a
+   pale bar across the whole screen with the words floating in the middle of
+   it. Buttons in an action row size to their text. */
+.ga-acts .btn{width:auto;}
+
+/* A form is not improved by being 1200px wide. The tiles want the width; the
+   fields want a readable measure, the same as every other form on the site. */
+.wide .inv, .wide .ga-sum{max-width:660px;}
+
+/* --- the tiles ---------------------------------------------------------- */
+.acc-grid{
+  display:grid;gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(272px,1fr));
+}
+/* A tile is a <button>, not a div with a click handler. That is what gets it
+   keyboard focus, Enter and Space, and a role screen readers announce — none
+   of which a div gives you, and all of which somebody at the masjid will
+   eventually need. */
+.acc-tile{
+  font-family:inherit;text-align:left;cursor:pointer;width:100%;
+  border:1px solid var(--line);border-radius:13px;background:var(--card);
+  padding:15px 16px 14px;display:flex;flex-direction:column;gap:9px;
+  transition:border-color .12s, box-shadow .12s, transform .12s;
+}
+.acc-tile:hover{border-color:var(--gold);box-shadow:0 3px 14px rgba(59,30,56,.07);transform:translateY(-1px);}
+.acc-tile:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+.acc-tile.me{border-color:var(--gold);background:#fff;}
+.acc-tile.off{opacity:.64;}
+.acc-tile .t-name{
+  font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1.02rem;
+  color:var(--ink);line-height:1.3;
+}
+.acc-tile .t-you{font-family:inherit;font-size:.7rem;font-weight:500;color:var(--muted);}
+.acc-tile .t-lines{display:flex;flex-direction:column;gap:3px;}
+.acc-tile .t-line{
+  font-size:.78rem;color:var(--muted);word-break:break-all;line-height:1.4;
+  display:flex;gap:7px;align-items:baseline;
+}
+.acc-tile .t-line b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+.acc-tile .t-line .gap{color:var(--danger);font-weight:700;}
+/* The chip styling lives on `.acc-chips span`, so a tile has to carry that
+   class as well as its own — otherwise the roles render as bare text and the
+   only thing distinguishing "Everything" from a line of prose is that somebody
+   knows what it means. */
+.acc-tile .acc-chips{margin:0;}
+.acc-tile .t-more{
+  font-size:.72rem;color:var(--brand-700);font-weight:700;margin-top:1px;
+}
+
+/* --- one person's page --------------------------------------------------- */
+.pp-back{
+  font-family:inherit;font-size:.76rem;font-weight:700;color:var(--brand-700);
+  background:none;border:none;cursor:pointer;padding:0;margin-bottom:14px;
+}
+.pp-back:hover{color:var(--brand-900);}
+.pp-head{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:18px;
+}
+.pp-head h2{font-size:1.5rem;color:var(--brand-900);margin:0 0 5px;}
+.pp-head .pp-mail{font-size:.84rem;color:var(--muted);word-break:break-all;}
+.pp-grid{display:grid;gap:18px;grid-template-columns:1fr;}
+@media (min-width:860px){ .pp-grid{grid-template-columns:1fr 1fr;} }
+.pp-box{border:1px solid var(--line);border-radius:13px;background:var(--card);padding:17px 18px;}
+.pp-box h3{
+  font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+  color:var(--brand-900);margin:0 0 4px;
+}
+.pp-box .pp-why{font-size:.78rem;color:var(--muted);line-height:1.55;margin-bottom:13px;}
+.pp-facts{display:flex;flex-direction:column;gap:9px;}
+.pp-fact{display:flex;justify-content:space-between;gap:12px;font-size:.85rem;flex-wrap:wrap;}
+.pp-fact .k{color:var(--muted);}
+.pp-fact .v{color:var(--ink);font-weight:600;text-align:right;word-break:break-all;}
+.pp-fact .v a{color:var(--brand-700);text-decoration:none;}
+.pp-fact .v.gap{color:var(--danger);}
+.pp-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pp-acts button{
+  font-family:inherit;font-size:.76rem;font-weight:700;padding:8px 15px;
+  border-radius:999px;border:1px solid var(--line);background:var(--card);
+  color:var(--brand-800);cursor:pointer;
+}
+.pp-acts button:hover:not(:disabled){border-color:var(--brand-800);}
+.pp-acts button:disabled{opacity:.45;cursor:not-allowed;}
+.pp-acts button.go{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+.pp-acts button.no{color:var(--danger);border-color:rgba(176,58,46,.35);}
+.pp-note{font-size:.76rem;color:var(--muted);line-height:1.55;margin-top:10px;}
+.pp-warn{
+  font-size:.78rem;line-height:1.55;color:#8f3f22;background:rgba(180,83,47,.09);
+  border:1px solid rgba(180,83,47,.3);border-radius:9px;padding:9px 11px;margin-top:12px;
+}
+</style>
+<style>
+/* ===========================================================================
+   MADRASAH — the administrators' view
+
+   Modelled on the shape of the system the masjid uses today (four headline
+   counts, then the areas) so it is recognisable to whoever has to switch. NOT
+   modelled on its appearance: this is the masjid's own type and colour, and
+   three things in the reference were deliberately left out —
+
+     · a password field on a staff record. An administrator must never be able
+       to set somebody else's password; that is the entire reason the invite
+       link exists.
+     · a Delete button on every tile. Deleting a pupil record is not a thing
+       that should be one press away on a list.
+     · rows of access toggles whose own help text admits they are "not
+       implemented in all areas of the system". A switch that does nothing is
+       worse than no switch, because somebody will rely on it.
+   =========================================================================== */
+
+/* The figures are real, and they are real SOMEWHERE ELSE. This is the panel
+   that says so, and it is deliberately the first thing under the heading. */
+.md-lead{
+  border:1px solid rgba(198,162,76,.5);background:rgba(198,162,76,.09);
+  border-radius:12px;padding:14px 16px;font-size:.88rem;line-height:1.65;
+  color:var(--ink);margin-bottom:18px;max-width:760px;
+}
+
+.md-counts{
+  display:grid;gap:13px;margin-bottom:8px;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+}
+/* A DIV, not a button and not a link. The data is not here, so there is
+   nowhere for a press to go — and a tile that looks pressable and does
+   nothing teaches people the page is broken. It becomes a button on the day
+   the import lands, which is one tag. */
+.md-count{
+  border:1px solid var(--line);border-radius:13px;background:var(--card);
+  padding:15px 17px 14px;
+}
+.md-count .n{
+  display:block;font-family:"Fraunces",Georgia,serif;font-weight:700;
+  font-size:1.9rem;line-height:1.1;color:var(--brand-900);
+  font-variant-numeric:tabular-nums;
+}
+.md-count .k{
+  display:block;font-size:.7rem;font-weight:800;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);margin-top:3px;
+}
+.md-count .s{
+  display:block;font-size:.73rem;color:var(--muted);margin-top:9px;
+  padding-top:9px;border-top:1px solid var(--line);line-height:1.45;
+}
+
+.md-areas{
+  display:grid;gap:13px;
+  grid-template-columns:repeat(auto-fill,minmax(272px,1fr));
+}
+.md-area{
+  border:1px solid var(--line);border-radius:13px;background:var(--card);
+  padding:15px 17px;display:flex;flex-direction:column;gap:7px;
+}
+.md-area .t{
+  font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1rem;color:var(--ink);
+}
+.md-area .d{font-size:.81rem;color:var(--muted);line-height:1.55;}
+.md-area .w{
+  /* Pushed to the bottom so the badge sits on the same line across the row
+     whatever length the description is. Without it the four cards each put it
+     wherever their own text ended, which reads as four different states. */
+  margin-top:auto;align-self:flex-start;font-size:.68rem;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;padding:3px 9px;border-radius:999px;
+  background:var(--paper);border:1px solid var(--line);color:var(--muted);
+}
+
+.md-before{
+  border:1px solid rgba(180,83,47,.34);background:rgba(180,83,47,.06);
+  border-radius:13px;padding:16px 18px;max-width:760px;
+}
+.md-why{font-size:.83rem;color:var(--muted);line-height:1.65;margin:0 0 12px;}
+.md-why-wide{max-width:760px;margin-top:-4px;}
+.md-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;}
+.md-list li{
+  font-size:.85rem;line-height:1.55;color:var(--ink);
+  padding-left:22px;position:relative;
+}
+.md-list li::before{
+  content:"";position:absolute;left:0;top:.45em;width:11px;height:11px;
+  border:1.5px solid rgba(180,83,47,.55);border-radius:3px;
+}
+.md-list li b{color:var(--brand-900);}
+.md-list li span{display:block;color:var(--muted);font-size:.79rem;margin-top:2px;}
+
+.md-rest{display:flex;flex-wrap:wrap;gap:7px;max-width:860px;}
+.md-rest span{
+  font-size:.75rem;font-weight:600;padding:5px 11px;border-radius:999px;
+  background:var(--paper);border:1px dashed var(--line);color:var(--muted);
+}
+</style>
+<style>
+/* ===========================================================================
+   THE TEACHERS' AND PARENTS' LANDING PAGES
+
+   Not separate URLs. A teacher who signs in at /portal/ should land somewhere
+   that speaks to them, and a parent likewise — the alternative was what this
+   page did until today, which was to tell them their side "has not been built"
+   and leave them looking at a sign-out button.
+
+   These say what the portal WILL do, in the words the person would use, and
+   then say plainly that it is not open yet. A list of promises is only worth
+   putting on a screen if the last line is honest about the date.
+   =========================================================================== */
+.role-land{max-width:820px;}
+.role-land .rl-lead{
+  font-size:.92rem;line-height:1.7;color:var(--ink);margin-bottom:20px;max-width:62ch;
+}
+.rl-list{display:grid;gap:12px;grid-template-columns:1fr;margin-bottom:6px;}
+@media (min-width:660px){ .rl-list{grid-template-columns:1fr 1fr;} }
+.rl-item{
+  border:1px solid var(--line);border-radius:13px;background:var(--card);
+  padding:14px 16px;display:flex;gap:12px;align-items:flex-start;
+}
+.rl-mark{
+  width:26px;height:26px;border-radius:8px;flex-shrink:0;margin-top:1px;
+  background:rgba(198,162,76,.18);color:#8a6c1f;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:800;
+}
+.rl-item b{display:block;font-size:.9rem;color:var(--ink);font-weight:700;line-height:1.35;}
+.rl-item span{display:block;font-size:.8rem;color:var(--muted);line-height:1.55;margin-top:3px;}
+
+.rl-soon{
+  margin-top:22px;border:1px solid var(--gold);border-radius:13px;
+  background:rgba(198,162,76,.09);padding:16px 18px;
+}
+.rl-soon h3{
+  font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.15rem;
+  color:var(--brand-900);margin:0 0 6px;
+}
+.rl-soon p{font-size:.85rem;line-height:1.65;color:var(--ink);margin:0;}
+.rl-soon p + p{margin-top:9px;color:var(--muted);font-size:.81rem;}
+</style>
 </head>
 <body>
 
@@ -221,10 +754,15 @@
   <div class="brand">
     <div class="brand-inner">
       <img class="logo" src="data:image/png;base64,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" alt="Taiyabah Masjid">
-      <div class="eyebrow">Madrasah</div>
-      <h1>Madrasah Portal</h1>
-      <p>Sign in to reach your madrasah account. Access depends on your role — parents, teaching staff and administrators each see different things.</p>
-      <a class="back" href="../index.html#madrasah">&larr; Back to the masjid website</a>
+      <div class="eyebrow">Taiyabah Masjid</div>
+      <h1>Madrasah</h1>
+      <p>Pupils, teachers, classes and the families behind them. Nothing has been imported yet &mdash; this is the shape of the page, waiting on the data and on the paperwork that has to come before a single child&rsquo;s record is entered.</p>
+      <!-- Administrators only, so this always points at the admin centre.
+           There is no lesser role that reaches class sign-ups, and app.js
+           does not rewrite this link — unlike /venue/, where hall_office
+           still exists as a role and must not be sent somewhere that
+           refuses it. -->
+      <a class="back" href="../portals/">&larr; Back to the admin centre</a>
     </div>
 
     <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
@@ -243,7 +781,7 @@
     <!-- sign in -->
     <div class="card" id="view-signin" hidden>
       <h2>Sign in</h2>
-      <p class="sub">Use the email address the madrasah office holds for you.</p>
+      <p class="sub">Use the email address the masjid office holds for you.</p>
       <div class="err" id="signin-error" hidden></div>
       <form id="signin-form" novalidate>
         <div class="field">
@@ -259,7 +797,7 @@
         </div>
         <button type="submit" class="btn btn-gold" id="signin-submit">Sign in</button>
       </form>
-      <p class="note">Accounts are issued by the madrasah. If you can't get in, contact the masjid office on 01204 535 997.</p>
+      <p class="note">Accounts are issued by the masjid office. If you can't get in, ring 01204 535 997.</p>
     </div>
 
     <!-- MFA: verify -->
@@ -281,7 +819,7 @@
     <!-- MFA: enrol -->
     <div class="card" id="view-enrol" hidden>
       <h2>Set up two-step verification</h2>
-      <p class="sub">Your account reaches pupil records, so it needs a second factor before you can continue.</p>
+      <p class="sub">Your account reaches people&rsquo;s contact details, so it needs a second factor before you can continue.</p>
       <div class="err" id="enrol-error" hidden></div>
 
       <ul class="steps">
@@ -308,8 +846,24 @@
     </div>
 
     <!-- signed in -->
-    <div class="card" id="view-app" hidden>
-      <div class="who">
+    <div class="card wide" id="view-app" hidden>
+
+      <!-- Shown only once the page has gone full width, because that is when
+           the brand panel — which held the way back and the masjid's name —
+           disappears. Hiding the exit along with it is how somebody ends up
+           closing the tab to get out. -->
+      <div class="wide-top" id="app-top" hidden>
+        <div class="wt-t">
+          <strong id="app-top-where">Madrasah</strong>
+          <span id="app-top-email">—</span>
+        </div>
+        <a href="../portals/" id="app-top-back">&larr; Admin centre</a>
+        <button type="button" id="app-signout-top">Sign out</button>
+      </div>
+
+      <div class="wide-wrap">
+
+      <div class="who" id="app-who">
         <div class="avatar" aria-hidden="true">✓</div>
         <div class="who-t">
           <strong id="app-name">—</strong>
@@ -321,19 +875,108 @@
 
       <div class="err" id="app-error" hidden></div>
 
-      <div class="err" id="app-norole" hidden>
-        Your account is active but has no role assigned yet, so there's nothing to show.
-        Ask the madrasah administrator to set your access.
+      <div class="err" id="app-noaccess" hidden>
+        The teachers&rsquo; and parents&rsquo; side of the madrasah has not been built yet.
+        This page is the administrators&rsquo; view only, and only after two-step.
       </div>
 
-      <div class="status">
-        <b>You're signed in.</b> Authentication, two-step verification and role checks
-        are all working. The madrasah features — registers, pupil records and reports —
-        are still being built, and no pupil data is held in this system yet.
-      </div>
+      <section class="bk" id="md-panel" hidden>
 
+        <div class="bk-head">
+          <h2>Madrasah</h2>
+          <span class="bk-sub">Everything the masjid keeps about its pupils, the people who teach them and the families behind them.</span>
+        </div>
+
+        <div class="err" id="md-error" hidden></div>
+
+        <!-- THE SENTENCE THAT KEEPS THIS PAGE HONEST.
+             The four figures below are real, and they are real somewhere
+             else. Putting 539 on a screen an administrator lands on, without
+             saying where it came from, would have somebody reporting it to
+             the committee as this system's roll within a month. -->
+        <div class="md-lead" id="md-lead">
+          <strong>Nothing has been imported yet.</strong>
+          The figures below are what the masjid&rsquo;s current system holds today.
+          They are here so the shape of this page is right &mdash; not because this
+          database has them. It holds <strong>no pupil records at all</strong>, and
+          it must not hold any until the paperwork further down is finished.
+        </div>
+
+        <div class="md-counts" id="md-counts"></div>
+
+        <div class="dash-lab">What this will hold</div>
+        <div class="md-areas" id="md-areas"></div>
+
+        <!-- Not decoration, and not pessimism. The project's own record says
+             the DPIA must be finished before the first real pupil record is
+             entered, and that the next milestone IS the first pupil record.
+             A list like this kept in a document gets read once; kept on the
+             page it gates, it gets read every time somebody opens it. -->
+        <div class="dash-lab">Before the first pupil record</div>
+        <div class="md-before">
+          <p class="md-why">A madrasah roll reveals religious belief, which makes it
+            <strong>special category data under UK GDPR Article&nbsp;9</strong> before a
+            single report is added to it. Administrator accounts for masjid staff
+            process no child&rsquo;s data, so everything built so far has been outside
+            this. Importing 539 pupils is not.</p>
+          <ul class="md-list" id="md-before-list"></ul>
+        </div>
+
+        <div class="dash-lab">Also in the current system, not built here</div>
+        <p class="md-why md-why-wide">Listed so nothing is quietly forgotten at
+          changeover. None of it is reachable yet, and some of it may never need
+          to be &mdash; that is a conversation for the committee, not a decision to
+          make by copying the old system feature for feature.</p>
+        <div class="md-rest" id="md-rest"></div>
+
+      </section>
+
+      <!-- ===================== A TEACHER ===================== -->
+      <section class="bk role-land" id="tc-panel" hidden>
+        <div class="bk-head">
+          <h2>The teachers&rsquo; portal</h2>
+          <span class="bk-sub">What it will do, and where it has got to.</span>
+        </div>
+        <p class="rl-lead">Everything below is what the masjid has asked for. None of
+          it is built yet &mdash; this page exists so you can see what is coming and say
+          if something important to your class is missing from it.</p>
+        <div class="rl-list" id="tc-list"></div>
+        <div class="rl-soon">
+          <h3>Coming soon</h3>
+          <p>None of this is open yet. The madrasah&rsquo;s records are still in the
+            system the masjid uses today, and nothing moves across until the data
+            protection work behind it is finished &mdash; a roll of pupils is
+            <strong>special category data</strong>, and that is not a corner worth cutting
+            to save a few weeks.</p>
+          <p>If something you rely on every Saturday is not on this list, tell the
+            office. It is far cheaper to add now than after it is built.</p>
+        </div>
+      </section>
+
+      <!-- ===================== A PARENT ===================== -->
+      <section class="bk role-land" id="pa-panel" hidden>
+        <div class="bk-head">
+          <h2>The parents&rsquo; portal</h2>
+          <span class="bk-sub">What it will do, and where it has got to.</span>
+        </div>
+        <p class="rl-lead">Everything below is what the masjid has asked for. None of
+          it is built yet. Until it is, the office is still the way to do all of
+          it &mdash; ring 01204&nbsp;535&nbsp;997 between 5pm and 7pm.</p>
+        <div class="rl-list" id="pa-list"></div>
+        <div class="rl-soon">
+          <h3>Coming soon</h3>
+          <p>None of this is open yet. Your child&rsquo;s records are still held in the
+            system the masjid uses today, and nothing moves across until the data
+            protection work behind it is finished. That is deliberate: a madrasah
+            roll is <strong>special category data</strong> under UK law, and it is
+            treated that way.</p>
+          <p>Nothing changes for you in the meantime. The office handles fees,
+            absences and everything else exactly as it does now.</p>
+        </div>
+      </section>
 
       <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+      </div>
     </div>
 
   </div>
