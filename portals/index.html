@@ -353,67 +353,175 @@
      dashboard. */
   .dash [hidden], .dash-top [hidden]{display:none !important;}
 
+  /* =========================================================================
+     THE DASHBOARD — a rail and a working column
+
+     WHAT THIS REPLACED. Seven identical cards in a grid, four stat boxes, and
+     the log, all in one column and all with the same treatment: same cream,
+     same border, same radius, same weight. Nothing told the eye where to
+     start, so you read all of it, every time. And the loudest thing on the
+     page was four figures that on a quiet day all say nought — the most
+     prominent element was the least informative.
+
+     THE MOVE. The areas leave the middle of the page and become a permanent
+     rail: grouped, always in the same place, always in the same order. A grid
+     is something you re-read; a list in a fixed position is something you
+     learn once and then stop reading. After a fortnight nobody reads it —
+     they go to the fourth item.
+
+     WHAT THAT BUYS is space. The working column now holds only what changes:
+     what needs you, where the masjid stands, what happened, and what the site
+     did to itself overnight.
+
+     THE COST, stated plainly. On a phone there is no room for a rail, so it
+     becomes a block above the content that you scroll past on every visit.
+     That is a real compromise, taken deliberately: the people who open this
+     every day are at a desk, and the phone case is the rarer one.
+     ========================================================================= */
+
   .shell.dash-mode{grid-template-columns:1fr;}
   .shell.dash-mode .brand{display:none;}
   .shell.dash-mode .panel{align-items:flex-start;padding:0;}
   .shell.dash-mode .card.dash{
     width:100%;max-width:none;border:none;border-radius:0;box-shadow:none;
-    padding:0 0 40px;background:transparent;
+    padding:0;background:transparent;
   }
 
-  .dash-top{
-    display:flex;align-items:center;gap:14px;background:var(--brand-900);
-    padding:15px clamp(16px,4vw,34px);margin-bottom:clamp(18px,3vw,26px);
+  .dash-app{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:960px){ .dash-app{grid-template-columns:254px 1fr;} }
+
+  /* --- the rail ---------------------------------------------------------- */
+  .rail{background:var(--brand-900);color:#F3EFE3;padding:0 0 22px;}
+  @media (min-width:960px){
+    .rail{position:sticky;top:0;height:100vh;overflow-y:auto;}
   }
-  .dash-mark{
-    width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.18);
-    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  .rail-top{
+    display:flex;align-items:center;gap:11px;padding:17px 18px 15px;
+    border-bottom:1px solid rgba(243,239,227,.13);margin-bottom:14px;
   }
-  .dash-mark svg{width:15px;height:15px;}
-  .dash-who{flex:1;min-width:0;}
-  .dash-who strong{display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:#F3EFE3;}
-  .dash-who span{display:block;font-size:.74rem;color:rgba(243,239,227,.6);word-break:break-all;}
-  .dash-top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+  .rail-mark{
+    width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:rgba(220,187,99,.22);border:1px solid rgba(220,187,99,.55);
+    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
+  }
+  /* 2px, not the 1.8 the icon was drawn with: at 15px on a dark ground a
+     hairline stroke disappears, and the mark read as an empty tan disc. */
+  .rail-mark svg{width:15px;height:15px;stroke-width:2;}
+  .rail-top .rt{min-width:0;}
+  .rail-top strong{
+    display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:.93rem;
+  }
+  .rail-top span{display:block;font-size:.7rem;color:rgba(243,239,227,.55);}
+
+  .rail-lab{
+    font-size:.6rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
+    color:rgba(220,187,99,.75);padding:0 18px;margin:17px 0 7px;
+  }
+  .rail-lab:first-child{margin-top:0;}
+  .rail-group{display:flex;flex-direction:column;}
+
+  /* Still `.area`, because that is what it is — the same destination, drawn
+     as a row instead of a card. */
+  /* A grid, not a centred flex row. When a row has a badge AND two lines of
+     counts, centring puts the badge halfway down the block and lets the name
+     and the numbers fight over the same line. Icon in its own column, aligned
+     to the first line; everything else stacks in the second. */
+  .rail .area{
+    display:grid;grid-template-columns:17px 1fr;gap:11px;padding:9px 18px;
+    color:rgba(243,239,227,.86);text-decoration:none;line-height:1.35;
+    border-left:3px solid transparent;align-items:start;
+  }
+  .rail .area .ic{display:block;margin-top:2px;}
+  .rail .area .bd{min-width:0;}
+  .rail .area:hover, .rail .area:focus-visible{
+    background:rgba(243,239,227,.07);color:#fff;border-left-color:var(--gold);outline:none;
+  }
+  .rail .area svg{width:17px;height:17px;flex-shrink:0;color:var(--gold-bright);opacity:.85;}
+  .rail .area .n{
+    font-family:inherit;font-size:.87rem;font-weight:400;color:inherit;
+    display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
+  }
+  /* The counts, under the name. The "what you can do" sentence that used to
+     be on each card does not fit a nav row and is carried as a title instead
+     — a real loss, and the reason the areas keep their numbers here: a row
+     that says only "Hall Hire" is a menu, and this is meant to be a
+     dashboard. */
+  .rail .area .nums{
+    display:block;font-size:.71rem;color:rgba(243,239,227,.5);margin-top:3px;
+    font-variant-numeric:tabular-nums;line-height:1.45;
+  }
+  .rail .area .nums b{color:rgba(243,239,227,.78);font-weight:700;}
+  .rail .area .chip{
+    font-size:.62rem;font-weight:800;padding:2px 7px;border-radius:999px;
+    white-space:nowrap;background:rgba(243,239,227,.14);color:rgba(243,239,227,.8);
+    border:none;
+  }
+  .rail .area .chip.hot{background:rgba(180,83,47,.34);color:#F3C9B8;}
+  .rail .area .chip.good{background:rgba(63,122,70,.3);color:#BFE0C4;}
+  .rail-foot{
+    margin-top:18px;padding:14px 18px 0;border-top:1px solid rgba(243,239,227,.13);
+    font-size:.73rem;color:rgba(243,239,227,.5);line-height:1.55;
+  }
+  .rail-foot a{color:rgba(220,187,99,.85);text-decoration:none;font-weight:600;}
+  .rail-foot a:hover{color:var(--gold-bright);text-decoration:underline;}
+
+  /* --- the working column ------------------------------------------------ */
+  .work{min-width:0;padding-bottom:56px;}
+  .work-top{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--line);
+    padding:15px clamp(16px,3vw,30px);
+  }
+  .work-top .when{font-size:.79rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .dash-who{display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+  .dash-av{
+    width:32px;height:32px;border-radius:50%;flex-shrink:0;
+    background:var(--brand-900);color:var(--gold-bright);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;
+  }
+  .dash-me{line-height:1.3;min-width:0;}
+  .dash-me b{display:block;font-size:.82rem;font-weight:700;}
+  .dash-me i{display:block;font-style:normal;font-size:.71rem;color:var(--muted);word-break:break-all;}
   .dash-role{
-    font-size:.6rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-    padding:3px 9px;border-radius:999px;background:rgba(198,162,76,.2);
-    border:1px solid rgba(198,162,76,.45);color:var(--gold-bright);white-space:nowrap;
+    font-size:.6rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;background:rgba(198,162,76,.18);
+    border:1px solid rgba(198,162,76,.5);color:#8a6c1f;white-space:nowrap;
   }
-  .dash-me{display:none;flex-direction:column;align-items:flex-end;line-height:1.3;}
-  @media (min-width:700px){ .dash-me{display:flex;} }
-  .dash-me b{font-size:.8rem;font-weight:700;color:rgba(243,239,227,.9);}
-  .dash-me i{font-style:normal;font-size:.7rem;color:rgba(243,239,227,.5);}
   .dash-out{
-    background:none;border:none;font-family:inherit;font-size:.78rem;
-    color:rgba(243,239,227,.6);cursor:pointer;padding:6px 4px;
+    background:none;border:none;color:var(--muted);font:inherit;font-size:.78rem;
+    cursor:pointer;padding:4px 2px;
   }
-  .dash-out:hover{color:#F3EFE3;}
+  .dash-out:hover{color:var(--ink);}
 
-  .dash-body{padding:0 clamp(16px,4vw,34px);}
-  .dash-h{
-    display:flex;align-items:baseline;justify-content:space-between;gap:12px;
-    flex-wrap:wrap;margin-bottom:11px;
-  }
-  .dash-h h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.35rem;color:var(--brand-900);}
-  .dash-h .when{font-size:.76rem;color:var(--muted);}
+  .dash-body{padding:24px clamp(16px,3vw,30px) 0;max-width:1320px;}
+
+  /* One section heading treatment, used four times. The old page had a
+     1.35rem serif for one section and a tiny grey uppercase label for the
+     next, which is why the sections did not read as siblings. */
+  .dash-sec{margin-bottom:30px;}
+  .dash-h{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .dash-h h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.3rem;color:var(--brand-900);}
+  .dash-h .rule{flex:1;height:1px;background:var(--line);min-width:20px;}
+  .dash-h .when{font-size:.74rem;color:var(--muted);}
   .dash-lab{
     font-size:.66rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;
     color:var(--muted);margin-bottom:11px;
   }
 
   /* needs you */
-  .needs{display:grid;grid-template-columns:1fr;gap:11px;margin-bottom:26px;}
+  .needs{display:grid;grid-template-columns:1fr;gap:11px;}
   @media (min-width:760px){ .needs{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @media (min-width:1120px){ .needs{grid-template-columns:repeat(3,minmax(0,1fr));} }
+  @media (min-width:1180px){ .needs{grid-template-columns:repeat(3,minmax(0,1fr));} }
   .need{
     background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
     border-radius:12px;padding:14px 16px;display:block;text-decoration:none;color:inherit;
+    transition:border-color .14s, background .14s;
   }
   .need:hover{border-color:var(--gold);background:#fff;}
   .need.now{border-left-color:var(--danger);}
   .need .flag{
-    display:flex;align-items:center;gap:7px;font-size:.63rem;font-weight:800;
-    letter-spacing:.1em;text-transform:uppercase;color:#8a6c1f;margin-bottom:6px;
+    display:flex;align-items:center;gap:6px;font-size:.7rem;font-weight:800;
+    letter-spacing:.07em;text-transform:uppercase;color:#8a6c1f;margin-bottom:7px;
   }
   .need.now .flag{color:#8f3f22;}
   .need .flag svg{width:13px;height:13px;flex-shrink:0;}
@@ -421,75 +529,90 @@
   .need .d{display:block;font-size:.8rem;color:var(--muted);margin-top:4px;line-height:1.45;}
   .need .go{font-size:.78rem;font-weight:700;color:var(--brand-700);margin-top:9px;display:block;}
 
-  /* the calm state — a line, not a grid of noughts */
+  /* THE CALM STATE IS A SENTENCE, NOT A GRID OF NOUGHTS. */
   .all-clear{
-    display:flex;align-items:center;gap:11px;background:rgba(63,122,70,.09);
-    border:1px solid rgba(63,122,70,.35);color:#2C5E33;border-radius:11px;
-    padding:14px 17px;font-size:.9rem;margin-bottom:26px;
+    display:flex;align-items:center;gap:11px;padding:15px 17px;border-radius:13px;
+    background:rgba(63,122,70,.08);border:1px solid rgba(63,122,70,.25);
+    font-size:.9rem;color:#2C5E33;line-height:1.5;
   }
-  .all-clear svg{width:17px;height:17px;flex-shrink:0;}
+  .all-clear svg{
+    width:24px;height:24px;padding:5px;border-radius:50%;flex-shrink:0;
+    background:rgba(63,122,70,.18);color:var(--success);
+  }
 
-  /* the estate */
-  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:26px;}
-  @media (min-width:900px){ .tiles{grid-template-columns:repeat(4,minmax(0,1fr));} }
-  .tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;}
-  .tile .k{font-size:.63rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);}
+  /* where the masjid stands */
+  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;}
+  @media (min-width:820px){ .tiles{grid-template-columns:repeat(4,minmax(0,1fr));} }
+  .tile{
+    background:var(--card);border:1px solid var(--line);border-top:3px solid var(--gold);
+    border-radius:12px;padding:14px 16px;
+  }
+  .tile .k{font-size:.62rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);}
   .tile .v{
-    font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;
-    font-size:1.75rem;line-height:1.1;color:var(--brand-900);margin-top:6px;
+    font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:1.75rem;line-height:1.15;
+    color:var(--brand-900);margin-top:4px;font-variant-numeric:tabular-nums;
   }
-  .tile .s{font-size:.75rem;color:var(--muted);margin-top:3px;}
+  .tile .s{font-size:.74rem;color:var(--muted);margin-top:2px;line-height:1.4;}
 
-  /* areas */
-  .areas{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:26px;}
-  @media (min-width:760px){ .areas{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @media (min-width:1120px){ .areas{grid-template-columns:repeat(3,minmax(0,1fr));} }
-  .area{
-    background:var(--card);border:1px solid var(--line);border-radius:12px;
-    padding:16px 18px;display:flex;flex-direction:column;gap:8px;
-    text-decoration:none;color:inherit;transition:.18s ease;
-  }
-  .area:hover{border-color:var(--gold);background:#fff;}
-  .area .h{display:flex;align-items:center;gap:9px;}
-  .area .h svg{width:17px;height:17px;color:var(--brand-700);flex-shrink:0;}
-  .area .h .n{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);min-width:0;}
-  .area .h .chip{
-    margin-left:auto;font-size:.6rem;font-weight:800;letter-spacing:.06em;
-    text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap;
-    background:rgba(198,162,76,.18);border:1px solid rgba(198,162,76,.5);color:#8a6c1f;
-  }
-  .area .h .chip.hot{background:rgba(180,83,47,.12);border-color:rgba(180,83,47,.4);color:#8f3f22;}
-  .area .h .chip.good{background:rgba(63,122,70,.13);border-color:rgba(63,122,70,.35);color:#2C5E33;}
-  .area .nums{display:flex;gap:15px;flex-wrap:wrap;font-size:.79rem;color:var(--muted);}
-  .area .nums b{color:var(--ink);}
-  .area .can{font-size:.77rem;color:var(--muted);line-height:1.45;}
-
-  /* log + housekeeping */
+  /* what has been happening */
   .dash-2col{display:grid;grid-template-columns:1fr;gap:14px;}
-  @media (min-width:900px){ .dash-2col{grid-template-columns:1.5fr 1fr;} }
-  .pane{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:17px 19px;}
-  .pane h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);}
-  .pane .why{font-size:.75rem;color:var(--muted);margin:5px 0 13px;line-height:1.5;}
-  .logrow{display:flex;gap:13px;padding:9px 0;border-bottom:1px solid var(--line);align-items:baseline;}
+  /* start, not stretch. On a quiet day the log is one line and the
+     housekeeping list is four, and stretching both to the taller of the two
+     leaves a pane of empty cream under the shorter one. */
+  @media (min-width:900px){
+    .dash-2col{grid-template-columns:1.25fr 1fr;align-items:start;}
+    /* An office account is not given the housekeeping pane, and a lone log in
+       a 1.25fr column leaves half the row empty with nothing to explain it.
+       When the second pane is hidden the row is one column. */
+    .dash-2col:has(> .pane[hidden]){grid-template-columns:1fr;max-width:820px;}
+  }
+  .pane{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:17px 19px;}
+  .pane h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.03rem;color:var(--brand-900);}
+  .pane .why{font-size:.77rem;color:var(--muted);line-height:1.55;margin:3px 0 11px;}
+  .logrow{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);align-items:baseline;}
   .logrow:last-child{border-bottom:none;}
-  .logrow .at{color:var(--muted);font-size:.76rem;width:104px;flex-shrink:0;font-variant-numeric:tabular-nums;}
-  .logrow .wt{font-size:.83rem;flex:1;min-width:0;}
+  .logrow .at{color:var(--muted);font-size:.75rem;width:96px;flex-shrink:0;font-variant-numeric:tabular-nums;}
+  .logrow .wt{font-size:.82rem;flex:1;min-width:0;}
   .logrow .wt b{color:var(--brand-900);}
-  .logrow .wh{font-size:.76rem;color:var(--muted);white-space:nowrap;}
+  .logrow .wh{font-size:.75rem;color:var(--muted);white-space:nowrap;}
   .logauto{
-    display:flex;align-items:center;gap:9px;margin-top:13px;padding-top:12px;
-    border-top:1px solid var(--line);font-size:.78rem;color:var(--muted);
+    display:flex;align-items:center;gap:8px;margin-top:13px;padding-top:12px;
+    border-top:1px solid var(--line);font-size:.77rem;color:var(--muted);
   }
   .logauto svg{width:14px;height:14px;flex-shrink:0;}
-  .hkrow{display:flex;align-items:flex-start;gap:9px;font-size:.82rem;line-height:1.5;margin-bottom:11px;}
+  .hkrow{display:flex;align-items:flex-start;gap:10px;font-size:.81rem;line-height:1.5;margin-bottom:11px;}
   .hkdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;background:var(--success);}
   .hkdot.bad{background:var(--danger);}
-  .hknote{margin-top:15px;padding-top:13px;border-top:1px solid var(--line);font-size:.76rem;color:var(--muted);line-height:1.6;}
+  .hkrow a{color:var(--brand-700);font-weight:700;}
+  .hknote{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:.75rem;color:var(--muted);line-height:1.6;}
   .dash-foot{
-    display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
-    margin-top:26px;font-size:.8rem;
+    display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+    margin-top:22px;font-size:.8rem;
   }
   .dash-skel{color:var(--muted);font-size:.86rem;padding:18px 2px;}
+
+  .whatfor{
+    border:1px solid var(--line);border-radius:12px;background:var(--card);
+    margin-top:4px;max-width:860px;
+  }
+  .whatfor summary{
+    cursor:pointer;padding:13px 17px;font-size:.85rem;font-weight:700;
+    color:var(--brand-800);list-style:none;display:flex;align-items:center;gap:9px;
+  }
+  .whatfor summary::-webkit-details-marker{display:none;}
+  .whatfor summary::before{
+    content:"";width:0;height:0;flex-shrink:0;
+    border-left:5px solid var(--gold);border-top:4px solid transparent;
+    border-bottom:4px solid transparent;transition:transform .15s;
+  }
+  .whatfor[open] summary::before{transform:rotate(90deg);}
+  .whatfor summary:hover{color:var(--brand-900);}
+  .whatfor dl{padding:0 17px 15px;margin:0;}
+  .whatfor dt{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:.9rem;
+    color:var(--brand-900);margin-top:11px;
+  }
+  .whatfor dd{margin:2px 0 0;font-size:.81rem;color:var(--muted);line-height:1.55;}
 </style>
 
 </head>
@@ -549,71 +672,106 @@
          flight, so the page never flashes an empty dashboard that looks
          like a quiet day. ============================================ -->
     <div class="card dash" id="view-list" hidden>
+      <div class="dash-app">
 
-      <div class="dash-top">
-        <div class="dash-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/></svg>
-        </div>
-        <div class="dash-who">
-          <strong>Masjid Administration</strong>
-          <span>Taiyabah Masjid &middot; Bolton</span>
-        </div>
-        <div class="dash-top-right">
-          <span class="dash-me">
-            <b id="list-name">&mdash;</b>
-            <i id="list-email">&mdash;</i>
-          </span>
-          <span id="list-roles" class="dash-top-right" style="padding:0;"></span>
-          <button type="button" class="dash-out" id="list-signout">Sign out</button>
-        </div>
-      </div>
-
-      <div class="dash-body">
-        <div class="err" id="dash-error" hidden></div>
-
-        <div class="dash-h">
-          <h2>Needs you</h2>
-          <span class="when" id="dash-when">&nbsp;</span>
-        </div>
-        <div id="dash-needs"><p class="dash-skel">Looking&hellip;</p></div>
-
-        <div class="tiles" id="dash-tiles"></div>
-
-        <div class="dash-lab">Everywhere you can go</div>
-        <div class="areas" id="dash-areas"></div>
-
-        <div class="dash-2col">
-          <div class="pane">
-            <div class="dash-h" style="margin-bottom:0;">
-              <h3>Daily log</h3>
-              <span class="when">Last 7 days</span>
-            </div>
-            <p class="why">What people did, and what the public sent in. Automatic jobs are counted at the bottom rather than listed.</p>
-            <div id="dash-log"><p class="dash-skel">Looking&hellip;</p></div>
-            <div class="logauto" id="dash-auto" hidden>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 1.5"/><circle cx="12" cy="12" r="9"/></svg>
-              <span id="dash-auto-t"></span>
-            </div>
+        <!-- THE RAIL. Every area this account can open, grouped, always in the
+             same place and the same order. Filled in by drawAreas(); the
+             groups with nothing in them are not drawn at all, so an office
+             account sees a shorter rail rather than empty headings. -->
+        <aside class="rail">
+          <div class="rail-top">
+            <span class="rail-mark" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10.5V20h12v-9.5"/></svg>
+            </span>
+            <span class="rt">
+              <strong>Masjid Administration</strong>
+              <span>Taiyabah Masjid</span>
+            </span>
           </div>
 
-          <div class="pane" id="dash-house-pane">
-            <h3>Looking after itself</h3>
-            <div id="dash-house"><p class="dash-skel">Looking&hellip;</p></div>
-            <p class="hknote">Nothing is kept longer than the website promises. Hall
-              requests go at six months, nik&#257;&#7717; and classes at twelve,
-              volunteers at twelve, Gift Aid at six years.</p>
+          <nav id="dash-areas" aria-label="Everywhere you can go">
+            <p class="dash-skel" style="padding:0 18px;">Looking&hellip;</p>
+          </nav>
+
+          <p class="rail-foot">Every area asks for your authenticator code when
+            you open it, whatever this page says.<br>
+            <a href="../index.html">Back to the website</a></p>
+        </aside>
+
+        <main class="work">
+          <div class="work-top">
+            <span class="when" id="dash-when">&nbsp;</span>
+            <span class="dash-who">
+              <span class="dash-av" id="list-initials" aria-hidden="true"></span>
+              <span class="dash-me">
+                <b id="list-name">&mdash;</b>
+                <i id="list-email">&mdash;</i>
+              </span>
+              <span id="list-roles"></span>
+              <button type="button" class="dash-out" id="list-signout">Sign out</button>
+            </span>
           </div>
-        </div>
 
-        <p class="note" style="margin-top:22px;">
-          Nothing on this page can read or change anything on its own &mdash; each
-          area checks who you are again, and asks for your authenticator code,
-          when you open it.
-        </p>
+          <div class="dash-body">
+            <div class="err" id="dash-error" hidden></div>
 
-        <div class="dash-foot">
-          <a class="btn btn-ghost" href="../index.html">Back to the website</a>
-        </div>
+            <section class="dash-sec">
+              <div class="dash-h"><h2>Needs you</h2><span class="rule"></span></div>
+              <div id="dash-needs"><p class="dash-skel">Looking&hellip;</p></div>
+            </section>
+
+            <section class="dash-sec">
+              <div class="dash-h"><h2>Where the masjid stands</h2><span class="rule"></span></div>
+              <div class="tiles" id="dash-tiles"></div>
+            </section>
+
+            <section class="dash-sec">
+              <div class="dash-h"><h2>What has been happening</h2><span class="rule"></span></div>
+              <div class="dash-2col">
+                <div class="pane">
+                  <h3>Daily log</h3>
+                  <p class="why">What people did, and what the public sent in. Automatic
+                    jobs are counted at the bottom rather than listed.</p>
+                  <div id="dash-log"><p class="dash-skel">Looking&hellip;</p></div>
+                  <div class="logauto" id="dash-auto" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12V7M12 12l3.5 2.2"/></svg>
+                    <span id="dash-auto-t"></span>
+                  </div>
+                </div>
+
+                <div class="pane" id="dash-house-pane">
+                  <h3>Looking after itself</h3>
+                  <div id="dash-house"><p class="dash-skel">Looking&hellip;</p></div>
+                  <p class="hknote">Nothing is kept longer than the website promises. Hall
+                    requests go at six months, nik&#257;&#7717; and classes at twelve,
+                    volunteers at twelve, Gift Aid at six years.</p>
+                </div>
+              </div>
+            </section>
+
+            <!-- WHERE THE SENTENCES WENT.
+                 Each area used to be a card carrying a line about what you can
+                 DO there, which is the difference between a dashboard and a
+                 list of links. A nav row cannot hold that sentence, so moving
+                 the areas into the rail would have quietly thrown it away —
+                 and at handover it is the most useful text on the page,
+                 because the person reading it has never seen any of this.
+
+                 So it lives here, closed. Out of the way of somebody who opens
+                 this every morning, one click from somebody who opened it for
+                 the first time today, and real text rather than a hover hint
+                 that a touchscreen never shows. -->
+            <details class="whatfor">
+              <summary>What each area is for</summary>
+              <dl id="dash-whatfor"></dl>
+            </details>
+
+            <p class="note">Nothing on this page can read or change anything on its
+              own &mdash; each area checks who you are again, and asks for your
+              authenticator code, when you open it.</p>
+          </div>
+        </main>
+
       </div>
     </div>
 

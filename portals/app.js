@@ -278,62 +278,115 @@
            '<div class="s">' + esc(s) + "</div></div>";
   }
 
-  // Each card says what you can DO there, not only what is in it. That is the
-  // difference between a dashboard and a list of links.
+  /* THE AREAS, AS A RAIL.
+     They used to be seven cards in a grid, each carrying a sentence about
+     what you can do there. A grid is something you re-read every visit; a
+     list in a fixed position is something you learn once. Grouped, because
+     seven undifferentiated rows would only be a shorter version of the same
+     problem.
+
+     WHAT WAS LOST, and it is worth naming: the "what you can do" sentence no
+     longer fits on a nav row. It is carried as the row's title, and the
+     COUNTS stay visible underneath the name — a row that says only "Hall
+     Hire" is a menu, and this is supposed to be a dashboard.
+
+     Groups with no members are not drawn at all, so an office account gets a
+     shorter rail rather than empty headings. */
+  var GROUPS = [
+    { t: "What people have asked for", keys: ["venue", "courses", "volunteers"] },
+    { t: "Money",                      keys: ["giftaid"] },
+    { t: "The masjid's own pages",     keys: ["madrasah", "newbuild", "access"] }
+  ];
+
+  //  Written once, used twice: on the rail row as its title, and in the
+  //  "What each area is for" list. Two copies of the same sentence in two
+  //  places is two things to keep in step, and only one of them ever gets
+  //  updated.
+  var SAYS = {};
+  function remember(k, n, d) { SAYS[k] = { n: n, d: d }; return d; }
+
   function drawAreas(areas, roles, house) {
     var box = el("dash-areas");
     if (!box) return;
-    var out = [];
     var has = function (r) { return roles.indexOf(r) !== -1; };
+    var made = {};
+    SAYS = {};
 
     if (areas.venue) {
       var v = areas.venue;
-      out.push(area("../venue/", ICON.hall, "Hall Hire & Nikāḥ",
+      made.venue = area("../venue/", ICON.hall, "Hall Hire & Nikāḥ",
         v.new > 0 ? chip(v.new + " new", "hot") : "",
         [["upcoming", v.upcoming], ["holding", v.holding], ["balance due", v.balance]],
-        "Confirm, decline, take a cash deposit, cancel and refund"));
+        remember("venue", "Hall Hire & Nikāḥ",
+          "Confirm, decline, take a cash deposit, cancel and refund"));
     }
     if (areas.courses) {
       var c = areas.courses;
-      out.push(area("../courses/", ICON.book, "Adult classes",
+      made.courses = area("../courses/", ICON.book, "Adult classes",
         c.waiting > 0 ? chip(c.waiting + " waiting") : "",
-        [["open", c.open], ["signed up", c.signed], ["waiting", c.waiting]],
-        "Offer a place from the waiting list, record who came"));
+        [["open", c.open], ["signed up", c.signed]],
+        remember("courses", "Adult classes",
+          "Offer a place from the waiting list, record who came"));
     }
     if (areas.giftaid) {
       var g = areas.giftaid;
-      out.push(area("../giftaid/", ICON.heart, "Gift Aid",
+      made.giftaid = area("../giftaid/", ICON.heart, "Gift Aid",
         g.to_claim > 0 ? chip(money(g.worth_p) + " to claim", "good") : "",
         [["declarations", g.to_claim], ["incomplete", g.incomplete]],
-        "Copy the rows for HMRC, then mark them claimed"));
+        remember("giftaid", "Gift Aid",
+          "Copy the rows for HMRC, then mark them claimed"));
     }
     if (areas.volunteers) {
       var f = areas.volunteers;
-      out.push(area("../volunteers/", ICON.basket, "Food Bank volunteers",
+      made.volunteers = area("../volunteers/", ICON.basket, "Food Bank volunteers",
         f.to_ring > 0 ? chip(f.to_ring + " to ring") : "",
         [["willing", f.willing], ["free Sundays", f.sundays]],
-        "Mark rung, helping or withdrawn; download the list"));
+        remember("volunteers", "Food Bank volunteers",
+          "Mark rung, helping or withdrawn; download the list"));
     }
     if (has("admin") || has("teacher")) {
-      out.push(area("../portal/", ICON.people, "Madrasah portal", "", [],
-        "Pupils, classes and staff — the most tightly held area on the site"));
+      made.madrasah = area("../portal/", ICON.people, "Madrasah portal", "", [],
+        remember("madrasah", "Madrasah portal",
+          "Pupils, classes and staff — the most tightly held area on the site"));
     }
-    // Added once /access/ existed. It deliberately had no card before that:
-    // a card that goes nowhere reads as a broken site.
-    // The one page on this website that goes out of date on its own. Added
-    // with migration 028, which moved the appeal figure out of the template
-    // and into something a person can edit.
+    // The one page on this website that goes out of date on its own.
     if (has("admin")) {
-      out.push(area("../newbuild/", ICON.crane, "The new build page", "", [],
-        "Change the appeal figure, what it pays for, and the timeline of phases"));
+      made.newbuild = area("../newbuild/", ICON.crane, "The new build page", "", [],
+        remember("newbuild", "The new build page",
+          "Change the appeal figure, what it pays for, and the timeline of phases"));
     }
+    // It deliberately had no card before /access/ existed: a link that goes
+    // nowhere reads as a broken site.
     if (has("admin") && house) {
-      out.push(area("../access/", ICON.lock, "Who can get in",
+      made.access = area("../access/", ICON.lock, "Who can get in",
         house.no_2fa > 0 ? chip(house.no_2fa + " without 2FA", "hot") : "",
         [["accounts", house.accounts], ["administrators", house.admins]],
-        "Invite somebody, change what they can do, suspend an account"));
+        remember("access", "Who can get in",
+          "Invite somebody, change what they can do, suspend an account"));
     }
+
+    var out = [];
+    GROUPS.forEach(function (g) {
+      var rows = g.keys.map(function (k) { return made[k]; })
+                       .filter(function (r) { return !!r; });
+      if (!rows.length) return;
+      out.push('<div class="rail-lab">' + esc(g.t) + "</div>" +
+               '<div class="rail-group">' + rows.join("") + "</div>");
+    });
     box.innerHTML = out.join("");
+
+    //  And the sentences, in the one place on the page that can hold them.
+    //  Only for the areas THIS account can actually reach — a list explaining
+    //  Gift Aid to somebody who cannot open it is a description of a locked
+    //  door.
+    var what = el("dash-whatfor");
+    if (what) {
+      what.innerHTML = GROUPS.reduce(function (acc, g) {
+        return acc.concat(g.keys.filter(function (k) { return !!made[k]; }));
+      }, []).map(function (k) {
+        return "<dt>" + esc(SAYS[k].n) + "</dt><dd>" + esc(SAYS[k].d) + "</dd>";
+      }).join("");
+    }
   }
 
   function chip(text, cls) {
@@ -341,15 +394,23 @@
   }
 
   function area(href, icon, name, chipHtml, nums, can) {
+    //  Joined with a middle dot rather than laid out in columns: at 254px
+    //  wide there is no room for columns, and "0 upcoming · 0 holding" reads
+    //  in one glance where three aligned cells do not.
     var numHtml = nums.filter(function (n) {
       return n[1] !== null && n[1] !== undefined;
     }).map(function (n) {
-      return "<span><b>" + esc(n[1]) + "</b> " + esc(n[0]) + "</span>";
-    }).join("");
-    return '<a class="area" href="' + esc(href) + '">' +
-      '<span class="h">' + icon + '<span class="n">' + esc(name) + "</span>" + chipHtml + "</span>" +
-      (numHtml ? '<span class="nums">' + numHtml + "</span>" : "") +
-      '<span class="can">' + esc(can) + "</span></a>";
+      return "<b>" + esc(n[1]) + "</b> " + esc(n[0]);
+    }).join(" · ");
+    //  `can` becomes the title. It was a visible sentence on the old cards and
+    //  a nav row cannot carry it — a hover hint is a poorer place for it, and
+    //  that is the price of the rail rather than something to pretend away.
+    return '<a class="area" href="' + esc(href) + '" title="' + esc(can) + '">' +
+      '<span class="ic">' + icon + "</span>" +
+      '<span class="bd">' +
+        '<span class="n">' + esc(name) + chipHtml + "</span>" +
+        (numHtml ? '<span class="nums">' + numHtml + "</span>" : "") +
+      "</span></a>";
   }
 
   function drawLog(log, autoCount) {
@@ -437,8 +498,17 @@
   }
 
   function renderList(identity) {
-    el("list-name").textContent  = nameOf(identity);
+    var who = nameOf(identity);
+    el("list-name").textContent  = who;
     el("list-email").textContent = identity.user.email;
+
+    //  Initials, not an uploaded photo: there is nowhere to upload one and a
+    //  grey silhouette says nothing at all.
+    var ini = el("list-initials");
+    if (ini) {
+      ini.textContent = String(who).trim().split(/\s+/)
+        .slice(0, 2).map(function (w) { return w.charAt(0).toUpperCase(); }).join("");
+    }
 
     var chips = el("list-roles");
     chips.innerHTML = "";
