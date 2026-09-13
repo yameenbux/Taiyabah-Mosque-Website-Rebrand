@@ -180,6 +180,22 @@ def text(pg, sel):
     return re.sub(r"\s+", " ", node.inner_text()) if node else ""
 
 
+def raw(pg, sel):
+    """textContent, not innerText.
+
+    innerText is what is RENDERED, so it returns "" for anything inside a
+    closed <details> — the descriptions are there in the DOM and it reports an
+    empty string. That is the fourth time this project has been caught by
+    innerText doing something reasonable and unexpected; the other three were
+    CSS text-transform turning "funded" into "FUNDED".
+
+    Use this for content that is present but not on screen; use text() for
+    anything where being VISIBLE is the point.
+    """
+    node = pg.query_selector(sel)
+    return re.sub(r"\s+", " ", node.text_content()) if node else ""
+
+
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
 
@@ -229,9 +245,31 @@ with sync_playwright() as p:
     for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah",
                  "Who can get in"]:
         check(name in joined, "%r is missing from the areas" % name)
-    check("cash deposit" in joined,
-          "the hall card does not say what you can do there — that is the "
-          "difference between a dashboard and a list of links")
+    #  WHAT YOU CAN DO THERE, which is the difference between a dashboard and a
+    #  list of links. Moving the areas into a rail took the sentence off the
+    #  card, so it has to be somewhere else — and "somewhere else" must not
+    #  mean a hover title only, which a touchscreen never shows.
+    check("cash deposit" in raw(pg, "#dash-whatfor"),
+          "the page no longer says what you can DO in an area. That sentence is "
+          "the most useful text here at handover, and it is the first thing a "
+          "navigation rail quietly throws away: %r" % raw(pg, "#dash-whatfor"))
+    check(pg.query_selector("details.whatfor") is not None,
+          "the descriptions are not behind a details element, so they are "
+          "either missing or permanently in the way")
+    #  And on the row itself, for somebody with a mouse who does not want to
+    #  scroll to the bottom.
+    titles = " ".join(pg.eval_on_selector_all(
+        ".area", "els => els.map(e => e.getAttribute('title') || '')"))
+    check("cash deposit" in titles,
+          "the rail rows carry no description at all: %r" % titles[:200])
+    #  ONE source. Two copies of the same sentence is two things to keep in
+    #  step and only one of them ever gets updated.
+    check(raw(pg, "#dash-whatfor").count("cash deposit") == 1,
+          "the description is listed more than once")
+    #  Closed by default. Open, it is the wall of text the rail was supposed to
+    #  get rid of.
+    check(pg.eval_on_selector("details.whatfor", "e => e.open") is False,
+          "the descriptions are open by default, which puts the wall back")
     check("£312" in joined, "the Gift Aid card does not show what is worth claiming")
     #  lowercased: the chip is uppercased by CSS and innerText returns the
     #  transformed text. Third time today.
