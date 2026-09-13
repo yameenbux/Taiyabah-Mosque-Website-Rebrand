@@ -507,6 +507,11 @@
 .cf-row label.inv-role{display:flex;font-size:.88rem;letter-spacing:0;text-transform:none;font-weight:400;color:var(--ink);margin-bottom:0;}
 .cf-row label.inv-role input{width:16px;}
 .field-hint{font-size:.76rem;color:var(--muted);margin-top:5px;line-height:1.5;}
+/* A read-only field has to LOOK read-only. One that looks editable and silently
+   refuses what you type is worse than not showing it at all. */
+.cf-row input[readonly]{
+  background:#EAE4D6;color:var(--muted);cursor:default;border-style:dashed;
+}
 .ok-note{
   background:rgba(63,122,70,.11);border:1px solid rgba(63,122,70,.32);
   color:#2C5E33;border-radius:10px;padding:10px 13px;font-size:.85rem;
@@ -866,11 +871,23 @@
           <div class="pp-box">
             <h3>Contact details</h3>
             <p class="pp-why">The masjid needs a full name, a contact number and an email
-              address for everybody with a staff account. The email address is the
-              account itself and cannot be changed here.</p>
+              address for everybody with a staff account.</p>
             <div class="cf-row">
               <label for="pp-edit-name">Full name</label>
               <input type="text" id="pp-edit-name" maxlength="80" autocomplete="off">
+            </div>
+            <!-- Shown here, where somebody looking for it will look, even
+                 though it cannot be edited. It was on the page already — in
+                 the Access box and under the heading — and that was not the
+                 same thing: a field you expect and cannot find reads as
+                 missing, whatever else is on the screen. -->
+            <div class="cf-row">
+              <label for="pp-edit-email">Email address</label>
+              <input type="email" id="pp-edit-email" readonly tabindex="-1">
+              <div class="field-hint">This <em>is</em> the account &mdash; it is what they
+                sign in with and what an invitation is matched against. Changing it here
+                would leave the sign-in and the record pointing at different addresses.
+                To move somebody to a new address, invite them at it and suspend this one.</div>
             </div>
             <div class="cf-row">
               <label for="pp-edit-phone">Contact number</label>
@@ -910,6 +927,52 @@
             <p class="pp-why">Two-step is not optional for a staff account. One account
               without an authenticator blocks every future change to the database.</p>
             <div class="pp-facts" id="pp-signin"></div>
+          </div>
+
+          <!-- PASSWORD.
+
+               An administrator can SEND a reset. An administrator can never
+               SET one. Every system this masjid has used puts a password box
+               on somebody else's record and it looks like a convenience — but
+               a password an administrator chose is a password an administrator
+               knows, and from then on every sign-in by that person is
+               deniable. On a site that will hold children's records that is
+               not a theoretical objection. So: a link, to their own address,
+               and nobody else ever sees what they choose. -->
+          <div class="pp-box">
+            <h3>Password</h3>
+            <p class="pp-why" id="pp-pw-why"></p>
+
+            <div id="pp-pw-mine" hidden>
+              <div class="cf-row">
+                <label for="pp-pw-new">New password</label>
+                <input type="password" id="pp-pw-new" autocomplete="new-password" maxlength="72">
+                <div class="field-hint">At least twelve characters. Length beats
+                  punctuation &mdash; three or four unrelated words you will actually
+                  remember is stronger than one word with symbols in it.</div>
+              </div>
+              <div class="cf-row">
+                <label for="pp-pw-again">Type it again</label>
+                <input type="password" id="pp-pw-again" autocomplete="new-password" maxlength="72">
+              </div>
+              <div class="pp-acts">
+                <button type="button" class="go" id="pp-pw-save">Change my password</button>
+              </div>
+            </div>
+
+            <div id="pp-pw-theirs" hidden>
+              <div class="pp-acts">
+                <button type="button" id="pp-pw-send">Send them a reset link</button>
+              </div>
+              <div class="inv-link" id="pp-pw-result" hidden>
+                <h4 id="pp-pw-h">Send them this link</h4>
+                <p id="pp-pw-p"></p>
+                <div class="inv-url" id="pp-pw-url"></div>
+                <div class="ga-acts">
+                  <button type="button" class="btn" id="pp-pw-copy">Copy the link</button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="pp-box">

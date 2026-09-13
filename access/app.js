@@ -290,8 +290,23 @@
     }
 
     /* ---- one person ------------------------------------------------------ */
+    /* Opening and closing a person's page is where everything transient gets
+       cleared — NOT in renderPerson(). renderPerson runs again after every
+       save, because load() redraws with the new answer, and the first version
+       cleared the messages and hid the reset link in the same breath. The
+       result was a "Contact details saved" that appeared and vanished in the
+       same frame, and a reset link that flashed and disappeared before it
+       could be copied. Drawing and resetting are two jobs. */
+    function freshPage() {
+      say("pp-error", ""); say("pp-ok", "");
+      var r = el("pp-pw-result"); if (r) r.hidden = true;
+      var a = el("pp-pw-new"),  b = el("pp-pw-again");
+      if (a) a.value = ""; if (b) b.value = "";
+    }
+
     function showList() {
       openId = null;
+      freshPage();
       el("acc-list-view").hidden = false;
       el("acc-person-view").hidden = true;
       window.scrollTo(0, 0);
@@ -301,6 +316,7 @@
       var p = person(id);
       if (!p) return;
       openId = id;
+      freshPage();
       el("acc-list-view").hidden = true;
       el("acc-person-view").hidden = false;
       renderPerson();
@@ -313,8 +329,6 @@
       // suspended-then-role-stripped account drops out of the staff list. Going
       // back to the list beats rendering a page of blanks.
       if (!p) { showList(); return; }
-
-      say("pp-error", ""); say("pp-ok", "");
 
       var roles = (p.roles || []).filter(function (r) { return r !== "parent"; });
       var needs = p.needs || [];
@@ -332,6 +346,20 @@
 
       el("pp-edit-name").value  = p.name || "";
       el("pp-edit-phone").value = p.phone || "";
+      el("pp-edit-email").value = p.email || "";
+
+      /* Your own password you change. Somebody else's you cannot touch — you
+         can only send them a link to change it themselves. */
+      el("pp-pw-mine").hidden   = !p.is_me;
+      el("pp-pw-theirs").hidden = !!p.is_me;
+      el("pp-pw-why").innerHTML = p.is_me
+        ? "Changing it here signs nothing else out. Your authenticator is " +
+          "separate and is not affected."
+        : "You cannot see or set " +
+          (p.name ? esc(p.name) + "&rsquo;s" : "their") + " password, and " +
+          "neither can anybody else at the masjid. Sending a link lets them " +
+          "choose a new one themselves &mdash; which is the only version of this " +
+          "that leaves their sign-ins meaning anything.";
 
       var gap = el("pp-contact-gap");
       if (needs.indexOf("phone") !== -1) {
@@ -667,6 +695,118 @@
         }).finally(function () {
           btn.disabled = false; btn.textContent = "Save what they can do";
         });
+      });
+
+      /* CHANGING YOUR OWN PASSWORD.
+         Done by the Supabase client against the session that is already
+         signed in and already at aal2. No Edge Function, no service key, and
+         nothing about it passes through the masjid's own code — which is the
+         point: the fewer places a password is handled, the fewer places it can
+         be logged by accident. */
+      el("pp-pw-save").addEventListener("click", function () {
+        var a = el("pp-pw-new").value || "";
+        var b = el("pp-pw-again").value || "";
+        say("pp-error", ""); say("pp-ok", "");
+
+        if (a.length < 12) {
+          say("pp-error", "Use at least twelve characters. Three or four " +
+              "unrelated words is easier to remember and harder to guess than " +
+              "one word with symbols in it.", true);
+          return;
+        }
+        if (a !== b) {
+          say("pp-error", "The two do not match.", true); return;
+        }
+
+        var btn = el("pp-pw-save");
+        btn.disabled = true; btn.textContent = "Changing…";
+        sb.auth.updateUser({ password: a }).then(function (res) {
+          if (res.error) throw res.error;
+          el("pp-pw-new").value = ""; el("pp-pw-again").value = "";
+          say("pp-ok", "Your password has been changed. Your authenticator is " +
+              "unaffected — you will still be asked for a code next time.");
+        }).catch(function (err) {
+          say("pp-error", err.message || "That did not work.", true);
+        }).finally(function () {
+          btn.disabled = false; btn.textContent = "Change my password";
+        });
+      });
+
+      /* SENDING SOMEBODY ELSE A RESET.
+         The Edge Function generates a recovery link with the service key,
+         records the act against the administrator who did it, and asks notify
+         to email it. The link comes back either way, for the same reason the
+         invitation's does: a reset that silently fails to arrive is worse than
+         one that was never offered. */
+      el("pp-pw-send").addEventListener("click", function () {
+        var p = person(openId);
+        if (!p) return;
+        say("pp-error", ""); say("pp-ok", "");
+
+        if (!window.confirm(
+              "Send " + (p.name || p.email) + " a link to set a new password?\n\n" +
+              "It goes to " + p.email + ". Their current password keeps working " +
+              "until they use it.")) return;
+
+        var btn = el("pp-pw-send");
+        btn.disabled = true; btn.textContent = "Sending…";
+
+        sb.auth.getSession().then(function (s) {
+          var token = s.data && s.data.session && s.data.session.access_token;
+          if (!token) throw new Error("Your session has expired. Sign in again.");
+          return fetch(apiUrl + "/functions/v1/invite-user", {
+            method: "POST",
+            headers: { "content-type": "application/json",
+                       apikey: cfg.SUPABASE_ANON_KEY,
+                       Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              action: "reset", email: p.email, full_name: p.name || "",
+              send_email: true
+            })
+          });
+        }).then(function (r) {
+          return r.text().then(function (t) {
+            var body; try { body = JSON.parse(t); } catch (e) { body = { error: t }; }
+            return { ok: r.ok, body: body };
+          });
+        }).then(function (res) {
+          if (!res.ok) throw new Error(res.body.error || "That did not work.");
+          var b = res.body;
+          el("pp-pw-url").textContent = b.link;
+          el("pp-pw-result").hidden = false;
+          if (b.emailed) {
+            el("pp-pw-h").textContent = "Emailed to " + b.email;
+            el("pp-pw-p").innerHTML =
+              "They have been sent a link to choose a new password. The same " +
+              "link is below in case they say it has not arrived &mdash; it works " +
+              "once, and stops working after 24 hours.";
+            say("pp-ok", "Reset link emailed to " + b.email + ".");
+          } else {
+            el("pp-pw-h").textContent = "Send them this link";
+            el("pp-pw-p").innerHTML =
+              "<strong>Nothing was emailed" +
+              (b.email_note ? " &mdash; " + esc(b.email_note) : "") + ".</strong> " +
+              "Give them this instead. It works once, and stops working after " +
+              "24 hours. Do not post it anywhere others can read.";
+            say("pp-ok", "Reset link made, but not emailed. It is below.");
+          }
+          return load();
+        }).catch(function (err) {
+          say("pp-error", err.message || "That did not work.", true);
+        }).finally(function () {
+          btn.disabled = false; btn.textContent = "Send them a reset link";
+        });
+      });
+
+      el("pp-pw-copy").addEventListener("click", function () {
+        var text = el("pp-pw-url").textContent;
+        var done = function () {
+          el("pp-pw-copy").textContent = "Copied";
+          setTimeout(function () { el("pp-pw-copy").textContent = "Copy the link"; }, 2000);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, function () { pick(text, done); });
+        } else { pick(text, done); }
       });
 
       el("pp-access-acts").addEventListener("click", function (e) {
