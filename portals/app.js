@@ -210,6 +210,7 @@
     hall:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M10 21v-5h4v5"/></svg>',
     book:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
     people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.7 14.3c2.7.3 4.8 2.3 4.8 5.2"/></svg>',
+    lock:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',
     tick:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
   };
 
@@ -278,7 +279,7 @@
 
   // Each card says what you can DO there, not only what is in it. That is the
   // difference between a dashboard and a list of links.
-  function drawAreas(areas, roles) {
+  function drawAreas(areas, roles, house) {
     var box = el("dash-areas");
     if (!box) return;
     var out = [];
@@ -315,6 +316,14 @@
     if (has("admin") || has("teacher")) {
       out.push(area("../portal/", ICON.people, "Madrasah portal", "", [],
         "Pupils, classes and staff — the most tightly held area on the site"));
+    }
+    // Added once /access/ existed. It deliberately had no card before that:
+    // a card that goes nowhere reads as a broken site.
+    if (has("admin") && house) {
+      out.push(area("../access/", ICON.lock, "Who can get in",
+        house.no_2fa > 0 ? chip(house.no_2fa + " without 2FA", "hot") : "",
+        [["accounts", house.accounts], ["administrators", house.admins]],
+        "Invite somebody, change what they can do, suspend an account"));
     }
     box.innerHTML = out.join("");
   }
@@ -387,7 +396,8 @@
     if (h.no_2fa > 0) {
       rows.push(row(true, "<b>" + h.no_2fa + " staff account" +
         (h.no_2fa === 1 ? " has" : "s have") + " no authenticator.</b> " +
-        "Two-step cannot be re-enforced until that is sorted."));
+        "Two-step cannot be re-enforced until that is sorted. " +
+        '<a href="../access/">See who</a>'));
     } else {
       rows.push(row(false, "Every staff account has an authenticator"));
     }
@@ -413,7 +423,7 @@
     }
     drawNeeds(d.needs);
     drawTiles(d.estate);
-    drawAreas(d.areas || {}, identity.roles);
+    drawAreas(d.areas || {}, identity.roles, d.housekeeping);
     drawLog(d.log, Number(d.auto_count || 0));
     drawHousekeeping(d.housekeeping);
   }
@@ -441,6 +451,17 @@
     // ONE call. If it fails the dashboard is replaced by the reason, not
     // left half-drawn above a quiet error — a page showing five panels and
     // one silent blank is worse than a page that says it could not load.
+    // If somebody was invited and has just completed two-step, this is where
+    // the roles they were promised actually arrive. Deliberately fired and
+    // forgotten: a failure here must not stop the dashboard drawing.
+    sb.rpc("claim_pending_access").then(function (res) {
+      if (res && res.data && res.data.claimed) {
+        // They now hold roles they did not hold a second ago, so the identity
+        // in hand is stale and the dashboard would draw the wrong areas.
+        window.location.reload();
+      }
+    }).catch(function () { /* nothing waiting, or not at aal2 yet */ });
+
     sb.rpc("admin_dashboard").then(function (res) {
       if (res.error) throw res.error;
       var d = res.data || {};
@@ -458,7 +479,7 @@
       // where they were going.
       drawNeeds([]);
       el("dash-tiles").innerHTML = "";
-      drawAreas({ venue: {}, volunteers: {} }, identity.roles);
+      drawAreas({ venue: {}, volunteers: {} }, identity.roles, null);
       el("dash-log").innerHTML = '<p class="dash-skel">Not available just now.</p>';
       drawHousekeeping(null);
     });
