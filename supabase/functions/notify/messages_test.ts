@@ -479,3 +479,40 @@ Deno.test("CONTROL — these assertions bite", () => {
   const textWithoutLink = m.text.split(INV.link).join("#");
   assert(textWithoutLink !== m.text, "the control did not change the plain text");
 });
+
+/* ===========================================================================
+   A RESET IS NOT AN INVITATION
+   =========================================================================== */
+Deno.test("a reset does not claim somebody has been given access", () => {
+  const m = staffInviteMessage({ ...INV, existing: true, reset: true });
+  assert(!m.html.includes("has given your existing account access"),
+    "a plain password reset tells the person they have been given access they already had");
+  assert(!m.text.includes("has given your existing account access"));
+  assertStringIncludes(m.html.toLowerCase(), "set a new password");
+  assertStringIncludes(m.subject.toLowerCase(), "password");
+});
+
+Deno.test("a reset says nobody at the masjid can see the password", () => {
+  const m = staffInviteMessage({ ...INV, existing: true, reset: true });
+  // The sentence that stops somebody ringing the office to ask what their
+  // password is, and stops an administrator feeling able to answer.
+  assertStringIncludes(m.html.toLowerCase(), "nobody at the masjid can see your password");
+  assertStringIncludes(m.text.toLowerCase(), "nobody can see it");
+});
+
+Deno.test("a reset does not list what they can do", () => {
+  // A reset is about one thing. Listing somebody's roles in it invites the
+  // reading that their access has changed, which it has not.
+  const m = staffInviteMessage({ ...INV, existing: true, reset: true });
+  assert(!m.html.includes("You will be able to see"),
+    "the reset email lists roles, implying access has changed");
+});
+
+Deno.test("CONTROL — the reset wording really is different", () => {
+  const invite = staffInviteMessage({ ...INV, existing: true, reset: false });
+  const reset  = staffInviteMessage({ ...INV, existing: true, reset: true });
+  assert(invite.html !== reset.html, "reset and invitation render identically");
+  assert(invite.subject !== reset.subject, "reset and invitation share a subject line");
+  // And the invitation still says the thing the reset must not.
+  assertStringIncludes(invite.html, "has given your existing account access");
+});

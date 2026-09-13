@@ -488,16 +488,31 @@ export interface Invite {
   invitedBy: string;     // the administrator who created it, by name
   says: string[];        // what they will be able to do, in plain English
   existing: boolean;     // true when the address already had an account
+  reset?: boolean;       // true when this is ONLY a password reset
 }
 
-export function staffInviteMessage(i: Invite): Message {
-  const rows: [string, string][] = [
-    ["For", `<strong>${esc(i.name)}</strong>`],
-    ["Given by", esc(i.invitedBy)],
-    ["You will be able to see", esc(i.says.join(", "))],
-  ];
+/* A RESET IS NOT AN INVITATION, and saying so matters. The recovery link
+   Supabase hands back is identical either way, so it would have been easy to
+   reuse the invitation wording — but that email says somebody "has given your
+   existing account access", which for a plain reset is simply untrue. Being
+   told you have been given access you already had is the sort of small wrong
+   thing that makes a person distrust the whole message, which is exactly the
+   instinct this email needs them to keep. */
 
-  const lead = i.existing
+export function staffInviteMessage(i: Invite): Message {
+  const rows: [string, string][] = i.reset
+    ? [["For", `<strong>${esc(i.name)}</strong>`],
+       ["Sent by", esc(i.invitedBy)]]
+    : [["For", `<strong>${esc(i.name)}</strong>`],
+       ["Given by", esc(i.invitedBy)],
+       ["You will be able to see", esc(i.says.join(", "))]];
+
+  const lead = i.reset
+    ? `<strong>${esc(i.invitedBy)}</strong> at Taiyabah Masjid has sent you a ` +
+      "link to set a new password for the masjid&rsquo;s portal. Nobody at the " +
+      "masjid can see your password, and nobody has changed it &mdash; this only " +
+      "lets you choose a new one."
+    : i.existing
     ? `<strong>${esc(i.invitedBy)}</strong> at Taiyabah Masjid has given your ` +
       "existing account access to the masjid&rsquo;s portal. Use the button below " +
       "to set a new password and sign in."
@@ -512,17 +527,23 @@ export function staffInviteMessage(i: Invite): Message {
     "<strong>If you were not expecting this, do not use the link.</strong> " +
     "Ring the masjid on 01204&nbsp;535&nbsp;997 and say you received it.";
 
+  const heading = i.reset
+    ? "Set a new password"
+    : i.existing ? "Access to the masjid portal" : "An account has been set up for you";
+
   return {
-    subject: "Your Taiyabah Masjid portal account",
-    html: shell(
-      i.existing ? "Access to the masjid portal" : "An account has been set up for you",
-      lead, rows, footer,
-      { href: i.link, label: i.existing ? "Set a new password" : "Set your password" }),
-    text: plain(
-      i.existing ? "Access to the masjid portal" : "An account has been set up for you",
-      (i.existing
-        ? `${i.invitedBy} at Taiyabah Masjid has given your existing account access to the masjid portal.`
-        : `${i.invitedBy} at Taiyabah Masjid has set up an account for you on the masjid portal.`) +
+    subject: i.reset
+      ? "Set a new Taiyabah Masjid password"
+      : "Your Taiyabah Masjid portal account",
+    html: shell(heading, lead, rows, footer,
+      { href: i.link,
+        label: i.reset || i.existing ? "Set a new password" : "Set your password" }),
+    text: plain(heading,
+      (i.reset
+        ? `${i.invitedBy} at Taiyabah Masjid has sent you a link to set a new password. Nobody has changed it and nobody can see it.`
+        : i.existing
+          ? `${i.invitedBy} at Taiyabah Masjid has given your existing account access to the masjid portal.`
+          : `${i.invitedBy} at Taiyabah Masjid has set up an account for you on the masjid portal.`) +
       " Open the link below to set a password and sign in.",
       rows, footer.replace(/<br><br>/g, "\n\n"), i.link),
   };

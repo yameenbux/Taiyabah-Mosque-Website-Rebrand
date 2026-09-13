@@ -264,6 +264,10 @@ Deno.serve(async (req) => {
       name, link, invitedBy: byWhom || "An administrator",
       says: says.length ? says : ["the masjid portal"],
       existing: body.existing === true,
+      //  A reset uses the same Supabase recovery link as an invitation to an
+      //  existing account, so without this flag the person would be told they
+      //  had been "given access" they already had.
+      reset: body.reset === true,
     });
 
     const r = await send([to], m.subject, m.html, m.text);
