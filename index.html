@@ -618,16 +618,65 @@ window.TAIYABAH_PUBLIC = {
   .madrasah-hero h1{color:#F3EFE3;font-size:clamp(1.6rem,3.2vw,2.15rem);margin-bottom:9px;}
   .madrasah-hero .mh-grid{display:grid;grid-template-columns:1fr;gap:16px;}
   @media (min-width:900px){
-    .madrasah-hero .mh-grid{grid-template-columns:1.3fr 1fr 1fr;gap:18px;align-items:stretch;}
+    /* Was 1.3fr 1fr 1fr for the intro plus two facility tiles. It is now the
+       intro and one curriculum panel, so the second column is wider. */
+    .madrasah-hero .mh-grid{grid-template-columns:1.15fr 1fr;gap:22px;align-items:stretch;}
   }
+  /* --- WHAT STUDENTS LEARN, in the hero -------------------------------
+     This replaced the Whudhu Khana and Mortuary tiles on 14 September 2026.
+
+     It was drawn once as four white cards, each with a numbered arch badge
+     over a bulleted list — which was the reference sheet redrawn in the
+     masjid's colours, not a design. This is the site's own language instead:
+     the dark translucent panel the hero already used, a gold hairline rule
+     under a Fraunces heading exactly as `.subhead` does everywhere else, and
+     the label/value row that /venue/ and the hall rate card already use.
+
+     ONE PANEL, FOUR ROWS — not four boxes. A hero is wide and shallow; four
+     cards stacked in it would push the photograph off the screen, and the
+     four areas are one curriculum rather than four separate offers. */
+  .mh-curric{
+    background:rgba(28,7,19,.72);border:1px solid rgba(198,162,76,.4);
+    border-radius:var(--radius);padding:20px 22px 16px;align-self:stretch;
+  }
+  .mh-curric .mc-top{
+    display:flex;align-items:baseline;gap:13px;
+    padding-bottom:12px;margin-bottom:4px;
+    border-bottom:1px solid rgba(198,162,76,.45);
+  }
+  .mh-curric .mc-top h4{
+    font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;
+    color:#F3EFE3;margin:0;line-height:1.2;
+  }
+  .mh-curric .mc-top .mc-lab{
+    font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold-bright);white-space:nowrap;
+  }
+  /* Label beside topics, the way the rate card and the booking panel already
+     read. On a phone the label sits above instead. */
+  .mh-curric .mc-row{
+    display:grid;grid-template-columns:1fr;gap:2px 18px;padding:11px 0;
+    border-bottom:1px solid rgba(243,239,227,.13);
+  }
+  @media(min-width:560px){
+    .mh-curric .mc-row{grid-template-columns:118px 1fr;gap:0 18px;align-items:baseline;}
+  }
+  .mh-curric .mc-row:last-child{border-bottom:none;padding-bottom:2px;}
+  .mh-curric .mc-k{
+    font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--gold-bright);line-height:1.45;
+  }
+  .mh-curric .mc-v{
+    font-size:.84rem;line-height:1.6;color:rgba(243,239,227,.9);
+  }
+  /* The separator between topics. A middot rather than a bullet list: four
+     lists of bullets in a hero is a wall, and these are short enough to read
+     as a run. */
+  .mh-curric .mc-v i{font-style:normal;color:rgba(220,187,99,.55);padding:0 5px;}
+
   .madrasah-hero .mh-intro p{color:rgba(243,239,227,.88);font-size:.88rem;line-height:1.55;max-width:54ch;margin-bottom:16px;text-shadow:0 1px 10px rgba(0,0,0,.5);}
   .madrasah-hero .mh-cta{display:flex;gap:10px;flex-wrap:wrap;}
   .madrasah-hero .mh-cta .btn{padding:10px 18px;font-size:.84rem;}
-  .mh-facility{background:rgba(28,7,19,.72);border:1px solid rgba(198,162,76,.4);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;justify-content:center;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);}
-  .mh-facility .mh-fac-ic{width:32px;height:32px;border-radius:50%;background:rgba(198,162,76,.2);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin-bottom:10px;flex-shrink:0;}
-  .mh-facility .mh-fac-ic svg{width:15px;height:15px;}
-  .mh-facility h4{font-family:"Fraunces",serif;font-weight:600;font-size:.94rem;color:#F3EFE3;margin-bottom:5px;line-height:1.3;}
-  .mh-facility p{font-size:.79rem;line-height:1.5;color:rgba(243,239,227,.8);}
   @media (max-width:600px){
     .madrasah-hero{padding-bottom:34px;}
   }
@@ -2494,21 +2543,22 @@ window.TAIYABAH_PUBLIC = {
             <a class="btn btn-ghost-dark" data-nav="madrasah" data-scroll-to="portals">Digital Portals ↓</a>
           </div>
         </div>
-        <div class="mh-facility">
-          <div class="mh-fac-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6.5 8.2 6.5 12.2a6.5 6.5 0 01-13 0C5.5 11.2 12 3 12 3z"/></svg></div>
-          <h4>Whudhu Khana (Ablution Room)</h4>
-          <p>Students are taken to the whudhu area and shown how to perform whudhu practically &mdash; the actions, the virtues and the accompanying du&rsquo;as.</p>
-        </div>
-        <div class="mh-facility">
-          <div class="mh-fac-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.5 3.05a9 9 0 100 17.9 7 7 0 010-17.9z"/></svg></div>
-          <h4>Mortuary</h4>
-          <p>Students learn, practically, about the masjid&rsquo;s mortuary and its purpose as part of our funeral (janā&#703;ah) services.</p>
+        <div class="mh-curric">
+          <div class="mc-top">
+            <span class="mc-lab">What students learn</span>
+            <h4>Our Curriculum</h4>
+          </div>
+          <div class="mc-row"><span class="mc-k">Qur&rsquo;an &amp;<br>Reading Arabic</span><span class="mc-v">Safar Qaidah<i>&middot;</i>Safar Tajweed Rules<i>&middot;</i>Juz&nbsp;&rsquo;Amma<i>&middot;</i>Qur&rsquo;an</span></div>
+          <div class="mc-row"><span class="mc-k">Islamic<br>Studies</span><span class="mc-v">Iman<i>&middot;</i>Fiqh<i>&middot;</i>Seerah<i>&middot;</i>Aqaid<i>&middot;</i>Hadith</span></div>
+          <div class="mc-row"><span class="mc-k">Qur&rsquo;an &amp;<br>Tafseer</span><span class="mc-v">Memorising Short Surahs<i>&middot;</i>Understanding Short Surahs</span></div>
+          <div class="mc-row"><span class="mc-k">Memorisation</span><span class="mc-v">An Nasihah Surah &amp; Dua</span></div>
         </div>
       </div>
     </div>
   </section>
   <section class="page-body" id="portals">
     <div class="container">
+      <div class="subhead"><h3 style="font-size:1.1rem;">Digital portals</h3><span class="rule"></span></div>
       <div class="cs-wrap" style="max-width:600px;margin:0 0 8px;">
         <p class="cs-lead" style="text-align:left;">Digital portals for the madrasah are on the way — nothing is live yet, but this is what's coming.</p>
       </div>
