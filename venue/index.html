@@ -19,6 +19,10 @@
   :root{
     --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
     --gold:#C6A24C; --gold-bright:#DCBB63;
+    /* Gold is a 2.3:1 text colour on a light card — unreadable. Use
+       --gold for gold on plum, --gold-ink for gold on paper or card.
+       Same rule for green. Matches index_template.html. */
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
     --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
     --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
     --radius:14px;
@@ -73,18 +77,18 @@
   @media (min-width:940px){ .brand-inner{margin:0 auto 0 max(6vw,32px);} }
   .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
   .eyebrow{
-    display:flex;align-items:center;gap:10px;font-size:.72rem;font-weight:700;
+    display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:700;
     letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
   }
   .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
   .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
-  .brand p{color:rgba(243,239,227,.82);font-size:.94rem;line-height:1.65;max-width:44ch;}
+  .brand p{color:rgba(243,239,227,.82);font-size:1.035rem;line-height:1.65;max-width:44ch;}
   .brand .back{
     display:inline-flex;align-items:center;gap:6px;margin-top:26px;
-    color:rgba(243,239,227,.66);font-size:.82rem;font-weight:600;text-decoration:none;
+    color:rgba(243,239,227,.66);font-size:.943rem;font-weight:600;text-decoration:none;
   }
   .brand .back:hover{color:#F3EFE3;}
-  .pcredit{margin-top:22px;font-size:.72rem;color:rgba(243,239,227,.45);}
+  .pcredit{margin-top:22px;font-size:.88rem;color:rgba(243,239,227,.45);}
   .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
   .pcredit a:hover{color:var(--gold-bright);}
 
@@ -95,14 +99,14 @@
     width:min(420px,86%);background:var(--card);border:1px solid var(--line);
     border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
   }
-  .card h2{font-size:1.4rem;margin-bottom:6px;}
-  .sub{color:var(--muted);font-size:.87rem;line-height:1.55;margin-bottom:22px;}
+  .card h2{font-size:1.408rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.977rem;line-height:1.55;margin-bottom:22px;}
 
   form{display:flex;flex-direction:column;gap:16px;}
   .field{display:flex;flex-direction:column;gap:7px;}
-  label{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
   input[type=email],input[type=password],input[type=text]{
-    font-family:inherit;font-size:.92rem;color:var(--ink);background:var(--paper);
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
     border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
   }
   input::placeholder{color:#A99CA4;}
@@ -111,7 +115,7 @@
   .pw input{padding-right:62px;}
   .pw button{
     position:absolute;right:6px;top:50%;transform:translateY(-50%);
-    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.72rem;
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.88rem;
     font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
     padding:6px 8px;border-radius:6px;
   }
@@ -119,7 +123,7 @@
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:.9rem;
+    padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:1.003rem;
     cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
   }
   .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
@@ -131,11 +135,11 @@
 
   .err{
     background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
-    border-radius:9px;padding:11px 13px;font-size:.83rem;line-height:1.5;
+    border-radius:9px;padding:11px 13px;font-size:.949rem;line-height:1.5;
   }
   .note{
     margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
-    font-size:.8rem;line-height:1.6;color:var(--muted);text-align:center;
+    font-size:.931rem;line-height:1.6;color:var(--muted);text-align:center;
   }
 
   /* ---- MFA ---- */
@@ -149,12 +153,12 @@
   }
   .qr img{width:172px;height:172px;display:block;}
   .secret{
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.76rem;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.907rem;
     letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
     background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
   }
   .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
-  .steps li{font-size:.84rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li{font-size:.954rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
   .steps li::before{
     content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
     border-radius:50%;background:var(--gold);
@@ -166,21 +170,21 @@
     width:46px;height:46px;border-radius:50%;flex-shrink:0;
     background:linear-gradient(160deg,var(--brand-800),var(--brand-600,#772157));
     color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
-    font-family:"Fraunces",serif;font-weight:700;font-size:1.05rem;
+    font-family:"Fraunces",serif;font-weight:700;font-size:1.115rem;
   }
   .who-t{min-width:0;}
-  .who-t strong{display:block;font-size:1rem;color:var(--ink);}
-  .who-t span{display:block;font-size:.82rem;color:var(--muted);word-break:break-all;}
+  .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
   .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
   .role-chip{
-    font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     padding:5px 11px;border-radius:999px;
     background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
   }
   .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
   .status{
     background:var(--paper);border:1px solid var(--line);border-radius:10px;
-    padding:15px 16px;font-size:.85rem;line-height:1.6;color:var(--muted);margin-bottom:18px;
+    padding:15px 16px;font-size:.96rem;line-height:1.6;color:var(--muted);margin-bottom:18px;
   }
   .status b{color:var(--ink);}
 
@@ -195,12 +199,12 @@
 
   .bk{margin:22px 0 18px;}
   .bk-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
-  .bk-head h2{font-size:1.15rem;color:var(--brand-900);}
-  .bk-head .bk-sub{font-size:.8rem;color:var(--muted);}
+  .bk-head h2{font-size:1.19rem;color:var(--brand-900);}
+  .bk-head .bk-sub{font-size:.931rem;color:var(--muted);}
 
   .bk-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
   .bk-tab{
-    font:inherit;font-size:.8rem;font-weight:600;cursor:pointer;
+    font:inherit;font-size:.931rem;font-weight:600;cursor:pointer;
     padding:7px 14px;border-radius:999px;border:1px solid var(--line);
     background:var(--paper);color:var(--muted);display:inline-flex;align-items:center;gap:7px;
   }
@@ -214,13 +218,13 @@
   .bk-tab:hover{border-color:var(--gold);}
   .bk-tab.on{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
   .bk-tab .n{
-    font-size:.7rem;font-weight:800;min-width:19px;padding:1px 6px;border-radius:999px;
+    font-size:.867rem;font-weight:800;min-width:19px;padding:1px 6px;border-radius:999px;
     background:rgba(198,162,76,.24);color:var(--brand-900);
   }
   .bk-tab.on .n{background:var(--gold-bright);color:var(--brand-900);}
 
   .bk-search{
-    font:inherit;font-size:.85rem;padding:9px 13px;border-radius:9px;
+    font:inherit;font-size:.96rem;padding:9px 13px;border-radius:9px;
     border:1px solid var(--line);background:var(--card);color:var(--ink);
     width:100%;max-width:280px;margin-bottom:16px;
   }
@@ -237,32 +241,32 @@
   .bk-item.s-declined,.bk-item.s-cancelled{border-left:3px solid var(--line);opacity:.72;}
 
   .bk-when{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;}
-  .bk-when .d{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;color:var(--brand-900);}
-  .bk-when .s{font-size:.83rem;color:var(--muted);}
-  .bk-kind{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.09em;
+  .bk-when .d{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;color:var(--brand-900);}
+  .bk-when .s{font-size:.949rem;color:var(--muted);}
+  .bk-kind{display:inline-block;font-size:.829rem;font-weight:800;letter-spacing:.09em;
     text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-right:6px;}
   .bk-kind.t-hall{background:rgba(94,22,56,.10);color:#5E1638;}
   .bk-kind.t-nikah{background:rgba(165,122,34,.16);color:#7A5A16;}
   .bk-item.k-nikah{border-left:3px solid rgba(165,122,34,.5);}
   .bk-pill{
-    font-size:.63rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    font-size:.835rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     padding:3px 9px;border-radius:999px;margin-left:auto;white-space:nowrap;
   }
   .p-new{background:rgba(198,162,76,.2);color:#7A5B10;}
-  .p-confirmed{background:rgba(63,122,70,.16);color:var(--success);}
+  .p-confirmed{background:rgba(63,122,70,.16);color:var(--success-ink);}
   .p-declined,.p-cancelled{background:rgba(110,97,106,.14);color:var(--muted);}
 
-  .bk-who{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.87rem;}
+  .bk-who{display:flex;flex-wrap:wrap;gap:4px 18px;font-size:.977rem;}
   .bk-who .nm{font-weight:700;color:var(--ink);}
   .bk-who .bk-ref{
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.92rem;
     font-weight:700;color:var(--brand-700);
   }
   /* Deposit state. 'refund due' is deliberately the loudest thing on a card:
      Stripe has somebody's money for a date they cannot have, and nothing will
      happen about it until a person notices. */
   .bk-dep{
-    font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    font-size:.835rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     padding:3px 8px;border-radius:3px;
   }
   /* "DEPOSIT NOT PAID" has to be readable across the room and impossible to
@@ -270,16 +274,16 @@
      enough that a quiet grey chip was being read as "done" — which is exactly
      what was reported on 11 September 2026. */
   .bk-dep.d-unpaid,.bk-dep.d-awaiting{
-    background:rgba(176,58,46,.12);color:var(--danger);
+    background:rgba(176,58,46,.12);color:var(--danger-ink);
     border:1px solid rgba(176,58,46,.35);
   }
   /* The clock, only while it is running. */
   .bk-hold{
-    font-size:.63rem;font-weight:700;letter-spacing:.04em;
+    font-size:.835rem;font-weight:700;letter-spacing:.04em;
     padding:3px 8px;border-radius:3px;
     background:rgba(198,162,76,.2);color:#7A5B10;
   }
-  .bk-dep.d-paid{background:rgba(63,122,70,.16);color:var(--success);}
+  .bk-dep.d-paid{background:rgba(63,122,70,.16);color:var(--success-ink);}
   .bk-dep.d-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
   .bk-dep.d-refund_due{background:var(--danger);color:#fff;}
   /* A hirer who opened the checkout and walked away. Still listed — the office
@@ -295,7 +299,7 @@
   /* When the money landed. The reassuring thing is a time, not a badge. */
   .bk-paidat{color:#1D6B3F;font-weight:800;}
 
-  .bk-tab.bk-tab-refund.on,.bk-tab.bk-tab-refund{border-color:var(--danger);color:var(--danger);}
+  .bk-tab.bk-tab-refund.on,.bk-tab.bk-tab-refund{border-color:var(--danger);color:var(--danger-ink);}
   .bk-tab.bk-tab-refund.on{background:var(--danger);color:#fff;}
   .bk-tab.bk-tab-balance{border-color:var(--gold);color:#7A5B10;}
   .bk-tab.bk-tab-balance.on{background:var(--gold);color:var(--brand-900);}
@@ -304,18 +308,18 @@
   .bk-money{
     display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;
     padding:9px 11px;border-radius:9px;background:var(--paper);
-    border:1px solid var(--line);font-size:.83rem;
+    border:1px solid var(--line);font-size:.949rem;
   }
   .bk-money .bm-b{font-weight:700;color:var(--ink);}
-  .bk-money .bm-k{color:var(--muted);font-size:.76rem;}
+  .bk-money .bm-k{color:var(--muted);font-size:.907rem;}
   .bk-money .bm-plus{color:var(--muted);}
-  .bk-money .bm-none{color:var(--muted);font-size:.78rem;line-height:1.5;}
+  .bk-money .bm-none{color:var(--muted);font-size:.92rem;line-height:1.5;}
   .bk-money .bm-owed{
-    margin-left:auto;font-weight:800;font-size:.8rem;
+    margin-left:auto;font-weight:800;font-size:.931rem;
     padding:3px 9px;border-radius:999px;white-space:nowrap;
   }
   .bm-owed.bo-unpaid{background:rgba(198,162,76,.24);color:#7A5B10;}
-  .bm-owed.bo-paid{background:rgba(63,122,70,.16);color:var(--success);}
+  .bm-owed.bo-paid{background:rgba(63,122,70,.16);color:var(--success-ink);}
   .bm-owed.bo-waived{background:rgba(110,97,106,.14);color:var(--muted);}
   /* A nikāḥ fee owed back is the same red as a hall deposit owed back. Stripe
      has somebody's money either way, and the office should not have to learn
@@ -327,47 +331,47 @@
      still has to agree the date. Same shape so the row reads consistently,
      a quieter colour so it is not mistaken for a confirmation. */
   .bk-fee-pill{
-    font-size:.63rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    font-size:.835rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     padding:3px 8px;border-radius:3px;
     background:rgba(110,97,106,.14);color:var(--muted);
   }
-  .bk-fee-pill.f-paid{background:rgba(63,122,70,.12);color:var(--success);}
+  .bk-fee-pill.f-paid{background:rgba(63,122,70,.12);color:var(--success-ink);}
   .bk-fee-pill.f-refund_due{background:var(--danger);color:#fff;}
   .bk-fee-pill.f-waived,.bk-fee-pill.f-refunded{background:rgba(110,97,106,.14);color:var(--muted);}
   .bk-money .bm-extras{
-    display:inline-flex;align-items:center;gap:4px;font-size:.76rem;color:var(--muted);
+    display:inline-flex;align-items:center;gap:4px;font-size:.907rem;color:var(--muted);
   }
   .bk-money .bm-extras input{
-    font:inherit;font-size:.8rem;width:78px;padding:4px 7px;border-radius:7px;
+    font:inherit;font-size:.931rem;width:78px;padding:4px 7px;border-radius:7px;
     border:1px solid var(--line);background:var(--card);color:var(--ink);
   }
   @media (max-width:560px){ .bk-money .bm-owed{margin-left:0;} }
   .bk-who a{color:var(--brand-700);font-weight:600;}
-  .bk-addr{font-size:.83rem;color:var(--muted);line-height:1.55;}
+  .bk-addr{font-size:.949rem;color:var(--muted);line-height:1.55;}
 
   /*  The five people, shut by default. Their addresses are the most sensitive
       thing on this screen and the office is not reading them while scanning
       the morning's list. */
   .bk-people{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;}
   .bk-people > summary{
-    cursor:pointer;font-size:.78rem;font-weight:700;color:var(--brand-700);
+    cursor:pointer;font-size:.92rem;font-weight:700;color:var(--brand-700);
     list-style:none;display:inline-flex;align-items:center;gap:6px;
   }
   .bk-people > summary::-webkit-details-marker{display:none;}
   .bk-people > summary::before{content:"\25B8";transition:transform .15s ease;display:inline-block;}
   .bk-people[open] > summary::before{transform:rotate(90deg);}
   .bk-person{display:grid;grid-template-columns:1fr;gap:2px;padding:8px 0;
-    border-bottom:1px solid var(--line);font-size:.82rem;line-height:1.5;}
+    border-bottom:1px solid var(--line);font-size:.943rem;line-height:1.5;}
   @media(min-width:620px){ .bk-person{grid-template-columns:170px 1fr;gap:12px;} }
   .bk-person:last-child{border-bottom:none;}
-  .bk-person .rl{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;
+  .bk-person .rl{font-size:.853rem;letter-spacing:.07em;text-transform:uppercase;
     font-weight:700;color:var(--muted);padding-top:2px;}
   .bk-person .bd{color:var(--ink);}
-  .bk-person .dc{font-size:.75rem;color:var(--muted);}
-  .bk-meta{font-size:.74rem;color:var(--muted);}
+  .bk-person .dc{font-size:.9rem;color:var(--muted);}
+  .bk-meta{font-size:.893rem;color:var(--muted);}
 
   .bk-notes{
-    font:inherit;font-size:.83rem;padding:8px 11px;border-radius:8px;
+    font:inherit;font-size:.949rem;padding:8px 11px;border-radius:8px;
     border:1px solid var(--line);background:var(--paper);color:var(--ink);
     width:100%;resize:vertical;min-height:38px;
   }
@@ -375,18 +379,18 @@
 
   .bk-acts{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
   .bk-btn{
-    font:inherit;font-size:.78rem;font-weight:700;cursor:pointer;
+    font:inherit;font-size:.92rem;font-weight:700;cursor:pointer;
     padding:7px 14px;border-radius:999px;border:1px solid var(--line);
     background:var(--paper);color:var(--brand-800);
   }
   .bk-btn:hover:not(:disabled){border-color:var(--brand-800);}
   .bk-btn:disabled{opacity:.5;cursor:default;}
   .bk-btn.go{background:var(--success);border-color:var(--success);color:#fff;}
-  .bk-btn.no{color:var(--danger);}
-  .bk-said{font-size:.76rem;color:var(--muted);margin-left:2px;}
+  .bk-btn.no{color:var(--danger-ink);}
+  .bk-said{font-size:.907rem;color:var(--muted);margin-left:2px;}
 
   .bk-empty{
-    text-align:center;padding:30px 20px;color:var(--muted);font-size:.88rem;
+    text-align:center;padding:30px 20px;color:var(--muted);font-size:.986rem;
     background:var(--paper);border:1px dashed var(--line);border-radius:12px;
   }
   @media (max-width:560px){
@@ -394,13 +398,13 @@
     .bk-acts .bk-btn{flex:1 1 auto;}
   }
   .diag summary{
-    cursor:pointer;padding:11px 14px;font-size:.78rem;font-weight:700;
+    cursor:pointer;padding:11px 14px;font-size:.92rem;font-weight:700;
     letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
   }
   .diag summary:hover{color:var(--ink);}
   .diag pre{
     margin:0;padding:0 14px 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-    font-size:.72rem;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;
+    font-size:.88rem;line-height:1.6;color:var(--ink);white-space:pre-wrap;word-break:break-word;
   }
 
   /* ---- loading ---- */
@@ -412,7 +416,7 @@
   }
   @keyframes spin{to{transform:rotate(360deg);}}
   @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
-  .loading p{font-size:.85rem;color:var(--muted);}
+  .loading p{font-size:.96rem;color:var(--muted);}
 </style>
 <style>
   /* The credit belongs at the foot of the panel, not in the middle of the
@@ -514,7 +518,7 @@
         <img id="enrol-qr" alt="QR code for setting up two-step verification">
         <div class="secret" id="enrol-secret"></div>
       </div>
-      <p class="sub" style="margin:0 0 4px;font-size:.8rem;">Can't scan it? Type the code above into your app by hand.</p>
+      <p class="sub" style="margin:0 0 4px;font-size:.931rem;">Can't scan it? Type the code above into your app by hand.</p>
 
       <form id="enrol-form" novalidate>
         <div class="field">
