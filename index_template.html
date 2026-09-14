@@ -1373,6 +1373,53 @@ window.TAIYABAH_PUBLIC = {
   .nk-mode button.is-on{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
   .nk-clear{background:none;border:none;font-family:inherit;font-size:.76rem;font-weight:600;
     color:var(--brand-700);cursor:pointer;padding:4px 0;text-decoration:underline;}
+  /* --- the fee and the online payment, now in the 330px rail ----------- */
+  .nk-tight{margin-top:14px;}
+  .nk-tight h4{font-size:.95rem;}
+  .nk-tight .hh-rate-line{padding:6px 0;font-size:.86rem;}
+  .nk-tight .hh-rate-eff{font-size:.76rem;}
+  .nk-tight .hh-rate-note,.nk-tight .np-note{font-size:.72rem;line-height:1.55;}
+  .nk-tight .np-when{font-size:.76rem;}
+  .nk-tight .np-btns{gap:7px;}
+  /* The rail is 330px. Two buttons side by side in that is two buttons with
+     three words each wrapped onto three lines. */
+  .nk-tight .np-btns .btn{flex:1 1 100%;font-size:.82rem;padding:9px 12px;}
+  .nk-tight input{padding:8px 10px;font-size:.88rem;}
+
+  /* --- "Your request", now the width of the page ----------------------- */
+  .nk-panel.nk-wide{position:static;margin-top:34px;padding:22px clamp(16px,2.4vw,26px);}
+  .nk-panel.nk-wide .nk-pick{display:flex;flex-wrap:wrap;gap:0 40px;border-top:none;
+    border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:6px;}
+  .nk-panel.nk-wide .nk-pick > div{display:block;border-bottom:none;padding:4px 0;}
+  .nk-panel.nk-wide .nk-pick .k{display:block;margin-bottom:2px;}
+  .nk-panel.nk-wide .nk-pick .v{display:block;text-align:left;}
+
+  /* --- one person ------------------------------------------------------ */
+  .nk-person{border-top:1px solid var(--line);padding-top:18px;margin-top:20px;}
+  .nk-person:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+  .nk-ph{display:flex;align-items:center;gap:11px;margin-bottom:13px;}
+  .nk-ph .num{width:27px;height:27px;border-radius:50%;background:var(--gold);
+    color:var(--brand-900);font-size:.72rem;font-weight:800;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
+  .nk-ph h5{font-family:"Fraunces",serif;font-size:1.05rem;color:var(--ink);margin:0;}
+  /* Two columns on a desktop, one on a phone. `wide` spans both — a street
+     address in a half-width box is the field people get wrong most. */
+  /* Six columns, so a field can be a half, a third or two thirds of a row and
+     the shape follows the paper form: a long name beside a short age, a long
+     town beside a short postcode. One column on a phone. */
+  .nk-fields{display:grid;grid-template-columns:1fr;gap:0 22px;}
+  @media(min-width:760px){
+    .nk-fields{grid-template-columns:repeat(6,minmax(0,1fr));}
+    .nk-fields > .cf-row{grid-column:span 3;}
+    .nk-fields > .cf-row.c4{grid-column:span 4;}
+    .nk-fields > .cf-row.c2{grid-column:span 2;}
+    .nk-fields > .cf-row.wide{grid-column:1/-1;}
+  }
+  .nk-fields .field-hint{font-size:.74rem;color:var(--muted);line-height:1.5;margin:-2px 0 6px;}
+  .nk-fields .opt{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);}
+  .nk-panel.nk-wide #nkAction .declare2{margin-top:20px;}
+  .nk-panel.nk-wide #nkAction .cf-submit{width:auto;padding-left:34px;padding-right:34px;}
+
   .nk-closed{background:var(--brand-900);color:#F3EFE3;border-radius:12px;padding:17px 18px;}
   .nk-closed h5{font-family:"Fraunces",serif;font-size:.98rem;color:#F3EFE3;margin:0 0 7px;}
   .nk-closed p{font-size:.83rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0 0 12px;}
@@ -3829,6 +3876,7 @@ window.TAIYABAH_PUBLIC = {
         <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Office hours 9am–3pm &middot; admin@thebcom.org &middot; 1 Vicarage Street, Bolton BL3 5LE. A service of Bolton Council of Mosques, independent of Taiyabah Masjid.</p>
       </div>
       </div>
+
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
         <a class="btn btn-ghost-light" data-nav="svc-bmd">Birth, Marriage &amp; Death</a>
@@ -3858,10 +3906,38 @@ window.TAIYABAH_PUBLIC = {
           <div class="h">Please also register your marriage legally</div>
           <p>A Nikāḥ performed at the masjid is not, by itself, a marriage recognised under UK law. We strongly encourage every couple to additionally complete a separate civil marriage — this protects both partners' legal rights, including around property and inheritance, should the need ever arise.</p>
         </div>
+        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
+        <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Request a date</h3><span class="rule"></span></div>
+        <div class="hh-notice">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
+          <span><b>This is a request, not a booking.</b> No date here is reserved, and nothing on this calendar shows what the masjid already has in the diary. Choose the day and time that would suit you, and the office will ring the person named on the request to confirm whether it can be done, go through the details, and take payment.</span>
+        </div>
+        <div class="hh-cal">
+          <div class="hh-cal-head">
+            <button type="button" class="hh-nav" id="nkPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <div class="hh-month" id="nkMonth">&nbsp;</div>
+            <button type="button" class="hh-nav" id="nkNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+          <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="hh-grid" id="nkGrid"></div>
+          <div class="nk-times">
+            <span class="lab" id="nkTimeLab">What time would suit you?</span>
+            <div class="nk-slots" id="nkSlots"></div>
+          </div>
+          <p class="hh-horizon">Two weeks&rsquo; notice minimum, and up to a year ahead.</p>
+        </div>
+      </div>
+      <div class="svc-aside">
+        <a class="svc-cta-row" href="tel:01204535997">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
+          <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
+          <span class="go">&rsaquo;</span>
+        </a>
+        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses and timings — are best discussed directly with the office when you call.</p>
         <!-- Stated openly rather than behind a tick box. It is a published
              rate card, so nobody has to tell the website anything about
              whether they belong to this masjid in order to read it. -->
-        <div class="hh-rates" style="margin-top:18px;">
+        <div class="hh-rates nk-tight">
           <h4>The nik&#0257;&#7717; fee</h4>
           <p class="hh-rate-eff">The same whatever the day and whatever the time.</p>
           <div class="hh-rate-line"><span class="n">Members of the masjid</span><span class="p tnum">&pound;100</span></div>
@@ -3877,7 +3953,7 @@ window.TAIYABAH_PUBLIC = {
              instead of coming in with cash.
              Hidden entirely until the masjid's two Payment Links exist; cash
              and bank transfer above stand on their own until then. -->
-        <div class="nk-pay" id="nkPayBox" hidden>
+        <div class="nk-pay nk-tight" id="nkPayBox" hidden>
           <h4>Pay the fee online</h4>
           <p class="np-when"><strong>Once the office has rung you and agreed your date.</strong> Paying does not book a date on its own &mdash; the masjid confirms what it can do first.</p>
           <label for="nkPayRef">Your reference</label>
@@ -3891,57 +3967,33 @@ window.TAIYABAH_PUBLIC = {
           <p class="np-note">Your reference is on the confirmation you were given when you sent your request, and the office can read it out. Pick the rate that applies to you &mdash; the office checks it, and will tell you if anything is owed or owed back.</p>
         </div>
 
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
-      </div>
-      <div class="svc-aside">
-        <a class="svc-cta-row" href="tel:01204535997">
-          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
-          <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
-          <span class="go">&rsaquo;</span>
-        </a>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses and timings — are best discussed directly with the office when you call. The fee is &pound;100 for members and &pound;200 for non-members.</p>
       </div>
       </div>
-      <div class="nk-wrap" id="nikahReq">
-        <div class="subhead"><h3 style="font-size:1.1rem;">Request a date</h3><span class="rule"></span></div>
-        <div class="hh-notice">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
-          <span><b>This is a request, not a booking.</b> No date here is reserved, and nothing on this calendar shows what the masjid already has in the diary. Choose the day and time that would suit you, and the office will ring the person named on the request to confirm whether it can be done, go through the details, and take payment.</span>
+      <!-- ===================================================================
+           YOUR REQUEST — full width, below the calendar.
+
+           It used to be a sticky side panel holding three lines. It now holds
+           the particulars of five people, so it takes the width and the date
+           you picked becomes a strip across the top: below the calendar, a
+           side panel would have scrolled away while somebody typed.
+
+           EVERY PERSON HERE EXCEPT THE CONTACT IS SOMEBODY ELSE. The two
+           witnesses and the bride's representative are not filling this in and
+           have not agreed to anything, which is why the declaration at the
+           bottom says so in as many words rather than a bare "I accept".
+           =================================================================== -->
+      <div class="nk-panel nk-wide" id="nikahReq">
+        <h4>Your request</h4>
+        <p class="sub">Pick a date at least two weeks away, then give the details
+          the masjid needs for the nik&#257;&#7717; itself.</p>
+        <div class="nk-pick">
+          <div><span class="k">Date</span><span class="v empty" id="nkV1">Not chosen</span></div>
+          <div><span class="k">Prayer</span><span class="v empty" id="nkVT">Not chosen</span></div>
         </div>
-        <div class="nk-layout">
-          <div>
-            <div class="hh-cal">
-              <div class="hh-cal-head">
-                <button type="button" class="hh-nav" id="nkPrev" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
-                <div class="hh-month" id="nkMonth">&nbsp;</div>
-                <button type="button" class="hh-nav" id="nkNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
-              </div>
-              <div class="hh-weekdays"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-              <div class="hh-grid" id="nkGrid"></div>
-              <div class="nk-times">
-                <span class="lab" id="nkTimeLab">What time would suit you?</span>
-                <div class="nk-slots" id="nkSlots"></div>
-              </div>
-              <p class="hh-horizon">Two weeks&rsquo; notice minimum, and up to a year ahead.</p>
-            </div>
-          </div>
-          <div class="nk-panel">
-            <h4>Your request</h4>
-            <p class="sub">Pick a date at least two weeks away. A second choice is optional but helps &mdash; it gives the masjid something to work with if the first is taken.</p>
-            <div class="nk-mode">
-              <button type="button" id="nkModeA" class="is-on">1st choice</button>
-              <button type="button" id="nkModeB">2nd choice</button>
-            </div>
-            <div class="nk-pick">
-              <div><span class="k">1st choice</span><span class="v empty" id="nkV1">Not chosen</span></div>
-              <div><span class="k">2nd choice</span><span class="v empty" id="nkV2">Optional</span></div>
-              <div><span class="k">Prayer</span><span class="v empty" id="nkVT">Not chosen</span></div>
-            </div>
-            <button type="button" class="nk-clear" id="nkClear">Start again</button>
-            <div id="nkAction" style="margin-top:14px;"></div>
-          </div>
-        </div>
+        <button type="button" class="nk-clear" id="nkClear">Start again</button>
+        <div id="nkAction" style="margin-top:16px;"></div>
       </div>
+
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-gold" data-nav="contact">Contact the office</a>
         <a class="btn btn-ghost-light" data-nav="svc-bmd">Birth, Marriage &amp; Death</a>
@@ -4389,6 +4441,7 @@ window.TAIYABAH_PUBLIC = {
 
         <div class="legal-note">
           <p><strong>The short version.</strong> This website collects something about you only if you choose to send it: a hall hire request, a nik&#0257;&#7717; date request, a place on one of our adult classes, or an account for the masjid shop. Nothing else. There are no cookies, no analytics, no advertising, and no tracking of any kind. Almost everything on the site is served from the site itself; the two exceptions are named below.</p>
+          <p>The longest thing we hold is a nik&#0257;&#7717; request, because it now carries the details of the five people at the ceremony. It is deleted after twelve months like everything else.</p>
         </div>
 
         <h2>Who is responsible</h2>
@@ -4403,11 +4456,24 @@ window.TAIYABAH_PUBLIC = {
         <h3 class="legal-sub">A nik&#0257;&#7717; date request</h3>
         <p>We receive the <strong>name, telephone number and email address</strong> of whoever we
         should ring, whether they are the bride, the groom or a family member, the
-        <strong>date or dates and the prayer time</strong> asked for, roughly how many guests are
+        <strong>date and the prayer time</strong> asked for, roughly how many guests are
         expected, and anything else written in the notes box.</p>
-        <p>We deliberately do <strong>not</strong> ask for the couple&rsquo;s names, addresses,
-        documents or witnesses on this form. Those are taken by the office on the telephone once
-        a date has been agreed, and there is no reason for a public web form to hold them.</p>
+        <p>Since September 2026 the form also asks for the details the masjid needs to
+        perform and record the nik&#0257;&#7717; itself. For <strong>five people</strong> &mdash; the
+        bridegroom, the bride, the bride&rsquo;s representative and the two witnesses &mdash; we
+        receive a <strong>full name, an age, a home address</strong> and, if given, an
+        <strong>occupation</strong>. For the bridegroom and the bride we also ask <em>which</em>
+        proof-of-address and identity document they are able to bring to the masjid.</p>
+        <p><strong>We ask for an age, not a date of birth</strong>, because what the masjid needs
+        to know is that both parties are adults. The masjid cannot perform a nik&#0257;&#7717; for
+        anyone under 18, and the form will not accept one.</p>
+        <p><strong>No document is ever uploaded to this website.</strong> We record only the name
+        of the document you say you can bring; the office looks at the original in person.</p>
+        <p><strong>Four of these five people do not fill the form in themselves.</strong> Whoever
+        sends the request confirms that they have told the others their details are being given
+        to the masjid. If you are named on a request and would rather we did not hold your
+        details, ring the office on <strong>01204&nbsp;535&nbsp;997</strong> and we will remove
+        them.</p>
 
         <h3 class="legal-sub">A place on an adult class</h3>
         <p>We receive your <strong>name, email address and telephone number</strong>, which class
@@ -6130,13 +6196,49 @@ window.TAIYABAH_PUBLIC = {
     // typed in twice and drifting. The one regular exception is a Saturday
     // late morning, before a wedding meal that is a separate event; that option
     // only appears on Saturdays, because that is the only day it happens.
+    //  Fajr was dropped in September 2026: nobody holds a nikāḥ at first
+    //  light. The DATABASE still accepts 'after_fajr' on purpose, so the
+    //  requests already recorded with it stay valid and still display.
     var PRAYER_SLOTS = [
-      { key:'after_fajr',    label:'After Fajr',    col:4  },
       { key:'after_zuhr',    label:'After Zuhr',    col:7  },
       { key:'after_asr',     label:'After Asr',     col:9  },
       { key:'after_maghrib', label:'After Maghrib', col:10 },
       { key:'after_isha',    label:'After Isha',    col:12 }
     ];
+    //  ONE list, used by the form builder, the validator and the payload.
+    //  Three separate copies of "who the five people are" is three places for
+    //  a role to be spelled differently, and only the database would notice.
+    var PEOPLE = [
+      { id:'Groom', role:'groom',     title:'Bridegroom',                  docs:true,  adult:true  },
+      { id:'Bride', role:'bride',     title:'Bride',                       docs:true,  adult:true  },
+      { id:'Wali',  role:'wali',      title:'Representative of the bride', docs:false, adult:false },
+      { id:'W1',    role:'witness_1', title:'Witness 1',                   docs:false, adult:false },
+      { id:'W2',    role:'witness_2', title:'Witness 2',                   docs:false, adult:false }
+    ];
+
+    //  THE DOCUMENT LISTS ARE A PLACEHOLDER and the masjid should replace
+    //  them with what it actually accepts. They are the ordinary UK lists; the
+    //  point of asking is so the office knows what will turn up on the day,
+    //  not to collect the document itself — nothing here uploads anything.
+    var POA = ['Council tax bill (this year)',
+               'Utility bill — gas, electricity or water (last 3 months)',
+               'Bank or building society statement (last 3 months)',
+               'Tenancy agreement (current)',
+               'Mortgage statement (last 12 months)',
+               'Driving licence showing this address',
+               'Letter from HMRC or DWP (last 3 months)'];
+    var POI = ['Passport (current)',
+               'Driving licence (photocard)',
+               'Biometric residence permit or eVisa share code',
+               'National identity card',
+               'Birth certificate',
+               'Certificate of naturalisation or registration'];
+    function sel(id, placeholder, list){
+      return '<select id="' + id + '"><option value="">' + placeholder + '</option>' +
+        list.map(function(o){ return '<option value="' + esc(o) + '">' + esc(o) + '</option>'; })
+            .join('') + '</select>';
+    }
+
     var SATURDAY_SLOT = { key:'saturday_11', label:'Saturday, 11:00am',
                           note:'before a wedding meal' };
 
@@ -6162,7 +6264,7 @@ window.TAIYABAH_PUBLIC = {
     var last  = new Date(today); last.setDate(last.getDate() + HORIZON_DAYS);
     var view  = new Date(first.getFullYear(), first.getMonth(), 1);
 
-    var S = { mode:'a', a:null, b:null, slot:null, flex:false };
+    var S = { a:null, slot:null, flex:false };
 
     // The masjid's own timetable, already on the page for the prayer times.
     // It holds 2026 only, so a date beyond it gets the prayer name without a
@@ -6192,7 +6294,7 @@ window.TAIYABAH_PUBLIC = {
         var cls = 'hh-day';
         if(key === iso(today)) cls += ' is-today';
         if(out && dt >= today && dt < first) cls += ' is-tooSoon';
-        if(key === S.a || key === S.b) cls += ' is-sel';
+        if(key === S.a) cls += ' is-sel';
         html += '<button type="button" class="' + cls + '" data-d="' + key + '"' +
                 (out ? ' disabled' : '') + '><span>' + d + '</span><span class="dot"></span></button>';
       }
@@ -6230,14 +6332,10 @@ window.TAIYABAH_PUBLIC = {
     function renderPanel(){
       $('nkV1').textContent = S.a ? pretty(S.a) : 'Not chosen';
       $('nkV1').classList.toggle('empty', !S.a);
-      $('nkV2').textContent = S.b ? pretty(S.b) : 'Optional';
-      $('nkV2').classList.toggle('empty', !S.b);
       var at = (S.slot && S.a) ? jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) : null;
       $('nkVT').textContent = S.flex ? 'Flexible'
         : (S.slot ? slotLabel(S.slot) + (at ? ' · ' + at : '') : 'Not chosen');
       $('nkVT').classList.toggle('empty', !S.flex && !S.slot);
-      $('nkModeA').classList.toggle('is-on', S.mode === 'a');
-      $('nkModeB').classList.toggle('is-on', S.mode === 'b');
       $('nkTimeLab').textContent = S.a
         ? 'Which prayer on ' + pretty(S.a) + '?'
         : 'A nikāḥ is usually held straight after a congregational prayer';
@@ -6261,27 +6359,98 @@ window.TAIYABAH_PUBLIC = {
         return;
       }
       if(host.querySelector('form')) return;      // already built — don't wipe what they typed
+
+      //  THE PEOPLE. One builder, five times: the fields are identical, and
+      //  five hand-written copies is five places for one of them to drift.
+      //  `docs` is only true for the bride and the groom — the masjid asks
+      //  them for evidence, not the witnesses.
+      //  `adult` is only true for the bride and the groom, and it is not a
+      //  nicety: since 27 February 2023 it is a criminal offence in England
+      //  and Wales to cause anyone under 18 to enter a marriage, and the
+      //  offence covers a religious ceremony whether or not it is legally
+      //  binding. The database refuses it again.
+      function person(n, id, title, docs, adult){
+        return '<div class="nk-person" id="nkP_' + id + '">' +
+          '<div class="nk-ph"><span class="num">' + n + '</span><h5>' + title + '</h5></div>' +
+          '<div class="nk-fields">' +
+            '<div class="cf-row c4" id="nkW_' + id + 'Name"><label for="nk' + id + 'Name">Full name</label>' +
+              '<input type="text" id="nk' + id + 'Name" autocomplete="off" maxlength="80">' +
+              '<span class="hf-err">Please give a full name.</span></div>' +
+            '<div class="cf-row c2" id="nkW_' + id + 'Age"><label for="nk' + id + 'Age">Age</label>' +
+              '<input type="text" id="nk' + id + 'Age" inputmode="numeric" maxlength="3">' +
+              (adult ? '<div class="field-hint">Minimum age: 18</div>' : '') +
+              '<span class="hf-err">Please give an age.</span></div>' +
+            '<div class="cf-row wide" id="nkW_' + id + 'Addr"><label for="nk' + id + 'Addr">Door no. &amp; street name</label>' +
+              '<input type="text" id="nk' + id + 'Addr" autocomplete="off" maxlength="120">' +
+              '<span class="hf-err">Please give a street address.</span></div>' +
+            '<div class="cf-row c4" id="nkW_' + id + 'Town"><label for="nk' + id + 'Town">Town / city</label>' +
+              '<input type="text" id="nk' + id + 'Town" autocomplete="off" maxlength="60">' +
+              '<span class="hf-err">Please give a town or city.</span></div>' +
+            '<div class="cf-row c2" id="nkW_' + id + 'Post"><label for="nk' + id + 'Post">Postcode</label>' +
+              '<input type="text" id="nk' + id + 'Post" autocomplete="off" maxlength="10" ' +
+              'style="text-transform:uppercase;">' +
+              '<span class="hf-err">That does not look like a UK postcode.</span></div>' +
+            '<div class="cf-row wide"><label for="nk' + id + 'Job">Occupation ' +
+              '<span class="opt">(optional)</span></label>' +
+              '<input type="text" id="nk' + id + 'Job" autocomplete="off" maxlength="80"></div>' +
+            (docs ?
+              '<div class="cf-row"><label for="nk' + id + 'PoA">Proof of address available</label>' +
+                '<div class="field-hint">Which current address document they can bring. ' +
+                  'The masjid may ask to see the original.</div>' +
+                sel('nk' + id + 'PoA', 'Select proof of address', POA) + '</div>' +
+              '<div class="cf-row"><label for="nk' + id + 'PoI">ID proof available</label>' +
+                '<div class="field-hint">Which identity document they can bring. ' +
+                  'The masjid may ask to see the original.</div>' +
+                sel('nk' + id + 'PoI', 'Select ID proof', POI) + '</div>'
+              : '') +
+          '</div></div>';
+      }
+
       host.innerHTML =
         '<form id="nkForm" novalidate autocomplete="on">' +
           '<div class="hp-trap" aria-hidden="true"><label for="nkWeb">Leave empty</label>' +
             '<input type="text" id="nkWeb" tabindex="-1" autocomplete="off"></div>' +
-          '<div class="cf-row" id="nkW_name"><label for="nkName">Your name</label>' +
-            '<input type="text" id="nkName" autocomplete="name"><span class="hf-err">Please tell us who to ask for.</span></div>' +
-          '<div class="cf-row" id="nkW_role"><label for="nkRole">You are</label>' +
-            '<select id="nkRole"><option value="">Please choose…</option>' +
-            '<option value="groom">The groom</option><option value="bride">The bride</option>' +
-            '<option value="family">A family member</option><option value="other">Someone else</option></select>' +
-            '<span class="hf-err">Please tell us who you are.</span></div>' +
-          '<div class="cf-row" id="nkW_phone"><label for="nkPhone">Phone</label>' +
-            '<input type="tel" id="nkPhone" autocomplete="tel" inputmode="tel"><span class="hf-err">The office will ring you, so we need a number.</span></div>' +
-          '<div class="cf-row" id="nkW_email"><label for="nkEmail">Email</label>' +
-            '<input type="email" id="nkEmail" autocomplete="email" inputmode="email"><span class="hf-err">That email address does not look right.</span></div>' +
-          '<div class="cf-row"><label for="nkGuests">Rough number of guests <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>' +
-            '<input type="text" id="nkGuests" inputmode="numeric"></div>' +
-          '<div class="cf-row"><label for="nkNotes">Anything else <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>' +
-            '<textarea id="nkNotes" maxlength="600" style="min-height:70px;"></textarea></div>' +
+
+          '<div class="nk-person" id="nkP_contact">' +
+            '<div class="nk-ph"><span class="num">01</span><h5>Who the office should ring</h5></div>' +
+            '<div class="nk-fields">' +
+              '<div class="cf-row wide" id="nkW_name"><label for="nkName">Your name</label>' +
+                '<input type="text" id="nkName" autocomplete="name">' +
+                '<span class="hf-err">Please tell us who to ask for.</span></div>' +
+              '<div class="cf-row" id="nkW_role"><label for="nkRole">You are</label>' +
+                '<select id="nkRole"><option value="">Please choose…</option>' +
+                '<option value="groom">The groom</option><option value="bride">The bride</option>' +
+                '<option value="family">A family member</option><option value="other">Someone else</option></select>' +
+                '<span class="hf-err">Please tell us who you are.</span></div>' +
+              '<div class="cf-row" id="nkW_phone"><label for="nkPhone">Phone</label>' +
+                '<input type="tel" id="nkPhone" autocomplete="tel" inputmode="tel">' +
+                '<span class="hf-err">The office will ring you, so we need a number.</span></div>' +
+              '<div class="cf-row" id="nkW_email"><label for="nkEmail">Email</label>' +
+                '<input type="email" id="nkEmail" autocomplete="email" inputmode="email">' +
+                '<span class="hf-err">That email address does not look right.</span></div>' +
+              '<div class="cf-row"><label for="nkGuests">Rough number of guests ' +
+                '<span class="opt">(optional)</span></label>' +
+                '<input type="text" id="nkGuests" inputmode="numeric"></div>' +
+              '<div class="cf-row wide"><label for="nkNotes">Anything else ' +
+                '<span class="opt">(optional)</span></label>' +
+                '<textarea id="nkNotes" maxlength="600" style="min-height:70px;"></textarea></div>' +
+            '</div></div>' +
+
+          //  Driven off PEOPLE, not five hand-written calls: the numbering,
+          //  the titles and the roles then cannot disagree with the validator
+          //  or with what gets sent.
+          PEOPLE.map(function(pn, n){
+            return person('0' + (n + 2), pn.id, pn.title, pn.docs, pn.adult);
+          }).join('') +
+
+          //  NOT a bare "I accept". Four of the five people described above are
+          //  not sitting at this screen and have not agreed to anything, so the
+          //  person who IS has to be told plainly that they are handing over
+          //  other people's details.
           '<label class="declare2" id="nkW_priv"><input type="checkbox" id="nkPriv">' +
-            '<span>I understand the masjid will keep these details to deal with this request and to contact me about it. ' +
+            '<span>I understand the masjid will keep these details to arrange and record this ' +
+            'nik&#257;&#7717; and to contact us about it. <b>I have told the other people named ' +
+            'above that their details are being given to the masjid.</b> ' +
             'See the <a href="#" data-nav="privacy">privacy notice</a>.</span></label>' +
           '<div class="ar-problems" id="nkProblems" role="alert" aria-live="polite"></div>' +
           '<button type="submit" class="btn btn-gold cf-submit" id="nkSubmit">Send my request</button>' +
@@ -6295,6 +6464,10 @@ window.TAIYABAH_PUBLIC = {
     function wireForm(){
       var form = $('nkForm'), loadedAt = Date.now();
       var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      //  Deliberately loose. A postcode regex that is too clever rejects real
+      //  addresses, and the office can read it anyway — this only catches a
+      //  phone number typed into the wrong box.
+      var POSTCODE = /^[A-Z]{1,2}[0-9][A-Z0-9]?\s?[0-9][A-Z]{2}$/;
       function v(id){ return ($(id).value || '').trim(); }
       function mark(id, bad){ $(id).classList.toggle('bad', !!bad); }
       function problems(list){
@@ -6309,6 +6482,41 @@ window.TAIYABAH_PUBLIC = {
         var bad = [];
         if(!S.a) bad.push('Choose a date on the calendar.');
         if(!S.flex && !S.slot) bad.push('Choose a prayer, or say you are flexible.');
+
+        //  THE FIVE PEOPLE. Checked here so somebody sees a sentence, and
+        //  again in Postgres because a browser can be edited.
+        PEOPLE.forEach(function(pn){
+          var ok = true;
+          if(!v('nk' + pn.id + 'Name')){ mark('nkW_' + pn.id + 'Name', true);
+            bad.push(pn.title + ': a full name is needed.'); ok = false; }
+          else mark('nkW_' + pn.id + 'Name', false);
+
+          var age = parseInt(v('nk' + pn.id + 'Age'), 10);
+          var ageBad = !(age >= 0 && age <= 120);
+          //  Not a policy the masjid chose and can relax. Since 27 February
+          //  2023 a nikāḥ for anyone under 18 is a criminal offence in England
+          //  and Wales, legally binding or not.
+          if(!ageBad && pn.adult && age < 18){
+            bad.push(pn.title + ' must be 18 or over. The masjid cannot perform a nik\u0101\u1e25 ' +
+                     'for anyone under 18 — since February 2023 that is a criminal offence in ' +
+                     'England and Wales, whether or not the marriage is registered.');
+            ageBad = true;
+          } else if(ageBad){
+            bad.push(pn.title + ': please give an age.');
+          }
+          mark('nkW_' + pn.id + 'Age', ageBad);
+
+          if(!v('nk' + pn.id + 'Addr')){ mark('nkW_' + pn.id + 'Addr', true);
+            bad.push(pn.title + ': a street address is needed.'); }
+          else mark('nkW_' + pn.id + 'Addr', false);
+          if(!v('nk' + pn.id + 'Town')){ mark('nkW_' + pn.id + 'Town', true);
+            bad.push(pn.title + ': a town or city is needed.'); }
+          else mark('nkW_' + pn.id + 'Town', false);
+          var pc = v('nk' + pn.id + 'Post').toUpperCase().replace(/\s+/g, ' ');
+          var pcBad = !POSTCODE.test(pc);
+          mark('nkW_' + pn.id + 'Post', pcBad);
+          if(pcBad) bad.push(pn.title + ': that does not look like a UK postcode.');
+        });
         mark('nkW_name', !v('nkName'));   if(!v('nkName')) bad.push('We need a name to ask for.');
         mark('nkW_role', !v('nkRole'));   if(!v('nkRole')) bad.push('Tell us whether you are the groom, the bride or a family member.');
         mark('nkW_phone', !v('nkPhone')); if(!v('nkPhone')) bad.push('The office rings every request, so we need a phone number.');
@@ -6339,7 +6547,7 @@ window.TAIYABAH_PUBLIC = {
           headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
                     'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
           body: JSON.stringify({ payload:{
-            preferred_date: S.a, alternative_date: S.b || '',
+            preferred_date: S.a,
             slot: S.flex ? 'flexible' : S.slot,
             preferred_time: (S.flex || !S.slot) ? '' :
               (jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) ||
@@ -6348,7 +6556,18 @@ window.TAIYABAH_PUBLIC = {
             guests_estimate: v('nkGuests'),
             contact_name: v('nkName'), contact_role: v('nkRole'),
             contact_phone: v('nkPhone'), contact_email: v('nkEmail'),
-            notes: v('nkNotes'), privacy_accepted: true
+            notes: v('nkNotes'), privacy_accepted: true,
+            people: PEOPLE.map(function(pn){
+              return { role: pn.role,
+                       full_name:  v('nk' + pn.id + 'Name'),
+                       age:        parseInt(v('nk' + pn.id + 'Age'), 10),
+                       address_line: v('nk' + pn.id + 'Addr'),
+                       town:       v('nk' + pn.id + 'Town'),
+                       postcode:   v('nk' + pn.id + 'Post').toUpperCase().replace(/\s+/g, ' '),
+                       occupation: v('nk' + pn.id + 'Job'),
+                       proof_address: pn.docs ? v('nk' + pn.id + 'PoA') : '',
+                       proof_id:      pn.docs ? v('nk' + pn.id + 'PoI') : '' };
+            })
           }})
         })
         .then(function(r){ return r.text().then(function(t){ return {ok:r.ok, body:t, status:r.status}; }); })
@@ -6384,13 +6603,7 @@ window.TAIYABAH_PUBLIC = {
     grid.addEventListener('click', function(e){
       var b = e.target.closest('.hh-day'); if(!b || b.disabled) return;
       var k = b.dataset.d;
-      if(S.mode === 'a'){
-        S.a = (S.a === k) ? null : k;
-        if(S.a && S.a === S.b) S.b = null;
-      } else {
-        S.b = (S.b === k) ? null : k;
-        if(S.b && S.b === S.a) S.a = null;
-      }
+      S.a = (S.a === k) ? null : k;
       if(S.slot === SATURDAY_SLOT.key && S.a && !isSaturday(S.a)) S.slot = null;
       renderMonth(); renderSlots(); renderPanel();
     });
@@ -6404,10 +6617,8 @@ window.TAIYABAH_PUBLIC = {
 
     $('nkPrev').addEventListener('click', function(){ view.setMonth(view.getMonth()-1); renderMonth(); });
     $('nkNext').addEventListener('click', function(){ view.setMonth(view.getMonth()+1); renderMonth(); });
-    $('nkModeA').addEventListener('click', function(){ S.mode = 'a'; renderPanel(); });
-    $('nkModeB').addEventListener('click', function(){ S.mode = 'b'; renderPanel(); });
     $('nkClear').addEventListener('click', function(){
-      S = { mode:'a', a:null, b:null, slot:null, flex:false };
+      S = { a:null, slot:null, flex:false };
       $('nkAction').innerHTML = '';
       renderMonth(); renderSlots(); renderPanel();
     });

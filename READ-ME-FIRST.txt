@@ -1,8 +1,8 @@
 TAIYABAH MASJID — files to upload to GitHub
 ===========================================
-Branch this came from: access-screen (7 commits, 13 September 2026)
+Branch this came from: access-screen (8 commits, 14 September 2026)
 
-This zip contains ONLY the 26 files that changed. Everything else in the
+This zip contains ONLY the files that changed. Everything else in the
 repository is untouched and must be left alone.
 
 
@@ -51,6 +51,7 @@ next person can read what was done.
   db/026_invite_contact_details.sql
   db/027_password_reset.sql
   db/028_site_content.sql
+  db/029_nikah_people.sql
 
 Changed pages
   index.html            BUILT FILE — never edit by hand
@@ -58,6 +59,8 @@ Changed pages
   portals/              the admin centre: a rail of names, and a working
                         column holding everything that changes
   account/, apply/      small changes
+  venue/                the office portal now shows the nikah particulars,
+                        behind a closed disclosure
 
 Edge Functions — like the migrations, these are ALREADY DEPLOYED. They are
 here so the repo matches what is live.
