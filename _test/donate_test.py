@@ -74,6 +74,46 @@ FILL = """
 """
 
 
+#  THE SUITE MUST NOT DEPEND ON WHETHER LINKS HAPPEN TO BE CONFIGURED.
+#  It used to fill the table by matching the EMPTY literal, so the day the
+#  masjid pasted real links in — 14 September 2026 — the whole of sections
+#  2 to 7 would have stopped running, and said so only as one vague failure.
+#  A suite that breaks when the thing it guards starts working is worse than
+#  no suite. Both states are now built from whatever is in the page.
+BLOCK = re.compile(r"var DONATE_LINKS = \{.*?\n    \};", re.S)
+
+EMPTY = """var DONATE_LINKS = {
+      once:    { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
+      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
+      jummah:  { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }
+    };"""
+
+#  Deliberately ragged: £50/£100/other missing monthly, everything but £5
+#  missing on Friday Pay. A table where every slot is filled would never
+#  exercise the greying-out, which is the behaviour most likely to break.
+FILLED = """var DONATE_LINKS = {
+      once:    { '5':'https://buy.stripe.test/o5', '10':'https://buy.stripe.test/o10', '25':'https://buy.stripe.test/o25', '50':'https://buy.stripe.test/o50', '100':'https://buy.stripe.test/o100', other:'https://buy.stripe.test/oany' },
+      monthly: { '5':'https://buy.stripe.test/m5', '10':'https://buy.stripe.test/m10', '25':'https://buy.stripe.test/m25', '50':'', '100':'', other:'' },
+      jummah:  { '5':'https://buy.stripe.test/f5', '10':'', '25':'', '50':'', '100':'', other:'' }
+    };"""
+
+
+def variant(name, table):
+    """Write a copy of the BUILT page with the link table replaced."""
+    src = open("index.html", encoding="utf-8").read()
+    out, n = BLOCK.subn(lambda m: table, src, count=1)
+    if n != 1:
+        fails.append("the DONATE_LINKS table is not where the test expects it — "
+                     "pasting links in may not be a one-place change any more")
+        return None
+    open(name, "w", encoding="utf-8").write(out)
+    return name
+
+
+GOTO_DONATE = ("() => { const a = document.querySelector('[data-nav=\"donate\"]');"
+               " if (a) a.click(); }")
+
+
 def open_donate(b, fill=False):
     pg = b.new_page(viewport={"width": 1360, "height": 1000})
     errs = []
@@ -120,7 +160,19 @@ with sync_playwright() as p:
 
     # =====================================================================
     #  2. NO LINKS — THE BUTTON MUST NOT BE PRESSABLE
+    #
+    #  Run against a copy with the table emptied, so this keeps testing the
+    #  real failure — a button that sends somebody nowhere — now that the
+    #  live page has links in it.
     # =====================================================================
+    pg.close()
+    variant("_donate_empty.html", EMPTY)
+    pg = b.new_page(viewport={"width": 1360, "height": 1000})
+    pg.on("pageerror", lambda e: errs.append(str(e)[:220]))
+    pg.goto(PAGE.replace("index.html", "_donate_empty.html"), wait_until="load")
+    pg.wait_for_timeout(1100)
+    pg.evaluate(GOTO_DONATE)
+    pg.wait_for_timeout(600)
     go = pg.query_selector(D + "#dn-go")
     check(go.get_attribute("aria-disabled") == "true",
           "THE DONATE BUTTON IS PRESSABLE WITH NO PAYMENT LINK BEHIND IT")
@@ -195,22 +247,7 @@ with sync_playwright() as p:
     #  also proves the thing that actually matters: that pasting links into
     #  that object is all the masjid has to do.
     # =====================================================================
-    src = open("index.html", encoding="utf-8").read()
-    LIVE = ("      once:    { '5':'https://buy.stripe.test/o5', '10':'https://buy.stripe.test/o10', "
-            "'25':'https://buy.stripe.test/o25', '50':'https://buy.stripe.test/o50', "
-            "'100':'https://buy.stripe.test/o100', other:'https://buy.stripe.test/oany' },\n"
-            "      monthly: { '5':'https://buy.stripe.test/m5', '10':'https://buy.stripe.test/m10', "
-            "'25':'https://buy.stripe.test/m25', '50':'', '100':'', other:'' },\n"
-            "      jummah:  { '5':'https://buy.stripe.test/f5', '10':'', "
-            "'25':'', '50':'', '100':'', other:'' }")
-    old = ("      once:    { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },\n"
-           "      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },\n"
-           "      jummah:  { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }")
-    if old not in src:
-        fails.append("the link table is not where the test expects it — "
-                     "pasting links in may not be a one-place change any more")
-    else:
-        open("_donate_live.html", "w", encoding="utf-8").write(src.replace(old, LIVE, 1))
+    if variant("_donate_live.html", FILLED):
         try:
             pg = b.new_page(viewport={"width": 1360, "height": 1000})
             errs2 = []
@@ -345,8 +382,56 @@ with sync_playwright() as p:
             check(errs2 == [], "the donate page threw with links: %s" % errs2)
             pg.close()
         finally:
-            if os.path.exists("_donate_live.html"):
-                os.remove("_donate_live.html")
+            for f in ("_donate_live.html", "_donate_empty.html"):
+                if os.path.exists(f):
+                    os.remove(f)
+    # =====================================================================
+    #  8. THE LINKS THAT ARE ACTUALLY IN THE PAGE
+    #
+    #  Everything above runs against a table this file wrote. This one runs
+    #  against whatever the masjid has really pasted in, and guards the three
+    #  ways fifteen hand-copied URLs go wrong:
+    #
+    #    * two combinations sharing one link — press "£100 every Friday",
+    #      get charged £5 once. Nothing on the page can look wrong.
+    #    * a test-mode link reaching the live site: it takes fake card
+    #      numbers, thanks the donor, and no money exists.
+    #    * a link that is not Stripe at all — a typo, or worse.
+    #
+    #  What CANNOT be checked from here is whether the amount behind a URL is
+    #  the amount on the button. donate.stripe.com disallows robots, so the
+    #  page cannot be read. That check is a human opening all fifteen.
+    # =====================================================================
+    pg, errs8 = open_donate(b)
+    live, dupes = {}, []
+    for f in ("once", "monthly", "jummah"):
+        pg.click(D + '#dn-freq .dn-pill[data-k="%s"]' % f)
+        pg.wait_for_timeout(160)
+        for a in ("5", "10", "25", "50", "100", "other"):
+            el = pg.query_selector(D + '#dn-amounts .dn-pill[data-k="%s"]' % a)
+            if el.get_attribute("disabled") is not None:
+                continue
+            pg.click(D + '#dn-amounts .dn-pill[data-k="%s"]' % a)
+            pg.wait_for_timeout(150)
+            href = pg.get_attribute(D + "#dn-go", "href") or ""
+            where = "%s/%s" % (f, a)
+            check(href != "", "%s is pressable with no link behind it" % where)
+            base = href.split("?")[0]
+            check("/test_" not in base,
+                  "A TEST-MODE STRIPE LINK IS LIVE ON %s — it accepts fake "
+                  "cards and no real money arrives: %s" % (where, base))
+            check(base.startswith("https://") and "stripe.com" in base,
+                  "%s does not point at Stripe: %r" % (where, base))
+            if base in live:
+                dupes.append("%s and %s share one link (%s)" % (live[base], where, base))
+            live[base] = where
+    for d in dupes:
+        check(False, "TWO BUTTONS CHARGE THE SAME THING — %s" % d)
+    check(errs8 == [], "the donate page threw while walking the links: %s" % errs8)
+    #  Not a failure — a note, so the count is visible in the output either way.
+    print("  links configured: %d of 18 combinations" % len(live))
+    pg.close()
+
     b.close()
 
 httpd.shutdown()
