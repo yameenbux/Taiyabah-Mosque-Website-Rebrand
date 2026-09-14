@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Charity collections — Taiyabah Masjid</title>
+<link rel="canonical" href="https://taiyabahmasjid.com/#collection">
+<meta name="robots" content="noindex,follow">
+<!--
+  ===========================================================================
+  A SHORT URL, AND NOTHING ELSE.
+
+  taiyabahmasjid.com/collection  ->  taiyabahmasjid.com/#collection
+
+  This exists because of how the form is actually reached. Charities and
+  institutes do not browse a masjid's website looking for a booking form;
+  somebody rings the office and is told where to go. A number read out on the
+  phone, written on a poster, or pasted into a WhatsApp message has to be
+  short enough to say once and spell correctly.
+
+  "taiyabahmasjid.com slash collection" is that. "taiyabahmasjid dot com hash
+  collection" is not, and the hash is the part people drop.
+
+  The page itself lives in index.html with everything else, so it gets the
+  same fonts, header, prayer times and design system, and is built from
+  index_template.html like every other page. This is a signpost, not a copy —
+  there is exactly one collection form and this is not it.
+
+  It carries noindex,follow so search engines index the real page rather than
+  this one, and no styling worth the name because nobody should see it for
+  longer than a blink. The <noscript> link is the fallback: a redirect that
+  depends on JavaScript and offers nothing else is a dead end for anybody who
+  has it turned off.
+  ===========================================================================
+-->
+<script>
+  //  replace(), not assign(): the back button should take somebody back to
+  //  wherever they came from, not to this page, which would bounce them
+  //  forward again and trap them.
+  location.replace("../#collection");
+</script>
+<style>
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    background:#3C0B2A; color:#F3EFE3;
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; margin:0; padding:24px; text-align:center;
+    font-size:1.05rem; line-height:1.6;
+  }
+  a{ color:#DCBB63; font-weight:700; }
+</style>
+</head>
+<body>
+  <noscript>
+    <p>Charity collections at Taiyabah Masjid &mdash;
+       <a href="../#collection">open the collection request form</a>.</p>
+  </noscript>
+  <p>Taking you to the collection request form &mdash;
+     <a href="../#collection">continue</a>.</p>
+</body>
+</html>
