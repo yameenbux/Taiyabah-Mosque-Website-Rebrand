@@ -220,7 +220,8 @@
     people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.7 14.3c2.7.3 4.8 2.3 4.8 5.2"/></svg>',
     lock:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',
     tick:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
-    crane:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5l9-2v4"/><path d="M4 9h9"/><path d="M13 7h7l-2.5 4H13z"/><path d="M17 11v4"/><path d="M15 15h4l-1 3h-2z"/></svg>'
+    crane:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5l9-2v4"/><path d="M4 9h9"/><path d="M13 7h7l-2.5 4H13z"/><path d="M17 11v4"/><path d="M15 15h4l-1 3h-2z"/></svg>',
+    tin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10h17v9a2 2 0 01-2 2h-13a2 2 0 01-2-2v-9Z"/><path d="M2.5 6.5h19V10h-19z"/><path d="M12 6.5V21"/><path d="M12 6.5S10.6 3.2 8.6 3.2a2.1 2.1 0 000 4.2"/><path d="M12 6.5s1.4-3.3 3.4-3.3a2.1 2.1 0 010 4.2"/></svg>'
   };
 
   var WHERE = { venue: "../venue/", volunteers: "../volunteers/",
@@ -307,7 +308,7 @@
      Groups with no members are not drawn at all, so an office account gets a
      shorter rail rather than empty headings. */
   var GROUPS = [
-    { t: "What people have asked for", keys: ["venue", "courses", "volunteers"] },
+    { t: "What people have asked for", keys: ["venue", "collections", "courses", "volunteers"] },
     { t: "Money",                      keys: ["giftaid"] },
     { t: "The masjid's own pages",     keys: ["madrasah", "newbuild", "access"] }
   ];
@@ -345,6 +346,13 @@
       made.volunteers = area("../volunteers/", ICON.basket, "Food Bank volunteers",
         remember("volunteers", "Food Bank volunteers",
           "Mark rung, helping or withdrawn; download the list"));
+    }
+    //  Same audience as /venue/ — whoever answers the masjid's post answers
+    //  these — so it sits beside it rather than under the madrasah.
+    if (areas.collections) {
+      made.collections = area("../collections/", ICON.tin, "Charity collections",
+        remember("collections", "Charity collections",
+          "Chanda requests from outside charities — ring the trustee, then approve or decline"));
     }
     if (has("admin") || has("teacher")) {
       made.madrasah = area("../portal/", ICON.people, "Madrasah portal",
@@ -547,7 +555,7 @@
       // where they were going.
       drawNeeds([]);
       el("dash-tiles").innerHTML = "";
-      drawAreas({ venue: {}, volunteers: {} }, identity.roles);
+      drawAreas({ venue: {}, collections: {}, volunteers: {} }, identity.roles);
       el("dash-log").innerHTML = '<p class="dash-skel">Not available just now.</p>';
       drawHousekeeping(null);
     });
