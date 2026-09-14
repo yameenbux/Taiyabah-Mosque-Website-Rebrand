@@ -55,6 +55,8 @@ If you only remember three things about this repository:
 | **`courses/`** | **Adult classes** — who signed up, places left, who is waiting. |
 | **`giftaid/`** | **Gift Aid** — the rows to send HMRC, and marking them claimed. |
 | **`volunteers/`** | **Food bank volunteers** — who offered, who has been rung. |
+| **`collections/`** | **Charity collections** — chanda requests from outside charities. Flags a paid collector and two charities booked for one day. |
+| **`collection/`** | A four-line redirect, nothing else. `taiyabahmasjid.com/collection` → `/#collection`, because this link is read out on the phone and the hash is the part people drop. |
 | **`access/`** | **User access** — every staff account, what each may do, and whether two-step is on. Invitations are sent from here; **no password is ever typed here, for anybody**. |
 | **`newbuild/`** | **The new build page editor** — the appeal figure, what it pays for and the timeline of phases, so the masjid can keep its own page current. |
 | **`portal/`** | **Madrasah portal** — for parents, teachers and administrators. |
@@ -189,6 +191,8 @@ Migrations are pasted into the SQL editor in order.
 | `027_password_reset` | An administrator can **send** a reset. An administrator can never **set** a password — one they chose is one they know, and every later sign-in by that person is then deniable. |
 | `028_site_content` | `site_content`, so the new build page's figures and timeline have one source the masjid can edit. Validates strictly about money and leniently about words. Oversubscribed appeals are allowed on purpose. |
 | `029_nikah_people` | The particulars of the five people at a nikāḥ. Cascades off the request, so the twelve-month purge already covers it. **Bride and groom are refused under 18** — see [Nikāḥ](#nikāḥ). |
+| `030_charity_collections` | The chanda collection booking — the online replacement for a paper CHARITY DATA FORM. Stores **which version of the rules** was on screen when it was signed, so changing the rules cannot rewrite what somebody agreed to. The wage/commission answer is `not null` on purpose: *blank* and *no* must never be the same row. |
+| `031_dashboard_charity` | Puts collection requests into the Admin Centre's **Needs you** and gives them a tile. 024's three functions, read back out of the catalogue and patched rather than retyped. |
 
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs

@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- en-GB, not en. A <input type="date"> takes its display format from the
+     document language: with "en" Chromium renders mm/dd/yyyy, which on a
+     UK masjid's booking form is an invitation to enter the wrong date and
+     never notice. Changed 14 September 2026 with the collection form. -->
+<html lang="en-GB">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -163,7 +167,10 @@ window.TAIYABAH_PUBLIC = {
   .page [class*="-center"] p,
   .page .hero p, .page .page-masthead p,
   .page .cs-wrap p, .page .media-outro p,
-  .page .cform p, .page .hh-cal p{ margin-left:auto;margin-right:auto; }
+  /* .cf-note, not every p in .cform: the form's hints and lead are
+     left-aligned, and auto margins on a 62ch box shoved them into the
+     middle of the field they describe. Only the centred note wants it. */
+  .page .cform .cf-note, .page .hh-cal p{ margin-left:auto;margin-right:auto; }
   .narrow{max-width:var(--measure);}
   .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
 
@@ -1823,6 +1830,80 @@ window.TAIYABAH_PUBLIC = {
   .cform-divider{display:flex;align-items:center;gap:12px;margin:26px 0 18px;color:var(--muted);font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;}
   .cform-divider::before,.cform-divider::after{content:"";flex:1;height:1px;background:var(--line);}
   .cform{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px 20px;}
+
+  /* ---------- CHARITY COLLECTION (CHANDA) ------------------------------
+     Replaces a paper "CHARITY DATA FORM" and a poster listing two mobile
+     numbers. Built from the site's own form vocabulary — .cform, .cf-row,
+     .nk-fields — rather than a new one, so it stays in step if those change.
+
+     The rules panel is not decoration. What the applicant agreed to, and
+     WHICH VERSION of it, is stored against the row, so changing the rules
+     later cannot rewrite what somebody signed. See db/030. */
+  .cc-rules{
+    background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
+    padding:20px 22px;margin:0 0 20px;
+  }
+  .cc-rules h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;
+    color:#F3EFE3;margin:0 0 4px;}
+  .cc-rules .cc-ver{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--gold-bright);margin-bottom:12px;}
+  .cc-rules ul{margin:0;padding:0;display:grid;gap:10px;}
+  .cc-rules li{display:grid;grid-template-columns:18px 1fr;gap:11px;
+    font-size:.986rem;line-height:1.6;color:rgba(243,239,227,.9);}
+  .cc-rules li b{color:#F3EFE3;font-weight:700;}
+  .cc-rules li .tick{color:var(--gold-bright);font-weight:700;}
+
+  /* Yes/No, drawn as two real buttons rather than a pair of radio dots.
+     The paper form puts this at the bottom of page one where it is easy to
+     skip; the masjid asked for a Yes to be impossible to miss, and a control
+     you have to aim at is harder to answer without reading. */
+  .cc-yn{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:320px;}
+  .cc-yn label{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    background:var(--paper);border:1.5px solid var(--line);border-radius:11px;
+    padding:13px 10px;cursor:pointer;font-size:1.02rem;font-weight:600;
+    color:var(--ink);text-transform:none;letter-spacing:0;margin:0;
+  }
+  .cc-yn label:hover{border-color:var(--gold);}
+  /* The canonical visually-hidden recipe, not width:0;height:0;opacity:0.
+     A zero-sized control is the one some screen readers skip, and it is also
+     unreachable by anything driving the page — which is how a required
+     question ends up with no way to answer it and nobody notices. This keeps
+     the radio in the accessibility tree and in the tab order; the label is
+     what everybody actually presses. */
+  .cc-yn input{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
+  }
+  .cc-yn input:checked + span{color:#F3EFE3;}
+  .cc-yn label:has(input:checked){background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
+  .cc-yn input:focus-visible + span{outline:2px solid var(--gold-bright);outline-offset:3px;}
+  .cf-row.bad .cc-yn label{border-color:var(--danger-ink);}
+
+  /* Shown only when they answer Yes. Not a validation error — a paid
+     collector is allowed, and the masjid simply needs to know before
+     somebody stands in the masjid asking people for money. */
+  .cc-paid-note{
+    margin-top:10px;padding:12px 14px;border-radius:11px;
+    background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.45);
+    font-size:.954rem;line-height:1.55;color:var(--ink);
+  }
+
+  .cc-help{
+    display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-top:18px;font-size:.986rem;color:var(--muted);
+  }
+  .cc-help b{color:var(--ink);}
+  .cc-help a{color:var(--brand-700);font-weight:700;white-space:nowrap;}
+
+  .cc-done{text-align:center;padding:12px 4px 4px;}
+  .cc-done .cc-ref{
+    display:inline-block;margin:12px 0 6px;padding:11px 20px;border-radius:999px;
+    background:var(--brand-900);color:var(--gold-bright);font-weight:700;
+    letter-spacing:.06em;font-size:1.094rem;
+  }
+
   .cform-lead{font-size:.96rem;color:var(--muted);line-height:1.6;margin-bottom:16px;}
   .cf-row{margin-bottom:14px;}
   .cf-row label{display:block;font-size:.853rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
@@ -3536,6 +3617,11 @@ window.TAIYABAH_PUBLIC = {
           <span class="sv-label">Imams' Advice</span>
           <span class="sv-sub">Book an appointment</span>
         </a>
+        <a class="svc-qtile" href="#" data-nav="collection">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9Z"/><path d="M2 6.5h20V10H2z"/><path d="M12 6.5v14.5"/><path d="M12 6.5S10.5 3 8.4 3a2.2 2.2 0 000 4.4"/><path d="M12 6.5S13.5 3 15.6 3a2.2 2.2 0 010 4.4"/></svg></span>
+          <span class="sv-label">Charity Collections</span>
+          <span class="sv-sub">Chanda &middot; book a date</span>
+        </a>
         <a class="svc-qtile" href="#" data-nav="svc-education">
           <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span>
           <span class="sv-label">Education</span>
@@ -3731,6 +3817,213 @@ window.TAIYABAH_PUBLIC = {
       </div>
       <div class="cs-cta" style="margin-top:32px;">
         <a class="btn btn-ghost-light" data-nav="svc-education">All courses</a>
+      </div>
+    </div>
+  </section>
+</div>
+<!-- ================= CHARITY COLLECTION (CHANDA) =================
+     Replaces the paper CHARITY DATA FORM and the poster of mobile numbers.
+     The form is a REQUEST: nothing here books a date. See db/030.
+     Rafik Patel's number is the only one on this page — the masjid asked for
+     one point of contact, not two, so that nobody is rung about a form the
+     other person has not seen. -->
+<div class="page" data-page="collection">
+  <section class="page-masthead">
+    <div class="container">
+      <div class="section-head on-dark">
+        <div class="eyebrow">Collections &middot; Chanda</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Collect for your cause at Taiyabah&nbsp;Masjid</h1>
+        <p>Charities and institutes are welcome to collect here. Fill this in and the
+           masjid office will contact your trustee to confirm a date. Nothing on this
+           page books a day &mdash; it is a request, and the masjid will be in touch.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="container">
+      <!-- is-rail: the form is the wide column, the reference panel is the
+           330px rail. NOT is-rail-first — the rail is a summary, and on a
+           phone the form itself is what somebody came here to do. -->
+      <div class="svc-split is-rail">
+        <div>
+
+          <div class="cc-rules">
+            <h4>Rules for collection</h4>
+            <div class="cc-ver">Version <span id="ccRulesVer">&mdash;</span> &middot; you are agreeing to this version</div>
+            <ul>
+              <li><span class="tick">&#10003;</span><span>Collection starts <b>after Zohr salah</b> and ends <b>after Isha salah</b>.</span></li>
+              <li><span class="tick">&#10003;</span><span>Announcements (el&#257;an) are made <b>without the microphone</b>.</span></li>
+              <li><span class="tick">&#10003;</span><span>Announcements are only allowed <b>after Asr and after Isha</b>, and must last <b>no more than two minutes</b>.</span></li>
+            </ul>
+          </div>
+
+          <form class="cform" id="ccForm" novalidate>
+            <p class="cform-lead">Every question is needed unless it says otherwise.
+               The masjid rings the trustee named at the bottom before confirming
+               anything, so please give a number that will be answered.</p>
+
+            <div class="cform-divider">The date</div>
+            <div class="nk-fields">
+              <div class="cf-row wide" id="ccr-date">
+                <label for="ccDate">Date you would like to collect</label>
+                <input type="date" id="ccDate" autocomplete="off">
+                <p class="field-hint" id="ccDateHint">&nbsp;</p>
+                <p class="hf-err">Please choose a date the masjid can still take.</p>
+              </div>
+            </div>
+
+            <div class="cform-divider">The charity or institute</div>
+            <div class="nk-fields">
+              <div class="cf-row wide" id="ccr-org">
+                <label for="ccOrg">Full name of charity / institute (id&#257;ra)</label>
+                <input type="text" id="ccOrg" autocomplete="organization">
+                <p class="hf-err">Please give the full name.</p>
+              </div>
+              <div class="cf-row wide" id="ccr-addr">
+                <label for="ccAddr">Address</label>
+                <textarea id="ccAddr" rows="2" autocomplete="street-address"></textarea>
+                <p class="hf-err">Please give the address.</p>
+              </div>
+              <div class="cf-row" id="ccr-phone">
+                <label for="ccPhone">Phone number</label>
+                <input type="tel" id="ccPhone" autocomplete="tel">
+                <p class="hf-err">Please give a phone number.</p>
+              </div>
+              <div class="cf-row" id="ccr-email">
+                <label for="ccEmail">Email</label>
+                <input type="email" id="ccEmail" autocomplete="email">
+                <p class="hf-err">Please give an email address the masjid can reply to.</p>
+              </div>
+              <div class="cf-row wide" id="ccr-num">
+                <label for="ccNum">Charity number <span class="opt">&mdash; if you have one</span></label>
+                <input type="text" id="ccNum" autocomplete="off">
+                <p class="field-hint">Leave this empty if the cause is overseas or not
+                   registered in England and Wales.</p>
+                <p class="hf-err">That does not look like a charity number.</p>
+              </div>
+            </div>
+
+            <div class="cform-divider">Who will be collecting</div>
+            <div class="nk-fields">
+              <div class="cf-row" id="ccr-cname">
+                <label for="ccCName">Name of the person doing the collection</label>
+                <input type="text" id="ccCName" autocomplete="name">
+                <p class="hf-err">Please give their name.</p>
+              </div>
+              <div class="cf-row" id="ccr-crole">
+                <label for="ccCRole">Their role in the institute</label>
+                <input type="text" id="ccCRole" autocomplete="organization-title">
+                <p class="hf-err">Please say what their role is.</p>
+              </div>
+              <div class="cf-row wide" id="ccr-paid">
+                <label>Do they receive any wage or commission for this collection?</label>
+                <div class="cc-yn">
+                  <label><input type="radio" name="ccPaid" value="no"><span>No</span></label>
+                  <label><input type="radio" name="ccPaid" value="yes"><span>Yes</span></label>
+                </div>
+                <div class="cc-paid-note" id="ccPaidNote" hidden>
+                  Thank you for saying so. A paid collector is allowed &mdash; the masjid
+                  simply needs to know beforehand, and the committee may ask about it
+                  when they ring.
+                </div>
+                <p class="hf-err">Please answer yes or no.</p>
+              </div>
+            </div>
+
+            <div class="cform-divider">Trustee or manager</div>
+            <div class="nk-fields">
+              <div class="cf-row wide" id="ccr-tname">
+                <label for="ccTName">Full name of trustee / CEO / principal</label>
+                <input type="text" id="ccTName" autocomplete="off">
+                <p class="field-hint">Somebody other than the collector. The masjid rings
+                   this person to confirm the collection is genuine.</p>
+                <p class="hf-err">Please give the trustee's name.</p>
+              </div>
+              <div class="cf-row" id="ccr-tphone">
+                <label for="ccTPhone">Their phone number</label>
+                <input type="tel" id="ccTPhone" autocomplete="off">
+                <p class="hf-err">Please give a number that will be answered.</p>
+              </div>
+              <div class="cf-row" id="ccr-temail">
+                <label for="ccTEmail">Their email</label>
+                <input type="email" id="ccTEmail" autocomplete="off">
+                <p class="hf-err">Please give their email address.</p>
+              </div>
+            </div>
+
+            <div class="cform-divider">Agreement</div>
+            <label class="declare2" id="ccr-rules">
+              <input type="checkbox" id="ccRules">
+              <span>I have read the <b>rules for collection</b> above and agree to them
+                    on behalf of the charity or institute named on this form.</span>
+            </label>
+            <label class="declare2" id="ccr-priv">
+              <input type="checkbox" id="ccPriv">
+              <span>I understand the masjid will keep these details to arrange and check
+                    the collection, will contact the trustee named above, and will delete
+                    them afterwards in line with its
+                    <a data-nav="privacy">privacy notice</a>. I confirm the trustee is
+                    content to be contacted about this.</span>
+            </label>
+            <div class="nk-fields" style="margin-top:4px;">
+              <div class="cf-row wide" id="ccr-sign">
+                <label for="ccSign">Signed &mdash; type your full name</label>
+                <input type="text" id="ccSign" autocomplete="name">
+                <p class="field-hint">Typing your name here has the same effect as signing
+                   the paper form. The date and time are recorded with it.</p>
+                <p class="hf-err">Please type your full name.</p>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-gold cf-submit" id="ccSubmit">
+              Send this request
+            </button>
+            <p class="cf-note">The masjid will contact your trustee to confirm. Nothing
+               here reserves a date.</p>
+          </form>
+
+          <div class="cform" id="ccDone" hidden>
+            <div class="cc-done">
+              <h3 class="display" style="font-size:1.316rem;">Your request has been sent</h3>
+              <div class="cc-ref" id="ccRef">&mdash;</div>
+              <p class="cform-lead" style="margin:6px auto 0;max-width:48ch;">
+                Please keep this reference. The masjid office will ring the trustee you
+                named to confirm the date. If you have not heard within a few days,
+                ring the number below and quote it.</p>
+            </div>
+          </div>
+
+          <div class="cform" id="ccSoon" hidden>
+            <p class="cform-lead" style="margin:0;"><b>This form is not open yet.</b>
+               Please ring the number below to arrange a collection.</p>
+          </div>
+
+          <div class="cc-help">
+            <span><b>Need help with this form?</b></span>
+            <span>Rafik Patel &mdash;
+              <a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a></span>
+          </div>
+
+        </div>
+
+        <aside class="svc-aside">
+          <div class="svc-detail-facts">
+            <h4>Before you fill this in</h4>
+            <dl class="adm-rules">
+              <div><dt>Notice</dt><dd>The masjid needs at least
+                  <b id="ccNoticeDays">14</b> days&rsquo; notice, and takes requests up
+                  to a year ahead.</dd></div>
+              <div><dt>One a day</dt><dd>Only one collection is allowed on any given
+                  day, so an early request has the best chance of the date you
+                  want.</dd></div>
+              <div><dt>The trustee</dt><dd>The masjid rings the trustee, not the
+                  collector. Please tell them to expect a call.</dd></div>
+              <div><dt>Where</dt><dd>Taiyabah Masjid, 31a Draycott Street,
+                  Bolton BL1&nbsp;8HD.</dd></div>
+            </dl>
+          </div>
+        </aside>
       </div>
     </div>
   </section>
@@ -5062,6 +5355,23 @@ window.TAIYABAH_PUBLIC = {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- CONTACT, not Services. Services is headed "what the masjid offers
+           the community" — a Bolton Muslim asking what they can get. A
+           charity collection runs the other way: an outside organisation
+           asking something OF the masjid, which is exactly what this page is
+           for. The Services tile stays too, because somebody collecting for
+           their own village's madrasah will look there first. -->
+      <div class="dn-nb" style="margin-top:34px;">
+        <div>
+          <div class="eyebrow">For charities &amp; institutes</div>
+          <h4>Collecting for a cause at the masjid?</h4>
+          <p>Charities and institutes are welcome to collect (chanda) here. Request a
+             date online instead of filling in the paper form &mdash; the office will
+             contact your trustee to confirm.</p>
+        </div>
+        <a class="btn btn-gold" data-nav="collection">Request a date</a>
       </div>
     </div>
   </section>
@@ -6588,6 +6898,221 @@ window.TAIYABAH_PUBLIC = {
     });
   })();
 
+
+  /* =======================================================================
+     CHARITY COLLECTION (CHANDA) — the form that replaced the paper one.
+
+     A REQUEST, NOT A BOOKING. Nothing here reserves a date and the page says
+     so three times, because the paper form was headed "Date Of Booking" and
+     people arrived believing they had one.
+
+     THE RULES ARE VERSIONED. Whatever is in RULES_VERSION travels with the
+     submission and is stored on the row. If the masjid changes the rules, a
+     request sent today still says what this applicant actually agreed to —
+     which a signed sheet of paper in a drawer cannot do, because the sheet
+     does not name the version either.
+
+     NOTICE_DAYS is enforced here AND in request_charity_collection(). The
+     browser copy stops somebody wasting their time; the database copy is the
+     one that counts, because a form can be driven from outside a browser.
+     If the masjid shortens the notice, BOTH have to change.
+  ======================================================================= */
+  (function(){
+    var RULES_VERSION = '2026-09-14';
+    var NOTICE_DAYS   = 14;
+    var HORIZON_DAYS  = 365;
+
+    var $ = function(id){ return document.getElementById(id); };
+    var form = $('ccForm');
+    if(!form) return;
+
+    var cfg = window.TAIYABAH_PUBLIC || {};
+    var live = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY &&
+                  String(cfg.SUPABASE_URL).indexOf('PASTE_') === -1);
+
+    function iso(d){
+      return d.getFullYear() + '-' +
+             ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
+             ('0' + d.getDate()).slice(-2);
+    }
+    function pretty(d){
+      return d.toLocaleDateString('en-GB',
+        { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    }
+
+    var today = new Date(); today.setHours(0,0,0,0);
+    var first = new Date(today); first.setDate(first.getDate() + NOTICE_DAYS);
+    var last  = new Date(today); last.setDate(last.getDate() + HORIZON_DAYS);
+
+    $('ccRulesVer').textContent  = RULES_VERSION;
+    $('ccNoticeDays').textContent = NOTICE_DAYS;
+    var dateEl = $('ccDate');
+    dateEl.min = iso(first);
+    dateEl.max = iso(last);
+    $('ccDateHint').textContent =
+      'The earliest date the masjid can take is ' + pretty(first) + '.';
+
+    //  The note appears the moment they say Yes. It is NOT an error — a paid
+    //  collector is allowed — so it must not look like one.
+    form.addEventListener('change', function(e){
+      if(e.target && e.target.name === 'ccPaid'){
+        $('ccPaidNote').hidden = (e.target.value !== 'yes');
+      }
+    });
+
+    function paidAnswer(){
+      var on = form.querySelector('input[name="ccPaid"]:checked');
+      return on ? on.value : null;
+    }
+
+    function mark(rowId, bad){
+      var el = $(rowId);
+      if(el) el.classList.toggle('bad', !!bad);
+      return !bad;
+    }
+
+    var EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+    function validate(){
+      var ok = true;
+      var v = function(id){ return ($(id).value || '').trim(); };
+
+      var d = v('ccDate');
+      var dOk = false;
+      if(d){
+        var chosen = new Date(d + 'T00:00:00');
+        dOk = !isNaN(chosen) && chosen >= first && chosen <= last;
+      }
+      ok = mark('ccr-date',  !dOk) && ok;
+
+      ok = mark('ccr-org',    v('ccOrg').length    < 2) && ok;
+      ok = mark('ccr-addr',   v('ccAddr').length   < 5) && ok;
+      ok = mark('ccr-phone',  v('ccPhone').length  < 6) && ok;
+      ok = mark('ccr-email',  !EMAIL.test(v('ccEmail'))) && ok;
+      //  Optional, so only its SHAPE is checked, and only when filled in.
+      //  An overseas cause has no UK number and must not be blocked.
+      var num = v('ccNum');
+      ok = mark('ccr-num',    num !== '' && (num.length < 3 || num.length > 30)) && ok;
+
+      ok = mark('ccr-cname',  v('ccCName').length  < 2) && ok;
+      ok = mark('ccr-crole',  v('ccCRole').length  < 2) && ok;
+      ok = mark('ccr-paid',   paidAnswer() === null) && ok;
+
+      ok = mark('ccr-tname',  v('ccTName').length  < 2) && ok;
+      ok = mark('ccr-tphone', v('ccTPhone').length < 6) && ok;
+      ok = mark('ccr-temail', !EMAIL.test(v('ccTEmail'))) && ok;
+
+      ok = mark('ccr-rules',  !$('ccRules').checked) && ok;
+      ok = mark('ccr-priv',   !$('ccPriv').checked) && ok;
+      ok = mark('ccr-sign',   v('ccSign').length    < 2) && ok;
+      return ok;
+    }
+
+    function fail(msg){
+      var note = form.querySelector('.cf-note');
+      note.innerHTML = msg;
+      note.style.color = 'var(--danger-ink)';
+      note.style.fontWeight = '600';
+      $('ccSubmit').disabled = false;
+      $('ccSubmit').textContent = 'Send this request';
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      if(!validate()){
+        var bad = form.querySelector('.bad');
+        if(bad) bad.scrollIntoView({ behavior:'smooth', block:'center' });
+        return;
+      }
+      if(!live){
+        //  Never pretend. A form that swallows somebody's details and says
+        //  thank you is worse than one that sends them to the phone.
+        form.hidden = true; $('ccSoon').hidden = false;
+        return;
+      }
+
+      var btn = $('ccSubmit');
+      btn.disabled = true; btn.textContent = 'Sending…';
+
+      var apiBase = String(cfg.SUPABASE_URL).trim()
+                      .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+
+      var timedOut = false;
+      var timer = setTimeout(function(){ timedOut = true; }, 12000);
+
+      fetch(apiBase + '/rest/v1/rpc/request_charity_collection', {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ payload: {
+          requested_date:  $('ccDate').value,
+          org_name:        $('ccOrg').value.trim(),
+          org_address:     $('ccAddr').value.trim(),
+          org_phone:       $('ccPhone').value.trim(),
+          org_email:       $('ccEmail').value.trim(),
+          charity_number:  $('ccNum').value.trim(),
+          collector_name:  $('ccCName').value.trim(),
+          collector_role:  $('ccCRole').value.trim(),
+          collector_paid:  paidAnswer() === 'yes',
+          trustee_name:    $('ccTName').value.trim(),
+          trustee_phone:   $('ccTPhone').value.trim(),
+          trustee_email:   $('ccTEmail').value.trim(),
+          rules_version:   RULES_VERSION,
+          rules_accepted:  true,
+          signed_name:     $('ccSign').value.trim(),
+          privacy_accepted: true
+        }})
+      }).then(function(res){
+        clearTimeout(timer);
+        return res.text().then(function(body){
+          if(res.ok){
+            var out = {};
+            try { out = JSON.parse(body) || {}; } catch(err){}
+            $('ccRef').textContent = out.reference || '—';
+            form.hidden = true;
+            $('ccDone').hidden = false;
+            $('ccDone').scrollIntoView({ behavior:'smooth', block:'center' });
+            return;
+          }
+          //  Postgres messages are written for the applicant, not a
+          //  developer, so the useful ones are shown as they are.
+          var msg = '';
+          try { msg = (JSON.parse(body) || {}).message || ''; } catch(err){}
+          if(msg && msg.indexOf('already has a request') !== -1){
+            fail('The masjid already has a request from this email address for that ' +
+                 'date. If you need to change it, ring Rafik Patel on ' +
+                 '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a>.');
+            return;
+          }
+          if(msg && msg.indexOf('notice') !== -1){
+            fail(msg);
+            return;
+          }
+          fail('That did not send. Please ring Rafik Patel on ' +
+               '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a> and he will ' +
+               'take the details.');
+        });
+      }).catch(function(){
+        clearTimeout(timer);
+        fail((timedOut ? 'That took too long. ' : 'That did not send. ') +
+             'Please ring Rafik Patel on ' +
+             '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a>.');
+      });
+    });
+
+    //  Clear the red the moment somebody starts fixing it. Leaving a field
+    //  red while they type tells them the thing they are doing is wrong.
+    form.addEventListener('input', function(e){
+      var row = e.target.closest('.cf-row, .declare2');
+      if(row) row.classList.remove('bad');
+    });
+    form.addEventListener('change', function(e){
+      if(e.target && e.target.name === 'ccPaid') mark('ccr-paid', false);
+    });
+  })();
 
   /* ---------------------------------------------------------------------------
      DONATE — choose what for, how often, how much, then one button.

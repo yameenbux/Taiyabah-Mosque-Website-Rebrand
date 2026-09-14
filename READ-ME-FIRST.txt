@@ -1,81 +1,94 @@
-TAIYABAH MASJID — card giving goes live
-=======================================
+TAIYABAH MASJID — charity collections (chanda) go online
+========================================================
 14 September 2026
 
-3 files. All replacements.
+10 files. Upload on top of the three earlier zips.
 
-  index.html            THE WEBSITE. Built file — never edit by hand.
-  index_template.html   the source index.html is built FROM.
-                        THESE TWO ALWAYS TRAVEL TOGETHER.
-  _test/donate_test.py  updated
-
-Upload on top of the text-size and width zips.
+The paper CHARITY DATA FORM and the poster with two mobile numbers are
+replaced by a form on the website that lands in the Admin Centre.
 
 
-WHAT IS NOW LIVE
-----------------
-16 of the 18 slots are filled:
+HOW TO UPLOAD
+-------------
+1. Open the repository on github.com, on the branch you are using.
+2. "Add file" -> "Upload files".
+3. Unzip this first, then drag the CONTENTS of the "taiyabah-collections"
+   folder in — not the folder itself, and not this text file. Keep the
+   folder structure (collection/, collections/, db/, _test/, portals/).
+4. Commit.
 
-  One-off      £5  £10  £25  £50  £100  Other
-  Monthly      £5  £10  £25  £50  £100   —
-  Friday Pay   £5  £10  £25  £50  £100   —
-
-"Other" on Monthly and Friday Pay is greyed out, because Stripe will not
-let a customer-chosen amount be a recurring price. That is expected and
-nothing is broken. If you would rather the Other button was not shown at
-all on those two, say so and it comes out.
-
-
-BEFORE YOU TELL ANYONE THE PAGE IS OPEN — DO THIS
--------------------------------------------------
-1. OPEN ALL 16 BUTTONS AND CHECK THE AMOUNT.
-
-   I could not do this. Stripe blocks automated access to
-   donate.stripe.com, so nothing here can read what is actually behind
-   each URL. What was checked is that all 16 are different, none is a
-   test-mode link, and all point at Stripe.
-
-   What was NOT checked is whether the £100-every-Friday button really
-   opens a £100 weekly page. If two links got swapped when they were
-   copied, the page cannot tell and neither can I. Ten minutes with the
-   live site open, pressing each of the 16 and reading the amount and
-   the "per week / per month" line on Stripe's page, is the only way to
-   know. Do it before the page is announced, not after.
-
-2. MAKE ONE REAL PAYMENT.
-
-   £1, real card, live mode. Watch it appear in Stripe, then watch the
-   payout reach the bank. Refund it afterwards.
-
-   No real money has ever gone through this Stripe account. Until one
-   payment has, the whole thing is unproven — not the buttons, but
-   whether the account can receive money at all and whether the payout
-   details are right.
-
-3. CHECK GIFT AID IS ON THE LINKS.
-
-   The page tells donors: tick Yes on the payment page and the masjid
-   reclaims 25p in the pound. If that question is not on these Payment
-   Links, that sentence is untrue and should come off the page. Open one
-   link and look. Tell me either way.
+NOTHING HAS TO BE RUN ON THE DATABASE. Migrations 030 and 031 are in the
+db/ folder for the record, but they are ALREADY APPLIED to the live
+Supabase project. The form works the moment these files are live.
 
 
-ONE THING THAT WAS BROKEN AND IS NOW FIXED
-------------------------------------------
-The gold Donate button's second line ("Card · Apple Pay · Google Pay")
-was too faint to pass the readability standard — but it had never once
-been seen, because until today the button was disabled and that line was
-a different colour entirely. It only became visible the moment the links
-went in. Now darkened.
+WHERE IT SITS ON THE WEBSITE
+----------------------------
+THE LINK TO HAND OUT:   taiyabahmasjid.com/collection
 
-Worth knowing because it is the second fault of exactly this shape on
-this page: something that looks fine while a feature is switched off,
-and is wrong the moment it is switched on.
+That is the one to read out on the phone, put on a poster, or paste into
+WhatsApp. It is short enough to say once and spell correctly.
+
+In the site's own navigation it appears in two places:
+
+  * CONTACT — the main one. Contact is where an outside organisation
+    approaching the masjid looks. Services is headed "what the masjid
+    offers the community", which is a Bolton Muslim asking what they can
+    get; a charity collection runs the other way.
+
+  * SERVICES — a tile as well, because somebody collecting for their own
+    village's madrasah will look there first.
 
 
-STILL OUTSTANDING, AND ONLY YOU CAN ANSWER
-------------------------------------------
-Which bank account general donations should use. The transfer panel on
-this page shows the NEW BUILD's HSBC 40-04-15 / 02320258, while hall
-hire uses BCIS 30-99-50 / 59286668. One of those is wrong for general
-giving. Nobody here can tell which.
+WHAT THE OFFICE SEES
+--------------------
+A new "Charity collections" area in the Admin Centre, beside Hall Hire.
+Administrators and office accounts, authenticator code required, same as
+everywhere else.
+
+Two things on that screen are deliberately NOT drawn like administration:
+
+  1. A COLLECTOR WHO IS PAID gets a red badge and a tab of its own. On
+     the paper form this is a tick in a box on page one that nobody reads
+     twice. It is a safeguarding and fraud control — the committee should
+     see it at a glance.
+
+  2. TWO CHARITIES ON ONE DAY is flagged on the row. The masjid allows
+     one collection a day. The public form is NOT told which days are
+     taken, on purpose — that would be publishing the masjid's diary,
+     the same decision already made for nikah.
+
+A UK charity number is shown as a one-click link to the Charity
+Commission register, so whoever reviews it can check in about five
+seconds. An overseas registration number is shown plainly and marked
+"check by hand" — a dead link to the Commission would read as "the
+masjid checked and found nothing".
+
+
+THE SIGNATURE
+-------------
+Typing a name has the same effect as signing the sheet. What makes it
+evidence is that it is stored with the date and time AND with the version
+of the rules that was on screen at that moment. If the masjid changes the
+collection rules, every earlier request still says what that person
+actually agreed to. The paper form cannot do that, because it does not
+name its own version either.
+
+
+THINGS ONLY THE MASJID CAN DECIDE
+---------------------------------
+1. FOURTEEN DAYS' NOTICE. That is what the form asks for now, matching
+   what the masjid already asks for a nikah. Nobody has said whether a
+   collection needs as long. If it should be less, tell me — it is one
+   number, changed in two places, and both have to move together.
+
+2. RAFIK PATEL'S NUMBER IS THE ONLY ONE ON THE FORM, as asked. Ali
+   Khotiwala's is not on it anywhere.
+
+3. THE DATA PROTECTION PAPERWORK. This form stores a TRUSTEE's name,
+   phone and email — somebody who is not filling the form in and has not
+   agreed to anything. That is the same point raised about the nikah
+   witnesses. The DPIA, the ICO registration, the lawful-basis note and a
+   privacy-notice line naming trustees are still outstanding for BOTH.
+   The form now asks the applicant to confirm the trustee is content to
+   be contacted, which helps and is not a substitute.
