@@ -320,8 +320,40 @@
              (r.notes ? " \u00B7 " + r.notes : ""),
         paid_at: r.fee_paid_at, abandoned: false,
         activity_at: r.fee_paid_at || r.reviewed_at || r.submitted_at,
+        people: (window.__NK_PEOPLE || {})[r.id] || [],
         status: r.status, notes: r.office_notes, handled_at: r.reviewed_at
       };
+    }
+
+    //  THE PARTICULARS, BEHIND A DISCLOSURE.
+    //
+    //  Five people's home addresses on every row would put the whole list on
+    //  screen at once — over a counter, on a laptop somebody else can see.
+    //  The office needs them at the point of doing the nikāḥ, not while
+    //  scanning what came in this morning, so they stay shut until asked for.
+    var ROLE_WORDS = {
+      groom: "Bridegroom", bride: "Bride", wali: "Representative of the bride",
+      witness_1: "Witness 1", witness_2: "Witness 2"
+    };
+    var ROLE_ORDER = ["groom", "bride", "wali", "witness_1", "witness_2"];
+
+    function particulars(r) {
+      if (r.kind !== "nikah" || !r.people || !r.people.length) return "";
+      var list = r.people.slice().sort(function (a, b) {
+        return ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role);
+      });
+      return '<details class="bk-people"><summary>Who is being married &mdash; ' +
+        list.length + ' ' + (list.length === 1 ? "person" : "people") + '</summary>' +
+        list.map(function (x) {
+          var docs = [x.proof_address, x.proof_id].filter(Boolean).join(" \u00B7 ");
+          return '<div class="bk-person">' +
+            '<div class="rl">' + esc(ROLE_WORDS[x.role] || x.role) + '</div>' +
+            '<div class="bd"><b>' + esc(x.full_name) + '</b> \u00B7 ' + esc(x.age) +
+              (x.occupation ? ' \u00B7 ' + esc(x.occupation) : '') + '<br>' +
+              esc(x.address_line) + ', ' + esc(x.town) + ' ' + esc(x.postcode) +
+              (docs ? '<br><span class="dc">Can bring: ' + esc(docs) + '</span>' : '') +
+            '</div></div>';
+        }).join("") + '</details>';
     }
 
     function load() {
@@ -332,6 +364,12 @@
         sb.from("hall_bookings")
           .select("id,created_at,booking_date,reference,hire_type,halls_count,session_slot,hall,kitchen,deposit_status,deposit_paid_at,hold_expires_at,base_amount_p,extras_p,balance_status,balance_paid_at,first_name,last_name,address,phone,status,office_notes,handled_at")
           .order("booking_date", { ascending: true }),
+        //  The five people. A separate query rather than an embed, because
+        //  an embed that fails takes the whole request list with it — and the
+        //  office would rather see a booking with no particulars than no
+        //  bookings at all.
+        sb.from("nikah_people")
+          .select("request_id,role,full_name,age,address_line,town,postcode,occupation,proof_address,proof_id"),
         sb.from("nikah_requests")
           .select("id,submitted_at,reference,preferred_date,alternative_date,slot,preferred_time,guests_estimate,contact_name,contact_role,contact_phone,contact_email,notes,status,office_notes,reviewed_at,fee_status,fee_amount_p,fee_paid_at")
           .order("preferred_date", { ascending: true })
@@ -340,14 +378,23 @@
         var out = [];
         if (res[0].error) problems.push("hall bookings (" + res[0].error.message + ")");
         else out = out.concat((res[0].data || []).map(fromHall));
-        if (res[1].error) {
+        //  Keyed by request, so a row can find its own people without a
+        //  scan per booking.
+        var PEOPLE = {};
+        if (!res[1].error) {
+          (res[1].data || []).forEach(function (pr) {
+            (PEOPLE[pr.request_id] = PEOPLE[pr.request_id] || []).push(pr);
+          });
+        }
+        window.__NK_PEOPLE = PEOPLE;
+        if (res[2].error) {
           // Until 010_nikah_requests.sql is applied this table does not exist,
           // which is expected rather than broken. Say so plainly instead of
           // showing the office a database error they cannot act on.
-          var missing = /does not exist|schema cache|relation/i.test(res[1].error.message || "");
-          if (!missing) problems.push("nikāḥ requests (" + res[1].error.message + ")");
+          var missing = /does not exist|schema cache|relation/i.test(res[2].error.message || "");
+          if (!missing) problems.push("nikāḥ requests (" + res[2].error.message + ")");
         } else {
-          out = out.concat((res[1].data || []).map(fromNikah));
+          out = out.concat((res[2].data || []).map(fromNikah));
         }
         setError(problems.length
           ? "Couldn't load " + problems.join(" or ") + ". The rest of the list is still correct."
@@ -587,6 +634,7 @@
               (r.email ? ' <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + '</a>' : '') +
             '</div>' +
             '<div class="bk-addr">' + esc(r.sub) + '</div>' +
+            particulars(r) +
             (r.kind === "hall" ? moneyLine(r) : feeLine(r)) +
             // When the money landed, in words. The whole complaint this was
             // built from was "there is no way to know they have paid" — and

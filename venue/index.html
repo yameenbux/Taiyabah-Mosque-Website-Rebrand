@@ -344,6 +344,26 @@
   @media (max-width:560px){ .bk-money .bm-owed{margin-left:0;} }
   .bk-who a{color:var(--brand-700);font-weight:600;}
   .bk-addr{font-size:.83rem;color:var(--muted);line-height:1.55;}
+
+  /*  The five people, shut by default. Their addresses are the most sensitive
+      thing on this screen and the office is not reading them while scanning
+      the morning's list. */
+  .bk-people{margin-top:9px;border-top:1px dashed var(--line);padding-top:8px;}
+  .bk-people > summary{
+    cursor:pointer;font-size:.78rem;font-weight:700;color:var(--brand-700);
+    list-style:none;display:inline-flex;align-items:center;gap:6px;
+  }
+  .bk-people > summary::-webkit-details-marker{display:none;}
+  .bk-people > summary::before{content:"\25B8";transition:transform .15s ease;display:inline-block;}
+  .bk-people[open] > summary::before{transform:rotate(90deg);}
+  .bk-person{display:grid;grid-template-columns:1fr;gap:2px;padding:8px 0;
+    border-bottom:1px solid var(--line);font-size:.82rem;line-height:1.5;}
+  @media(min-width:620px){ .bk-person{grid-template-columns:170px 1fr;gap:12px;} }
+  .bk-person:last-child{border-bottom:none;}
+  .bk-person .rl{font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;
+    font-weight:700;color:var(--muted);padding-top:2px;}
+  .bk-person .bd{color:var(--ink);}
+  .bk-person .dc{font-size:.75rem;color:var(--muted);}
   .bk-meta{font-size:.74rem;color:var(--muted);}
 
   .bk-notes{
