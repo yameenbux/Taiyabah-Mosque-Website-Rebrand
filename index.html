@@ -4361,7 +4361,8 @@ window.TAIYABAH_PUBLIC = {
             </div>
             <div class="dn-row">
               <div class="dn-lab">How often</div>
-              <div class="dn-pills dn-two" id="dn-freq" role="group" aria-label="How often"></div>
+              <div class="dn-pills" id="dn-freq" role="group" aria-label="How often"></div>
+              <p class="dn-hint" id="dn-freq-hint"></p>
             </div>
             <div class="dn-row">
               <div class="dn-lab">Amount</div>
@@ -6633,14 +6634,34 @@ window.TAIYABAH_PUBLIC = {
     ];
 
     //  PASTE THE STRIPE PAYMENT LINKS HERE. Nothing else needs changing.
+    //  18 slots. Any left blank grey out; if all are blank the card says card
+    //  giving opens shortly and the bank details below carry the page.
     var DONATE_LINKS = {
       once:    { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
-      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }
+      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
+      jummah:  { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }
     };
 
+    //  FRIDAY PAY IS A WEEKLY SUBSCRIPTION, AND THE NOTE SAYS SO.
+    //
+    //  Stripe bills a weekly subscription every seven days from the day it
+    //  starts. There is no way to anchor it to a Friday from a Payment Link —
+    //  billing_cycle_anchor exists only on the API, not on links. So somebody
+    //  who sets this up on a Tuesday is charged every Tuesday.
+    //
+    //  The gift is the same size and arrives every week either way, so the
+    //  feature is sound. What is not sound is a masjid page promising a day
+    //  it cannot deliver, and a donor later noticing. Hence the note.
     var FREQS = [
-      { key:'once',    label:'One-off', sub:'a single gift' },
-      { key:'monthly', label:'Monthly', sub:'until you stop' }
+      { key:'once',    label:'One-off', sub:'a single gift',
+        note:'' },
+      { key:'monthly', label:'Monthly', sub:'until you stop',
+        note:'Taken once a month from the day you set it up, until you stop it. ' +
+             'You can cancel any time from the receipt Stripe emails you.' },
+      { key:'jummah',  label:'Friday Pay', sub:'Jumu\u02bbah',
+        note:'A weekly gift for Jumu\u02bbah. Stripe takes it every seven days ' +
+             'from the day you start, so set it up on a Friday if you would ' +
+             'like it to land on one. You can stop it any time.' }
     ];
 
     var $ = function(id){ return document.getElementById(id); };
@@ -6679,10 +6700,19 @@ window.TAIYABAH_PUBLIC = {
       var p = PURPOSES.filter(function(x){ return x.key === S.purpose; })[0];
       $('dn-purpose-hint').textContent = p ? p.hint : '';
 
+      var f = FREQS.filter(function(x){ return x.key === S.freq; })[0];
+      var fh = $('dn-freq-hint');
+      fh.textContent = f ? f.note : '';
+      fh.hidden = !(f && f.note);
+
       var href = DONATE_LINKS[S.freq][S.amount] || '';
       var go = $('dn-go');
       var amt = AMOUNTS.filter(function(x){ return x.key === S.amount; })[0];
-      var per = S.freq === 'monthly' ? ' a month' : '';
+      //  What the donor is agreeing to, on the button itself. "Donate £10"
+      //  and "Donate £10 every Friday" are different promises and the button
+      //  is the last thing read before the card page.
+      var per = S.freq === 'monthly' ? ' a month'
+              : S.freq === 'jummah'  ? ' every Friday' : '';
 
       if(href){
         //  The designation travels with the payment rather than needing its
@@ -6692,7 +6722,7 @@ window.TAIYABAH_PUBLIC = {
                   'client_reference_id=' + encodeURIComponent(S.purpose);
         go.removeAttribute('aria-disabled');
         $('dn-go-main').textContent = S.amount === 'other'
-          ? 'Choose your amount' + (per ? ' a month' : '')
+          ? 'Choose your amount' + per
           : 'Donate ' + amt.label + per;
         $('dn-go-sub').textContent = 'Card · Apple Pay · Google Pay';
       } else {
