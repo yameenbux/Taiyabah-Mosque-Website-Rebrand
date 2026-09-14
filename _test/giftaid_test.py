@@ -17,6 +17,7 @@ Run:  python3 _test/giftaid_test.py
 """
 from playwright.sync_api import sync_playwright
 import sys, os, re, http.server, socketserver, threading, functools
+import atexit
 
 ROOT = os.environ.get("SITE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
@@ -81,6 +82,21 @@ def hrefs(pg):
 
 
 made = []
+
+
+#  Registered, not written as trailing statements at the end of the file.
+#  A check that raises — a missing migration, a Playwright timeout — skips
+#  every statement after the `with` block, so the two 700 KB copies of
+#  index.html this test writes were being left behind in the REPOSITORY
+#  ROOT, which is the folder GitHub Pages serves. Found 14 September 2026,
+#  after giftaid_test.py died on the missing db/022 and left them there.
+@atexit.register
+def _sweep():
+    for f in made:
+        try:
+            os.remove(f)
+        except OSError:
+            pass
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
     pg = b.new_page(viewport={"width": 1440, "height": 1100})
@@ -198,12 +214,6 @@ with sync_playwright() as p:
 
     check(errs == [], "uncaught exceptions: %s" % errs)
     b.close()
-
-for f in made:
-    try:
-        os.remove(f)
-    except OSError:
-        pass
 
 print("\n" + ("ALL PASS" if not fails else "FAILURES (%d):\n  " % len(fails) + "\n  ".join(fails)))
 sys.exit(1 if fails else 0)
