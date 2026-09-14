@@ -1,87 +1,68 @@
-TAIYABAH MASJID — the pages to upload
-=====================================
+TAIYABAH MASJID — bigger text, readable gold
+============================================
 14 September 2026
 
-16 files. These are the website itself — nothing else.
+14 files. Every one is a replacement for a file already in the repository —
+nothing new is added, nothing has to be deleted.
 
 
 HOW TO UPLOAD (github.com, no command line needed)
 --------------------------------------------------
 1. Open https://github.com/yameenbux/Taiyabah-Mosque-Website-Rebrand
-2. Make sure you are on the branch you want to change (main).
+2. Make sure you are on the branch you want to change.
 3. "Add file" -> "Upload files".
-4. Unzip this first, then drag the CONTENTS of the "taiyabah-pages" folder
-   into the browser — not the folder itself, and not this text file. The
-   folder structure (access/, newbuild/, portal/, ...) must be kept, because
-   that is how GitHub decides which files to replace.
+4. Unzip this first, then drag the CONTENTS of the "taiyabah-text-size"
+   folder into the browser — not the folder itself, and not this text file.
+   The folder structure (access/, venue/, portals/, ...) must be kept: that
+   is how GitHub decides which files to replace.
 5. Commit.
 
 
-WHAT IS IN HERE
----------------
-NEW SCREENS
-  access/index.html        "User access" — invite staff, tiles, person page,
-  access/app.js             contact details, send a password reset
-  access/config.js
-  newbuild/index.html      the new build page editor
-  newbuild/app.js
-  newbuild/config.js
-  portal/index.html        the madrasah portal — admin console, teacher,
-  portal/app.js             parent
+WHAT CHANGED
+------------
+Text size. 1,119 sizes across the website and the eleven staff screens were
+raised. The small print moved most — a 9.6px label is now 13.3px — and the
+big headings did not move at all. Nothing on the site is under 12px now.
+Body text is 16.3px instead of 14.7px.
 
-CHANGED SCREENS
-  index.html               THE WEBSITE. Built file — never edit by hand.
-  index_template.html      the source index.html is built FROM. See below.
-  portals/index.html       the Admin Centre — rail + working column
-  portals/app.js
-  venue/index.html         hall bookings + nikah requests for the office.
-  venue/app.js              Now shows the nikah particulars.
-  account/index.html       small changes
-  apply/index.html         small changes
+Colour. The masjid gold reads at 2.3:1 on the cream cards, which is well
+below the readable minimum. "VIEW FULL TIMETABLE" on the home page was one
+of the worst. There are now three darker variants for text — gold, green
+and red — and 59 places were switched over to them. Gold on the dark plum
+was always fine and has not changed.
 
 
-TWO THINGS THAT WILL BITE IF SKIPPED
-------------------------------------
-1. UPLOAD index_template.html EVEN THOUGH NOBODY VISITS IT.
+FIVE THINGS THAT WERE BROKEN, FOUND WHILE DOING THIS
+----------------------------------------------------
+1. The donate page's button, when no payment link is set up — which is the
+   state it is in right now — said "Not available yet" in cream on cream.
+   Invisible.
+2. Two buttons in the Five Pillars article were cream on cream for the same
+   reason.
+3. ON THE SIGN-IN PAGE, the charity registration line was invisible. It had
+   been placed outside the plum panel it was styled for, so it rendered as
+   pale cream on the pale background. A charity's registration number is
+   the one line on that page that has to be legible.
+4. The "TAIYABAH MASJID" line above every sign-in form was 1.77:1.
+5. The madrasah and new-build pages were being cut off at the right edge on
+   a narrow phone, with nothing reporting an error.
 
-   index.html is BUILT from index_template.html. If you upload the built
-   index.html but not the template, the repository is left holding an old
-   template that does not match the live site. The next time anybody runs
-   the build, every change made in the last week is silently undone and the
-   site goes backwards with no error anywhere.
+All five are fixed in these files.
 
-   The two always travel together.
 
-2. ONE FILE HAS TO BE DELETED BY HAND.
+HOW IT WAS CHECKED
+------------------
+Every page was measured before and after at four screen widths for text
+that gets clipped, buttons whose labels wrap, and columns that push off the
+screen — and the two reports compared line by line. The public site's report
+is identical to before. Contrast failures went from 22 to 0.
 
-   A web upload can add and replace files. It cannot delete one.
-
-       portal/supabase2.112.4.js
-
-   is now unused. Delete it on GitHub after uploading: open the file, click
-   the bin icon, commit. The site works either way — it is dead weight, not
-   a dependency — so this is tidiness, not urgency.
+The repository's own 13 test suites were run before and after. Twelve pass
+either way. giftaid_test.py fails identically before and after, because
+db/022_donations_and_gift_aid.sql is missing from the repository — a known
+gap, not something caused by this change.
 
 
 WHAT IS DELIBERATELY NOT IN HERE
 --------------------------------
-  db/*.sql                 the database migrations. ALREADY APPLIED to the
-                           live Supabase project — uploading them changes
-                           nothing. They belong in the repo eventually so the
-                           next person can read what was done, but they are
-                           not needed for the site to work.
-  supabase/functions/*     the Edge Functions. ALREADY DEPLOYED, same story.
-  _test/*.py              the test suites. They never run on the live site.
-
-Ask for the full zip if you want those as well.
-
-
-THE KEYS IN THESE FILES
------------------------
-access/config.js and newbuild/config.js contain a Supabase key. It is the
-PUBLISHABLE (anon) key and it is meant to be visible in a browser — the real
-protection is Row Level Security inside the database. Safe in a public repo.
-
-The service_role / secret key is NOT in any of these files and must never be
-put in one. If GitHub ever warns that a push contains a secret, do NOT click
-"Allow secret" — cancel, and get the key rotated.
+Nothing from db/, supabase/ or _test/. None of them changed.

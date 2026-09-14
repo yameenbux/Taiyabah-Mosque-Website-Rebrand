@@ -103,6 +103,13 @@ window.TAIYABAH_PUBLIC = {
   :root{
     --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844; --brand-600:#772157;
     --gold:#C6A24C; --gold-bright:#DCBB63;
+    /* --gold-ink is the SAME gold, dark enough to read as text on a light
+       card. #C6A24C on cream is 2.3:1 — below the 4.5:1 minimum and, in
+       practice, the thing people mean when they say the site makes them
+       squint: the small print was not just small, it was pale. Gold on the
+       dark plum is 5.2:1 and stays exactly as it is. Use --gold for gold on
+       plum, --gold-ink for gold on paper or card. Same rule for green. */
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
     --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
     --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
     --radius:14px;
@@ -130,7 +137,7 @@ window.TAIYABAH_PUBLIC = {
 
   .eyebrow{
     display:inline-flex;align-items:center;gap:10px;
-    font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;
+    font-size:.867rem;letter-spacing:.24em;text-transform:uppercase;
     color:var(--gold-bright);font-weight:600;margin-bottom:16px;
   }
   .eyebrow.on-light{color:var(--brand-700);}
@@ -138,7 +145,7 @@ window.TAIYABAH_PUBLIC = {
 
   .btn{
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
-    padding:15px 30px;border-radius:999px;font-weight:600;font-size:.9rem;
+    padding:15px 30px;border-radius:999px;font-weight:600;font-size:1.003rem;
     letter-spacing:.01em;cursor:pointer;border:1px solid transparent;transition:.25s ease;
   }
   .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
@@ -148,7 +155,7 @@ window.TAIYABAH_PUBLIC = {
   .btn-ghost-light{border-color:var(--line);color:var(--brand-800);}
   .btn-ghost-light:hover{border-color:var(--brand-800);background:var(--card);}
   .link-arrow{
-    display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.88rem;
+    display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:.986rem;
     color:var(--brand-800);border-bottom:1px solid transparent;padding-bottom:2px;transition:.2s ease;
   }
   .link-arrow:hover{border-color:var(--brand-800);}
@@ -159,7 +166,7 @@ window.TAIYABAH_PUBLIC = {
   section{position:relative;padding:100px 0;}
   .section-tight{padding:70px 0;}
   .section-head{max-width:560px;margin-bottom:44px;}
-  .section-head p{color:var(--muted);margin-top:14px;font-size:1.02rem;line-height:1.7;}
+  .section-head p{color:var(--muted);margin-top:14px;font-size:1.094rem;line-height:1.7;}
   .section-head.on-dark p{color:rgba(243,239,227,.75);}
   .section-head.on-dark h2, .section-head.on-dark h1{color:#F3EFE3;}
   .section-head.center{margin-inline:auto;text-align:center;}
@@ -167,8 +174,8 @@ window.TAIYABAH_PUBLIC = {
   .rule{flex:1;height:1px;background:var(--line);}
   .rule-dark{background:rgba(255,255,255,.14);}
   .sec-h{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;}
-  .sec-h h3{font-size:1.05rem;letter-spacing:.02em;}
-  .sec-h .tag{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .sec-h h3{font-size:1.115rem;letter-spacing:.02em;}
+  .sec-h .tag{font-size:.853rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
 
   .girih-mark{position:absolute;width:200px;height:200px;color:var(--gold);opacity:.05;pointer-events:none;}
   .girih-mark.tr{top:-30px;right:-30px;} .girih-mark.bl{bottom:-30px;left:-30px;}
@@ -186,8 +193,8 @@ window.TAIYABAH_PUBLIC = {
   .brand{display:flex;align-items:center;gap:12px;}
   .brand img{height:32px;width:auto;}
   .brand .txt{line-height:1.22;}
-  .brand .txt strong{display:block;font-family:"Fraunces",serif;color:#F3EFE3;font-size:1rem;}
-  .brand .txt span{display:block;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:#BBA9B4;}
+  .brand .txt strong{display:block;font-family:"Fraunces",serif;color:#F3EFE3;font-size:1.08rem;}
+  .brand .txt span{display:block;font-size:.829rem;letter-spacing:.16em;text-transform:uppercase;color:#BBA9B4;}
 
   /* ---------- HEADER UTILITY BAR (live times, desktop only — mobile already has the hero chip + drawer) ---------- */
   .header-utility{display:none;align-items:stretch;gap:0;flex:1;justify-content:center;margin:0 24px;}
@@ -197,16 +204,16 @@ window.TAIYABAH_PUBLIC = {
   }
   .hu-live .dot{width:26px;height:26px;border-radius:50%;background:rgba(198,162,76,.16);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .hu-live .dot svg{width:12px;height:12px;color:var(--gold-bright);}
-  .hu-live .tx{font-size:.76rem;color:rgba(243,239,227,.68);}
+  .hu-live .tx{font-size:.907rem;color:rgba(243,239,227,.68);}
   .hu-live .tx b{color:var(--gold-bright);font-weight:700;}
   .hu-upcoming{display:flex;align-items:center;gap:0;margin-left:14px;padding-left:14px;border-left:1px solid rgba(198,162,76,.22);}
   .hu-item{padding:0 13px;white-space:nowrap;}
-  .hu-item .k{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(243,239,227,.5);}
-  .hu-item .v{font-size:.8rem;color:#F3EFE3;font-weight:600;}
-  .hu-item .s{font-size:.68rem;color:rgba(243,239,227,.55);}
+  .hu-item .k{font-size:.833rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(243,239,227,.5);}
+  .hu-item .v{font-size:.931rem;color:#F3EFE3;font-weight:600;}
+  .hu-item .s{font-size:.853rem;color:rgba(243,239,227,.55);}
   .hu-donate{
     display:inline-flex;align-items:center;gap:6px;background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-    color:var(--brand-900);font-weight:700;font-size:.78rem;padding:9px 18px;border-radius:999px;margin-left:16px;white-space:nowrap;
+    color:var(--brand-900);font-weight:700;font-size:.92rem;padding:9px 18px;border-radius:999px;margin-left:16px;white-space:nowrap;
     transition:.2s ease;
   }
   .hu-donate:hover{filter:brightness(1.06);transform:translateY(-1px);}
@@ -225,8 +232,8 @@ window.TAIYABAH_PUBLIC = {
   .acct-hello svg{width:16px;height:16px;flex-shrink:0;color:var(--gold-bright);}
   .acct-hello:hover svg{color:var(--brand-900);}
   .acct-hello .ah-t{display:flex;flex-direction:column;line-height:1.15;min-width:0;}
-  .acct-hello .ah-k{font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
-  .acct-hello .ah-v{font-size:.78rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .acct-hello .ah-k{font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
+  .acct-hello .ah-v{font-size:.92rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   @media (min-width:1080px){ .acct-hello:not([hidden]){display:inline-flex;} }
   .acct-icons{display:none;align-items:center;gap:19px;margin-right:8px;}
   .acct-btn{
@@ -234,7 +241,7 @@ window.TAIYABAH_PUBLIC = {
     padding:4px 2px;color:rgba(243,239,227,.68);cursor:pointer;font-family:inherit;
   }
   .acct-btn svg{width:17px;height:17px;color:var(--gold-bright);}
-  .acct-btn span{font-size:.58rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;white-space:nowrap;}
+  .acct-btn span{font-size:.825rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;white-space:nowrap;}
   .acct-btn:hover{color:#F3EFE3;}
   .acct-btn:hover svg{color:#fff;}
   /* These used to appear only at 1340px and up, which meant that on every
@@ -247,7 +254,7 @@ window.TAIYABAH_PUBLIC = {
   .coming-soon-toast{
     position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(16px);
     background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.4);
-    padding:12px 22px;border-radius:999px;font-size:.85rem;z-index:2000;
+    padding:12px 22px;border-radius:999px;font-size:.96rem;z-index:2000;
     opacity:0;pointer-events:none;transition:.3s ease;box-shadow:0 14px 40px rgba(0,0,0,.35);white-space:nowrap;
   }
   .coming-soon-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
@@ -256,7 +263,7 @@ window.TAIYABAH_PUBLIC = {
   .topnav{display:none;background:var(--brand-800);border-top:1px solid rgba(198,162,76,.28);border-bottom:1px solid rgba(198,162,76,.16);}
   .topnav-list{display:flex;align-items:center;justify-content:center;gap:clamp(18px,3vw,38px);list-style:none;flex-wrap:wrap;}
   .topnav-list a{
-    display:inline-block;padding:14px 2px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;
+    display:inline-block;padding:14px 2px;font-size:.9rem;letter-spacing:.08em;text-transform:uppercase;
     font-weight:700;color:rgba(243,239,227,.75);cursor:pointer;border-bottom:2px solid transparent;transition:.2s ease;
   }
   .topnav-list a:hover{color:#F3EFE3;}
@@ -299,9 +306,9 @@ window.TAIYABAH_PUBLIC = {
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.35);
     border-radius:10px;padding:9px 13px;margin-bottom:9px;
   }
-  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.78rem;font-family:"Fraunces",serif;line-height:1.25;}
-  .nav-app-cta span{display:block;color:rgba(243,239,227,.6);font-size:.66rem;margin-top:1px;line-height:1.3;}
-  .nav-app-cta .go{color:var(--gold-bright);font-size:1rem;}
+  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.92rem;font-family:"Fraunces",serif;line-height:1.25;}
+  .nav-app-cta span{display:block;color:rgba(243,239,227,.6);font-size:.84rem;margin-top:1px;line-height:1.3;}
+  .nav-app-cta .go{color:var(--gold-bright);font-size:1.08rem;}
   .nav-live-cta{margin-bottom:16px;}
   .nav-live-cta{background:rgba(180,50,50,.08);border-color:rgba(220,90,90,.3);}
   .nav-live-cta strong{display:flex;align-items:center;gap:7px;}
@@ -310,7 +317,7 @@ window.TAIYABAH_PUBLIC = {
   .nav-stack{display:flex;flex-direction:column;}
   .nav-stack li a{
     display:flex;align-items:center;gap:12px;padding:13px 4px;color:#F3EFE3;font-family:"Fraunces",serif;
-    font-size:1rem;border-bottom:1px solid rgba(255,255,255,.07);transition:.25s ease;cursor:pointer;
+    font-size:1.08rem;border-bottom:1px solid rgba(255,255,255,.07);transition:.25s ease;cursor:pointer;
   }
   /* An icon says what the section is; 01..11 only said how long the list was. */
   .nav-stack li a .nav-ic{
@@ -333,8 +340,8 @@ window.TAIYABAH_PUBLIC = {
   .nav-acct-hello:not([hidden]){display:flex;}
   .nav-acct-hello svg{width:18px;height:18px;flex-shrink:0;color:var(--gold-bright);}
   .nav-acct-hello .ah-t{display:flex;flex-direction:column;line-height:1.2;min-width:0;}
-  .nav-acct-hello .ah-k{font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
-  .nav-acct-hello .ah-v{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .nav-acct-hello .ah-k{font-size:.822rem;letter-spacing:.1em;text-transform:uppercase;opacity:.72;}
+  .nav-acct-hello .ah-v{font-size:.986rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .nav-acct-row{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
   /* Once signed in, Login and Register go, so the row would otherwise leave two
      empty columns and push the remaining tiles into a corner. */
@@ -346,10 +353,10 @@ window.TAIYABAH_PUBLIC = {
     color:rgba(243,239,227,.82);font-family:inherit;transition:.2s ease;
   }
   .na-btn svg{width:19px;height:19px;color:var(--gold-bright);flex-shrink:0;}
-  .na-btn span{font-size:.53rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700;}
+  .na-btn span{font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;font-weight:700;}
   .na-btn:hover,.na-btn:focus-visible{background:rgba(220,187,99,.16);border-color:rgba(220,187,99,.42);color:#F3EFE3;}
   .nav-panel .panel-foot{margin-top:auto;padding-top:20px;border-top:1px solid rgba(255,255,255,.1);}
-  .nav-panel .panel-foot p{color:rgba(243,239,227,.55);font-size:.76rem;margin-bottom:12px;line-height:1.5;}
+  .nav-panel .panel-foot p{color:rgba(243,239,227,.55);font-size:.907rem;margin-bottom:12px;line-height:1.5;}
   .social-row{display:flex;gap:9px;}
   .social-row a{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#F3EFE3;}
   .social-row a svg{width:15px;height:15px;}
@@ -373,26 +380,26 @@ window.TAIYABAH_PUBLIC = {
   .hero-grid{display:block;}
   .salam{display:flex;align-items:baseline;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
   .salam .ar{font-size:1.5rem;color:var(--gold-bright);}
-  .salam .tr{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:#A78F9E;}
+  .salam .tr{font-size:.853rem;letter-spacing:.16em;text-transform:uppercase;color:#A78F9E;}
   .hero h1{font-size:clamp(2.1rem,4.4vw,3.3rem);color:#F3EFE3;margin-bottom:20px;max-width:15ch;}
   .hero h1 em{font-style:normal;color:var(--gold-bright);}
-  .hero p.lead{font-size:1.05rem;color:rgba(243,239,227,.78);max-width:46ch;line-height:1.75;margin-bottom:32px;}
+  .hero p.lead{font-size:1.115rem;color:rgba(243,239,227,.78);max-width:46ch;line-height:1.75;margin-bottom:32px;}
   .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:36px;}
   .hero-chip{
     display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);
-    border:1px solid rgba(198,162,76,.3);border-radius:999px;padding:8px 18px 8px 8px;font-size:.85rem;
+    border:1px solid rgba(198,162,76,.3);border-radius:999px;padding:8px 18px 8px 8px;font-size:.96rem;
   }
-  .hero-chip .dot{width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.16);display:flex;align-items:center;justify-content:center;font-size:.8rem;}
+  .hero-chip .dot{width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.16);display:flex;align-items:center;justify-content:center;font-size:.931rem;}
   .hero-chip b{color:var(--gold-bright);font-weight:700;}
   .hero-chip span{color:rgba(243,239,227,.7);}
   .hero-feat-card{
     margin-top:30px;background:rgba(18,4,12,.6);border:1px solid rgba(198,162,76,.3);border-radius:var(--radius);
     padding:22px 24px;max-width:380px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
   }
-  .hero-feat-card .fc-eyebrow{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);font-weight:700;}
-  .hero-feat-card p{font-size:.86rem;color:rgba(243,239,227,.8);line-height:1.6;margin-top:8px;}
+  .hero-feat-card .fc-eyebrow{font-size:.84rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-bright);font-weight:700;}
+  .hero-feat-card p{font-size:.969rem;color:rgba(243,239,227,.8);line-height:1.6;margin-top:8px;}
   .hero-feat-card ul{list-style:none;margin-top:14px;display:flex;flex-direction:column;gap:10px;}
-  .hero-feat-card li{display:flex;align-items:center;gap:9px;font-size:.86rem;color:rgba(243,239,227,.94);}
+  .hero-feat-card li{display:flex;align-items:center;gap:9px;font-size:.969rem;color:rgba(243,239,227,.94);}
   .hero-feat-card li svg{width:15px;height:15px;color:var(--gold-bright);flex-shrink:0;}
   @media (min-width:900px){
     .hero .hero-bg{
@@ -423,7 +430,7 @@ window.TAIYABAH_PUBLIC = {
   .banner-content{position:relative;z-index:3;text-align:center;padding:60px 24px;}
   .banner-content .eyebrow{justify-content:center;color:var(--gold-bright);}
   .banner-content h2{font-size:clamp(2rem,4.6vw,3.4rem);color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.9);margin-bottom:16px;}
-  .banner-content p{font-size:1.05rem;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 30px;line-height:1.7;text-shadow:0 1px 12px rgba(0,0,0,.6);}
+  .banner-content p{font-size:1.115rem;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 30px;line-height:1.7;text-shadow:0 1px 12px rgba(0,0,0,.6);}
 
   /* ---------- HOME: PAGE TEASERS ---------- */
   /* ---------- EXPLORE ROW (5-up icon strip, girih-textured) ---------- */
@@ -438,8 +445,8 @@ window.TAIYABAH_PUBLIC = {
   .explore-item:hover .ei-ic{background:var(--brand-900);color:var(--gold-bright);}
   .ei-ic{width:42px;height:42px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;transition:.25s ease;flex-shrink:0;}
   .ei-ic svg{width:18px;height:18px;}
-  .ei-label{font-family:"Fraunces",serif;font-weight:600;font-size:1rem;color:var(--ink);letter-spacing:.01em;}
-  .ei-sub{font-size:.79rem;color:var(--muted);line-height:1.55;}
+  .ei-label{font-family:"Fraunces",serif;font-weight:600;font-size:1.08rem;color:var(--ink);letter-spacing:.01em;}
+  .ei-sub{font-size:.926rem;color:var(--muted);line-height:1.55;}
 
   /* ---------- HOME: AT-A-GLANCE ROW (prayer / new build / quick links / donate) ---------- */
   .glance-row{background:var(--paper);padding:56px 0 68px;}
@@ -447,14 +454,14 @@ window.TAIYABAH_PUBLIC = {
   .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px;display:flex;flex-direction:column;}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
   .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
-  .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces",serif;font-weight:700;font-size:.8rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+  .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
   .glance-title svg{width:14px;height:14px;color:var(--brand-800);flex-shrink:0;}
-  .glance-more{font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold);cursor:pointer;white-space:nowrap;}
+  .glance-more{font-size:.838rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-ink);cursor:pointer;white-space:nowrap;}
   .glance-more:hover{text-decoration:underline;}
-  .gp-table-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;font-size:.63rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
+  .gp-table-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;font-size:.835rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);}
   .gp-table-head .gp-cols{display:flex;gap:12px;}
   .gp-col{width:46px;text-align:right;}
-  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:.8rem;}
+  .gp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);font-size:.931rem;}
   .gp-row:last-of-type{border-bottom:none;}
   .gp-row .gp-name{color:var(--ink);font-weight:600;}
   .gp-row .gp-times{display:flex;gap:12px;color:var(--ink);font-variant-numeric:tabular-nums;}
@@ -462,16 +469,16 @@ window.TAIYABAH_PUBLIC = {
   .gp-row .gp-times b{font-weight:700;}
   .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -8px;padding:5px 8px;border-radius:7px;border-bottom-color:transparent;}
   .gp-row.is-next .gp-times{color:var(--brand-900);}
-  .gp-foot{margin-top:6px;font-size:.68rem;color:var(--muted);}
+  .gp-foot{margin-top:6px;font-size:.853rem;color:var(--muted);}
   .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;align-items:center;text-align:center;justify-content:center;}
-  .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.58rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:9px;}
-  .glance-promo .fc-eyebrow{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.75;}
-  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.02rem;line-height:1.25;margin:5px 0 4px;}
-  .glance-promo .gp-when{font-size:.7rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:7px;}
-  .glance-promo p{font-size:.76rem;line-height:1.4;opacity:.85;margin-bottom:11px;max-width:30ch;}
-  .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.82rem;}
-  .glance-promo .gp-where{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:.72rem;font-weight:600;opacity:.9;}
-  .glance-promo .gp-live{margin-top:3px;font-size:.65rem;opacity:.75;}
+  .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.825rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:9px;}
+  .glance-promo .fc-eyebrow{font-size:.833rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.75;}
+  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.094rem;line-height:1.25;margin:5px 0 4px;}
+  .glance-promo .gp-when{font-size:.867rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:7px;}
+  .glance-promo p{font-size:.907rem;line-height:1.4;opacity:.85;margin-bottom:11px;max-width:30ch;}
+  .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.943rem;}
+  .glance-promo .gp-where{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:.88rem;font-weight:600;opacity:.9;}
+  .glance-promo .gp-live{margin-top:3px;font-size:.838rem;opacity:.75;}
   /* WhatsApp tile. The QR is a real, decoded-and-checked image rather than a
      picture of one, and it links to the same address it encodes, so tapping and
      scanning cannot drift apart. Rendered at 122px; verified readable at 120. */
@@ -491,12 +498,12 @@ window.TAIYABAH_PUBLIC = {
      reads as a broken website rather than as an announcement. */
   .fb-art{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 4px;min-height:0;}
   .fb-art svg{width:100%;max-width:230px;height:auto;display:block;}
-  .fb-copy{font-size:.79rem;color:var(--muted);line-height:1.5;text-align:center;margin:0 auto 12px;max-width:30ch;}
+  .fb-copy{font-size:.926rem;color:var(--muted);line-height:1.5;text-align:center;margin:0 auto 12px;max-width:30ch;}
   .fb-soon{
     align-self:center;display:inline-flex;align-items:center;gap:6px;
     padding:5px 13px;border-radius:999px;background:rgba(198,162,76,.16);
     border:1px solid rgba(198,162,76,.4);color:var(--brand-800);
-    font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+    font-size:.84rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
   }
   .fb-soon::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--gold);}
   /* The card was deliberately not clickable while there was nothing behind it.
@@ -506,7 +513,7 @@ window.TAIYABAH_PUBLIC = {
      and only one of them leads anywhere. */
   .fb-vol{
     display:inline-flex;align-items:center;gap:7px;align-self:center;margin-top:11px;
-    font-size:.82rem;font-weight:700;color:var(--brand-700);text-decoration:none;
+    font-size:.943rem;font-weight:700;color:var(--brand-700);text-decoration:none;
     border-bottom:1px solid rgba(94,24,68,.28);padding-bottom:2px;
   }
   .fb-vol svg{width:13px;height:13px;transition:transform .18s ease;}
@@ -515,10 +522,10 @@ window.TAIYABAH_PUBLIC = {
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
   .glance-donate .gd-ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
   .glance-donate .gd-ic svg{width:14px;height:14px;}
-  .glance-donate h3{font-family:"Fraunces",serif;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;color:#F3EFE3;}
-  .glance-donate p{font-size:.78rem;color:rgba(243,239,227,.78);line-height:1.45;margin-bottom:11px;max-width:26ch;}
-  .glance-donate .btn{padding:9px 20px;font-size:.82rem;}
-  .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.68rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
+  .glance-donate h3{font-family:"Fraunces",serif;font-size:1.042rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;color:#F3EFE3;}
+  .glance-donate p{font-size:.92rem;color:rgba(243,239,227,.78);line-height:1.45;margin-bottom:11px;max-width:26ch;}
+  .glance-donate .btn{padding:9px 20px;font-size:.943rem;}
+  .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.853rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
   .glance-donate .gd-policy svg{flex-shrink:0;}
 
   /* ---- App promo (home page) ---- */
@@ -527,19 +534,19 @@ window.TAIYABAH_PUBLIC = {
   .app-promo-grid{display:grid;grid-template-columns:1fr .82fr;gap:56px;align-items:center;position:relative;}
   .app-promo-copy p{color:rgba(243,239,227,.75);line-height:1.75;margin-top:12px;max-width:52ch;}
   .app-feat-list{list-style:none;margin:24px 0 28px;display:flex;flex-direction:column;gap:12px;}
-  .app-feat-list li{display:flex;gap:11px;align-items:flex-start;font-size:.92rem;color:rgba(243,239,227,.88);line-height:1.5;}
-  .afi{width:20px;height:20px;border-radius:50%;background:rgba(198,162,76,.18);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.66rem;font-weight:700;margin-top:2px;}
+  .app-feat-list li{display:flex;gap:11px;align-items:flex-start;font-size:1.02rem;color:rgba(243,239,227,.88);line-height:1.5;}
+  .afi{width:20px;height:20px;border-radius:50%;background:rgba(198,162,76,.18);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.84rem;font-weight:700;margin-top:2px;}
   .app-promo-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px;}
   .store-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
   .store-badge{display:flex;align-items:center;gap:9px;background:#000;border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;pointer-events:none;user-select:none;}
   .store-badge svg{width:22px;height:22px;flex-shrink:0;}
   .store-badge .sb-text{display:flex;flex-direction:column;line-height:1.15;}
-  .store-badge .sb-text .sb-small{font-size:.56rem;color:rgba(255,255,255,.75);letter-spacing:.03em;text-transform:uppercase;}
-  .store-badge .sb-text .sb-big{font-size:.9rem;font-weight:600;color:#fff;font-family:"Fraunces",serif;}
+  .store-badge .sb-text .sb-small{font-size:.822rem;color:rgba(255,255,255,.75);letter-spacing:.03em;text-transform:uppercase;}
+  .store-badge .sb-text .sb-big{font-size:1.003rem;font-weight:600;color:#fff;font-family:"Fraunces",serif;}
   .qr-mini{display:flex;align-items:center;gap:10px;}
   .qr-mini img{width:50px;height:50px;border-radius:6px;background:#fff;padding:4px;display:block;}
-  .qr-mini span{font-size:.72rem;color:rgba(243,239,227,.68);max-width:92px;line-height:1.3;}
-  .store-disclaimer{font-size:.72rem;color:rgba(243,239,227,.48);line-height:1.55;max-width:46ch;}
+  .qr-mini span{font-size:.88rem;color:rgba(243,239,227,.68);max-width:92px;line-height:1.3;}
+  .store-disclaimer{font-size:.88rem;color:rgba(243,239,227,.48);line-height:1.55;max-width:46ch;}
   .app-promo-phones{position:relative;height:520px;}
   .phone-shot{position:absolute;top:50%;border-radius:26px;overflow:hidden;border:7px solid #0c0208;box-shadow:0 25px 55px rgba(0,0,0,.55);width:200px;background:#170410;}
   .phone-shot img{display:block;width:100%;height:auto;}
@@ -551,31 +558,31 @@ window.TAIYABAH_PUBLIC = {
   .subsection{margin-bottom:64px;scroll-margin-top:110px;}
   .subsection:last-child{margin-bottom:0;}
   .subhead{display:flex;align-items:baseline;gap:16px;margin-bottom:28px;}
-  .subhead .idx{font-family:"Fraunces",serif;font-size:.8rem;color:var(--gold);font-weight:600;}
-  .subhead h3{font-size:1.3rem;}
+  .subhead .idx{font-family:"Fraunces",serif;font-size:.931rem;color:var(--gold);font-weight:600;}
+  .subhead h3{font-size:1.316rem;}
   .subhead .rule{margin-left:4px;}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;}
-  .card p{color:var(--ink);line-height:1.75;font-size:.95rem;margin-bottom:12px;}
+  .card p{color:var(--ink);line-height:1.75;font-size:1.042rem;margin-bottom:12px;}
   .card p:last-child{margin-bottom:0;}
 
   /* ---------- ABOUT ---------- */
   .about-hero{background:linear-gradient(160deg,var(--brand-800),var(--brand-900));color:#F3EFE3;border-radius:20px;padding:44px 38px;margin-bottom:56px;position:relative;overflow:hidden;}
-  .ab-est{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
+  .ab-est{font-size:.853rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
   .ab-lead{font-family:"Fraunces",Georgia,serif;font-size:1.6rem;line-height:1.25;color:#F3EFE3;margin-bottom:12px;}
   .ab-sub{color:rgba(243,239,227,.82);line-height:1.75;max-width:60ch;}
   .ab-sub b{color:var(--gold-bright);}
   .roll{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;}
-  .roll div{padding:11px 0;border-bottom:1px dashed var(--line);font-size:.92rem;}
-  .roll-note{display:block;font-size:.7rem;color:var(--muted);}
-  .roll-now{display:inline-block;margin-left:6px;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;background:var(--brand-800);color:var(--gold-bright);padding:3px 8px;border-radius:99px;}
+  .roll div{padding:11px 0;border-bottom:1px dashed var(--line);font-size:1.02rem;}
+  .roll-note{display:block;font-size:.867rem;color:var(--muted);}
+  .roll-now{display:inline-block;margin-left:6px;font-size:.833rem;letter-spacing:.08em;text-transform:uppercase;background:var(--brand-800);color:var(--gold-bright);padding:3px 8px;border-radius:99px;}
   .ab-video{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px;margin-top:22px;}
   .ab-play{width:38px;height:38px;border-radius:50%;background:var(--brand-800);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .ab-play svg{width:15px;height:15px;}
-  .ab-v1{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:.92rem;}
-  .ab-v2{display:block;font-size:.76rem;color:var(--muted);}
+  .ab-v1{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;}
+  .ab-v2{display:block;font-size:.907rem;color:var(--muted);}
   .plans-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
-  .plans-row span{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.8rem;color:var(--brand-800);font-weight:600;}
+  .plans-row span{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.931rem;color:var(--brand-800);font-weight:600;}
 
   /* ---------- SHARED PAGE MASTHEAD (keeps every page on-brand under the fixed header) ---------- */
   .page-masthead{background:linear-gradient(180deg,var(--brand-900),var(--brand-800));color:#F3EFE3;padding:150px 0 56px;position:relative;overflow:hidden;}
@@ -590,16 +597,16 @@ window.TAIYABAH_PUBLIC = {
   }
   .nb-body{background:var(--paper);}
   .hadith-block{text-align:center;max-width:44ch;margin:0 auto 60px;}
-  .h-ar{font-family:"Amiri",serif;font-size:1.4rem;color:var(--brand-800);line-height:2;direction:rtl;margin-bottom:14px;}
-  .h-en{font-family:"Fraunces",Georgia,serif;font-size:1.25rem;line-height:1.5;color:var(--ink);margin-bottom:12px;font-style:italic;}
-  .h-src{font-size:.76rem;color:var(--muted);}
+  .h-ar{font-family:"Amiri",serif;font-size:1.408rem;color:var(--brand-800);line-height:2;direction:rtl;margin-bottom:14px;}
+  .h-en{font-family:"Fraunces",Georgia,serif;font-size:1.27rem;line-height:1.5;color:var(--ink);margin-bottom:12px;font-style:italic;}
+  .h-src{font-size:.907rem;color:var(--muted);}
   .newbuild-page-hero .hadith-block{
     text-align:left;max-width:none;margin:0;
     background:rgba(255,255,255,.045);border:1px solid rgba(198,162,76,.28);border-radius:var(--radius);
     padding:26px;
   }
-  .newbuild-page-hero .hadith-block .h-ar{color:var(--gold-bright);text-align:right;font-size:1.2rem;}
-  .newbuild-page-hero .hadith-block .h-en{color:#F3EFE3;font-size:1.04rem;}
+  .newbuild-page-hero .hadith-block .h-ar{color:var(--gold-bright);text-align:right;font-size:1.23rem;}
+  .newbuild-page-hero .hadith-block .h-en{color:#F3EFE3;font-size:1.108rem;}
   .newbuild-page-hero .hadith-block .h-src{color:rgba(243,239,227,.6);}
 
   /* ---------- MADRASAH: INTRO HERO (fits one screen, full width, photo background) ---------- */
@@ -608,7 +615,13 @@ window.TAIYABAH_PUBLIC = {
   .madrasah-hero .mh-scrim{position:absolute;inset:0;z-index:1;background:linear-gradient(180deg, rgba(38,10,26,.55) 0%, rgba(38,10,26,.68) 55%, rgba(28,7,19,.82) 100%);}
   .madrasah-hero .container{position:relative;z-index:2;}
   .madrasah-hero h1{color:#F3EFE3;font-size:clamp(1.6rem,3.2vw,2.15rem);margin-bottom:9px;}
+  /* min-width:0 — a grid child defaults to min-width:auto, which means it
+     refuses to shrink below its own min-content width. Larger type raises
+     that width, the column pushes past the screen edge, and because body has
+     overflow-x:hidden the page does NOT scroll sideways to show it: the right
+     edge is simply cut off and nothing anywhere reports a fault. */
   .madrasah-hero .mh-grid{display:grid;grid-template-columns:1fr;gap:16px;}
+  .madrasah-hero .mh-grid > *{min-width:0;}
   @media (min-width:900px){
     /* Was 1.3fr 1fr 1fr for the intro plus two facility tiles. It is now the
        intro and one curriculum panel, so the second column is wider. */
@@ -645,7 +658,7 @@ window.TAIYABAH_PUBLIC = {
     color:var(--brand-900);margin:0;line-height:1.15;
   }
   .dn-secure{
-    display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:700;
+    display:inline-flex;align-items:center;gap:7px;font-size:.88rem;font-weight:700;
     letter-spacing:.04em;color:var(--brand-700);background:#fff;
     border:1px solid var(--line);border-radius:999px;padding:7px 14px;white-space:nowrap;
   }
@@ -654,7 +667,7 @@ window.TAIYABAH_PUBLIC = {
 
   .dn-row{margin:20px 0 0;}
   .dn-lab{
-    font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    font-size:.867rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
     color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:12px;
   }
   .dn-lab::after{content:"";flex:1;height:1px;background:var(--line);}
@@ -666,21 +679,21 @@ window.TAIYABAH_PUBLIC = {
       narrow and the row read as a strip of small print; three gives each
       amount the room to be pressed without looking. */
   .dn-pills.dn-amts{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
-  .dn-pills.dn-amts .dn-pill{padding:26px 8px;font-size:1.45rem;border-radius:14px;}
-  .dn-pills.dn-amts .dn-pill small{font-size:.62rem;margin-top:3px;}
+  .dn-pills.dn-amts .dn-pill{padding:26px 8px;font-size:1.454rem;border-radius:14px;}
+  .dn-pills.dn-amts .dn-pill small{font-size:.833rem;margin-top:3px;}
   @media(max-width:420px){
-    .dn-pills.dn-amts .dn-pill{padding:20px 6px;font-size:1.2rem;}
+    .dn-pills.dn-amts .dn-pill{padding:20px 6px;font-size:1.23rem;}
   }
 
   .dn-pill{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     gap:2px;padding:16px 8px;background:var(--paper);border:1.5px solid var(--line);
-    border-radius:12px;font:inherit;font-weight:700;font-size:1.08rem;
+    border-radius:12px;font:inherit;font-weight:700;font-size:1.136rem;
     color:var(--brand-900);cursor:pointer;text-align:center;line-height:1.2;
     font-variant-numeric:tabular-nums;transition:.14s ease;
   }
   .dn-pill small{
-    display:block;font-size:.6rem;font-weight:700;letter-spacing:.05em;
+    display:block;font-size:.829rem;font-weight:700;letter-spacing:.05em;
     text-transform:uppercase;color:var(--muted);
   }
   .dn-pill:hover:not(.is-on){border-color:var(--gold);background:#fff;}
@@ -693,8 +706,8 @@ window.TAIYABAH_PUBLIC = {
      frequency is a grid people think they misclicked. */
   .dn-pill[disabled]{opacity:.35;cursor:not-allowed;}
   .dn-pill[disabled]:hover{border-color:var(--line);background:var(--paper);}
-  .dn-hint{font-size:.82rem;line-height:1.6;color:var(--muted);margin:10px 0 0;}
-  .dn-zakat{color:var(--danger);}
+  .dn-hint{font-size:.943rem;line-height:1.6;color:var(--muted);margin:10px 0 0;}
+  .dn-zakat{color:var(--danger-ink);}
   .dn-zakat a{color:inherit;font-weight:700;}
 
   /* THE BUTTON. Gold, not the plum the new build page uses for the same job:
@@ -704,23 +717,28 @@ window.TAIYABAH_PUBLIC = {
     margin-top:22px;background:var(--gold);border-color:var(--gold);
     color:var(--brand-900);padding:20px 24px;border-radius:14px;
   }
-  .donate-cta.dn-go .dc-main{font-size:1.22rem;}
+  .donate-cta.dn-go .dc-main{font-size:1.246rem;}
   .donate-cta.dn-go:hover{filter:brightness(1.05);}
   .donate-cta.dn-go .dc-sub{color:rgba(60,11,42,.72);}
   .donate-cta.dn-go[aria-disabled="true"]{
     background:var(--paper);border:1.5px solid var(--line);color:var(--muted);
     box-shadow:none;
   }
+  /* .dc-main sets its own colour (cream, for the plum button), so switching
+     the BUTTON to paper left the words cream-on-cream — 1.02:1, invisible.
+     Nobody saw it because it is the state you only reach with no payment
+     link configured, which is exactly the state the page is in today. */
+  .donate-cta.dn-go[aria-disabled="true"] .dc-main{color:var(--ink);}
   .donate-cta.dn-go[aria-disabled="true"] .dc-sub{color:var(--muted);}
 
   .dn-ga-note{
     margin-top:18px;padding:13px 15px;border-radius:11px;
     background:rgba(198,162,76,.13);border:1px solid rgba(198,162,76,.4);
-    font-size:.84rem;line-height:1.6;color:var(--ink);
+    font-size:.954rem;line-height:1.6;color:var(--ink);
   }
   .dn-soon{
     background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.45);
-    border-radius:12px;padding:15px 17px;font-size:.9rem;line-height:1.6;
+    border-radius:12px;padding:15px 17px;font-size:1.003rem;line-height:1.6;
     color:var(--ink);margin-top:16px;
   }
   .dn-main .dc-note{margin-top:12px;}
@@ -748,7 +766,7 @@ window.TAIYABAH_PUBLIC = {
   .dn-bank .bk{grid-template-columns:1fr auto;column-gap:12px;row-gap:3px;
     align-items:baseline;padding:12px 4px;}
   .dn-bank .bk-k{grid-column:1/-1;}
-  .dn-bank .bk-v{font-size:.98rem;}
+  .dn-bank .bk-v{font-size:1.065rem;}
   /* A sort code somebody has to read and copy must never wrap. */
   .dn-bank .bk-v.tnum{white-space:nowrap;letter-spacing:.02em;}
   .dn-bank .bank-card{border:none;background:none;}
@@ -763,10 +781,10 @@ window.TAIYABAH_PUBLIC = {
   }
   .dn-line:last-child{border-bottom:none;}
   .dn-line .k{
-    font-size:.68rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    font-size:.853rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     color:var(--brand-700);line-height:1.5;
   }
-  .dn-line .v{font-size:.92rem;line-height:1.65;color:var(--muted);}
+  .dn-line .v{font-size:1.02rem;line-height:1.65;color:var(--muted);}
 
   /* The new build, kept in view without taking the page over. */
   .dn-nb{
@@ -776,8 +794,8 @@ window.TAIYABAH_PUBLIC = {
   }
   @media(min-width:720px){ .dn-nb{grid-template-columns:1fr auto;gap:26px;} }
   .dn-nb .eyebrow{color:var(--gold-bright);margin-bottom:7px;}
-  .dn-nb h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.15rem;color:#F3EFE3;margin:0 0 6px;}
-  .dn-nb p{font-size:.87rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0;max-width:62ch;}
+  .dn-nb h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.19rem;color:#F3EFE3;margin:0 0 6px;}
+  .dn-nb p{font-size:.977rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0;max-width:62ch;}
 
   /* --- WHAT STUDENTS LEARN, in the hero -------------------------------
      This replaced the Whudhu Khana and Mortuary tiles on 14 September 2026.
@@ -802,11 +820,11 @@ window.TAIYABAH_PUBLIC = {
     border-bottom:1px solid rgba(198,162,76,.45);
   }
   .mh-curric .mc-top h4{
-    font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;
+    font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;
     color:#F3EFE3;margin:0;line-height:1.2;
   }
   .mh-curric .mc-top .mc-lab{
-    font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    font-size:.825rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
     color:var(--gold-bright);white-space:nowrap;
   }
   /* Label beside topics, the way the rate card and the booking panel already
@@ -820,20 +838,20 @@ window.TAIYABAH_PUBLIC = {
   }
   .mh-curric .mc-row:last-child{border-bottom:none;padding-bottom:2px;}
   .mh-curric .mc-k{
-    font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    font-size:.833rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
     color:var(--gold-bright);line-height:1.45;
   }
   .mh-curric .mc-v{
-    font-size:.84rem;line-height:1.6;color:rgba(243,239,227,.9);
+    font-size:.954rem;line-height:1.6;color:rgba(243,239,227,.9);
   }
   /* The separator between topics. A middot rather than a bullet list: four
      lists of bullets in a hero is a wall, and these are short enough to read
      as a run. */
   .mh-curric .mc-v i{font-style:normal;color:rgba(220,187,99,.55);padding:0 5px;}
 
-  .madrasah-hero .mh-intro p{color:rgba(243,239,227,.88);font-size:.88rem;line-height:1.55;max-width:54ch;margin-bottom:16px;text-shadow:0 1px 10px rgba(0,0,0,.5);}
+  .madrasah-hero .mh-intro p{color:rgba(243,239,227,.88);font-size:.986rem;line-height:1.55;max-width:54ch;margin-bottom:16px;text-shadow:0 1px 10px rgba(0,0,0,.5);}
   .madrasah-hero .mh-cta{display:flex;gap:10px;flex-wrap:wrap;}
-  .madrasah-hero .mh-cta .btn{padding:10px 18px;font-size:.84rem;}
+  .madrasah-hero .mh-cta .btn{padding:10px 18px;font-size:.954rem;}
   @media (max-width:600px){
     .madrasah-hero{padding-bottom:34px;}
   }
@@ -847,11 +865,11 @@ window.TAIYABAH_PUBLIC = {
   .newbuild-page-hero.pm-photo .hadith-block{background:rgba(28,7,19,.6);}
 
   .phase-card{background:var(--brand-900);color:#F3EFE3;border-radius:18px;padding:32px 30px;margin-bottom:16px;}
-  .ph-tag{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
-  .ph-h{font-family:"Fraunces",Georgia,serif;font-size:1.4rem;color:#F3EFE3;margin-bottom:10px;}
+  .ph-tag{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
+  .ph-h{font-family:"Fraunces",Georgia,serif;font-size:1.408rem;color:#F3EFE3;margin-bottom:10px;}
   .ph-p{color:rgba(243,239,227,.78);line-height:1.7;margin-bottom:18px;}
   .needs{display:flex;flex-wrap:wrap;gap:8px;}
-  .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.78rem;font-weight:600;}
+  .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.92rem;font-weight:600;}
 
   /* ---------- NEW BUILD: the appeal meter ---------------------------------
      One ratio against one limit, so a meter — not a chart, and not a pie of
@@ -867,11 +885,11 @@ window.TAIYABAH_PUBLIC = {
   .ph-meter{margin:20px 0 4px;}
   .ph-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
   .ph-raised{font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;font-size:1.8rem;line-height:1;color:#F3EFE3;}
-  .ph-raised .of{display:block;font-size:.8rem;font-weight:500;color:rgba(243,239,227,.72);margin-top:6px;letter-spacing:.01em;}
-  .ph-pct{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);}
+  .ph-raised .of{display:block;font-size:.931rem;font-weight:500;color:rgba(243,239,227,.72);margin-top:6px;letter-spacing:.01em;}
+  .ph-pct{font-size:.88rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);}
   .ph-track{height:11px;border-radius:999px;background:rgba(198,162,76,.2);overflow:hidden;}
   .ph-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--gold),var(--gold-bright));}
-  .ph-left{margin-top:11px;font-size:.82rem;line-height:1.55;color:rgba(243,239,227,.8);}
+  .ph-left{margin-top:11px;font-size:.943rem;line-height:1.55;color:rgba(243,239,227,.8);}
   .ph-left b{color:var(--gold-bright);font-weight:700;}
 
   /* ---------- NEW BUILD: status + plan side by side ---------- */
@@ -881,7 +899,7 @@ window.TAIYABAH_PUBLIC = {
     .nb-status-grid .phase-card,.nb-status-grid .nb-plan-card{margin-bottom:0;display:flex;flex-direction:column;}
     .nb-status-grid .needs,.nb-status-grid .plans-row{margin-top:auto;}
   }
-  .nb-plan-tag{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:10px;}
+  .nb-plan-tag{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin-bottom:10px;}
   .nb-plan-card p{color:var(--muted);line-height:1.7;margin-bottom:0;}
   .nb-plan-card .plans-row{margin-top:16px;}
 
@@ -893,25 +911,26 @@ window.TAIYABAH_PUBLIC = {
   .nb-tl-dot{position:absolute;left:-30px;top:3px;width:14px;height:14px;border-radius:50%;background:var(--card);border:2px solid var(--line);}
   .nb-tl-item.nb-tl-done .nb-tl-dot{border-color:var(--success);background:var(--success);}
   .nb-tl-item.nb-tl-active .nb-tl-dot{border-color:var(--gold);background:var(--gold-bright);box-shadow:0 0 0 4px rgba(198,162,76,.18);}
-  .nb-tl-date{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px;}
-  .nb-tl-body h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
-  .nb-tl-body p{color:var(--muted);font-size:.87rem;line-height:1.6;max-width:62ch;}
-  .nb-tl-status{display:inline-block;font-size:.6rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;}
-  .nb-tl-status.done{background:rgba(63,122,70,.13);color:var(--success);border:1px solid rgba(63,122,70,.35);}
-  .nb-tl-status.active{background:rgba(198,162,76,.16);color:#8a6c1f;border:1px solid rgba(198,162,76,.45);}
+  .nb-tl-date{font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin-bottom:4px;}
+  .nb-tl-body h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .nb-tl-body p{color:var(--muted);font-size:.977rem;line-height:1.6;max-width:62ch;}
+  .nb-tl-status{display:inline-block;font-size:.829rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;}
+  .nb-tl-status.done{background:rgba(63,122,70,.13);color:var(--success-ink);border:1px solid rgba(63,122,70,.35);}
+  .nb-tl-status.active{background:rgba(198,162,76,.16);color:#75590F;border:1px solid rgba(198,162,76,.45);}
   .nb-tl-status.upcoming{background:var(--paper);color:var(--muted);border:1px solid var(--line);}
-  .nb-tl-note{margin-top:22px;font-size:.8rem;color:var(--muted);}
+  .nb-tl-note{margin-top:22px;font-size:.931rem;color:var(--muted);}
   .nb-tl-note a{color:var(--brand-700);font-weight:600;}
 
   /* ---------- NEW BUILD: journey + give side by side ---------- */
   .nb-journey-grid{display:grid;grid-template-columns:1fr;gap:28px;}
+  .nb-journey-grid > *{min-width:0;}          /* see .mh-grid, same trap */
   @media (min-width:900px){
     .nb-journey-grid{grid-template-columns:1.15fr .85fr;gap:36px;align-items:start;}
   }
   .nb-give-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;}
   .nb-give-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
-  .nb-give-head h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.05rem;color:var(--ink);}
-  .nb-give-head .tag{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .nb-give-head h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
+  .nb-give-head .tag{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
   .nb-give-card .tiers{grid-template-columns:1fr 1fr;}
   .nb-give-card .dc-note{margin-bottom:0;}
   .nb-give-divider{height:1px;background:var(--line);margin:24px 0 20px;}
@@ -936,24 +955,24 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 17px;margin-bottom:18px;
   }
   .ga-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px;}
-  .ga-head h5{font-family:"Fraunces",serif;font-weight:600;font-size:.98rem;color:var(--brand-900);}
-  .ga-head .ga-boost{font-size:.68rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7A5B10;white-space:nowrap;}
-  .ga-lead{font-size:.84rem;line-height:1.6;color:var(--ink);}
+  .ga-head h5{font-family:"Fraunces",serif;font-weight:600;font-size:1.065rem;color:var(--brand-900);}
+  .ga-head .ga-boost{font-size:.853rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7A5B10;white-space:nowrap;}
+  .ga-lead{font-size:.954rem;line-height:1.6;color:var(--ink);}
   .ga-lead b{color:var(--brand-900);}
   .ga-more{margin-top:11px;}
   .ga-more summary{
-    font-size:.76rem;font-weight:700;color:var(--brand-800);cursor:pointer;
+    font-size:.907rem;font-weight:700;color:var(--brand-800);cursor:pointer;
     letter-spacing:.02em;
   }
   .ga-more summary::marker{color:var(--gold);}
   .ga-decl{
-    font-size:.78rem;line-height:1.65;color:var(--muted);margin-top:9px;
+    font-size:.92rem;line-height:1.65;color:var(--muted);margin-top:9px;
     border-left:2px solid var(--gold);padding-left:12px;
   }
   .ga-decl p{margin:0 0 8px;}
   .ga-decl p:last-child{margin-bottom:0;}
   .ga-decl strong{color:var(--ink);}
-  .ga-ver{display:block;margin-top:10px;font-size:.68rem;letter-spacing:.04em;color:var(--muted);}
+  .ga-ver{display:block;margin-top:10px;font-size:.853rem;letter-spacing:.04em;color:var(--muted);}
   .ga[hidden]{display:none !important;}
 
   .tiers{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;}
@@ -961,16 +980,16 @@ window.TAIYABAH_PUBLIC = {
   .tier:hover{transform:translateY(-3px);box-shadow:var(--shadow);}
   .t-bronze{border-color:#D3A47C;} .t-bronze .t-name{color:#A2673A;}
   .t-silver{border-color:#C4BFC2;} .t-silver .t-name{color:#837A80;}
-  .t-gold{border-color:#D8BC72;}   .t-gold .t-name{color:#9A7A1E;}
+  .t-gold{border-color:#D8BC72;}   .t-gold .t-name{color:var(--gold-ink);}
   .t-plat{border-color:#B39BD0;}  .t-plat .t-name{color:#6E5691;}
-  .t-amt{font-family:"Fraunces",serif;font-size:1.35rem;font-weight:700;color:var(--ink);}
-  .t-name{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
+  .t-amt{font-family:"Fraunces",serif;font-size:1.362rem;font-weight:700;color:var(--ink);}
+  .t-name{font-size:.853rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
 
   .donate-cta{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--brand-900);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px;transition:.2s ease;}
   .donate-cta:hover{background:var(--brand-800);}
-  .dc-main{font-family:"Fraunces",serif;font-weight:600;color:#F3EFE3;font-size:1rem;}
-  .dc-sub{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);}
-  .dc-note{font-size:.82rem;color:var(--muted);line-height:1.6;text-align:center;max-width:50ch;margin:0 auto 40px;}
+  .dc-main{font-family:"Fraunces",serif;font-weight:600;color:#F3EFE3;font-size:1.08rem;}
+  .dc-sub{font-size:.867rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);}
+  .dc-note{font-size:.943rem;color:var(--muted);line-height:1.6;text-align:center;max-width:50ch;margin:0 auto 40px;}
   .dc-note b{color:var(--brand-800);}
 
   .bank-card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px;}
@@ -979,56 +998,56 @@ window.TAIYABAH_PUBLIC = {
     background:none;border:none;color:inherit;padding:14px 17px;border-bottom:1px solid var(--line);cursor:pointer;text-align:left;
   }
   .bk:last-child{border-bottom:none;}
-  .bk-k{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-  .bk-v{font-size:.92rem;font-weight:600;color:var(--ink);text-align:left;}
+  .bk-k{font-size:.867rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .bk-v{font-size:1.02rem;font-weight:600;color:var(--ink);text-align:left;}
   @media (max-width:480px){ .bk{grid-template-columns:110px 1fr auto;} }
-  .bk .copied{color:var(--brand-800);font-size:.7rem;opacity:0;transition:.2s;}
+  .bk .copied{color:var(--brand-800);font-size:.867rem;opacity:0;transition:.2s;}
   .bk.copied-flash .copied{opacity:1;}
-  .copyall{width:100%;background:transparent;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:12px;font-weight:700;font-size:.82rem;cursor:pointer;margin-bottom:16px;}
+  .copyall{width:100%;background:transparent;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:12px;font-weight:700;font-size:.943rem;cursor:pointer;margin-bottom:16px;}
   .copyall:hover{background:var(--brand-800);color:#F3EFE3;}
-  .dnote{font-size:.8rem;color:var(--muted);line-height:1.6;text-align:center;}
+  .dnote{font-size:.931rem;color:var(--muted);line-height:1.6;text-align:center;}
 
   /* ---------- PRAYER TIMES ---------- */
   .live-card{background:var(--brand-900);color:#F3EFE3;border-radius:18px;padding:26px;margin-bottom:16px;}
-  .live-card .lk{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);}
-  .live-card .lc-name{font-family:"Fraunces",serif;font-size:1.25rem;color:#F3EFE3;margin:6px 0 2px;}
+  .live-card .lk{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);}
+  .live-card .lc-name{font-family:"Fraunces",serif;font-size:1.27rem;color:#F3EFE3;margin:6px 0 2px;}
   .live-card .lc-time{font-family:"Fraunces",serif;font-size:2.3rem;color:var(--gold-bright);}
-  .live-card .lc-count{font-size:.85rem;color:rgba(243,239,227,.72);margin-top:4px;}
-  .live-card .lc-note{font-size:.72rem;color:rgba(243,239,227,.5);margin-top:12px;line-height:1.5;}
-  .jumuah-flag{display:flex;align-items:center;gap:10px;background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.83rem;color:var(--gold-bright);}
+  .live-card .lc-count{font-size:.96rem;color:rgba(243,239,227,.72);margin-top:4px;}
+  .live-card .lc-note{font-size:.88rem;color:rgba(243,239,227,.78);margin-top:12px;line-height:1.5;}
+  .jumuah-flag{display:flex;align-items:center;gap:10px;background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.949rem;color:var(--gold-bright);}
   .snapshot{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;}
-  .snapshot .sk{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-700);margin-bottom:6px;}
-  .snapshot .sv{font-family:"Fraunces",serif;font-size:1rem;margin-bottom:14px;}
-  .snap-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.88rem;}
+  .snapshot .sk{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-700);margin-bottom:6px;}
+  .snapshot .sv{font-family:"Fraunces",serif;font-size:1.08rem;margin-bottom:14px;}
+  .snap-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.986rem;}
   .snap-row:last-of-type{border-bottom:none;}
   .snap-row .k{color:var(--muted);}
   .snap-row .v{font-weight:600;}
-  .snap-note{margin-top:14px;font-size:.76rem;color:var(--muted);line-height:1.5;}
+  .snap-note{margin-top:14px;font-size:.907rem;color:var(--muted);line-height:1.5;}
 
   .pt-controls{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
   .pt-nav{display:flex;align-items:center;gap:10px;}
-  .pt-nav button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--brand-800);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .pt-nav button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--brand-800);font-size:1.08rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .pt-nav button:hover{background:var(--brand-900);color:#F3EFE3;border-color:var(--brand-900);}
   .pt-nav button:disabled{opacity:.35;cursor:not-allowed;}
-  .pt-nav .pt-month{font-family:"Fraunces",serif;font-size:1.1rem;min-width:160px;text-align:center;}
-  .pt-jump,.pt-print{background:none;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:8px 16px;font-weight:700;font-size:.78rem;cursor:pointer;}
+  .pt-nav .pt-month{font-family:"Fraunces",serif;font-size:1.15rem;min-width:160px;text-align:center;}
+  .pt-jump,.pt-print{background:none;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:8px 16px;font-weight:700;font-size:.92rem;cursor:pointer;}
   .pt-jump:hover,.pt-print:hover{background:var(--brand-800);color:#F3EFE3;}
   .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line);}
   table.pt{width:100%;border-collapse:collapse;background:var(--card);min-width:680px;}
-  table.pt th{background:var(--brand-900);color:#F3EFE3;padding:12px 11px;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;white-space:nowrap;}
-  table.pt td{padding:10px 11px;border-bottom:1px solid var(--line);font-size:.85rem;white-space:nowrap;}
+  table.pt th{background:var(--brand-900);color:#F3EFE3;padding:12px 11px;text-align:left;font-size:.853rem;text-transform:uppercase;letter-spacing:.05em;font-weight:600;white-space:nowrap;}
+  table.pt td{padding:10px 11px;border-bottom:1px solid var(--line);font-size:.96rem;white-space:nowrap;}
   table.pt tr:last-child td{border-bottom:none;}
   table.pt tr.today td{background:rgba(198,162,76,.14);font-weight:700;}
-  .pt-note{margin-top:14px;font-size:.8rem;color:var(--muted);line-height:1.6;}
+  .pt-note{margin-top:14px;font-size:.931rem;color:var(--muted);line-height:1.6;}
   .jummah-note{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
-  .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:.83rem;}
+  .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:.949rem;}
   .jummah-note .jc b{display:block;font-family:"Fraunces",serif;color:var(--brand-800);margin-bottom:3px;}
 
   /* ---------- MADRASAH ---------- */
   .soon-list{display:flex;flex-direction:column;gap:8px;}
   .soon-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 16px;}
-  .soon-row span.t{font-weight:600;font-size:.88rem;}
-  .soon-tag{font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);border:1px solid var(--line);color:var(--muted);padding:4px 9px;border-radius:999px;}
+  .soon-row span.t{font-weight:600;font-size:.986rem;}
+  .soon-tag{font-size:.836rem;letter-spacing:.08em;text-transform:uppercase;background:var(--paper);border:1px solid var(--line);color:var(--muted);padding:4px 9px;border-radius:999px;}
 
   /* ---------- App: coming soon ----------
      The same idea as the shop's soon-tag, and deliberately the same shape, so
@@ -1039,11 +1058,11 @@ window.TAIYABAH_PUBLIC = {
     border-radius:10px;padding:13px 15px;margin-bottom:18px;max-width:52ch;
   }
   .app-soon .as-pill{
-    flex:0 0 auto;font-size:.63rem;font-weight:800;letter-spacing:.09em;
+    flex:0 0 auto;font-size:.835rem;font-weight:800;letter-spacing:.09em;
     text-transform:uppercase;padding:4px 10px;border-radius:999px;
     background:var(--gold-bright);color:var(--brand-900);
   }
-  .app-soon .as-text{font-size:.85rem;line-height:1.6;color:rgba(243,239,227,.82);}
+  .app-soon .as-text{font-size:.96rem;line-height:1.6;color:rgba(243,239,227,.82);}
   /* A badge for a listing that does not exist yet must not look like a link. */
   .store-badge.is-soon{opacity:.55;cursor:default;}
 
@@ -1052,19 +1071,19 @@ window.TAIYABAH_PUBLIC = {
   .app-grid{display:grid;grid-template-columns:1fr .5fr;gap:50px;align-items:center;}
   .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:26px 0 30px;}
   .feat{background:rgba(255,255,255,.04);border:1px solid rgba(198,162,76,.22);border-radius:12px;padding:16px;}
-  .feat h4{color:#F3EFE3;font-size:.92rem;margin-bottom:5px;}
-  .feat p{color:rgba(243,239,227,.65);font-size:.79rem;line-height:1.55;}
+  .feat h4{color:#F3EFE3;font-size:1.02rem;margin-bottom:5px;}
+  .feat p{color:rgba(243,239,227,.65);font-size:.926rem;line-height:1.55;}
   .qr-card{background:var(--card);border-radius:16px;padding:22px;text-align:center;}
   .qr-card img{width:100%;max-width:190px;margin:0 auto 12px;border-radius:8px;}
-  .qr-card .u{font-size:.74rem;color:var(--muted);letter-spacing:.02em;}
+  .qr-card .u{font-size:.893rem;color:var(--muted);letter-spacing:.02em;}
   .steps{margin-top:22px;display:flex;flex-direction:column;gap:9px;}
-  .steps div{display:flex;gap:11px;align-items:flex-start;font-size:.85rem;color:rgba(243,239,227,.78);}
-  .steps .n{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(198,162,76,.18);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;}
+  .steps div{display:flex;gap:11px;align-items:flex-start;font-size:.96rem;color:rgba(243,239,227,.78);}
+  .steps .n{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(198,162,76,.18);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-size:.867rem;font-weight:700;}
 
   /* ---------- COMING SOON PLACEHOLDER PAGES ---------- */
   .cs-wrap{max-width:640px;margin:0 auto;text-align:center;padding:10px 0 8px;}
-  .cs-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(198,162,76,.12);color:var(--brand-800);border:1px solid rgba(198,162,76,.35);border-radius:999px;padding:6px 16px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;}
-  .cs-wrap p.cs-lead{color:var(--muted);font-size:1.02rem;line-height:1.75;margin-bottom:28px;}
+  .cs-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(198,162,76,.12);color:var(--brand-800);border:1px solid rgba(198,162,76,.35);border-radius:999px;padding:6px 16px;font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px;}
+  .cs-wrap p.cs-lead{color:var(--muted);font-size:1.094rem;line-height:1.75;margin-bottom:28px;}
   .cs-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
 
   /* ---- Media page: YouTube video grid ---- */
@@ -1094,24 +1113,24 @@ window.TAIYABAH_PUBLIC = {
   .media-play svg{width:20px;height:20px;margin-left:3px;color:var(--gold-bright);}
   .media-item:hover .media-play{background:var(--brand-900);}
   .media-cap{padding:13px 15px;}
-  .media-cap .mt{font-size:.86rem;font-weight:600;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .media-cap .mt{font-size:.969rem;font-weight:600;color:var(--ink);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
   .media-outro{text-align:center;margin-top:38px;}
-  .media-outro p{color:var(--muted);font-size:.9rem;margin-bottom:14px;}
+  .media-outro p{color:var(--muted);font-size:1.003rem;margin-bottom:14px;}
 
   /* ---- Shop page: placeholder category tiles ---- */
   .shop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:8px 0 6px;}
   .shop-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 10px;cursor:default;}
   .shop-tile .sh-ic{width:36px;height:36px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .shop-tile .sh-ic svg{width:17px;height:17px;}
-  .shop-tile .sh-label{font-family:"Fraunces",serif;font-weight:600;font-size:.78rem;color:var(--ink);line-height:1.25;}
+  .shop-tile .sh-label{font-family:"Fraunces",serif;font-weight:600;font-size:.92rem;color:var(--ink);line-height:1.25;}
   .shop-tile.has-photo{padding:0 0 14px;overflow:hidden;}
   .shop-tile .sh-photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-top-left-radius:12px;border-top-right-radius:12px;margin-bottom:2px;}
   .shop-tile.has-photo .sh-label{padding:0 10px;margin-top:7px;}
   .shop-tile.has-photo .soon-tag{margin:0 10px;}
-  .shop-tile .soon-tag{font-size:.58rem;padding:3px 8px;}
+  .shop-tile .soon-tag{font-size:.825rem;padding:3px 8px;}
   a.shop-tile{cursor:pointer;transition:.2s ease;}
   a.shop-tile:hover{transform:translateY(-2px);border-color:var(--gold);box-shadow:var(--shadow);}
-  .live-tag{font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;background:rgba(198,162,76,.15);border:1px solid rgba(198,162,76,.5);color:var(--gold);font-weight:700;padding:3px 9px;border-radius:999px;}
+  .live-tag{font-size:.825rem;letter-spacing:.08em;text-transform:uppercase;background:rgba(198,162,76,.15);border:1px solid rgba(198,162,76,.5);color:var(--gold);font-weight:700;padding:3px 9px;border-radius:999px;}
 
   /* ---- Madrasah portal sign-in screens (Parents / Teachers) ---- */
   .portal-login{
@@ -1124,7 +1143,7 @@ window.TAIYABAH_PUBLIC = {
 
   .pl-admin-link{
     display:inline-flex;align-items:center;gap:6px;
-    color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;
+    color:var(--muted);font-size:.943rem;font-weight:600;cursor:pointer;
     border-bottom:1px solid transparent;
   min-height:28px;padding:5px 2px;}
   .pl-admin-link:hover{color:var(--brand-800);border-color:var(--brand-800);}
@@ -1132,7 +1151,7 @@ window.TAIYABAH_PUBLIC = {
 
   /* ---- Hall hire: availability calendar ---- */
   .hh-horizon{
-    font-size:.78rem;line-height:1.55;color:var(--muted);
+    font-size:.92rem;line-height:1.55;color:var(--muted);
     margin-top:10px;text-align:center;
   }
   .hh-agree{
@@ -1141,14 +1160,14 @@ window.TAIYABAH_PUBLIC = {
     border-radius:9px;padding:12px 14px;cursor:pointer;
   }
   .hh-agree input{width:16px;height:16px;flex-shrink:0;margin-top:1px;accent-color:var(--gold);cursor:pointer;}
-  .hh-agree span{font-size:.81rem;line-height:1.55;color:rgba(243,239,227,.85);}
+  .hh-agree span{font-size:.937rem;line-height:1.55;color:rgba(243,239,227,.85);}
   .hh-agree a{color:var(--gold-bright);font-weight:600;text-decoration:underline;text-underline-offset:2px;}
 
   .hh-tc-prompt{
     display:flex;gap:10px;align-items:flex-start;margin-top:14px;
     background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
     border-radius:9px;padding:12px 14px;
-    font-size:.83rem;line-height:1.65;color:var(--muted);
+    font-size:.949rem;line-height:1.65;color:var(--muted);
   }
   .hh-tc-prompt svg{width:15px;height:15px;flex-shrink:0;margin-top:2px;color:var(--gold);}
   .hh-tc-link{color:var(--brand-700);font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
@@ -1159,11 +1178,11 @@ window.TAIYABAH_PUBLIC = {
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
     padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid rgba(243,239,227,.16);
   }
-  .hf-slot{font-family:"Fraunces",serif;font-size:1.02rem;color:#F3EFE3;margin-bottom:2px;}
-  .hf-when{font-size:.8rem;color:rgba(243,239,227,.65);}
+  .hf-slot{font-family:"Fraunces",serif;font-size:1.094rem;color:#F3EFE3;margin-bottom:2px;}
+  .hf-when{font-size:.931rem;color:rgba(243,239,227,.65);}
   .hf-back{
     background:none;border:1px solid rgba(243,239,227,.3);color:rgba(243,239,227,.8);
-    font-family:inherit;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    font-family:inherit;font-size:.88rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
     border-radius:999px;padding:6px 13px;cursor:pointer;flex-shrink:0;
   }
   .hf-back:hover{border-color:var(--gold);color:var(--gold-bright);}
@@ -1173,11 +1192,11 @@ window.TAIYABAH_PUBLIC = {
   @media (min-width:520px){ .hf-row{grid-template-columns:1fr 1fr;} }
   .hf-field{display:flex;flex-direction:column;gap:6px;border:none;padding:0;margin:0;min-width:0;}
   .hf-field label,.hf-field legend{
-    font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
     color:rgba(243,239,227,.72);padding:0;
   }
   .hf-field input[type=text],.hf-field input[type=tel],.hf-field textarea{
-    font-family:inherit;font-size:.92rem;color:#F3EFE3;width:100%;
+    font-family:inherit;font-size:1.02rem;color:#F3EFE3;width:100%;
     background:rgba(255,255,255,.06);border:1px solid rgba(243,239,227,.2);
     border-radius:9px;padding:11px 13px;transition:.18s ease;
   }
@@ -1188,20 +1207,20 @@ window.TAIYABAH_PUBLIC = {
     box-shadow:0 0 0 3px rgba(198,162,76,.2);
   }
   .hf-field.has-err input,.hf-field.has-err textarea{border-color:#E8896B;}
-  .hf-hint{font-size:.74rem;color:rgba(243,239,227,.5);line-height:1.5;}
-  .hf-err{display:none;font-size:.75rem;color:#F0A88E;line-height:1.45;}
+  .hf-hint{font-size:.893rem;color:rgba(243,239,227,.5);line-height:1.5;}
+  .hf-err{display:none;font-size:.9rem;color:#F0A88E;line-height:1.45;}
   .hf-field.has-err .hf-err{display:block;}
   .hf-radios{display:flex;gap:10px;margin-top:2px;}
   .hf-radios label{
     display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;
     background:rgba(255,255,255,.06);border:1px solid rgba(243,239,227,.2);
     border-radius:9px;padding:11px 14px;
-    font-size:.88rem;font-weight:600;letter-spacing:0;text-transform:none;color:#F3EFE3;
+    font-size:.986rem;font-weight:600;letter-spacing:0;text-transform:none;color:#F3EFE3;
   }
   .hf-radios label:hover{border-color:var(--gold);}
   .hf-radios input{width:15px;height:15px;accent-color:var(--gold);cursor:pointer;}
 
-  .hf-privacy{font-size:.8rem;line-height:1.6;color:var(--muted);margin:2px 0 14px;}
+  .hf-privacy{font-size:.931rem;line-height:1.6;color:var(--muted);margin:2px 0 14px;}
   .hf-privacy a{color:var(--brand-700);font-weight:700;text-underline-offset:2px;}
   .hf-privacy a:hover{color:var(--brand-900);}
   /* The deposit box. It is the loudest thing on the confirmation screen on
@@ -1221,10 +1240,10 @@ window.TAIYABAH_PUBLIC = {
     font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.6rem;
     color:var(--gold-bright);line-height:1;
   }
-  .hf-pay .hp-what{font-size:.85rem;color:#F3EFE3;font-weight:600;}
+  .hf-pay .hp-what{font-size:.96rem;color:#F3EFE3;font-weight:600;}
   .hf-pay .btn{width:auto;}
-  .hf-pay .hp-hold{font-size:.8rem;color:var(--gold-bright);font-weight:600;margin:10px 0 0;}
-  .hf-pay .hp-note{font-size:.78rem;line-height:1.6;color:rgba(243,239,227,.72);margin:8px 0 0;}
+  .hf-pay .hp-hold{font-size:.931rem;color:var(--gold-bright);font-weight:600;margin:10px 0 0;}
+  .hf-pay .hp-note{font-size:.92rem;line-height:1.6;color:rgba(243,239,227,.72);margin:8px 0 0;}
   .hf-pay .hp-note strong{color:#F3EFE3;}
 
   .hf-price{
@@ -1232,14 +1251,14 @@ window.TAIYABAH_PUBLIC = {
     background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.5);
     border-radius:10px;padding:14px 16px;margin:16px 0;
   }
-  .hp-label{font-size:.74rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(243,239,227,.75);}
+  .hp-label{font-size:.893rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(243,239,227,.75);}
   .hp-val{font-family:"Fraunces",serif;font-size:1.5rem;font-weight:700;color:var(--gold-bright);margin-left:auto;}
   .hp-badge{
-    width:100%;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    width:100%;font-size:.867rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     color:#F0A88E;
   }
   .hf-summary{display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
-  .hf-sum-row{display:flex;justify-content:space-between;gap:14px;font-size:.85rem;}
+  .hf-sum-row{display:flex;justify-content:space-between;gap:14px;font-size:.96rem;}
   .hf-sum-row .k{color:rgba(243,239,227,.6);}
   .hf-sum-row .v{color:#F3EFE3;font-weight:600;text-align:right;}
 
@@ -1252,15 +1271,15 @@ window.TAIYABAH_PUBLIC = {
   }
   .hh-term .ht-n{
     width:30px;height:30px;border-radius:50%;background:var(--brand-900);
-    color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.85rem;
+    color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.96rem;
     display:flex;align-items:center;justify-content:center;
   }
-  .hh-term h4{font-family:"Fraunces",serif;font-weight:600;font-size:.98rem;color:var(--ink);margin-bottom:5px;line-height:1.3;}
-  .hh-term p{font-size:.86rem;line-height:1.65;color:var(--muted);}
+  .hh-term h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.065rem;color:var(--ink);margin-bottom:5px;line-height:1.3;}
+  .hh-term p{font-size:.969rem;line-height:1.65;color:var(--muted);}
   .hh-terms-foot{
     margin-top:18px;padding:14px 16px;border-radius:10px;
     background:var(--paper);border:1px solid var(--line);
-    font-size:.83rem;line-height:1.65;color:var(--muted);
+    font-size:.949rem;line-height:1.65;color:var(--muted);
   }
   .hh-terms-foot b{color:var(--ink);}
 
@@ -1277,14 +1296,14 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 18px;margin-bottom:16px;
   }
   .hh-rates h4{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
     color:var(--brand-900);margin:0 0 3px;
   }
-  .hh-rate-eff{font-size:.78rem;line-height:1.55;color:var(--muted);margin:0 0 12px;}
+  .hh-rate-eff{font-size:.92rem;line-height:1.55;color:var(--muted);margin:0 0 12px;}
   .hh-rate-band{margin-bottom:14px;}
   .hh-rate-band:last-of-type{margin-bottom:0;}
   .hh-rate-when{
-    display:block;font-size:.68rem;font-weight:800;letter-spacing:.09em;
+    display:block;font-size:.853rem;font-weight:800;letter-spacing:.09em;
     text-transform:uppercase;color:var(--brand-700);margin-bottom:5px;
   }
   .hh-rate-line{
@@ -1292,13 +1311,13 @@ window.TAIYABAH_PUBLIC = {
     padding:6px 0;border-bottom:1px dotted var(--line);
   }
   .hh-rate-line:last-child{border-bottom:none;}
-  .hh-rate-line .n{font-size:.85rem;color:var(--ink);}
+  .hh-rate-line .n{font-size:.96rem;color:var(--ink);}
   .hh-rate-line .p{
-    font-size:.88rem;font-weight:700;color:var(--brand-800);
+    font-size:.986rem;font-weight:700;color:var(--brand-800);
     white-space:nowrap;flex:0 0 auto;
   }
   .hh-rate-line .p a{color:var(--brand-700);}
-  .hh-rate-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:9px 0 0;}
+  .hh-rate-note{font-size:.92rem;line-height:1.6;color:var(--muted);margin:9px 0 0;}
 
   /* Paying the nikāḥ fee online (migration 018). Sits on the LIGHT service
      card, not the dark booking panel, so it uses the page inks rather than the
@@ -1314,35 +1333,35 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 18px;margin-top:14px;
   }
   .nk-pay h4{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
     color:var(--brand-900);margin:0 0 3px;
   }
   .nk-pay .np-when{
-    font-size:.78rem;line-height:1.55;color:var(--muted);margin:0 0 12px;
+    font-size:.92rem;line-height:1.55;color:var(--muted);margin:0 0 12px;
   }
   .nk-pay label{
-    display:block;font-size:.72rem;font-weight:800;letter-spacing:.07em;
+    display:block;font-size:.88rem;font-weight:800;letter-spacing:.07em;
     text-transform:uppercase;color:var(--brand-700);margin-bottom:5px;
   }
   .nk-pay input{
     width:100%;box-sizing:border-box;padding:10px 12px;font:inherit;
-    font-size:.92rem;letter-spacing:.04em;text-transform:uppercase;
+    font-size:1.02rem;letter-spacing:.04em;text-transform:uppercase;
     border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);
   }
   .nk-pay input:focus{outline:2px solid var(--brand-700);outline-offset:1px;}
   .nk-pay .np-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;}
   .nk-pay .np-btns .btn{flex:1 1 190px;text-align:center;}
   .nk-pay .np-err{
-    display:none;font-size:.8rem;line-height:1.55;color:#8B2E2E;margin:9px 0 0;
+    display:none;font-size:.931rem;line-height:1.55;color:#8B2E2E;margin:9px 0 0;
   }
   .nk-pay .np-err.on{display:block;}
-  .nk-pay .np-note{font-size:.78rem;line-height:1.6;color:var(--muted);margin:11px 0 0;}
+  .nk-pay .np-note{font-size:.92rem;line-height:1.6;color:var(--muted);margin:11px 0 0;}
 
   .hh-notice{
     display:flex;gap:11px;align-items:flex-start;
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.45);
     border-radius:10px;padding:14px 16px;margin-bottom:20px;
-    font-size:.87rem;line-height:1.6;color:var(--brand-800);
+    font-size:.977rem;line-height:1.6;color:var(--brand-800);
   }
   .hh-notice svg{width:16px;height:16px;flex-shrink:0;margin-top:2px;color:var(--gold);}
   .hh-notice b{font-weight:700;}
@@ -1350,29 +1369,29 @@ window.TAIYABAH_PUBLIC = {
   .hh-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
   .hh-choose{display:flex;flex-direction:column;gap:14px;}
   .hh-choice{display:flex;flex-direction:column;gap:7px;}
-  .hh-clabel{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;}
-  .hh-sub{display:block;font-size:.66rem;font-weight:500;opacity:.72;letter-spacing:0;text-transform:none;}
+  .hh-clabel{font-size:.88rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;}
+  .hh-sub{display:block;font-size:.84rem;font-weight:500;opacity:.72;letter-spacing:0;text-transform:none;}
   .hh-halls{display:flex;flex-wrap:wrap;gap:7px;}
   .hh-hall{
-    font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;
+    font-family:inherit;font-size:.92rem;font-weight:600;cursor:pointer;
     background:var(--card);border:1px solid var(--line);color:var(--muted);
     border-radius:999px;padding:7px 14px;transition:.18s ease;
   }
   .hh-hall:hover{border-color:var(--gold);color:var(--brand-800);}
   .hh-hall.is-on{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
-  .hh-sample{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--muted);cursor:pointer;}
+  .hh-sample{display:flex;align-items:center;gap:7px;font-size:.92rem;color:var(--muted);cursor:pointer;}
   .hh-sample input{width:15px;height:15px;accent-color:var(--brand-800);cursor:pointer;}
 
   .hh-cal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
   .hh-sample-banner{
     display:none;background:var(--danger);color:#fff;border-radius:8px;
     padding:8px 12px;margin-bottom:14px;text-align:center;
-    font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    font-size:.867rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
   }
   .hh-sample-banner.on{display:block;}
 
   .hh-cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
-  .hh-month{font-family:"Fraunces",serif;font-weight:600;font-size:1.05rem;color:var(--ink);}
+  .hh-month{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
   .hh-nav{
     width:34px;height:34px;border-radius:50%;cursor:pointer;
     background:var(--paper);border:1px solid var(--line);color:var(--brand-800);
@@ -1385,14 +1404,14 @@ window.TAIYABAH_PUBLIC = {
   .hh-weekdays,.hh-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;}
   .hh-weekdays{margin-bottom:6px;}
   .hh-weekdays span{
-    text-align:center;font-size:.64rem;font-weight:700;letter-spacing:.06em;
+    text-align:center;font-size:.836rem;font-weight:700;letter-spacing:.06em;
     text-transform:uppercase;color:var(--muted);padding:4px 0;
   }
   .hh-day{
     position:relative;min-height:54px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     background:var(--paper);border:1px solid var(--line);border-radius:8px;
-    font-family:inherit;font-size:.84rem;font-weight:600;color:var(--ink);
+    font-family:inherit;font-size:.954rem;font-weight:600;color:var(--ink);
     cursor:pointer;transition:.15s ease;padding:0;
   }
   .hh-day:hover:not(:disabled){border-color:var(--gold);transform:translateY(-1px);}
@@ -1411,25 +1430,25 @@ window.TAIYABAH_PUBLIC = {
   .hh-day.s-unoffered .dot{background:transparent;}
 
   .hh-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
-  .hh-legend span{display:flex;align-items:center;gap:6px;font-size:.74rem;color:var(--muted);}
+  .hh-legend span{display:flex;align-items:center;gap:6px;font-size:.893rem;color:var(--muted);}
   .hh-legend i{width:7px;height:7px;border-radius:50%;display:block;}
 
   .hh-panel{
     background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
     padding:22px 24px;margin-top:16px;
   }
-  .hh-panel h4{font-family:"Fraunces",serif;font-size:1.05rem;color:#F3EFE3;margin-bottom:4px;}
-  .hh-panel .hh-p-sub{font-size:.82rem;color:rgba(243,239,227,.7);margin-bottom:16px;}
+  .hh-panel h4{font-family:"Fraunces",serif;font-size:1.115rem;color:#F3EFE3;margin-bottom:4px;}
+  .hh-panel .hh-p-sub{font-size:.943rem;color:rgba(243,239,227,.7);margin-bottom:16px;}
   .hh-sessions{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
   .hh-session{
     display:flex;align-items:center;justify-content:space-between;gap:12px;
     background:rgba(255,255,255,.05);border:1px solid rgba(243,239,227,.14);
-    border-radius:9px;padding:11px 14px;font-size:.85rem;
+    border-radius:9px;padding:11px 14px;font-size:.96rem;
   }
   .hh-session .hs-t{color:rgba(243,239,227,.9);font-weight:600;}
-  .hh-session .hs-v{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-bright);}
+  .hh-session .hs-v{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-bright);}
   .hh-session .hs-act{
-    font-family:inherit;font-size:.72rem;font-weight:800;letter-spacing:.05em;
+    font-family:inherit;font-size:.88rem;font-weight:800;letter-spacing:.05em;
     text-transform:uppercase;cursor:pointer;white-space:nowrap;
     background:linear-gradient(180deg,var(--gold-bright),var(--gold));
     color:var(--brand-900);border:none;border-radius:999px;padding:7px 15px;transition:.18s ease;
@@ -1439,17 +1458,17 @@ window.TAIYABAH_PUBLIC = {
     background:none;border:1px solid rgba(243,239,227,.22);
     color:rgba(243,239,227,.45);cursor:not-allowed;
   }
-  .hh-p-foot{font-size:.8rem;color:rgba(243,239,227,.65);line-height:1.6;margin-top:2px;}
+  .hh-p-foot{font-size:.931rem;color:rgba(243,239,227,.65);line-height:1.6;margin-top:2px;}
   .hh-p-foot a{color:var(--gold-bright);font-weight:600;}
   .hh-booked-msg{
     background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.45);
     border-radius:9px;padding:11px 13px;margin-bottom:14px;
-    font-size:.82rem;line-height:1.55;color:var(--gold-bright);
+    font-size:.943rem;line-height:1.55;color:var(--gold-bright);
   }
   .hh-panel .btn{width:auto;}
   @media (max-width:520px){
     .hh-cal{padding:13px;}
-    .hh-day{min-height:42px;font-size:.78rem;}
+    .hh-day{min-height:42px;font-size:.92rem;}
     .hh-controls{flex-direction:column;align-items:flex-start;}
   }
 
@@ -1460,38 +1479,38 @@ window.TAIYABAH_PUBLIC = {
   .ac-thumb{aspect-ratio:16/10;overflow:hidden;}
   .ac-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
   .ac-body{padding:18px 20px 22px;display:flex;flex-direction:column;gap:6px;}
-  .ac-tag{font-size:.64rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:700;}
-  .ac-body h3{font-size:1.15rem;margin:2px 0 2px;}
-  .ac-body p{color:var(--muted);font-size:.88rem;line-height:1.55;}
-  .ac-read{margin-top:6px;font-size:.82rem;font-weight:700;color:var(--brand-700);}
+  .ac-tag{font-size:.836rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-ink);font-weight:700;}
+  .ac-body h3{font-size:1.19rem;margin:2px 0 2px;}
+  .ac-body p{color:var(--muted);font-size:.986rem;line-height:1.55;}
+  .ac-read{margin-top:6px;font-size:.943rem;font-weight:700;color:var(--brand-700);}
 
   .article-body{padding-top:8px;}
-  .article-body .art-lead{font-size:1.08rem;line-height:1.75;color:var(--ink);margin-bottom:8px;}
-  .article-body h2{font-size:1.35rem;margin:38px 0 14px;}
+  .article-body .art-lead{font-size:1.136rem;line-height:1.75;color:var(--ink);margin-bottom:8px;}
+  .article-body h2{font-size:1.362rem;margin:38px 0 14px;}
   .article-body h2:first-of-type{margin-top:30px;}
-  .article-body p{font-size:.95rem;line-height:1.8;color:var(--muted);margin-bottom:16px;}
+  .article-body p{font-size:1.042rem;line-height:1.8;color:var(--muted);margin-bottom:16px;}
   .article-body b{color:var(--ink);}
   .art-checklist{list-style:none;display:grid;grid-template-columns:1fr;gap:8px;margin:0 0 16px;}
   @media (min-width:640px){ .art-checklist{grid-template-columns:1fr 1fr;} }
-  .art-checklist li{position:relative;padding-left:26px;font-size:.92rem;color:var(--ink);line-height:1.5;}
+  .art-checklist li{position:relative;padding-left:26px;font-size:1.02rem;color:var(--ink);line-height:1.5;}
   .art-checklist li::before{content:"";position:absolute;left:0;top:.35em;width:14px;height:14px;border-radius:50%;background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);}
   .art-checklist li::after{content:"";position:absolute;left:4.5px;top:.55em;width:5px;height:8px;border-right:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(45deg);}
   .pillars-grid{display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0 18px;}
   @media (min-width:640px){ .pillars-grid{grid-template-columns:1fr 1fr;} }
   .pillar-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
-  .pillar-num{width:28px;height:28px;border-radius:50%;background:var(--brand-900);color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
-  .pillar-card h3{font-size:.98rem;margin-bottom:6px;line-height:1.3;}
-  .pillar-card p{font-size:.85rem;line-height:1.6;margin-bottom:0;}
+  .pillar-num{width:28px;height:28px;border-radius:50%;background:var(--brand-900);color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.96rem;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .pillar-card h3{font-size:1.065rem;margin-bottom:6px;line-height:1.3;}
+  .pillar-card p{font-size:.96rem;line-height:1.6;margin-bottom:0;}
   .art-shop{display:flex;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius);padding:18px 20px;margin:30px 0 0;}
   .art-shop .as-photo{width:96px;height:96px;object-fit:cover;border-radius:10px;flex-shrink:0;display:none;}
   @media (min-width:560px){ .art-shop .as-photo{display:block;} }
   .art-shop .as-txt{flex:1;min-width:0;}
-  .art-shop h3{font-size:1.02rem;margin:0 0 6px;line-height:1.3;}
-  .art-shop p{font-size:.88rem;line-height:1.6;margin:0 0 13px;}
+  .art-shop h3{font-size:1.094rem;margin:0 0 6px;line-height:1.3;}
+  .art-shop p{font-size:.986rem;line-height:1.6;margin:0 0 13px;}
   .shop-tile{transition:border-color .35s ease, box-shadow .35s ease;}
   .shop-tile.just-linked{border-color:var(--gold);box-shadow:0 0 0 3px rgba(198,162,76,.3);}
   .art-cta-box{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:26px 24px;margin-top:36px;}
-  .art-cta-box p{color:rgba(243,239,227,.85);margin-bottom:0;font-size:.92rem;line-height:1.65;}
+  .art-cta-box p{color:rgba(243,239,227,.85);margin-bottom:0;font-size:1.02rem;line-height:1.65;}
 
   /* ---- Services page: quick-nav tiles + full detail sections, mirroring the app ---- */
   .svc-quicknav{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin:28px 0 60px;}
@@ -1501,13 +1520,13 @@ window.TAIYABAH_PUBLIC = {
   .svc-qtile.is-soon:hover{transform:none;border-color:var(--line);}
   .svc-qtile .sv-ic{width:42px;height:42px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;}
   .svc-qtile .sv-ic svg{width:19px;height:19px;}
-  .svc-qtile .sv-label{font-family:"Fraunces",serif;font-weight:600;font-size:.84rem;color:var(--ink);line-height:1.3;}
-  .svc-qtile .sv-sub{font-size:.7rem;color:var(--muted);line-height:1.4;}
+  .svc-qtile .sv-label{font-family:"Fraunces",serif;font-weight:600;font-size:.954rem;color:var(--ink);line-height:1.3;}
+  .svc-qtile .sv-sub{font-size:.867rem;color:var(--muted);line-height:1.4;}
 
   .svc-facts{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;}
   .svc-fact{flex:1;text-align:center;padding:16px 8px;border-right:1px solid var(--line);}
   .svc-fact:last-child{border-right:none;}
-  .svc-fact .k{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+  .svc-fact .k{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
   .svc-fact .v{font-size:1.5rem;font-weight:700;color:var(--brand-700);font-family:"Fraunces",serif;margin-top:2px;}
 
   /* ---- Holiday Planner -------------------------------------------------- */
@@ -1515,9 +1534,9 @@ window.TAIYABAH_PUBLIC = {
   .hp-status .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:6px;}
   .hp-status.is-open .dot{background:var(--success);}
   .hp-status.is-shut .dot{background:var(--danger);}
-  .hp-status .t{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;color:var(--ink);}
-  .hp-status .d{display:block;font-size:.86rem;color:var(--muted);line-height:1.6;margin-top:3px;}
-  .hp-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 20px;font-size:.78rem;color:var(--muted);}
+  .hp-status .t{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;color:var(--ink);}
+  .hp-status .d{display:block;font-size:.969rem;color:var(--muted);line-height:1.6;margin-top:3px;}
+  .hp-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 20px;font-size:.92rem;color:var(--muted);}
   .hp-legend span{display:inline-flex;align-items:center;gap:7px;}
   .hp-key{width:15px;height:15px;border-radius:4px;border:1px solid var(--line);background:var(--card);flex-shrink:0;}
   .hp-key.k-shut{background:rgba(180,83,47,.16);border-color:rgba(180,83,47,.4);}
@@ -1528,10 +1547,10 @@ window.TAIYABAH_PUBLIC = {
   @media(min-width:600px){ .hp-months{grid-template-columns:1fr 1fr;} }
   @media(min-width:980px){ .hp-months{grid-template-columns:repeat(3,1fr);} }
   .hp-m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;}
-  .hp-m h4{font-family:"Fraunces",serif;font-size:.92rem;font-weight:600;color:var(--ink);margin:0 0 9px;}
+  .hp-m h4{font-family:"Fraunces",serif;font-size:1.02rem;font-weight:600;color:var(--ink);margin:0 0 9px;}
   .hp-wd,.hp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
-  .hp-wd span{font-size:.58rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:4px;}
-  .hp-d{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-variant-numeric:tabular-nums;color:var(--ink);border-radius:5px;border:1px solid transparent;}
+  .hp-wd span{font-size:.825rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:4px;}
+  .hp-d{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-variant-numeric:tabular-nums;color:var(--ink);border-radius:5px;border:1px solid transparent;}
   .hp-d.is-pad{color:transparent;}
   .hp-d.is-wknd{color:var(--muted);opacity:.55;}
   .hp-d.is-shut{background:rgba(180,83,47,.16);color:#7C3A20;font-weight:600;}
@@ -1540,19 +1559,19 @@ window.TAIYABAH_PUBLIC = {
   .hp-rows{display:grid;gap:0;border-top:1px solid var(--line);margin:4px 0 0;}
   .hp-row{display:grid;gap:2px 16px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline;}
   @media(min-width:620px){ .hp-row{grid-template-columns:1fr 172px 62px;} }
-  .hp-row .n{font-size:.9rem;font-weight:600;color:var(--ink);}
-  .hp-row .sub{font-size:.78rem;color:var(--muted);display:block;font-weight:400;margin-top:1px;}
-  .hp-row .w{font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums;}
-  .hp-row .len{font-size:.78rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .hp-row .n{font-size:1.003rem;font-weight:600;color:var(--ink);}
+  .hp-row .sub{font-size:.92rem;color:var(--muted);display:block;font-weight:400;margin-top:1px;}
+  .hp-row .w{font-size:.96rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .hp-row .len{font-size:.92rem;color:var(--muted);font-variant-numeric:tabular-nums;}
   @media(min-width:620px){ .hp-row .len{text-align:right;} }
   .hp-row.is-past{opacity:.5;}
-  .hp-est{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.22);border-radius:4px;padding:2px 6px;margin-left:7px;white-space:nowrap;}
+  .hp-est{font-size:.829rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.22);border-radius:4px;padding:2px 6px;margin-left:7px;white-space:nowrap;}
   /* ---- Nikah date request ----------------------------------------------- */
   .nk-wrap{margin-top:34px;}
   .nk-layout{display:grid;gap:20px;grid-template-columns:1fr;align-items:start;}
   @media(min-width:900px){ .nk-layout{grid-template-columns:minmax(0,1fr) 340px;} }
   .nk-times{margin-top:16px;}
-  .nk-times .lab{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;
+  .nk-times .lab{font-size:.853rem;letter-spacing:.08em;text-transform:uppercase;
     font-weight:700;color:var(--muted);display:block;margin-bottom:9px;}
   .nk-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:7px;}
   .nk-slots{grid-template-columns:repeat(auto-fill,minmax(132px,1fr));}
@@ -1560,8 +1579,8 @@ window.TAIYABAH_PUBLIC = {
     background:var(--paper);border:1px solid var(--line);border-radius:10px;
     padding:10px 12px;font-family:inherit;color:var(--ink);
     cursor:pointer;min-height:52px;text-align:left;transition:.15s ease;}
-  .nk-slot .p{font-size:.86rem;font-weight:700;}
-  .nk-slot .t{font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .nk-slot .p{font-size:.969rem;font-weight:700;}
+  .nk-slot .t{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums;}
   .nk-slot:hover:not(:disabled){border-color:var(--gold);}
   .nk-slot.is-sel{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
   .nk-slot.is-sel .t{color:rgba(243,239,227,.72);}
@@ -1572,40 +1591,40 @@ window.TAIYABAH_PUBLIC = {
   .nk-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:20px;position:sticky;top:95px;}
   @media(max-width:899px){ .nk-panel{position:static;} }
-  .nk-panel h4{font-family:"Fraunces",serif;font-size:1.02rem;margin:0 0 4px;color:var(--ink);}
-  .nk-panel .sub{font-size:.82rem;color:var(--muted);line-height:1.6;margin:0 0 14px;}
+  .nk-panel h4{font-family:"Fraunces",serif;font-size:1.094rem;margin:0 0 4px;color:var(--ink);}
+  .nk-panel .sub{font-size:.943rem;color:var(--muted);line-height:1.6;margin:0 0 14px;}
   .nk-pick{display:grid;gap:0;border-top:1px solid var(--line);margin-bottom:14px;}
   .nk-pick > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
     padding:11px 0;border-bottom:1px solid var(--line);}
-  .nk-pick .k{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;}
-  .nk-pick .v{font-size:.9rem;font-weight:700;color:var(--ink);text-align:right;}
+  .nk-pick .k{font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+  .nk-pick .v{font-size:1.003rem;font-weight:700;color:var(--ink);text-align:right;}
   .nk-pick .v.empty{color:var(--muted);font-weight:500;}
   .nk-mode{display:flex;gap:7px;margin-bottom:14px;}
   .nk-mode button{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:9px;
-    padding:9px 8px;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--muted);
+    padding:9px 8px;font-family:inherit;font-size:.92rem;font-weight:700;color:var(--muted);
     cursor:pointer;min-height:40px;}
   .nk-mode button.is-on{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
-  .nk-clear{background:none;border:none;font-family:inherit;font-size:.76rem;font-weight:600;
+  .nk-clear{background:none;border:none;font-family:inherit;font-size:.907rem;font-weight:600;
     color:var(--brand-700);cursor:pointer;padding:4px 0;text-decoration:underline;}
   /* --- the fee and the online payment, now in the 330px rail ----------- */
   .nk-tight{margin-top:14px;}
-  .nk-tight h4{font-size:.95rem;}
-  .nk-tight .hh-rate-line{padding:6px 0;font-size:.86rem;}
-  .nk-tight .hh-rate-eff{font-size:.76rem;}
+  .nk-tight h4{font-size:1.042rem;}
+  .nk-tight .hh-rate-line{padding:6px 0;font-size:.969rem;}
+  .nk-tight .hh-rate-eff{font-size:.907rem;}
   /* .72rem is 11.5px. That is fine in a 330px rail on a desktop and wrong on
      a phone, where the rail becomes full width and this text stays tiny — and
      the text in question is the masjid's SORT CODE AND ACCOUNT NUMBER, which
      somebody has to read and copy. Shrunk only where the rail is narrow. */
-  .nk-tight .hh-rate-note,.nk-tight .np-note{font-size:.8rem;line-height:1.6;}
+  .nk-tight .hh-rate-note,.nk-tight .np-note{font-size:.931rem;line-height:1.6;}
   @media(min-width:900px){
-    .nk-tight .hh-rate-note,.nk-tight .np-note{font-size:.72rem;line-height:1.55;}
+    .nk-tight .hh-rate-note,.nk-tight .np-note{font-size:.88rem;line-height:1.55;}
   }
-  .nk-tight .np-when{font-size:.76rem;}
+  .nk-tight .np-when{font-size:.907rem;}
   .nk-tight .np-btns{gap:7px;}
   /* The rail is 330px. Two buttons side by side in that is two buttons with
      three words each wrapped onto three lines. */
-  .nk-tight .np-btns .btn{flex:1 1 100%;font-size:.82rem;padding:9px 12px;}
-  .nk-tight input{padding:8px 10px;font-size:.88rem;}
+  .nk-tight .np-btns .btn{flex:1 1 100%;font-size:.943rem;padding:9px 12px;}
+  .nk-tight input{padding:8px 10px;font-size:.986rem;}
 
   /* --- "Your request", now the width of the page ----------------------- */
   .nk-panel.nk-wide{position:static;margin-top:34px;padding:22px clamp(16px,2.4vw,26px);}
@@ -1620,9 +1639,9 @@ window.TAIYABAH_PUBLIC = {
   .nk-person:first-of-type{border-top:none;padding-top:0;margin-top:0;}
   .nk-ph{display:flex;align-items:center;gap:11px;margin-bottom:13px;}
   .nk-ph .num{width:27px;height:27px;border-radius:50%;background:var(--gold);
-    color:var(--brand-900);font-size:.72rem;font-weight:800;flex-shrink:0;
+    color:var(--brand-900);font-size:.88rem;font-weight:800;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
-  .nk-ph h5{font-family:"Fraunces",serif;font-size:1.05rem;color:var(--ink);margin:0;}
+  .nk-ph h5{font-family:"Fraunces",serif;font-size:1.115rem;color:var(--ink);margin:0;}
   /* Two columns on a desktop, one on a phone. `wide` spans both — a street
      address in a half-width box is the field people get wrong most. */
   /* Six columns, so a field can be a half, a third or two thirds of a row and
@@ -1636,15 +1655,15 @@ window.TAIYABAH_PUBLIC = {
     .nk-fields > .cf-row.c2{grid-column:span 2;}
     .nk-fields > .cf-row.wide{grid-column:1/-1;}
   }
-  .nk-fields .field-hint{font-size:.74rem;color:var(--muted);line-height:1.5;margin:-2px 0 6px;}
+  .nk-fields .field-hint{font-size:.893rem;color:var(--muted);line-height:1.5;margin:-2px 0 6px;}
   .nk-fields .opt{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);}
   .nk-panel.nk-wide #nkAction .declare2{margin-top:20px;}
   .nk-panel.nk-wide #nkAction .cf-submit{width:auto;padding-left:34px;padding-right:34px;}
 
   .nk-closed{background:var(--brand-900);color:#F3EFE3;border-radius:12px;padding:17px 18px;}
-  .nk-closed h5{font-family:"Fraunces",serif;font-size:.98rem;color:#F3EFE3;margin:0 0 7px;}
-  .nk-closed p{font-size:.83rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0 0 12px;}
-  .nk-closed .tel{display:block;font-size:1.02rem;font-weight:700;color:var(--gold-bright);
+  .nk-closed h5{font-family:"Fraunces",serif;font-size:1.065rem;color:#F3EFE3;margin:0 0 7px;}
+  .nk-closed p{font-size:.949rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0 0 12px;}
+  .nk-closed .tel{display:block;font-size:1.094rem;font-weight:700;color:var(--gold-bright);
     text-decoration:none;font-variant-numeric:tabular-nums;}
   /* ---- Education course tiles ------------------------------------------- */
   .edu-grid{display:grid;gap:16px;grid-template-columns:1fr;}
@@ -1660,13 +1679,13 @@ window.TAIYABAH_PUBLIC = {
   .edu-tile .et-media .et-ic svg{width:52px;height:52px;}
   .edu-tile .et-photo{width:100%;height:100%;object-fit:cover;display:block;}
   .edu-tile .et-body{display:flex;flex-direction:column;gap:5px;padding:17px 19px 20px;}
-  .edu-tile .et-tag{font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
-    color:var(--gold);font-weight:700;}
-  .edu-tile .et-h{font-family:"Fraunces",serif;font-weight:600;font-size:1.12rem;
+  .edu-tile .et-tag{font-size:.833rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--gold-ink);font-weight:700;}
+  .edu-tile .et-h{font-family:"Fraunces",serif;font-weight:600;font-size:1.166rem;
     color:var(--ink);line-height:1.25;margin:2px 0 1px;}
-  .edu-tile .et-p{font-size:.87rem;line-height:1.6;color:var(--muted);}
-  .edu-tile .et-meta{font-size:.76rem;color:var(--muted);opacity:.85;margin-top:4px;}
-  .edu-tile .et-read{margin-top:8px;font-size:.82rem;font-weight:700;color:var(--brand-700);}
+  .edu-tile .et-p{font-size:.977rem;line-height:1.6;color:var(--muted);}
+  .edu-tile .et-meta{font-size:.907rem;color:var(--muted);opacity:.85;margin-top:4px;}
+  .edu-tile .et-read{margin-top:8px;font-size:.943rem;font-weight:700;color:var(--brand-700);}
   .edu-tile.is-soon{opacity:.72;}
   .edu-tile.is-soon .et-media{background:var(--paper);border-bottom:1px solid var(--line);}
   .edu-tile.is-soon .et-media .et-ic{color:var(--muted);opacity:.45;}
@@ -1675,74 +1694,74 @@ window.TAIYABAH_PUBLIC = {
   @media(min-width:560px){ .cf-two{grid-template-columns:1fr 1fr;} }
   .yn2{display:flex;gap:9px;flex-wrap:wrap;}
   .yn2 label{display:inline-flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;
-    font-size:.9rem;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);
+    font-size:1.003rem;font-weight:600;color:var(--ink);background:var(--paper);border:1px solid var(--line);
     border-radius:10px;padding:10px 16px;cursor:pointer;min-height:44px;margin:0;}
   .yn2 input{accent-color:var(--brand-700);width:16px;height:16px;}
   .yn2 label:has(input:checked){border-color:var(--gold);background:rgba(198,162,76,.13);}
   .declare2{display:flex;gap:11px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);
     border-radius:10px;padding:12px 14px;margin-bottom:11px;cursor:pointer;text-transform:none;letter-spacing:0;}
   .declare2 input{accent-color:var(--brand-700);width:16px;height:16px;margin-top:2px;flex-shrink:0;}
-  .declare2 span{font-size:.85rem;line-height:1.6;color:var(--muted);font-weight:400;}
+  .declare2 span{font-size:.96rem;line-height:1.6;color:var(--muted);font-weight:400;}
   .declare2 a{color:var(--brand-700);font-weight:600;cursor:pointer;}
   .declare2.bad{border-color:var(--danger);background:#FDF6F3;}
   .cf-row.bad input,.cf-row.bad select,.cf-row.bad textarea{border-color:var(--danger);background-color:#FDF6F3;}
-  .cf-row .hf-err{display:none;font-size:.76rem;color:var(--danger);font-weight:600;margin-top:5px;}
+  .cf-row .hf-err{display:none;font-size:.907rem;color:var(--danger-ink);font-weight:600;margin-top:5px;}
   .cf-row.bad .hf-err{display:block;}
   .hp-trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
   .ar-problems{display:none;background:#FDF6F3;border:1px solid #EBCDBF;border-radius:10px;
-    padding:12px 14px;margin-bottom:13px;font-size:.84rem;color:#7C3A20;line-height:1.6;}
+    padding:12px 14px;margin-bottom:13px;font-size:.954rem;color:#7C3A20;line-height:1.6;}
   .ar-problems.on{display:block;}
   .ar-done{display:none;text-align:center;padding:10px 0 4px;}
   .ar-done.on{display:block;}
-  .ar-done h4{font-family:"Fraunces",serif;font-size:1.1rem;color:var(--ink);margin-bottom:8px;}
-  .ar-done p{font-size:.88rem;color:var(--muted);line-height:1.65;margin-bottom:12px;}
-  .ar-ref{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.02rem;
+  .ar-done h4{font-family:"Fraunces",serif;font-size:1.15rem;color:var(--ink);margin-bottom:8px;}
+  .ar-done p{font-size:.986rem;color:var(--muted);line-height:1.65;margin-bottom:12px;}
+  .ar-ref{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.094rem;
     font-weight:700;letter-spacing:.05em;background:var(--paper);border:1px solid var(--line);
     border-radius:9px;padding:9px 18px;color:var(--brand-800);}
   .adm-status{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:22px 22px 20px;}
-  .adm-status .lab{font-size:.66rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);display:block;margin-bottom:9px;}
-  .adm-status h3{font-family:"Fraunces",serif;font-size:1.08rem;color:#F3EFE3;margin-bottom:9px;line-height:1.3;}
-  .adm-status p{font-size:.86rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:12px;}
-  .adm-status .adm-preview{width:100%;padding:12px 20px;font-size:.86rem;margin-top:2px;}
-  .adm-status .adm-preview-note{font-size:.76rem;line-height:1.6;color:rgba(243,239,227,.6);margin:10px 0 0;}
+  .adm-status .lab{font-size:.84rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);display:block;margin-bottom:9px;}
+  .adm-status h3{font-family:"Fraunces",serif;font-size:1.136rem;color:#F3EFE3;margin-bottom:9px;line-height:1.3;}
+  .adm-status p{font-size:.969rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:12px;}
+  .adm-status .adm-preview{width:100%;padding:12px 20px;font-size:.969rem;margin-top:2px;}
+  .adm-status .adm-preview-note{font-size:.907rem;line-height:1.6;color:rgba(243,239,227,.6);margin:10px 0 0;}
   .adm-rules{display:grid;gap:0;border-top:1px solid var(--line);margin:4px 0 0;}
   .adm-rules > div{display:grid;gap:2px 18px;padding:13px 0;border-bottom:1px solid var(--line);}
   @media(min-width:560px){ .adm-rules > div{grid-template-columns:118px 1fr;} }
-  .adm-rules dt{font-size:.86rem;font-weight:700;color:var(--ink);}
-  .adm-rules dd{margin:0;font-size:.88rem;line-height:1.7;color:var(--muted);}
+  .adm-rules dt{font-size:.969rem;font-weight:700;color:var(--ink);}
+  .adm-rules dd{margin:0;font-size:.986rem;line-height:1.7;color:var(--muted);}
   .svc-cta-row{display:flex;gap:14px;align-items:center;padding:15px 16px;border-radius:14px;background:var(--card);border:1px solid var(--line);text-decoration:none;margin-top:12px;}
   .svc-cta-row .ic{width:38px;height:38px;border-radius:10px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .svc-cta-row .ic svg{width:18px;height:18px;}
   .svc-cta-row .t{display:flex;flex-direction:column;gap:2px;min-width:0;}
-  .svc-cta-row .k{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
-  .svc-cta-row .v{font-size:.96rem;font-weight:700;color:var(--ink);}
+  .svc-cta-row .k{font-size:.867rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .svc-cta-row .v{font-size:1.05rem;font-weight:700;color:var(--ink);}
   .svc-cta-row .go{margin-left:auto;color:var(--muted);flex-shrink:0;}
 
   .wl-ul{list-style:disc;margin:8px 0 0 2px;padding-left:18px;}
-  .wl-ul li{font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:6px;}
+  .wl-ul li{font-size:1.003rem;line-height:1.7;color:var(--muted);margin-bottom:6px;}
 
   .svc-quote{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;}
-  .svc-quote .ar{font-size:1rem;line-height:2;color:#8A6A18;direction:rtl;text-align:right;}
-  .svc-quote .en{font-family:"Fraunces",Georgia,serif;font-size:.92rem;line-height:1.6;color:var(--ink);margin-top:8px;}
-  .svc-quote .src{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:#9A7A1E;margin-top:8px;}
+  .svc-quote .ar{font-size:1.08rem;line-height:2;color:var(--gold-ink);direction:rtl;text-align:right;}
+  .svc-quote .en{font-family:"Fraunces",Georgia,serif;font-size:1.02rem;line-height:1.6;color:var(--ink);margin-top:8px;}
+  .svc-quote .src{font-size:.84rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink);margin-top:8px;}
 
-  .svc-notprovided{display:flex;align-items:center;gap:9px;margin:4px 0 12px;padding:11px 13px;border-radius:11px;background:#FBF0EB;border:1px solid #EBCDBF;font-size:.83rem;font-weight:600;color:#7C3A20;}
+  .svc-notprovided{display:flex;align-items:center;gap:9px;margin:4px 0 12px;padding:11px 13px;border-radius:11px;background:#FBF0EB;border:1px solid #EBCDBF;font-size:.949rem;font-weight:600;color:#7C3A20;}
   .svc-notprovided .dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0;}
 
   .svc-advisory{margin:12px 0;border-radius:14px;padding:15px 16px;background:#FBF0EB;border:1px solid #EBCDBF;}
-  .svc-advisory .h{font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#7C3A20;margin-bottom:6px;}
-  .svc-advisory p{font-size:.82rem;line-height:1.6;color:#7C3A20;}
+  .svc-advisory .h{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#7C3A20;margin-bottom:6px;}
+  .svc-advisory p{font-size:.943rem;line-height:1.6;color:#7C3A20;}
 
   /* ---- Funeral services ---- */
   .fs-urgent{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:22px 24px;margin-bottom:26px;}
-  .fs-urgent .u-lab{font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;display:block;}
-  .fs-urgent h3{font-family:"Fraunces",serif;font-size:1.15rem;color:#F3EFE3;margin-bottom:9px;}
-  .fs-urgent p{font-size:.9rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:14px;max-width:58ch;}
+  .fs-urgent .u-lab{font-size:.853rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;display:block;}
+  .fs-urgent h3{font-family:"Fraunces",serif;font-size:1.19rem;color:#F3EFE3;margin-bottom:9px;}
+  .fs-urgent p{font-size:1.003rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:14px;max-width:58ch;}
   .fs-nums{display:flex;flex-wrap:wrap;gap:10px;}
   .fs-num{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.07);border:1px solid rgba(198,162,76,.34);border-radius:11px;padding:11px 17px;text-decoration:none;transition:.2s ease;}
   .fs-num:hover{background:var(--gold-bright);border-color:var(--gold-bright);}
-  .fs-num .who{font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(243,239,227,.66);}
-  .fs-num .no{font-size:1.02rem;font-weight:700;color:var(--gold-bright);}
+  .fs-num .who{font-size:.853rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(243,239,227,.66);}
+  .fs-num .no{font-size:1.094rem;font-weight:700;color:var(--gold-bright);}
   .fs-num:hover .who{color:rgba(60,11,42,.72);}
   .fs-num:hover .no{color:var(--brand-900);}
   .fs-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:6px 0 8px;}
@@ -1750,23 +1769,23 @@ window.TAIYABAH_PUBLIC = {
   .fs-item{display:flex;gap:13px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 17px;}
   .fs-item .ic{width:34px;height:34px;border-radius:9px;flex-shrink:0;background:rgba(198,162,76,.14);color:var(--brand-800);display:flex;align-items:center;justify-content:center;}
   .fs-item .ic svg{width:16px;height:16px;}
-  .fs-item h4{font-size:.93rem;font-weight:600;color:var(--ink);margin-bottom:3px;}
-  .fs-item p{font-size:.83rem;line-height:1.6;color:var(--muted);margin:0;}
-  .fs-extra{font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.2);padding:2px 7px;border-radius:4px;margin-left:6px;white-space:nowrap;}
+  .fs-item h4{font-size:1.028rem;font-weight:600;color:var(--ink);margin-bottom:3px;}
+  .fs-item p{font-size:.949rem;line-height:1.6;color:var(--muted);margin:0;}
+  .fs-extra{font-size:.836rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-800);background:rgba(198,162,76,.2);padding:2px 7px;border-radius:4px;margin-left:6px;white-space:nowrap;}
 
   .svc-soon-note{background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px;}
   .svc-soon-note .tw{display:flex;flex-direction:column;gap:2px;}
-  .svc-soon-note .t{font-size:.88rem;font-weight:600;color:var(--ink);}
-  .svc-soon-note .d{font-size:.78rem;color:var(--muted);}
+  .svc-soon-note .t{font-size:.986rem;font-weight:600;color:var(--ink);}
+  .svc-soon-note .d{font-size:.92rem;color:var(--muted);}
 
   /* ---------- Contact form (used on Imams' Advice page) ---------- */
-  .cform-divider{display:flex;align-items:center;gap:12px;margin:26px 0 18px;color:var(--muted);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;}
+  .cform-divider{display:flex;align-items:center;gap:12px;margin:26px 0 18px;color:var(--muted);font-size:.88rem;letter-spacing:.1em;text-transform:uppercase;}
   .cform-divider::before,.cform-divider::after{content:"";flex:1;height:1px;background:var(--line);}
   .cform{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px 20px 20px;}
-  .cform-lead{font-size:.85rem;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+  .cform-lead{font-size:.96rem;color:var(--muted);line-height:1.6;margin-bottom:16px;}
   .cf-row{margin-bottom:14px;}
-  .cf-row label{display:block;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
-  .cf-row input,.cf-row select,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:.92rem;line-height:1.3;color:var(--ink);}
+  .cf-row label{display:block;font-size:.853rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:6px;}
+  .cf-row input,.cf-row select,.cf-row textarea{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-family:inherit;font-size:1.02rem;line-height:1.3;color:var(--ink);}
   .cf-row input:focus,.cf-row select:focus,.cf-row textarea:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
   /* A <select> left alone renders as the operating system's own widget, which
      is why the "You are" field looked like it belonged to a different website
@@ -1787,9 +1806,9 @@ window.TAIYABAH_PUBLIC = {
   .cf-row select:invalid,.cf-row select option[value=""]{color:var(--muted);}
   .cf-row textarea{resize:vertical;min-height:96px;line-height:1.5;}
   .cform .cf-submit{width:100%;justify-content:center;margin-top:2px;border:none;cursor:pointer;font-family:inherit;}
-  .cf-note{font-size:.74rem;color:var(--muted);margin-top:12px;line-height:1.6;text-align:center;}
+  .cf-note{font-size:.893rem;color:var(--muted);margin-top:12px;line-height:1.6;text-align:center;}
 
-  .back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(243,239,227,.68);font-size:.8rem;font-weight:600;text-decoration:none;margin-bottom:12px;cursor:pointer;
+  .back-link{display:inline-flex;align-items:center;gap:6px;color:rgba(243,239,227,.68);font-size:.931rem;font-weight:600;text-decoration:none;margin-bottom:12px;cursor:pointer;
     min-height:28px;padding:5px 2px;}
   .back-link:hover{color:#F3EFE3;}
   .back-link svg{width:14px;height:14px;}
@@ -1875,8 +1894,8 @@ window.TAIYABAH_PUBLIC = {
   .contact-list li{display:flex;gap:15px;padding:15px 0;border-bottom:1px solid var(--line);}
   .contact-list li .ic{width:38px;height:38px;border-radius:9px;background:var(--brand-900);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .contact-list li .ic svg{width:17px;height:17px;}
-  .contact-list li strong{display:block;font-size:.88rem;margin-bottom:2px;}
-  .contact-list li span,.contact-list li a{color:var(--muted);font-size:.86rem;}
+  .contact-list li strong{display:block;font-size:.986rem;margin-bottom:2px;}
+  .contact-list li span,.contact-list li a{color:var(--muted);font-size:.969rem;}
   .contact-list li a:hover{color:var(--brand-800);}
   /* Find-us card. Replaces an embedded Google map: an iframe would set
      third-party cookies on arrival, before anyone had agreed to anything.
@@ -1887,11 +1906,11 @@ window.TAIYABAH_PUBLIC = {
   .find-card .fc-body{display:grid;gap:14px;padding:16px 4px 6px;flex:0 0 auto;align-content:start;}
   @media (min-width:520px){ .find-card .fc-body{grid-template-columns:1fr 1fr;gap:16px;} }
   .fc-place{display:flex;flex-direction:column;gap:2px;min-width:0;}
-  .fc-k{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
-  .fc-place strong{font-size:.97rem;color:var(--ink);font-weight:600;line-height:1.35;}
-  .fc-town{font-size:.88rem;color:var(--muted);}
+  .fc-k{font-size:.853rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+  .fc-place strong{font-size:1.058rem;color:var(--ink);font-weight:600;line-height:1.35;}
+  .fc-town{font-size:.986rem;color:var(--muted);}
   .fc-go{display:inline-flex;align-items:center;gap:6px;margin-top:9px;align-self:flex-start;
-    font-size:.8rem;font-weight:600;color:var(--brand-800);background:rgba(198,162,76,.13);
+    font-size:.931rem;font-weight:600;color:var(--brand-800);background:rgba(198,162,76,.13);
     border:1px solid rgba(198,162,76,.4);border-radius:8px;padding:7px 12px;transition:.2s ease;}
   .fc-go svg{width:13px;height:13px;flex-shrink:0;}
   .fc-go:hover{background:var(--brand-800);color:#F3EFE3;border-color:var(--brand-800);}
@@ -1907,30 +1926,30 @@ window.TAIYABAH_PUBLIC = {
   .social-row-dark a{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid rgba(198,162,76,.3);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;transition:.2s ease;}
   .social-row-dark a svg{width:14px;height:14px;}
   .social-row-dark a:hover{background:var(--gold-bright);color:var(--brand-900);border-color:var(--gold-bright);}
-  footer h5{color:#F3EFE3;font-size:.82rem;margin-bottom:13px;letter-spacing:.04em;}
+  footer h5{color:#F3EFE3;font-size:.943rem;margin-bottom:13px;letter-spacing:.04em;}
   footer .foot-brand img{height:28px;margin-bottom:12px;}
-  footer .foot-brand p{font-size:.8rem;line-height:1.7;max-width:300px;}
-  footer ul li{margin-bottom:8px;font-size:.82rem;}
+  footer .foot-brand p{font-size:.931rem;line-height:1.7;max-width:300px;}
+  footer ul li{margin-bottom:8px;font-size:.943rem;}
   footer ul li a:hover{color:var(--gold-bright);}
   footer ul li a[data-nav]{cursor:pointer;}
-  .foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.74rem;}
+  .foot-bottom{border-top:1px solid rgba(255,255,255,.1);padding-top:18px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.893rem;}
   /* ---- Legal pages (privacy) ---- */
   .legal-body{max-width:none;}
   .legal-wrap{max-width:74ch;margin:0 auto;}
-  .legal-wrap h2{font-family:"Fraunces",serif;font-size:1.28rem;color:var(--brand-900);margin:38px 0 12px;letter-spacing:-.01em;}
+  .legal-wrap h2{font-family:"Fraunces",serif;font-size:1.298rem;color:var(--brand-900);margin:38px 0 12px;letter-spacing:-.01em;}
   .legal-wrap h2:first-of-type{margin-top:6px;}
-  .legal-wrap p{color:var(--ink-2, var(--muted));font-size:.97rem;line-height:1.8;margin-bottom:14px;}
+  .legal-wrap p{color:var(--ink-2, var(--muted));font-size:1.058rem;line-height:1.8;margin-bottom:14px;}
   .legal-wrap ul{margin:0 0 16px;padding-left:20px;}
-  .legal-wrap li{color:var(--muted);font-size:.95rem;line-height:1.75;margin-bottom:8px;}
+  .legal-wrap li{color:var(--muted);font-size:1.042rem;line-height:1.75;margin-bottom:8px;}
   .legal-wrap li strong{color:var(--ink);font-weight:600;}
   .legal-wrap a{color:var(--brand-700);border-bottom:1px solid rgba(94,24,68,.3);}
   .legal-wrap a:hover{border-color:var(--brand-700);}
-  .legal-sub{font-family:'Fraunces',Georgia,serif;font-size:1.02rem;font-weight:600;
+  .legal-sub{font-family:'Fraunces',Georgia,serif;font-size:1.094rem;font-weight:600;
              color:var(--brand-800);margin:22px 0 6px;}
   .legal-note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
     border-radius:0 10px 10px 0;padding:16px 20px;margin:22px 0;}
-  .legal-note p{margin:0;font-size:.93rem;}
-  .legal-meta{font-size:.82rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;margin-top:40px;}
+  .legal-note p{margin:0;font-size:1.028rem;}
+  .legal-meta{font-size:.943rem;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;margin-top:40px;}
   .foot-credit a{
     color:var(--gold-bright);font-weight:600;
     border-bottom:1px solid rgba(220,187,99,.35);padding-bottom:1px;transition:.2s ease;
@@ -1941,7 +1960,7 @@ window.TAIYABAH_PUBLIC = {
   .totop{position:fixed;bottom:24px;right:24px;width:46px;height:46px;border-radius:50%;background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;opacity:0;visibility:hidden;transform:translateY(10px);transition:.3s ease;box-shadow:var(--shadow);}
   .totop.show{opacity:1;visibility:visible;transform:translateY(0);}
 
-  .skip-link{position:fixed;top:-60px;left:14px;z-index:2000;background:var(--gold-bright);color:var(--brand-900);padding:12px 20px;border-radius:10px;font-weight:700;font-size:.85rem;transition:top .2s ease;}
+  .skip-link{position:fixed;top:-60px;left:14px;z-index:2000;background:var(--gold-bright);color:var(--brand-900);padding:12px 20px;border-radius:10px;font-weight:700;font-size:.96rem;transition:top .2s ease;}
   .skip-link:focus{top:14px;}
   :focus-visible{outline:2px solid var(--gold-bright);outline-offset:2px;}
   @media (prefers-reduced-motion: reduce){
@@ -2722,7 +2741,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body" id="portals">
     <div class="container">
-      <div class="subhead"><h3 style="font-size:1.1rem;">Digital portals</h3><span class="rule"></span></div>
+      <div class="subhead"><h3 style="font-size:1.15rem;">Digital portals</h3><span class="rule"></span></div>
       <div class="cs-wrap" style="max-width:600px;margin:0 0 8px;">
         <p class="cs-lead" style="text-align:left;">Digital portals for the madrasah are on the way — nothing is live yet, but this is what's coming.</p>
       </div>
@@ -2748,7 +2767,7 @@ window.TAIYABAH_PUBLIC = {
           <span class="live-tag">2026/27</span>
         </a>
       </div>
-      <p style="margin-top:20px;color:var(--muted);font-size:.9rem;line-height:1.7;">The Parents and Teachers portals are shown here as design previews — the sign-in screens are not yet connected and no account will work. For madrasah enquiries in the meantime, please <a data-nav="contact" style="color:var(--brand-800);font-weight:600;cursor:pointer;">get in touch</a> or call the masjid office.</p>
+      <p style="margin-top:20px;color:var(--muted);font-size:1.003rem;line-height:1.7;">The Parents and Teachers portals are shown here as design previews — the sign-in screens are not yet connected and no account will work. For madrasah enquiries in the meantime, please <a data-nav="contact" style="color:var(--brand-800);font-weight:600;cursor:pointer;">get in touch</a> or call the masjid office.</p>
       <p style="margin-top:16px;">
         <a class="pl-admin-link" href="portal/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 018 0v3.5"/></svg>Madrasah staff administration</a>
       </p>
@@ -2797,25 +2816,25 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="svc-detail-facts">
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The madrasah has taught the community's children since 1967, from age 4 through to Hifz and the Alimiyyah course. Everything below applies to every student, and submitting an application means agreeing to it.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The madrasah has taught the community's children since 1967, from age 4 through to Hifz and the Alimiyyah course. Everything below applies to every student, and submitting an application means agreeing to it.</p>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Fees</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Fees</h3><span class="rule"></span></div>
           <div class="soon-list">
             <div class="soon-row"><span class="t">All classes</span><span class="tnum" style="font-weight:700;">&pound;10 / week</span></div>
             <div class="soon-row"><span class="t">Hifz</span><span class="tnum" style="font-weight:700;">&pound;14 / week</span></div>
             <div class="soon-row"><span class="t">Admission fee &middot; one-off</span><span class="tnum" style="font-weight:700;">&pound;20</span></div>
           </div>
-          <p style="font-size:.86rem;color:var(--muted);line-height:1.7;margin-top:12px;">The admission fee is payable once your child has been granted a place. Fees are collected through the madrasah office or the parent portal, and are <strong>payable whether or not your child attends</strong>. Fees are reviewed each year &mdash; please confirm the current rate with the office when you apply.</p>
+          <p style="font-size:.969rem;color:var(--muted);line-height:1.7;margin-top:12px;">The admission fee is payable once your child has been granted a place. Fees are collected through the madrasah office or the parent portal, and are <strong>payable whether or not your child attends</strong>. Fees are reviewed each year &mdash; please confirm the current rate with the office when you apply.</p>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Class times</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Class times</h3><span class="rule"></span></div>
           <div class="soon-list">
             <div class="soon-row"><span class="t">All classes &middot; Monday to Friday</span><span class="tnum" style="font-weight:700;">5:00&ndash;7:00pm</span></div>
             <div class="soon-row"><span class="t">Hifz &middot; Monday to Friday</span><span class="tnum" style="font-weight:700;">5:00&ndash;7:30pm</span></div>
             <div class="soon-row"><span class="t">Hifz &middot; Saturday</span><span class="tnum" style="font-weight:700;">9:00&ndash;11:00am</span></div>
           </div>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Attendance</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Attendance is taken seriously, because a class only works if the children in it are there. The madrasah expects <strong>at least 90% attendance across the year</strong>, and a child consistently below that by the end of a term will lose their place.</p>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Attendance</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Attendance is taken seriously, because a class only works if the children in it are there. The madrasah expects <strong>at least 90% attendance across the year</strong>, and a child consistently below that by the end of a term will lose their place.</p>
           <ul class="art-checklist">
             <li>Lateness counts towards the attendance figure</li>
             <li>Ring the office on the day, between 5pm and 7pm</li>
@@ -2823,11 +2842,11 @@ window.TAIYABAH_PUBLIC = {
             <li>Absence not reported on the day is recorded as unauthorised</li>
           </ul>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Term dates and holidays</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The madrasah follows the school term dates recommended by Bolton Council, so holidays should be arranged outside term time wherever possible.</p>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">If you must travel during term, collect a <strong>Holiday Absence Form</strong> from the madrasah office and return it <strong>three weeks before you travel</strong>. Without it, the absence is unauthorised. A handwritten letter is not accepted in place of the form.</p>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Term dates and holidays</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The madrasah follows the school term dates recommended by Bolton Council, so holidays should be arranged outside term time wherever possible.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">If you must travel during term, collect a <strong>Holiday Absence Form</strong> from the madrasah office and return it <strong>three weeks before you travel</strong>. Without it, the absence is unauthorised. A handwritten letter is not accepted in place of the form.</p>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Uniform and appearance</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Uniform and appearance</h3><span class="rule"></span></div>
           <dl class="adm-rules">
             <div><dt>Boys</dt><dd>Jubba and topi.</dd></div>
             <div><dt>Girls</dt><dd>Abaya and burkhi, long enough to cover the chest and hair.</dd></div>
@@ -2836,7 +2855,7 @@ window.TAIYABAH_PUBLIC = {
             <div><dt>If not followed</dt><dd>Children arriving without the correct uniform, or with an unacceptable hairstyle, are sent home.</dd></div>
           </dl>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Day to day</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Day to day</h3><span class="rule"></span></div>
           <dl class="adm-rules">
             <div><dt>Toilet</dt><dd>Please make sure your child has been before leaving home. If there is an accident during madrasah, you will be called to collect them.</dd></div>
             <div><dt>Concerns</dt><dd>Raise anything with the <strong>office manager</strong> rather than the teacher. It will be handled confidentially.</dd></div>
@@ -2844,9 +2863,9 @@ window.TAIYABAH_PUBLIC = {
             <div><dt>Proof of age</dt><dd>A birth certificate, valid passport or ID card is needed once a place has been confirmed.</dd></div>
           </dl>
 
-          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">After you apply</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Submitting an application does <strong>not</strong> mean your child has been granted a place. Classes fill quickly, and where a class is already full, applicants are added to a waiting list and contacted when a space comes up. Admission to <strong>Hifz</strong> is additionally subject to the headteacher's approval.</p>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">You will need a working email address: it is how the office reaches you, and how you will sign in to the parent portal once your child has a place.</p>
+          <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">After you apply</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Submitting an application does <strong>not</strong> mean your child has been granted a place. Classes fill quickly, and where a class is already full, applicants are added to a waiting list and contacted when a space comes up. Admission to <strong>Hifz</strong> is additionally subject to the headteacher's approval.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">You will need a working email address: it is how the office reaches you, and how you will sign in to the parent portal once your child has a place.</p>
         </div>
       </div>
       <div class="cs-cta" style="margin-top:32px;">
@@ -2896,9 +2915,9 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="svc-detail-facts">
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The madrasah teaches <strong>180 days</strong> this year &mdash; 36 weeks, Monday to Friday, 5pm to 7pm. Hifz students also attend on Saturday mornings. Everything below applies to every class.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The madrasah teaches <strong>180 days</strong> this year &mdash; 36 weeks, Monday to Friday, 5pm to 7pm. Hifz students also attend on Saturday mornings. Everything below applies to every class.</p>
 
-          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">The year at a glance</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">The year at a glance</h3><span class="rule"></span></div>
           <div class="hp-legend">
             <span><i class="hp-key"></i>Madrasah open</span>
             <span><i class="hp-key k-shut"></i>Closed</span>
@@ -2907,18 +2926,18 @@ window.TAIYABAH_PUBLIC = {
           </div>
           <div class="hp-months" id="hpMonths"></div>
 
-          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.1rem;">When the madrasah is closed</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">When the madrasah is closed</h3><span class="rule"></span></div>
           <div class="hp-rows" id="hpClosures"></div>
-          <p style="font-size:.86rem;color:var(--muted);line-height:1.7;margin-top:12px;">The two long breaks &mdash; <strong>Ramadhan</strong> (33 days) and the <strong>summer</strong> (40 days) &mdash; are when a family trip costs nothing in attendance. Everything else is a week or less.</p>
+          <p style="font-size:.969rem;color:var(--muted);line-height:1.7;margin-top:12px;">The two long breaks &mdash; <strong>Ramadhan</strong> (33 days) and the <strong>summer</strong> (40 days) &mdash; are when a family trip costs nothing in attendance. Everything else is a week or less.</p>
 
-          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.1rem;">Islamic dates this year</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">Islamic dates this year</h3><span class="rule"></span></div>
           <div class="hp-rows" id="hpEvents"></div>
           <div class="svc-advisory" style="margin-top:16px;">
             <div class="h">These dates are estimates</div>
             <p>The Islamic calendar follows the moon, so the exact day is confirmed by sighting and can fall a day either side of what is printed here. These are calculated from the Umm al-Qur&aacute; calendar and are shown so you can plan &mdash; <strong>the masjid announces the confirmed date for Ramadhan and each Eid beforehand</strong>. The madrasah's closure dates above are fixed and were set by the madrasah itself.</p>
           </div>
 
-          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.1rem;">Reporting an absence</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">Reporting an absence</h3><span class="rule"></span></div>
           <ul class="art-checklist">
             <li>Ring the office on the day, between 5pm and 7pm</li>
             <li>Tell us about lateness too, not only absence</li>
@@ -2943,7 +2962,7 @@ window.TAIYABAH_PUBLIC = {
         <div>
           <div class="eyebrow">Get the App</div>
           <h1 style="color:#F3EFE3;font-size:clamp(1.9rem,4vw,2.6rem);">The Taiyabah Masjid App is on its way.</h1>
-          <p style="color:rgba(243,239,227,.78);line-height:1.75;margin-top:14px;font-size:1rem;max-width:52ch;">
+          <p style="color:rgba(243,239,227,.78);line-height:1.75;margin-top:14px;font-size:1.08rem;max-width:52ch;">
             We are building an App for the community, with the masjid's own prayer timetable rather than a third-party aggregator. It will be free, and it will be on the App Store and Google Play. Until then, everything below is on this website &mdash; the <a data-nav="prayer" style="color:var(--gold-bright);">full prayer timetable</a> is live now.
           </p>
           <div class="feat-grid">
@@ -3241,14 +3260,16 @@ window.TAIYABAH_PUBLIC = {
         <p>Once a year, for the whole month of Ramadhan, Muslims fast from first light until sunset &mdash; no food, no drink, no smoking &mdash; and use the month for extra prayer, extra Qur'an and extra charity. The intention is self-restraint rather than deprivation: holding the tongue and the temper as much as the appetite.</p>
         <p>Fasting is obligatory on adult Muslims in good health, and Islam exempts those it would harm &mdash; the ill, the pregnant, the elderly, travellers, and children before puberty.</p>
         <div class="cs-cta" style="margin:0 0 18px;">
-          <a class="btn btn-ghost-dark" data-nav="article-ramadan">Read: What Is Ramadhan?</a>
+          <!-- ghost-LIGHT: this button sits on the cream article body, not on
+               plum. The dark variant is cream text, so it was cream on cream. -->
+          <a class="btn btn-ghost-light" data-nav="article-ramadan">Read: What Is Ramadhan?</a>
         </div>
 
         <h2>5 &middot; Hajj &mdash; the pilgrimage to Makkah</h2>
         <p>Every Muslim who is physically and financially able must perform the pilgrimage to Makkah once in their lifetime. It takes place over five days in Dhul Hijjah, the last month of the Islamic year, and is the largest annual gathering of people anywhere on earth.</p>
         <p>&ldquo;Able&rdquo; is a genuine condition, not a formality: a person must be well enough to make the journey and able to pay for it from surplus wealth, without borrowing and without leaving dependants short. Someone who never becomes able is not blamed for never going.</p>
         <div class="cs-cta" style="margin:0 0 18px;">
-          <a class="btn btn-ghost-dark" data-nav="article-hajj">Read: What Is Hajj?</a>
+          <a class="btn btn-ghost-light" data-nav="article-hajj">Read: What Is Hajj?</a>
         </div>
 
         <h2>Why &ldquo;pillars&rdquo;?</h2>
@@ -3509,7 +3530,7 @@ window.TAIYABAH_PUBLIC = {
   <section class="page-body">
     <div class="container">
       <div class="svc-detail-facts svc-hub">
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Every course below is open to adults aged 16 and over, taught at the masjid, with men's and women's sessions run separately. Places are limited and registration is required &mdash; you cannot simply turn up.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Every course below is open to adults aged 16 and over, taught at the masjid, with men's and women's sessions run separately. Places are limited and registration is required &mdash; you cannot simply turn up.</p>
         <div class="edu-grid" style="margin-top:22px;">
 
           <a class="edu-tile" href="#" data-nav="svc-edu-arabic">
@@ -3584,7 +3605,7 @@ window.TAIYABAH_PUBLIC = {
           </a>
         </div>
         <div class="svc-detail-facts">
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">The aim is to get you reading and understanding the language of the Qur'an, not only reciting it. Classes start from the alphabet, so no previous study is assumed &mdash; and they run after the madrasah finishes, when the building is already open.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The aim is to get you reading and understanding the language of the Qur'an, not only reciting it. Classes start from the alphabet, so no previous study is assumed &mdash; and they run after the madrasah finishes, when the building is already open.</p>
           <dl class="adm-rules">
             <div><dt>When</dt><dd><span id="eduWhen">One evening a week, 7:00&ndash;8:00pm.</span></dd></div>
             <div><dt>Who for</dt><dd>Adults aged <strong>16 and over</strong>. Men's and women's classes are taught separately.</dd></div>
@@ -3619,7 +3640,7 @@ window.TAIYABAH_PUBLIC = {
       <div class="svc-split is-rail-first">
         <div class="svc-aside">
           <div class="svc-facts" style="margin-bottom:16px;">
-            <div class="svc-fact"><div class="k">Format</div><div class="v" style="font-size:1.05rem;">One session</div></div>
+            <div class="svc-fact"><div class="k">Format</div><div class="v" style="font-size:1.115rem;">One session</div></div>
             <div class="svc-fact"><div class="k">Places</div><div class="v tnum">15</div></div>
           </div>
           <div class="course-reg" data-course="ghusl" data-cap="15"></div>
@@ -3635,10 +3656,10 @@ window.TAIYABAH_PUBLIC = {
           </a>
         </div>
         <div class="svc-detail-facts">
-          <p class="art-lead" style="font-size:1rem;">Washing the body of someone who has died is a <b>fard kifayah</b> &mdash; an obligation on the community as a whole rather than on any one person. As long as enough people can do it, the duty is discharged for everyone. Where nobody can, it falls on everyone.</p>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">In practice most families discover, in the worst week of their lives, that they do not know how and do not know who to ask. This workshop exists so that fewer families are in that position &mdash; and so that when it happens on your street, someone nearby can step in.</p>
+          <p class="art-lead" style="font-size:1.08rem;">Washing the body of someone who has died is a <b>fard kifayah</b> &mdash; an obligation on the community as a whole rather than on any one person. As long as enough people can do it, the duty is discharged for everyone. Where nobody can, it falls on everyone.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">In practice most families discover, in the worst week of their lives, that they do not know how and do not know who to ask. This workshop exists so that fewer families are in that position &mdash; and so that when it happens on your street, someone nearby can step in.</p>
 
-          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.1rem;">What the workshop covers</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.15rem;">What the workshop covers</h3><span class="rule"></span></div>
           <ul class="art-checklist">
             <li>What happens in the hours after a death, and who to ring first</li>
             <li>What is needed, and where the masjid keeps it</li>
@@ -3647,9 +3668,9 @@ window.TAIYABAH_PUBLIC = {
             <li>The adab of it: modesty, gentleness, and holding your tongue afterwards</li>
             <li>What follows &mdash; janāzah prayer, and the burial</li>
           </ul>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">It is taught at the masjid, which has its own mortuary, so what you are shown is what you would actually be doing in the room.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">It is taught at the masjid, which has its own mortuary, so what you are shown is what you would actually be doing in the room.</p>
 
-          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.1rem;">Practical details</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:28px;"><h3 style="font-size:1.15rem;">Practical details</h3><span class="rule"></span></div>
           <dl class="adm-rules">
             <div><dt>Who for</dt><dd>Adults aged <strong>16 and over</strong>. <strong>Men's and women's sessions are run separately</strong>, because men wash men and women wash women.</dd></div>
             <div><dt>When</dt><dd>A one-off session, run periodically rather than to a fixed timetable. Register and the office will tell you when the next one is.</dd></div>
@@ -3854,7 +3875,7 @@ window.TAIYABAH_PUBLIC = {
             <div class="svc-fact"><div class="k">Kitchens available</div><div class="v">2</div></div>
           </div>
 
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-bottom:16px;">Taiyabah Centre &mdash; a separate building owned by the masjid &mdash; offers three halls and two kitchens for hire, suitable for a range of community and family occasions.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;margin-bottom:16px;">Taiyabah Centre &mdash; a separate building owned by the masjid &mdash; offers three halls and two kitchens for hire, suitable for a range of community and family occasions.</p>
 
           <!-- The masjid's published charges, printed here as they are printed
                on the masjid's own sheet. The page does NOT work out a total:
@@ -3916,7 +3937,7 @@ window.TAIYABAH_PUBLIC = {
             <span class="go">&rsaquo;</span>
           </a>
 
-          <p style="color:var(--muted);font-size:.85rem;line-height:1.7;margin-top:16px;">The charges above are the masjid's published rates. For anything the calendar doesn't cover, the office is the quickest route.</p>
+          <p style="color:var(--muted);font-size:.96rem;line-height:1.7;margin-top:16px;">The charges above are the masjid's published rates. For anything the calendar doesn't cover, the office is the quickest route.</p>
 
           <p class="hh-tc-prompt">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h8l4 4v13a1 1 0 01-1 1H7a1 1 0 01-1-1v-16a1 1 0 011-1z"/><path d="M15 3.5v4h4"/><path d="M9 13h6M9 16.5h4"/></svg>
@@ -4068,7 +4089,7 @@ window.TAIYABAH_PUBLIC = {
       <a class="back-link" href="#" data-nav="svc-bmd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Birth, Marriage &amp; Death</a>
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
-        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.3rem;color:var(--gold-bright);margin:-4px 0 8px;">وِلَادَة</div>
+        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">وِلَادَة</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Guidance for New Arrivals</h1>
       </div>
     </div>
@@ -4077,17 +4098,17 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="svc-split is-rail">
       <div class="svc-detail-facts">
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Congratulations on the arrival of your child. This covers guidance and services relevant to a newborn.</p>
-        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">Circumcision (Khitān)</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Congratulations on the arrival of your child. This covers guidance and services relevant to a newborn.</p>
+        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">Circumcision (Khitān)</h3><span class="rule"></span></div>
         <div class="svc-notprovided"><span class="dot"></span>Taiyabah Masjid does not provide this service directly.</div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Circumcision can be arranged through the <strong>Bolton Council of Mosques (BCoM)</strong>, which runs a long-established weekly clinic performed by experienced NHS doctors.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Circumcision can be arranged through the <strong>Bolton Council of Mosques (BCoM)</strong>, which runs a long-established weekly clinic performed by experienced NHS doctors.</p>
         <div class="soon-list" style="margin-top:12px;">
           <div class="soon-row"><span class="t">Age range</span><span style="font-weight:700;">2 weeks – 18 months</span></div>
           <div class="soon-row"><span class="t">2 weeks – 6 months</span><span class="tnum" style="font-weight:700;">£180</span></div>
           <div class="soon-row"><span class="t">6 – 12 months</span><span class="tnum" style="font-weight:700;">£250</span></div>
           <div class="soon-row"><span class="t">12 – 18 months</span><span class="tnum" style="font-weight:700;">£300</span></div>
         </div>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">BCoM does not circumcise babies over 18 months old.</p>
+        <p style="font-size:.92rem;color:var(--muted);margin-top:8px;">BCoM does not circumcise babies over 18 months old.</p>
       </div>
       <div class="svc-aside">
         <a class="svc-cta-row" href="tel:01204363680">
@@ -4095,7 +4116,7 @@ window.TAIYABAH_PUBLIC = {
           <span class="t"><span class="k">Call BCoM to book &middot; option 4</span><span class="v tnum">01204 363 680</span></span>
           <span class="go">&rsaquo;</span>
         </a>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Office hours 9am–3pm &middot; admin@thebcom.org &middot; 1 Vicarage Street, Bolton BL3 5LE. A service of Bolton Council of Mosques, independent of Taiyabah Masjid.</p>
+        <p style="font-size:.92rem;color:var(--muted);margin-top:8px;">Office hours 9am–3pm &middot; admin@thebcom.org &middot; 1 Vicarage Street, Bolton BL3 5LE. A service of Bolton Council of Mosques, independent of Taiyabah Masjid.</p>
       </div>
       </div>
 
@@ -4114,7 +4135,7 @@ window.TAIYABAH_PUBLIC = {
       <a class="back-link" href="#" data-nav="svc-bmd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Birth, Marriage &amp; Death</a>
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
-        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.3rem;color:var(--gold-bright);margin:-4px 0 8px;">نِكَاح</div>
+        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">نِكَاح</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Islamic Marriage at Taiyabah</h1>
       </div>
     </div>
@@ -4123,13 +4144,13 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="svc-split is-rail">
       <div class="svc-detail-facts">
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">For many couples, an Islamic ceremony carries a significance that a civil registration alone does not provide. Taiyabah Masjid is able to conduct this Nikāḥ on your behalf, in keeping with authentic Islamic practice — both parties giving their free and informed consent, and the groom presenting a dowry (mahr) to the bride as part of the contract.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">For many couples, an Islamic ceremony carries a significance that a civil registration alone does not provide. Taiyabah Masjid is able to conduct this Nikāḥ on your behalf, in keeping with authentic Islamic practice — both parties giving their free and informed consent, and the groom presenting a dowry (mahr) to the bride as part of the contract.</p>
         <div class="svc-advisory">
           <div class="h">Please also register your marriage legally</div>
           <p>A Nikāḥ performed at the masjid is not, by itself, a marriage recognised under UK law. We strongly encourage every couple to additionally complete a separate civil marriage — this protects both partners' legal rights, including around property and inheritance, should the need ever arise.</p>
         </div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
-        <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.1rem;">Request a date</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;margin-top:14px;">Requirements such as documentation, witnesses and available dates are best confirmed directly with the masjid.</p>
+        <div class="subhead" style="margin-top:30px;"><h3 style="font-size:1.15rem;">Request a date</h3><span class="rule"></span></div>
         <div class="hh-notice">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.01"/></svg>
           <span><b>This is a request, not a booking.</b> No date here is reserved, and nothing on this calendar shows what the masjid already has in the diary. Choose the day and time that would suit you, and the office will ring the person named on the request to confirm whether it can be done, go through the details, and take payment.</span>
@@ -4155,7 +4176,7 @@ window.TAIYABAH_PUBLIC = {
           <span class="t"><span class="k">Call the main office</span><span class="v tnum">01204 535 997</span></span>
           <span class="go">&rsaquo;</span>
         </a>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses and timings — are best discussed directly with the office when you call.</p>
+        <p style="font-size:.92rem;color:var(--muted);margin-top:8px;">Specific requirements — documentation, witnesses and timings — are best discussed directly with the office when you call.</p>
         <!-- Stated openly rather than behind a tick box. It is a published
              rate card, so nobody has to tell the website anything about
              whether they belong to this masjid in order to read it. -->
@@ -4234,7 +4255,7 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="section-head on-dark">
         <div class="eyebrow">Support the masjid</div>
-        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.3rem;color:var(--gold-bright);margin:-4px 0 8px;">&#1589;&#1614;&#1583;&#1614;&#1602;&#1614;&#1577;</div>
+        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">&#1589;&#1614;&#1583;&#1614;&#1602;&#1614;&#1577;</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Give to Taiyabah Masjid</h1>
         <p>Every prayer held here, every child taught, every jan&#257;zah carried out
           rests on what the community gives. This page is for the masjid itself
@@ -4253,7 +4274,7 @@ window.TAIYABAH_PUBLIC = {
            card they were never going to use.
            =================================================================== -->
       <div class="dn-top">
-        <div class="subhead"><h3 style="font-size:1.1rem;">Where your giving goes</h3><span class="rule"></span></div>
+        <div class="subhead"><h3 style="font-size:1.15rem;">Where your giving goes</h3><span class="rule"></span></div>
         <div class="dn-where">
         <div class="dn-line"><span class="k">Keeping the doors open</span>
           <span class="v">Heating, lighting, water and insurance. The masjid is open
@@ -4363,7 +4384,7 @@ window.TAIYABAH_PUBLIC = {
       <a class="back-link" href="#" data-nav="svc-bmd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Birth, Marriage &amp; Death</a>
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
-        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.3rem;color:var(--gold-bright);margin:-4px 0 8px;">الوَصِيَّة</div>
+        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">الوَصِيَّة</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">The Importance of an Islamic Will</h1>
       </div>
     </div>
@@ -4382,16 +4403,16 @@ window.TAIYABAH_PUBLIC = {
           <p class="en">"When death approaches one of you, and you leave behind good, it is prescribed that you make a bequest — a duty upon those mindful of Allah."</p>
           <p class="src">Qur'an &middot; Sūrah al-Baqarah, 2:180</p>
         </div>
-        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">Why it matters</h3><span class="rule"></span></div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">When a Muslim passes away without having made their wishes clear, their estate is left to be settled according to the default rules of the country they lived in — which may not reflect Islamic guidance on how a person's wealth should be distributed. An Islamic will sets out, in your own words, while you are able to:</p>
+        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">Why it matters</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">When a Muslim passes away without having made their wishes clear, their estate is left to be settled according to the default rules of the country they lived in — which may not reflect Islamic guidance on how a person's wealth should be distributed. An Islamic will sets out, in your own words, while you are able to:</p>
         <ul class="wl-ul">
           <li>Who is entitled to benefit from your estate, and in what shares</li>
           <li>How your property and other assets should be dealt with</li>
           <li>Who you trust to carry this out on your behalf — your executors</li>
           <li>Any funeral wishes you would like to be followed</li>
         </ul>
-        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">Distributing your estate</h3><span class="rule"></span></div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Islamic inheritance follows fixed shares (Farā'iḍ) set out in the Qur'an for specific family members. A will does not override these shares, but it lets you address anything the fixed shares do not cover — for example, up to a third of your estate may be left to people or causes outside your Islamic heirs, such as a charitable gift. Because these calculations depend on your own family circumstances, they are best worked through individually with the imam or a solicitor experienced in Islamic wills.</p>
+        <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">Distributing your estate</h3><span class="rule"></span></div>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Islamic inheritance follows fixed shares (Farā'iḍ) set out in the Qur'an for specific family members. A will does not override these shares, but it lets you address anything the fixed shares do not cover — for example, up to a third of your estate may be left to people or causes outside your Islamic heirs, such as a charitable gift. Because these calculations depend on your own family circumstances, they are best worked through individually with the imam or a solicitor experienced in Islamic wills.</p>
         <div class="svc-advisory">
           <div class="h">General information, not advice</div>
           <p>This is a starting point, not legal, financial or religious advice for your own circumstances. UK inheritance tax and probate rules are detailed and change over time — please speak to a qualified solicitor to write your will, and to the imam for guidance on the Islamic shares that apply to your family.</p>
@@ -4421,7 +4442,7 @@ window.TAIYABAH_PUBLIC = {
       <a class="back-link" href="#" data-nav="svc-bmd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Birth, Marriage &amp; Death</a>
       <div class="section-head on-dark">
         <div class="eyebrow">Services</div>
-        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.3rem;color:var(--gold-bright);margin:-4px 0 8px;">الجَنَازَة</div>
+        <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">الجَنَازَة</div>
         <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Funeral Services</h1>
         <p>Taiyabah Masjid supports families through every part of an Islamic funeral, from the first phone call to the burial.</p>
       </div>
@@ -4446,7 +4467,7 @@ window.TAIYABAH_PUBLIC = {
       <div class="svc-detail-facts">
 
         <div class="subhead" style="margin-top:6px;"><span class="idx">01</span><h3>What the masjid provides</h3><span class="rule"></span></div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-bottom:18px;">Everything here is arranged by the masjid. If you are unsure what is needed or in what order, ring the office and someone will talk you through it.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;margin-bottom:18px;">Everything here is arranged by the masjid. If you are unsure what is needed or in what order, ring the office and someone will talk you through it.</p>
 
         <div class="fs-grid">
           <div class="fs-item"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a7 7 0 007-7c0-4-7-11-7-11S5 11 5 15a7 7 0 007 7z"/></svg></span><div><h4>Ghusl &mdash; washing</h4><p>The ritual washing of the deceased, carried out at the masjid according to Islamic practice.</p></div></div>
@@ -4467,8 +4488,8 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="subhead" style="margin-top:30px;"><span class="idx">02</span><h3>Where BCoM fits in</h3><span class="rule"></span></div>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">A death has to be registered, and the hospital or coroner has to release the deceased, before a burial can go ahead. <strong style="color:var(--ink);">Bolton Council of Mosques handles that side</strong> &mdash; liaising with the council and the hospital &mdash; which is why they are the first call. The masjid then takes care of the ghusl, the kafn, the janāzah and the burial itself.</p>
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">You do not need to work out who does what. Ring either number and you will be pointed the right way.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">A death has to be registered, and the hospital or coroner has to release the deceased, before a burial can go ahead. <strong style="color:var(--ink);">Bolton Council of Mosques handles that side</strong> &mdash; liaising with the council and the hospital &mdash; which is why they are the first call. The masjid then takes care of the ghusl, the kafn, the janāzah and the burial itself.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">You do not need to work out who does what. Ring either number and you will be pointed the right way.</p>
 
         <div class="subhead" style="margin-top:30px;"><span class="idx">03</span><h3>What it costs</h3><span class="rule"></span></div>
 
@@ -4520,13 +4541,13 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="svc-split svc-split-form">
       <div class="svc-detail-facts">
-        <p style="color:var(--muted);font-size:.92rem;line-height:1.75;">Many in the community turn to the masjid for guidance on matters affecting their day-to-day lives. Our imams are able to advise on a range of subjects, including marriage, bereavement, family matters, and general Islamic guidance. If you would like to arrange a time to speak with one of the imams, please contact the main office to make an appointment.</p>
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">Many in the community turn to the masjid for guidance on matters affecting their day-to-day lives. Our imams are able to advise on a range of subjects, including marriage, bereavement, family matters, and general Islamic guidance. If you would like to arrange a time to speak with one of the imams, please contact the main office to make an appointment.</p>
         <a class="svc-cta-row" href="tel:01204535997">
           <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg></span>
           <span class="t"><span class="k">Call the main office to book</span><span class="v tnum">01204 535 997</span></span>
           <span class="go">&rsaquo;</span>
         </a>
-        <p style="font-size:.78rem;color:var(--muted);margin-top:8px;">Appointments are arranged through the office, so the imam can make time to see you properly rather than in passing.</p>
+        <p style="font-size:.92rem;color:var(--muted);margin-top:8px;">Appointments are arranged through the office, so the imam can make time to see you properly rather than in passing.</p>
       </div>
       <div class="svc-aside">
         <div class="cform-divider">Or write to us</div>
@@ -4665,19 +4686,19 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="svc-split is-rail">
         <div class="svc-detail-facts">
-          <p style="color:var(--muted);font-size:.95rem;line-height:1.75;">
+          <p style="color:var(--muted);font-size:1.042rem;line-height:1.75;">
             The Taiyabah Food Bank is being planned. Nothing is open yet and there is
             nothing to turn up to &mdash; but knowing how many people are willing to
             help, and when they are free, is what makes it possible to open at all.
           </p>
 
-          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">What happens after you register</h3><span class="rule"></span></div>
+          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">What happens after you register</h3><span class="rule"></span></div>
           <div class="soon-list">
             <div class="soon-row"><span class="t">Right now</span><span style="font-weight:700;">Nothing to do</span></div>
             <div class="soon-row"><span class="t">When it opens</span><span style="font-weight:700;">The masjid contacts you</span></div>
             <div class="soon-row"><span class="t">Your details are kept</span><span style="font-weight:700;">12 months</span></div>
           </div>
-          <p style="font-size:.82rem;color:var(--muted);margin-top:12px;line-height:1.7;">
+          <p style="font-size:.943rem;color:var(--muted);margin-top:12px;line-height:1.7;">
             The masjid will contact you the way you ask it to, about the food bank and
             nothing else. Your details are deleted twelve months after you register,
             automatically. You can ask to be taken off the list at any time &mdash;
@@ -4685,8 +4706,8 @@ window.TAIYABAH_PUBLIC = {
             or see the <a href="#" data-nav="privacy" style="color:var(--brand-700);font-weight:600;">privacy notice</a>.
           </p>
 
-          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.1rem;">If you are under 16</h3><span class="rule"></span></div>
-          <p style="color:var(--muted);font-size:.9rem;line-height:1.75;">
+          <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">If you are under 16</h3><span class="rule"></span></div>
+          <p style="color:var(--muted);font-size:1.003rem;line-height:1.75;">
             Please do not fill this in. Ask a parent to ring the office on
             <a href="tel:01204535997" style="color:var(--brand-700);font-weight:600;">01204&nbsp;535&nbsp;997</a>
             between 5pm and 7pm instead &mdash; that is a conversation worth having with
@@ -4720,7 +4741,7 @@ window.TAIYABAH_PUBLIC = {
                   <label><input type="radio" name="vol-gender" value="female"> Female</label>
                 </div>
                 <div class="hf-err">Please choose one.</div>
-                <p style="font-size:.74rem;color:var(--muted);margin-top:7px;line-height:1.5;">Asked only so the rota can be organised.</p></div>
+                <p style="font-size:.893rem;color:var(--muted);margin-top:7px;line-height:1.5;">Asked only so the rota can be organised.</p></div>
 
               <div class="cf-row" id="vw_age"><label for="vol-age">Age</label>
                 <input type="number" id="vol-age" min="16" max="110" inputmode="numeric" style="max-width:140px;">
@@ -5509,7 +5530,7 @@ window.TAIYABAH_PUBLIC = {
       var state = free === true ? 'Available' : (free === false ? 'Booked' : 'Not published');
       row.innerHTML =
         '<span class="hs-t">Whole day' +
-        '<span style="display:block;font-size:.7rem;font-weight:700;letter-spacing:.05em;' +
+        '<span style="display:block;font-size:.867rem;font-weight:700;letter-spacing:.05em;' +
         'text-transform:uppercase;color:var(--gold-bright);margin-top:2px;">' + state + '</span></span>';
 
       var btn = document.createElement('button');
@@ -6845,7 +6866,7 @@ window.TAIYABAH_PUBLIC = {
           '<div class="nk-closed"><h5>Online requests open soon</h5>' +
           '<p>You can see here exactly what the masjid will ask for. Until requests can be sent from this page, ring the office with your preferred date and they will take it from there.</p>' +
           '<a class="tel" href="tel:01204535997">01204 535 997</a>' +
-          '<p style="margin:6px 0 0;font-size:.78rem;">Office hours 5pm&ndash;7pm.</p></div>';
+          '<p style="margin:6px 0 0;font-size:.92rem;">Office hours 5pm&ndash;7pm.</p></div>';
         return;
       }
       if(!ready()){
