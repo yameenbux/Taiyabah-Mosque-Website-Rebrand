@@ -759,7 +759,12 @@ window.TAIYABAH_PUBLIC = {
   }
   .donate-cta.dn-go .dc-main{font-size:1.246rem;}
   .donate-cta.dn-go:hover{filter:brightness(1.05);}
-  .donate-cta.dn-go .dc-sub{color:rgba(60,11,42,.72);}
+  /* .85, not .72. Plum at 72% over gold is 4.15:1, and it only became
+     visible the day the Stripe links went in — until then the button was
+     aria-disabled and this line took --muted on paper instead. A fault that
+     appears the moment a feature starts working is the worst kind to leave
+     to chance, which is why contrast is measured rather than eyeballed. */
+  .donate-cta.dn-go .dc-sub{color:rgba(60,11,42,.85);}
   .donate-cta.dn-go[aria-disabled="true"]{
     background:var(--paper);border:1.5px solid var(--line);color:var(--muted);
     box-shadow:none;
@@ -6637,9 +6642,9 @@ window.TAIYABAH_PUBLIC = {
     //  18 slots. Any left blank grey out; if all are blank the card says card
     //  giving opens shortly and the bank details below carry the page.
     var DONATE_LINKS = {
-      once:    { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
-      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
-      jummah:  { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }
+      once:    { '5':'https://donate.stripe.com/3cI6oH8ry5XO2x84l0f3a09', '10':'https://donate.stripe.com/cNi7sL7nu71S8Vw3gWf3a0a', '25':'https://donate.stripe.com/aFaeVd37egCs2x8eZEf3a0b', '50':'https://donate.stripe.com/eVq3cvfU03PG8VwdVAf3a0c', '100':'https://donate.stripe.com/28EcN5cHOcmc7Rs4l0f3a0d', other:'https://donate.stripe.com/6oU00j7nueuk2x8bNsf3a0o' },
+      monthly: { '5':'https://donate.stripe.com/dRmcN523aeukc7I6t8f3a0f', '10':'https://donate.stripe.com/4gMcN55fm71S0p018Of3a0e', '25':'https://donate.stripe.com/14A8wPgY4gCs9ZAeZEf3a0g', '50':'https://donate.stripe.com/5kQ00jdLScmc9ZAaJof3a0h', '100':'https://donate.stripe.com/dRm9ATgY4bi86NocRwf3a0i', other:'' },
+      jummah:  { '5':'https://donate.stripe.com/28E5kD8ry2LCdbM04Kf3a0j', '10':'https://donate.stripe.com/5kQfZhdLSbi81t418Of3a0k', '25':'https://donate.stripe.com/dRm3cv5fm71S9ZA9Fkf3a0l', '50':'https://donate.stripe.com/dRmaEX37e9a0b3E8Bgf3a0m', '100':'https://donate.stripe.com/3cIaEXfU0cmc2x8dVAf3a0n', other:'' }
     };
 
     //  FRIDAY PAY IS A WEEKLY SUBSCRIPTION, AND THE NOTE SAYS SO.

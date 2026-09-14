@@ -1,69 +1,81 @@
-TAIYABAH MASJID — page width and line length
-============================================
+TAIYABAH MASJID — card giving goes live
+=======================================
 14 September 2026
 
-4 files. All replacements. Upload these ON TOP of the text-size zip, not
-instead of it — this builds on those changes.
+3 files. All replacements.
 
   index.html            THE WEBSITE. Built file — never edit by hand.
   index_template.html   the source index.html is built FROM.
                         THESE TWO ALWAYS TRAVEL TOGETHER.
-  _test/measure_test.py new — guards everything below
-  _test/giftaid_test.py a small fix, see the last section
+  _test/donate_test.py  updated
+
+Upload on top of the text-size and width zips.
 
 
-WHAT CHANGED
-------------
-The page was capped at 1080px wide. On a 1920px screen that filled 56%
-of the monitor, and on a 2560px screen 42% — which is why it looked like
-a phone layout stranded in the middle of a desktop. The cap is now
-1280px, and the donate page's own three 1120px caps went with it.
+WHAT IS NOW LIVE
+----------------
+16 of the 18 slots are filled:
 
-But widening the page on its own would have made the site HARDER to
-read, not easier, and that is worth understanding before anyone asks
-for it to go wider still.
+  One-off      £5  £10  £25  £50  £100  Other
+  Monthly      £5  £10  £25  £50  £100   —
+  Friday Pay   £5  £10  £25  £50  £100   —
 
-
-WHY IT IS NOT FULL WIDTH
-------------------------
-A line of text longer than about 85 characters is hard to read, because
-the eye loses its place travelling back to the start of the next line.
-It is the same problem as text being too small, and it affects the same
-people.
-
-The lines were ALREADY too long inside the old 1080px:
-
-  prayer times   147 characters
-  madrasah       141
-  about          122
-  nikah           99
-
-At 1280px those would have gone to 167, 156 and 125. So paragraphs are
-now capped separately, at about 70 characters, no matter how wide the
-page gets. Timetables, card grids and the header have no such limit —
-they have no reason to, and they are what now fills the extra space.
-
-If anyone asks for the site to go edge to edge, this is the answer: the
-empty space at the sides is not waste, it is what keeps the sentences
-readable. The furniture can widen; the sentences cannot.
+"Other" on Monthly and Friday Pay is greyed out, because Stripe will not
+let a customer-chosen amount be a recurring price. That is expected and
+nothing is broken. If you would rather the Other button was not shown at
+all on those two, say so and it comes out.
 
 
-ONE THING THAT BROKE AND WAS FIXED
-----------------------------------
-Capping the paragraphs knocked four CENTRED paragraphs off centre — a
-narrow block still sits at the left of its parent unless told otherwise.
-On the media page that left 723px of blank space to the right of the
-text. Fixed, and now guarded.
+BEFORE YOU TELL ANYONE THE PAGE IS OPEN — DO THIS
+-------------------------------------------------
+1. OPEN ALL 16 BUTTONS AND CHECK THE AMOUNT.
+
+   I could not do this. Stripe blocks automated access to
+   donate.stripe.com, so nothing here can read what is actually behind
+   each URL. What was checked is that all 16 are different, none is a
+   test-mode link, and all point at Stripe.
+
+   What was NOT checked is whether the £100-every-Friday button really
+   opens a £100 weekly page. If two links got swapped when they were
+   copied, the page cannot tell and neither can I. Ten minutes with the
+   live site open, pressing each of the 16 and reading the amount and
+   the "per week / per month" line on Stripe's page, is the only way to
+   know. Do it before the page is announced, not after.
+
+2. MAKE ONE REAL PAYMENT.
+
+   £1, real card, live mode. Watch it appear in Stripe, then watch the
+   payout reach the bank. Refund it afterwards.
+
+   No real money has ever gone through this Stripe account. Until one
+   payment has, the whole thing is unproven — not the buttons, but
+   whether the account can receive money at all and whether the payout
+   details are right.
+
+3. CHECK GIFT AID IS ON THE LINKS.
+
+   The page tells donors: tick Yes on the payment page and the masjid
+   reclaims 25p in the pound. If that question is not on these Payment
+   Links, that sentence is untrue and should come off the page. Open one
+   link and look. Tell me either way.
 
 
-THE NEW TEST FILE
------------------
-_test/measure_test.py checks four things on all 29 pages, at desktop and
-phone size: no line over 82 characters, no centred text off centre, the
-page really is wider on a big screen, and it still fits a phone. Each
-check was proved by deliberately breaking it and confirming it failed.
+ONE THING THAT WAS BROKEN AND IS NOW FIXED
+------------------------------------------
+The gold Donate button's second line ("Card · Apple Pay · Google Pay")
+was too faint to pass the readability standard — but it had never once
+been seen, because until today the button was disabled and that line was
+a different colour entirely. It only became visible the moment the links
+went in. Now darkened.
 
-It never touches the live site or the database.
+Worth knowing because it is the second fault of exactly this shape on
+this page: something that looks fine while a feature is switched off,
+and is wrong the moment it is switched on.
 
-_test/giftaid_test.py had a small bug: when it failed it left two 700 KB
-copies of index.html sitting in the repository folder. Fixed.
+
+STILL OUTSTANDING, AND ONLY YOU CAN ANSWER
+------------------------------------------
+Which bank account general donations should use. The transfer panel on
+this page shows the NEW BUILD's HSBC 40-04-15 / 02320258, while hall
+hire uses BCIS 30-99-50 / 59286668. One of those is wrong for general
+giving. Nobody here can tell which.
