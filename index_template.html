@@ -617,33 +617,142 @@ window.TAIYABAH_PUBLIC = {
   /* ===================================================================
      DONATE — the masjid's general fund.
 
-     Deliberately NOT the layout of the reference sheet this was asked from.
-     That page is a breadcrumb, an outlined arch, three numbered icon cards
-     and a dark band holding two white panels. This is the site's own
-     furniture: the masthead every service page uses, the rail split from the
-     marriage and will pages, the hairline label rows from the hall rate
-     card, and the give card and bank card that already exist on the new
-     build page — the same components, so a donor who has seen one recognises
-     the other.
+     THE GIVING CARD IS THE PAGE. It was tried in the 330px rail first and
+     that was wrong: the rail is where this site puts reference material, and
+     a donation is the one thing somebody came here to do. Centred, wide, and
+     the only thing above the fold after the masthead.
+
+     Still not the reference sheet's arrangement — no segmented toggle in a
+     grey track, no dark band holding two white panels, no tick badges. Three
+     labelled rows of the same pills the nikāḥ prayer slots use, under the
+     gold hairline labels used across this site.
      =================================================================== */
   [data-page="donate"] [hidden]{display:none !important;}
 
-  /*  The bank card was built for the full-width column on the new build page:
-      a 180px label beside the value. Dropped into the 330px rail it put
-      "Bolton Central Islamic Society (BCIS)" on five lines and broke the sort
-      code across three — and a sort code somebody has to read and copy is the
-      last thing on this site that should wrap at all. Label above value here,
-      and the numbers never break. */
-  [data-page="donate"] .bk{
-    grid-template-columns:1fr auto;column-gap:12px;row-gap:3px;
-    align-items:baseline;padding:12px 15px;
+  .dn-main{
+    background:var(--card);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    box-shadow:0 18px 50px rgba(60,11,42,.09);
   }
-  [data-page="donate"] .bk-k{grid-column:1/-1;}
-  [data-page="donate"] .bk-v{font-size:.98rem;}
-  [data-page="donate"] .bk-v.tnum{white-space:nowrap;letter-spacing:.02em;}
-  @media(min-width:1200px){
-    [data-page="donate"] .bk{grid-template-columns:1fr auto;}
+  .dn-main-head{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    flex-wrap:wrap;padding:22px clamp(18px,3vw,32px);
+    background:var(--paper);border-bottom:1px solid var(--line);
   }
+  .dn-main-head .eyebrow{margin-bottom:4px;}
+  .dn-main-head h2{
+    font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.4rem,2.6vw,1.8rem);
+    color:var(--brand-900);margin:0;line-height:1.15;
+  }
+  .dn-secure{
+    display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:700;
+    letter-spacing:.04em;color:var(--brand-700);background:#fff;
+    border:1px solid var(--line);border-radius:999px;padding:7px 14px;white-space:nowrap;
+  }
+  .dn-secure svg{width:13px;height:13px;flex-shrink:0;}
+  .dn-body{padding:6px clamp(18px,3vw,32px) clamp(20px,3vw,28px);}
+
+  .dn-row{margin:20px 0 0;}
+  .dn-lab{
+    font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 10px;display:flex;align-items:center;gap:12px;
+  }
+  .dn-lab::after{content:"";flex:1;height:1px;background:var(--line);}
+  .dn-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  .dn-pills.dn-two{grid-template-columns:repeat(2,minmax(0,1fr));}
+  /* Six across on a desktop — one row, all the choices visible at once, no
+     grid for the eye to read as two groups. Three on a phone. */
+  /*  Three across, two rows, at every width. Six in a line made each one
+      narrow and the row read as a strip of small print; three gives each
+      amount the room to be pressed without looking. */
+  .dn-pills.dn-amts{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+  .dn-pills.dn-amts .dn-pill{padding:26px 8px;font-size:1.45rem;border-radius:14px;}
+  .dn-pills.dn-amts .dn-pill small{font-size:.62rem;margin-top:3px;}
+  @media(max-width:420px){
+    .dn-pills.dn-amts .dn-pill{padding:20px 6px;font-size:1.2rem;}
+  }
+
+  .dn-pill{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:16px 8px;background:var(--paper);border:1.5px solid var(--line);
+    border-radius:12px;font:inherit;font-weight:700;font-size:1.08rem;
+    color:var(--brand-900);cursor:pointer;text-align:center;line-height:1.2;
+    font-variant-numeric:tabular-nums;transition:.14s ease;
+  }
+  .dn-pill small{
+    display:block;font-size:.6rem;font-weight:700;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .dn-pill:hover:not(.is-on){border-color:var(--gold);background:#fff;}
+  .dn-pill.is-on{
+    background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;
+    box-shadow:0 4px 14px rgba(60,11,42,.22);
+  }
+  .dn-pill.is-on small{color:rgba(220,187,99,.85);}
+  /* Unavailable, not absent: a grid that changes shape as you switch
+     frequency is a grid people think they misclicked. */
+  .dn-pill[disabled]{opacity:.35;cursor:not-allowed;}
+  .dn-pill[disabled]:hover{border-color:var(--line);background:var(--paper);}
+  .dn-hint{font-size:.82rem;line-height:1.6;color:var(--muted);margin:10px 0 0;}
+  .dn-zakat{color:var(--danger);}
+  .dn-zakat a{color:inherit;font-weight:700;}
+
+  /* THE BUTTON. Gold, not the plum the new build page uses for the same job:
+     every chosen pill here is plum, so a plum button reads as one more thing
+     selected rather than the thing you press. */
+  .donate-cta.dn-go{
+    margin-top:22px;background:var(--gold);border-color:var(--gold);
+    color:var(--brand-900);padding:20px 24px;border-radius:14px;
+  }
+  .donate-cta.dn-go .dc-main{font-size:1.22rem;}
+  .donate-cta.dn-go:hover{filter:brightness(1.05);}
+  .donate-cta.dn-go .dc-sub{color:rgba(60,11,42,.72);}
+  .donate-cta.dn-go[aria-disabled="true"]{
+    background:var(--paper);border:1.5px solid var(--line);color:var(--muted);
+    box-shadow:none;
+  }
+  .donate-cta.dn-go[aria-disabled="true"] .dc-sub{color:var(--muted);}
+
+  .dn-ga-note{
+    margin-top:18px;padding:13px 15px;border-radius:11px;
+    background:rgba(198,162,76,.13);border:1px solid rgba(198,162,76,.4);
+    font-size:.84rem;line-height:1.6;color:var(--ink);
+  }
+  .dn-soon{
+    background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.45);
+    border-radius:12px;padding:15px 17px;font-size:.9rem;line-height:1.6;
+    color:var(--ink);margin-top:16px;
+  }
+  .dn-main .dc-note{margin-top:12px;}
+
+  /* --- the page, in order -------------------------------------------- */
+  /*  What the money does comes FIRST and full width: it is the thing that
+      makes somebody decide, and it is short. */
+  .dn-top{max-width:1120px;margin:0 auto 34px;}
+
+  /*  Then the two ways of giving, side by side. 70/30 — the card is the
+      thing most people will use, the transfer is for those who would rather
+      not put a card in. One column on anything narrower than a laptop, with
+      the card first. */
+  .dn-split{
+    display:grid;grid-template-columns:1fr;gap:26px;align-items:start;
+    max-width:1120px;margin:0 auto;
+  }
+  @media(min-width:980px){ .dn-split{grid-template-columns:7fr 3fr;gap:30px;} }
+  .dn-bank{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:22px 22px 20px;align-self:start;
+  }
+  /*  At 30% of 1120px this column is ~310px — narrower than the card the bank
+      rows were designed for, so label above value and numbers never wrap. */
+  .dn-bank .bk{grid-template-columns:1fr auto;column-gap:12px;row-gap:3px;
+    align-items:baseline;padding:12px 4px;}
+  .dn-bank .bk-k{grid-column:1/-1;}
+  .dn-bank .bk-v{font-size:.98rem;}
+  /* A sort code somebody has to read and copy must never wrap. */
+  .dn-bank .bk-v.tnum{white-space:nowrap;letter-spacing:.02em;}
+  .dn-bank .bank-card{border:none;background:none;}
+
   .dn-where{margin-top:6px;}
   .dn-line{
     display:grid;grid-template-columns:1fr;gap:2px 18px;padding:13px 0;
@@ -659,39 +768,11 @@ window.TAIYABAH_PUBLIC = {
   }
   .dn-line .v{font-size:.92rem;line-height:1.65;color:var(--muted);}
 
-  /* The amount buttons. `.tier` on the new build page carries a tier NAME —
-     Bronze, Silver — because those are donor tiers. General giving has no
-     tiers, so these carry the amount and nothing else, and are deliberately
-     smaller: an appeal shouts, an ordinary sadaqah should not. */
-  .dn-amts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:11px;}
-  @media(min-width:420px){ .dn-amts{grid-template-columns:repeat(4,minmax(0,1fr));} }
-  .dn-amt{
-    display:flex;align-items:center;justify-content:center;padding:14px 8px;
-    background:var(--paper);border:1px solid var(--line);border-radius:11px;
-    font-weight:700;font-size:1.02rem;color:var(--brand-900);text-decoration:none;
-    font-variant-numeric:tabular-nums;transition:.15s ease;
-  }
-  .dn-amt:hover{border-color:var(--gold);background:#fff;transform:translateY(-1px);}
-
-  .dn-freq{
-    font-size:.68rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
-    color:var(--muted);margin:16px 0 8px;display:flex;align-items:center;gap:11px;
-  }
-  .dn-freq::after{content:"";flex:1;height:1px;background:var(--line);}
-
-  /* Shown only while no payment link exists. The alternative is a button that
-     goes nowhere, which is worse than an honest sentence. */
-  .dn-soon{
-    background:rgba(198,162,76,.12);border:1px solid rgba(198,162,76,.45);
-    border-radius:11px;padding:13px 15px;font-size:.85rem;line-height:1.6;
-    color:var(--ink);
-  }
-
   /* The new build, kept in view without taking the page over. */
   .dn-nb{
     display:grid;grid-template-columns:1fr;gap:14px;align-items:center;
     background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
-    padding:22px 24px;margin-top:34px;
+    padding:22px 24px;margin:40px auto 0;max-width:1120px;
   }
   @media(min-width:720px){ .dn-nb{grid-template-columns:1fr auto;gap:26px;} }
   .dn-nb .eyebrow{color:var(--gold-bright);margin-bottom:7px;}
@@ -4163,120 +4244,95 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="svc-split is-rail">
-        <div class="svc-detail-facts">
-          <div class="subhead"><h3 style="font-size:1.1rem;">Where your giving goes</h3><span class="rule"></span></div>
-          <div class="dn-where">
-            <div class="dn-line"><span class="k">Keeping the doors open</span>
-              <span class="v">Heating, lighting, water and insurance. The masjid is open
-                for five prayers a day, every day of the year, and that is the bill
-                behind it.</span></div>
-            <div class="dn-line"><span class="k">The madrasah</span>
-              <span class="v">Teaching the children of the community, as it has since
-                1967. Fees do not cover it.</span></div>
-            <div class="dn-line"><span class="k">Jan&#257;zah and burial</span>
-              <span class="v">The mortuary, the ghusl facilities and the help given to
-                families at the hardest time. The masjid does not charge for this.</span></div>
-            <div class="dn-line"><span class="k">Repairs and upkeep</span>
-              <span class="v">A building used this heavily needs work done on it, and
-                most of it is not the sort anybody notices until it fails.</span></div>
-            <div class="dn-line"><span class="k">The food bank and outreach</span>
-              <span class="v">Serving people in Bolton who need it, Muslim and
-                non-Muslim alike.</span></div>
-          </div>
-
-          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.1rem;">Zakat, and what this page is not</h3><span class="rule"></span></div>
-          <!-- Said plainly because getting it wrong is a religious problem, not
-               an accounting one. Zakat has its own eligible categories and the
-               masjid's general fund is not automatically one of them. -->
-          <div class="svc-advisory">
-            <div class="h">Zak&#257;t is not taken through this page</div>
-            <p>Zak&#257;t must reach one of the categories it is due to, and the
-              masjid keeps that separate from its general fund. If you are giving
-              zak&#257;t, please speak to the office on
-              <strong>01204&nbsp;535&nbsp;997</strong> so it is used correctly.</p>
-          </div>
-          <p style="color:var(--muted);font-size:.92rem;line-height:1.75;margin-top:14px;">
-            Giving towards the <strong>new building</strong> is handled on its own
-            page, so the appeal total stays accurate. There is a link to it at the
-            foot of this page.</p>
+      <!-- ===================================================================
+           ORDER OF THE PAGE, as asked for on 14 September:
+             1. what the money does        — full width, read first
+             2. the giving card | the bank — 70/30, side by side
+           The card was centred on its own first, which pushed the bank details
+           below the fold: somebody who prefers a transfer had to scroll past a
+           card they were never going to use.
+           =================================================================== -->
+      <div class="dn-top">
+        <div class="subhead"><h3 style="font-size:1.1rem;">Where your giving goes</h3><span class="rule"></span></div>
+        <div class="dn-where">
+        <div class="dn-line"><span class="k">Keeping the doors open</span>
+          <span class="v">Heating, lighting, water and insurance. The masjid is open
+            for five prayers a day, every day of the year, and that is the bill
+            behind it.</span></div>
+        <div class="dn-line"><span class="k">The madrasah</span>
+          <span class="v">Teaching the children of the community, as it has since
+            1967. Fees do not cover it.</span></div>
+        <div class="dn-line"><span class="k">Jan&#257;zah and burial</span>
+          <span class="v">The mortuary, the ghusl facilities and the help given to
+            families at the hardest time. The masjid does not charge for this.</span></div>
+        <div class="dn-line"><span class="k">Repairs and upkeep</span>
+          <span class="v">A building used this heavily needs work done on it, and
+            most of it is not the sort anybody notices until it fails.</span></div>
+        <div class="dn-line"><span class="k">The food bank and outreach</span>
+          <span class="v">Serving people in Bolton who need it, Muslim and
+            non-Muslim alike.</span></div>
         </div>
+      </div>
 
-        <div class="svc-aside">
-          <div class="nb-journey-col nb-give-card" id="dn-give">
-            <div class="nb-give-head"><h4>Give online</h4><span class="tag">Apple &amp; Google Pay</span></div>
-
-        <div class="ga" id="dn-ga-block" data-ga-version="2026-09-12" hidden>
-          <div class="ga-head">
-            <h5>Gift Aid</h5>
-            <span class="ga-boost">+25p per &pound;1, at no cost to you</span>
-          </div>
-
-          <p class="ga-lead">If you are a UK taxpayer, the masjid can reclaim
-            25p of tax for every &pound;1 you give. <b>You will be asked on the
-            payment page</b> &mdash; choose <b>Yes</b> under Gift Aid, and give
-            your name and home address including postcode. HMRC will not allow
-            the claim without them.</p>
-
-          <details class="ga-more">
-            <summary>The declaration you are agreeing to</summary>
-            <div class="ga-decl">
-              <p><strong>I am a UK taxpayer and understand that if I pay less
-                Income Tax and/or Capital Gains Tax in the current tax year than
-                the amount of Gift Aid claimed on all my donations it is my
-                responsibility to pay any difference.</strong></p>
-              <p>Gift Aid lets <strong>Bolton Central Islamic Society</strong>
-                (Taiyabah Masjid, registered charity 1041569) reclaim the basic
-                rate tax you have already paid on your gift. It costs you nothing.</p>
-              <p>Please tell the masjid if you want to cancel this declaration,
-                if you change your name or home address, or if you no longer pay
-                enough Income Tax or Capital Gains Tax.</p>
-              <p>If you pay Income Tax at the higher or additional rate and want
-                to receive the additional relief due to you, you must include all
-                your Gift Aid donations on your Self Assessment tax return or ask
-                HMRC to adjust your tax code.</p>
-              <p><strong>Gift Aid applies to donations to the masjid itself.</strong>
-                Zakat is not taken through this page &mdash; speak to the office.</p>
-              <span class="ga-ver">Declaration wording version 2026-09-12</span>
+      <div class="dn-split">
+        <div class="dn-main" id="dn-give">
+          <div class="dn-main-head">
+            <div>
+              <div class="eyebrow">Give online</div>
+              <h2>How would you like to give?</h2>
             </div>
-          </details>
-        </div>
+            <span class="dn-secure">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
+              Secure &middot; Apple &amp; Google Pay</span>
+          </div>
+          <div class="dn-body">
+            <div class="dn-row">
+              <div class="dn-lab">What it is for</div>
+              <div class="dn-pills" id="dn-purpose" role="group" aria-label="What the donation is for"></div>
+              <p class="dn-hint" id="dn-purpose-hint"></p>
+              <p class="dn-hint dn-zakat"><strong>Zak&#257;t is not taken here.</strong>
+                It has its own categories &mdash; please ring the office on
+                <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
+            </div>
+            <div class="dn-row">
+              <div class="dn-lab">How often</div>
+              <div class="dn-pills dn-two" id="dn-freq" role="group" aria-label="How often"></div>
+            </div>
+            <div class="dn-row">
+              <div class="dn-lab">Amount</div>
+              <div class="dn-pills dn-amts" id="dn-amounts" role="group" aria-label="Amount"></div>
+            </div>
+            <p class="dn-ga-note" id="dn-ga-note" hidden>
+            <strong>Gift Aid:</strong> if you are a UK taxpayer, tick <b>Yes</b> on the
+            payment page and the masjid reclaims <b>25p for every &pound;1</b> at no cost
+            to you. You will need to give your name and home address there.</p>
 
-            <div class="dn-freq">One-off gift</div>
-            <div class="dn-amts" id="dn-once"></div>
-            <a class="donate-cta" id="dn-any" href="#" target="_blank" rel="noopener" hidden>
-              <span class="dc-main">Give any other amount</span>
-              <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
+          <a class="donate-cta dn-go" id="dn-go" href="#" target="_blank" rel="noopener">
+              <span class="dc-main" id="dn-go-main">Continue</span>
+              <span class="dc-sub" id="dn-go-sub">Card &middot; Apple Pay &middot; Google Pay</span>
             </a>
-
-            <div class="dn-freq">Every month</div>
-            <div class="dn-amts" id="dn-monthly"></div>
-            <p class="dc-note" id="dn-monthly-note">A standing gift is what lets the
-              masjid plan rather than hope. Cancel any time from the receipt.</p>
-
             <div class="dn-soon" id="dn-soon" hidden>
               <strong>Card giving from this page opens shortly.</strong> The masjid&rsquo;s
               donation pages are being set up. In the meantime a bank transfer below
               reaches the masjid in full, or you can give at the office.
             </div>
-
             <p class="dc-note" id="dn-card-note" hidden>Opens the masjid&rsquo;s secure
               donation page. Card payments carry a small processing fee &mdash; a bank
               transfer below reaches the masjid in full, if that suits you better.</p>
-
-            <div class="nb-give-divider"></div>
-
-            <div class="nb-give-head"><h4>Or transfer directly</h4><span class="tag">Tap to copy</span></div>
-        <div class="bank-card">
-          <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
-          <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
-        </div>
-            <p class="dc-note">Please use your surname as the reference. If you are a UK
-              taxpayer and want the masjid to claim Gift Aid on a transfer, ring the
-              office &mdash; a declaration has to be held for it.</p>
           </div>
+        </div>
+
+        <div class="dn-bank">
+          <div class="nb-give-head"><h4>Or transfer directly</h4><span class="tag">Tap to copy</span></div>
+          <div class="bank-card">
+            <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
+            <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
+            <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
+            <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+          </div>
+          <p class="dc-note">Please use your surname as the reference. If you are a UK
+            taxpayer and want the masjid to claim Gift Aid on a transfer, ring the
+            office &mdash; a declaration has to be held for it.</p>
         </div>
       </div>
 
@@ -6471,73 +6527,143 @@ window.TAIYABAH_PUBLIC = {
 
 
   /* ---------------------------------------------------------------------------
-     DONATE — the general fund.
+     DONATE — choose what for, how often, how much, then one button.
 
-     THE LINKS DO NOT EXIST YET. Rather than shipping buttons that go nowhere,
-     each amount is drawn only if a link is present, and if none are, the card
-     says so in a sentence and the bank transfer below carries the page. Same
-     shape as NIKAH_LINKS on the marriage page, for the same reason.
+     WHY THE LINKS ARE SHAPED THIS WAY. A Stripe Payment Link carries its own
+     fixed price and CANNOT be given an amount in the URL — the only query
+     parameters it accepts are UTM codes and client_reference_id
+     (docs.stripe.com/payment-links/url-parameters). So a link is needed per
+     amount, per frequency: 6 x 2 = 12.
 
-     To turn card giving on: create the Stripe Payment Links (Submit type ->
-     Donate, with the Gift Aid dropdown, as set up for the appeal links) and
-     paste them in below. Nothing else changes.
+     WHAT IS *NOT* IN THE MATRIX IS THE PURPOSE. Sadaqah and Lillah are
+     designations, not different products, so they ride on the SAME links as
+     client_reference_id. That keeps twelve links instead of thirty-six, and
+     the designation shows against the payment in the Stripe dashboard and in
+     the checkout.session.completed webhook. Adding a fourth purpose later
+     costs one line here and no new links.
+
+     TO TURN CARD GIVING ON: create the Payment Links (Submit type -> Donate,
+     Gift Aid dropdown, as set up for the appeal links) and paste them in. Any
+     combination left blank shows as unavailable rather than breaking; if every
+     one is blank the card says card giving opens shortly and the bank details
+     below carry the page.
   --------------------------------------------------------------------------- */
   (function(){
+    var PURPOSES = [
+      { key:'general', label:'The masjid',  sub:'general',
+        hint:'The general fund — upkeep, running costs, and the masjid’s work in Bolton.' },
+      { key:'sadaqah', label:'Sadaqah',     sub:'voluntary',
+        hint:'Voluntary charity, given as and when you wish.' },
+      { key:'lillah',  label:'Lillah',      sub:'for Allah',
+        hint:'Given purely for the sake of Allah, with nothing expected in return.' }
+    ];
+
+    var AMOUNTS = [
+      { key:'5',   label:'£5'   },
+      { key:'10',  label:'£10'  },
+      { key:'25',  label:'£25'  },
+      { key:'50',  label:'£50'  },
+      { key:'100', label:'£100' },
+      { key:'other', label:'Other', sub:'you choose' }
+    ];
+
+    //  PASTE THE STRIPE PAYMENT LINKS HERE. Nothing else needs changing.
     var DONATE_LINKS = {
-      once: [
-        { amount: '\u00a310',  href: '' },
-        { amount: '\u00a325',  href: '' },
-        { amount: '\u00a350',  href: '' },
-        { amount: '\u00a3100', href: '' }
-      ],
-      any: '',
-      monthly: [
-        { amount: '\u00a35',  href: '' },
-        { amount: '\u00a310', href: '' },
-        { amount: '\u00a325', href: '' }
-      ]
+      once:    { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' },
+      monthly: { '5':'', '10':'', '25':'', '50':'', '100':'', other:'' }
     };
 
+    var FREQS = [
+      { key:'once',    label:'One-off', sub:'a single gift' },
+      { key:'monthly', label:'Monthly', sub:'until you stop' }
+    ];
+
     var $ = function(id){ return document.getElementById(id); };
-    if(!$('dn-once')) return;
+    if(!$('dn-purpose')) return;
 
-    function draw(host, list){
-      var live = list.filter(function(x){ return !!x.href; });
-      host.innerHTML = live.map(function(x){
-        return '<a class="dn-amt" href="' + x.href + '" target="_blank" rel="noopener">' +
-               x.amount + '</a>';
+    var S = { purpose:'general', freq:'once', amount:'25' };
+
+    function anyLink(){
+      return Object.keys(DONATE_LINKS).some(function(f){
+        return Object.keys(DONATE_LINKS[f]).some(function(a){ return !!DONATE_LINKS[f][a]; });
+      });
+    }
+
+    function pill(key, label, sub, on, off){
+      return '<button type="button" class="dn-pill' + (on ? ' is-on' : '') + '"' +
+        ' data-k="' + key + '" aria-pressed="' + (on ? 'true' : 'false') + '"' +
+        (off ? ' disabled' : '') + '>' + label +
+        (sub ? '<small>' + sub + '</small>' : '') + '</button>';
+    }
+
+    function render(){
+      $('dn-purpose').innerHTML = PURPOSES.map(function(p){
+        return pill(p.key, p.label, p.sub, S.purpose === p.key, false);
       }).join('');
-      host.hidden = live.length === 0;
-      return live.length;
+      $('dn-freq').innerHTML = FREQS.map(function(f){
+        return pill(f.key, f.label, f.sub, S.freq === f.key, false);
+      }).join('');
+      //  Amounts are greyed, not removed, when that frequency has no link for
+      //  them: a grid that changes shape as you switch is a grid people think
+      //  they misclicked.
+      $('dn-amounts').innerHTML = AMOUNTS.map(function(a){
+        var has = !!DONATE_LINKS[S.freq][a.key];
+        return pill(a.key, a.label, a.sub, S.amount === a.key, !has && anyLink());
+      }).join('');
+
+      var p = PURPOSES.filter(function(x){ return x.key === S.purpose; })[0];
+      $('dn-purpose-hint').textContent = p ? p.hint : '';
+
+      var href = DONATE_LINKS[S.freq][S.amount] || '';
+      var go = $('dn-go');
+      var amt = AMOUNTS.filter(function(x){ return x.key === S.amount; })[0];
+      var per = S.freq === 'monthly' ? ' a month' : '';
+
+      if(href){
+        //  The designation travels with the payment rather than needing its
+        //  own link. Appended, not assigned, in case the masjid ever adds a
+        //  UTM code to the same URL.
+        go.href = href + (href.indexOf('?') === -1 ? '?' : '&') +
+                  'client_reference_id=' + encodeURIComponent(S.purpose);
+        go.removeAttribute('aria-disabled');
+        $('dn-go-main').textContent = S.amount === 'other'
+          ? 'Choose your amount' + (per ? ' a month' : '')
+          : 'Donate ' + amt.label + per;
+        $('dn-go-sub').textContent = 'Card · Apple Pay · Google Pay';
+      } else {
+        go.removeAttribute('href');
+        go.setAttribute('aria-disabled', 'true');
+        $('dn-go-main').textContent = 'Not available yet';
+        $('dn-go-sub').textContent = anyLink()
+          ? 'Choose another amount, or use the bank details below'
+          : 'Use the bank details below';
+      }
     }
 
-    var n = draw($('dn-once'), DONATE_LINKS.once);
-    var m = draw($('dn-monthly'), DONATE_LINKS.monthly);
-
-    if(DONATE_LINKS.any){
-      $('dn-any').href = DONATE_LINKS.any;
-      $('dn-any').hidden = false;
-      n += 1;
+    function wire(id, field){
+      $(id).addEventListener('click', function(e){
+        var b = e.target.closest('.dn-pill');
+        if(!b || b.disabled) return;
+        S[field] = b.dataset.k;
+        render();
+      });
     }
+    wire('dn-purpose', 'purpose');
+    wire('dn-freq', 'freq');
+    wire('dn-amounts', 'amount');
 
-    //  Hide a heading whose row is empty, so the card never shows a label with
-    //  nothing under it.
-    var freqs = document.querySelectorAll('#dn-give .dn-freq');
-    if(freqs[0]) freqs[0].hidden = n === 0;
-    if(freqs[1]) freqs[1].hidden = m === 0;
-    if($('dn-monthly-note')) $('dn-monthly-note').hidden = m === 0;
+    var live = anyLink();
+    $('dn-soon').hidden = live;
+    if($('dn-card-note')) $('dn-card-note').hidden = !live;
 
-    //  Nothing to click at all: say so once, rather than leaving a card that
-    //  looks broken.
-    $('dn-soon').hidden = (n + m) > 0;
-    //  …and the note that describes a checkout only appears when there is one.
-    if($('dn-card-note')) $('dn-card-note').hidden = (n + m) === 0;
+    //  The full declaration lives on Stripe's checkout, where the donor
+    //  actually answers. All that is left here is the one line telling them it
+    //  is on offer — shown only when there is a checkout to reach, and only
+    //  while Gift Aid is switched on at all.
+    var ga = $('dn-ga-note');
+    if(ga && window.GIFT_AID_OPEN && live) ga.hidden = false;
 
-    //  The Gift Aid wording is the same on both pages and is there for the same
-    //  reason — so somebody can read it before deciding. Only worth showing
-    //  when there is a checkout to read it about.
-    var ga = $('dn-ga-block');
-    if(ga && window.GIFT_AID_OPEN && (n + m) > 0) ga.hidden = false;
+    render();
   })();
 
   /* ---------------- Nikāḥ date request -------------------------------------
