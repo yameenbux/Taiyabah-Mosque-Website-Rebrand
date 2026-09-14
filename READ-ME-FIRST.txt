@@ -1,68 +1,69 @@
-TAIYABAH MASJID — bigger text, readable gold
+TAIYABAH MASJID — page width and line length
 ============================================
 14 September 2026
 
-14 files. Every one is a replacement for a file already in the repository —
-nothing new is added, nothing has to be deleted.
+4 files. All replacements. Upload these ON TOP of the text-size zip, not
+instead of it — this builds on those changes.
 
-
-HOW TO UPLOAD (github.com, no command line needed)
---------------------------------------------------
-1. Open https://github.com/yameenbux/Taiyabah-Mosque-Website-Rebrand
-2. Make sure you are on the branch you want to change.
-3. "Add file" -> "Upload files".
-4. Unzip this first, then drag the CONTENTS of the "taiyabah-text-size"
-   folder into the browser — not the folder itself, and not this text file.
-   The folder structure (access/, venue/, portals/, ...) must be kept: that
-   is how GitHub decides which files to replace.
-5. Commit.
+  index.html            THE WEBSITE. Built file — never edit by hand.
+  index_template.html   the source index.html is built FROM.
+                        THESE TWO ALWAYS TRAVEL TOGETHER.
+  _test/measure_test.py new — guards everything below
+  _test/giftaid_test.py a small fix, see the last section
 
 
 WHAT CHANGED
 ------------
-Text size. 1,119 sizes across the website and the eleven staff screens were
-raised. The small print moved most — a 9.6px label is now 13.3px — and the
-big headings did not move at all. Nothing on the site is under 12px now.
-Body text is 16.3px instead of 14.7px.
+The page was capped at 1080px wide. On a 1920px screen that filled 56%
+of the monitor, and on a 2560px screen 42% — which is why it looked like
+a phone layout stranded in the middle of a desktop. The cap is now
+1280px, and the donate page's own three 1120px caps went with it.
 
-Colour. The masjid gold reads at 2.3:1 on the cream cards, which is well
-below the readable minimum. "VIEW FULL TIMETABLE" on the home page was one
-of the worst. There are now three darker variants for text — gold, green
-and red — and 59 places were switched over to them. Gold on the dark plum
-was always fine and has not changed.
+But widening the page on its own would have made the site HARDER to
+read, not easier, and that is worth understanding before anyone asks
+for it to go wider still.
 
 
-FIVE THINGS THAT WERE BROKEN, FOUND WHILE DOING THIS
-----------------------------------------------------
-1. The donate page's button, when no payment link is set up — which is the
-   state it is in right now — said "Not available yet" in cream on cream.
-   Invisible.
-2. Two buttons in the Five Pillars article were cream on cream for the same
-   reason.
-3. ON THE SIGN-IN PAGE, the charity registration line was invisible. It had
-   been placed outside the plum panel it was styled for, so it rendered as
-   pale cream on the pale background. A charity's registration number is
-   the one line on that page that has to be legible.
-4. The "TAIYABAH MASJID" line above every sign-in form was 1.77:1.
-5. The madrasah and new-build pages were being cut off at the right edge on
-   a narrow phone, with nothing reporting an error.
+WHY IT IS NOT FULL WIDTH
+------------------------
+A line of text longer than about 85 characters is hard to read, because
+the eye loses its place travelling back to the start of the next line.
+It is the same problem as text being too small, and it affects the same
+people.
 
-All five are fixed in these files.
+The lines were ALREADY too long inside the old 1080px:
 
+  prayer times   147 characters
+  madrasah       141
+  about          122
+  nikah           99
 
-HOW IT WAS CHECKED
-------------------
-Every page was measured before and after at four screen widths for text
-that gets clipped, buttons whose labels wrap, and columns that push off the
-screen — and the two reports compared line by line. The public site's report
-is identical to before. Contrast failures went from 22 to 0.
+At 1280px those would have gone to 167, 156 and 125. So paragraphs are
+now capped separately, at about 70 characters, no matter how wide the
+page gets. Timetables, card grids and the header have no such limit —
+they have no reason to, and they are what now fills the extra space.
 
-The repository's own 13 test suites were run before and after. Twelve pass
-either way. giftaid_test.py fails identically before and after, because
-db/022_donations_and_gift_aid.sql is missing from the repository — a known
-gap, not something caused by this change.
+If anyone asks for the site to go edge to edge, this is the answer: the
+empty space at the sides is not waste, it is what keeps the sentences
+readable. The furniture can widen; the sentences cannot.
 
 
-WHAT IS DELIBERATELY NOT IN HERE
---------------------------------
-Nothing from db/, supabase/ or _test/. None of them changed.
+ONE THING THAT BROKE AND WAS FIXED
+----------------------------------
+Capping the paragraphs knocked four CENTRED paragraphs off centre — a
+narrow block still sits at the left of its parent unless told otherwise.
+On the media page that left 723px of blank space to the right of the
+text. Fixed, and now guarded.
+
+
+THE NEW TEST FILE
+-----------------
+_test/measure_test.py checks four things on all 29 pages, at desktop and
+phone size: no line over 82 characters, no centred text off centre, the
+page really is wider on a big screen, and it still fits a phone. Each
+check was proved by deliberately breaking it and confirming it failed.
+
+It never touches the live site or the database.
+
+_test/giftaid_test.py had a small bug: when it failed it left two 700 KB
+copies of index.html sitting in the repository folder. Fixed.

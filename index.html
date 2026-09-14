@@ -139,7 +139,39 @@ window.TAIYABAH_PUBLIC = {
   img,svg{display:block;max-width:100%;}
   ul{list-style:none;}
   button{font:inherit;}
-  .container{width:min(1080px,91%);margin:0 auto;}
+  /* 1280, not 1080. On a 1920px screen the old cap filled 56% of the window
+     and on a 2560px monitor 42%, which read as a phone layout stranded in the
+     middle of a desktop. Widened 14 September 2026.
+
+     The cap exists for LINE LENGTH, and line length is a property of prose,
+     not of timetables, card grids or the header — so the container is no
+     longer the thing enforcing it. Prose is capped separately below, at the
+     blocks that actually needed it, measured rather than guessed. */
+  .container{width:min(1280px,91%);margin:0 auto;}
+
+  /* PROSE STOPS AT ABOUT 70 CHARACTERS, WHEREVER THE CONTAINER ENDS.
+     Measured, not assumed: before this, /prayer-times was setting a line of
+     147 characters, /madrasah 167 and /about 156 — roughly double what a
+     reader can track back from, and the same fault as small type for exactly
+     the same people. `ch` is the advance of "0", which for this face runs a
+     little wider than average lowercase, so 62ch lands near 70 characters.
+
+     This is a max-width, so it can only ever make a block narrower: anything
+     already inside a card, a column or a grid cell is untouched. The
+     centred-text exception is below — a capped block that is centred has to
+     keep its auto margins or the text ends up sitting off to one side. */
+  .page p, .page li, .page dd{ max-width:62ch; }
+  /* Capped prose that is CENTRED keeps its auto side margins. Without this
+     the words are centred inside a box that is itself shoved to the left —
+     on /media the paragraph ended up with 723px of empty space to its right.
+     These wrappers were found by measuring every centred paragraph against
+     its parent, not by reading the CSS, and _test/measure_test.py fails if a
+     new one appears. */
+  .page .center p, .page .center li,
+  .page [class*="-center"] p,
+  .page .hero p, .page .page-masthead p,
+  .page .cs-wrap p, .page .media-outro p,
+  .page .cform p, .page .hh-cal p{ margin-left:auto;margin-right:auto; }
   .narrow{max-width:var(--measure);}
   .tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
 
@@ -754,7 +786,11 @@ window.TAIYABAH_PUBLIC = {
   /* --- the page, in order -------------------------------------------- */
   /*  What the money does comes FIRST and full width: it is the thing that
       makes somebody decide, and it is short. */
-  .dn-top{max-width:1120px;margin:0 auto 34px;}
+  /* 1280 to match .container. These three were pinned at 1120 while the
+     container was 1080; when the container went to 1280 the donate page was
+     the only one that did not widen, which read as a mistake rather than a
+     choice. */
+  .dn-top{max-width:1280px;margin:0 auto 34px;}
 
   /*  Then the two ways of giving, side by side. 70/30 — the card is the
       thing most people will use, the transfer is for those who would rather
@@ -762,7 +798,7 @@ window.TAIYABAH_PUBLIC = {
       the card first. */
   .dn-split{
     display:grid;grid-template-columns:1fr;gap:26px;align-items:start;
-    max-width:1120px;margin:0 auto;
+    max-width:1280px;margin:0 auto;
   }
   @media(min-width:980px){ .dn-split{grid-template-columns:7fr 3fr;gap:30px;} }
   .dn-bank{
@@ -798,7 +834,7 @@ window.TAIYABAH_PUBLIC = {
   .dn-nb{
     display:grid;grid-template-columns:1fr;gap:14px;align-items:center;
     background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
-    padding:22px 24px;margin:40px auto 0;max-width:1120px;
+    padding:22px 24px;margin:40px auto 0;max-width:1280px;
   }
   @media(min-width:720px){ .dn-nb{grid-template-columns:1fr auto;gap:26px;} }
   .dn-nb .eyebrow{color:var(--gold-bright);margin-bottom:7px;}
