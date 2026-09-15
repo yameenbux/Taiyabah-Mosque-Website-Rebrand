@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>What a class says — Taiyabah Masjid</title>
+<title>Send to the app — Taiyabah Masjid</title>
 <link rel="preload" href="../fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../admin/fonts.css">
@@ -26,6 +26,15 @@
     --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
+  /*  THE hidden ATTRIBUTE HAS TO WIN, AND WITHOUT THIS IT DOES NOT.
+      The browser hides [hidden] with a rule of its own, and any rule in this
+      sheet that sets `display` on a class beats it — so a panel written
+      `<div class="ap-confirm" hidden>` was drawn on the page anyway, with
+      every field still saying "—", because .ap-confirm is display:flex. It
+      cost half an hour and a screenshot to see, since app.js sets .hidden and
+      a test reading .hidden is told the truth about an element the person can
+      plainly see. One rule, at the top, for the whole file. */
+  [hidden]{display:none !important;}
   html,body{min-height:100%;}
   body{
     font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
@@ -43,12 +52,12 @@
     background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
     padding:46px 0 44px;display:flex;flex-direction:column;justify-content:center;
   }
-  /* The editor on the right runs to a list of classes, eight what-to-know
-     rows, six answers and a preview of the whole page, and the only link out
-     of here lives in the left panel. Pinned on a wide screen so the way back
-     stays on screen; see the longer note in venue/index.html. The height is
-     what stops the grid item stretching to its row — sticky alone does
-     nothing here. Below 940px the columns stack and it scrolls normally. */
+  /* The list of what has already been sent can run to a hundred rows, and the
+     only link out of this page lives in the left panel. Pinned on a wide
+     screen so the way back stays on screen; see the longer note in
+     venue/index.html. The height is what stops the grid item stretching to its
+     row — sticky alone does nothing here. Below 940px the columns stack and it
+     scrolls normally. */
   @media (min-width:940px){
     .brand{
       padding:64px 0;
@@ -112,6 +121,7 @@
     display:inline-flex;align-items:center;justify-content:center;gap:8px;
     padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:1.003rem;
     cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+    min-height:48px;
   }
   .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
   .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
@@ -156,12 +166,6 @@
 
   /* ---- signed in ---- */
   .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
-  .avatar{
-    width:46px;height:46px;border-radius:50%;flex-shrink:0;
-    background:linear-gradient(160deg,var(--brand-800),var(--brand-600,#772157));
-    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
-    font-family:"Fraunces",serif;font-weight:700;font-size:1.115rem;
-  }
   .who-t{min-width:0;}
   .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
   .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
@@ -173,9 +177,9 @@
   }
   .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
 
-  /* The sign-in card is 420px because a login form should be narrow. A rate
-     card with a description and a price side by side is not a login form, so
-     the shell widens once there is something to show. */
+  /* The sign-in card is 420px because a login form should be narrow. A message
+     going to a thousand phones, and the record of every one sent before it, is
+     not a login form, so the shell widens once there is something to show. */
   .card.is-wide{width:min(880px,94%);}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
@@ -190,250 +194,223 @@
   @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
   .loading p{font-size:.96rem;color:var(--muted);}
 
-  /* ---------- the "what a class says" screen ----------
-     Only what is genuinely new is here: the list of classes, the editor for
-     one class's page copy, and the preview of that page. The card, the
-     buttons, .err and .ok are the portal's own and are left exactly as the
-     other screens have them, so this does not look like it came from a
-     different website.
+  /* ---------- the send-to-the-app screen ----------
+     Only what is genuinely new is here: the audience chooser, the compose
+     form, the lock-screen preview, the confirmation panel and the list of what
+     has been sent. The card, the buttons, .err and .ok are the portal's own
+     and are left exactly as the other screens have them, so this does not look
+     like it came from a different website.
 
-     Gold and green are unreadable as text on a light card — 2.3:1 — so
-     anything here that has to be READ rather than merely noticed uses
-     --gold-ink, --success-ink or --danger-ink. See the note beside the
+     Gold and green are unreadable as text on a light card, so the pills below
+     use --gold-ink, --success-ink and --danger-ink. See the note beside the
      variables at the top. */
-
-  /*  Both of these are inside the identity block and the card footer, which
-      shell.css hides once the rail is up — so on a signed-in desk neither is
-      ever drawn. They are styled anyway rather than deleted, because the
-      markup they sit on is real (app.js fills #app-name and #app-email) and a
-      class with no rules is how times/ shipped a form three centimetres
-      wide. Dead-looking is not the same as dead. */
+  /*  .av and .card-foot are inside the identity block and the card footer,
+      which shell.css hides once the rail is up — so on a signed-in desk
+      neither is ever drawn. They are styled anyway rather than deleted,
+      because the markup they sit on is real (app.js fills #app-name and
+      #app-email) and a class with no rules is how times/ shipped a form three
+      centimetres wide. Dead-looking is not the same as dead. */
   .av{
     display:inline-flex;align-items:center;justify-content:center;
     width:34px;height:34px;border-radius:50%;flex-shrink:0;
     background:var(--brand-700);color:#F3EFE3;font-size:.95rem;
   }
+  .av::before{
+    content:"";width:9px;height:9px;border-radius:50%;background:var(--gold-bright);
+  }
   .card-foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);}
   .lede{font-size:.99rem;line-height:1.62;color:var(--muted);margin:6px 0 14px;}
   .lede strong{color:var(--ink);}
 
-  /*  WHERE A NEW CLASS COMES FROM — INFORMATION, NOT AN ERROR.
-      Nothing is wrong when somebody opens this screen; they simply need to
-      know that this screen writes the WORDS for a class and the Adult classes
-      screen is what brings the class itself into being. Dressing that in the
-      red of .err would train people to read every red box on this page as
-      noise, and the red box further down is the one that stops them
-      publishing a half-written page. So: plum and gold, the masjid's own
-      colours, and gold only as --gold-ink where it is text. */
-  .cp-note{
-    border:1px solid rgba(198,162,76,.55);border-left:4px solid var(--gold);
-    background:rgba(198,162,76,.10);border-radius:12px;
-    padding:15px 17px;margin:4px 0 22px;
-  }
-  .cp-note h4{font-size:1.02rem;color:var(--brand-900);margin-bottom:8px;}
-  .cp-note p{font-size:.955rem;line-height:1.62;color:var(--ink);}
-  .cp-note p + p{margin-top:9px;}
-  .cp-note strong{color:var(--gold-ink);}
-
-  /*  The editor. `.fld` and `.row` are the names the other screens use, and
-      they are scoped to .cp-form rather than defined globally so nothing on
-      any other page shifts underneath them. Everything app.js draws — the
-      list, the facts, the rules, the sessions, the answers — is inside
-      .cp-form too, which is why one set of rules covers the generated markup
-      as well as the markup that ships in this file. */
-  .cp-form{display:flex;flex-direction:column;gap:14px;margin:6px 0 0;}
-  .cp-form h3{font-size:1.09rem;margin-top:10px;}
-  .cp-form .fld{display:flex;flex-direction:column;gap:7px;}
-  /*  The label, and ONLY the label. A .fld can hold a hint underneath its box
-      as well — the filing name on an answer does — and :not() is what stops
-      "lower case letters and underscores" being shouted in small capitals. */
-  .cp-form .fld > span:not(.cp-hint){
+  .ap-form{display:flex;flex-direction:column;gap:15px;margin:10px 0 0;}
+  .ap-form .fld{display:flex;flex-direction:column;gap:7px;}
+  .ap-form .fld > span{
     font-size:.88rem;font-weight:700;letter-spacing:.06em;
     text-transform:uppercase;color:var(--muted);
   }
-  .cp-form input[type=text],.cp-form textarea{
-    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--card);
-    border:1px solid var(--line);border-radius:9px;padding:11px 13px;width:100%;
-    transition:.18s ease;
+  .ap-form input[type=text],
+  .ap-form input[type=datetime-local],
+  .ap-form textarea{
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;
+    min-height:48px;transition:.18s ease;
   }
-  .cp-form textarea{line-height:1.6;resize:vertical;min-height:84px;}
-  .cp-form input[type=text]:focus,.cp-form textarea:focus{
+  .ap-form textarea{resize:vertical;min-height:130px;line-height:1.55;font-size:.99rem;}
+  .ap-form textarea:focus{
     outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);
   }
-  .cp-form .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-  .cp-form .row .btn{width:auto;}
+  .ap-form .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .ap-form .row .btn{width:auto;min-width:min(260px,100%);}
 
-  .cp-count{
+  .ap-hint{font-size:.9rem;line-height:1.55;color:var(--muted);}
+  .ap-hint strong{color:var(--ink);}
+  .ap-count{
     font-size:.86rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums;
   }
-  .cp-count.is-over{color:var(--danger-ink);font-weight:800;}
-  .cp-hint{
-    font-size:.9rem;line-height:1.55;color:var(--muted);
-    font-weight:400;letter-spacing:normal;text-transform:none;
-  }
-  .cp-hint strong{color:var(--ink);}
-
-  /* ---- the list of classes ---- */
-  .cp-list{display:flex;flex-direction:column;gap:11px;}
-  /*  A whole row is the target, because "click a class" is the only thing
-      anybody does here and a small "Edit" link beside a long name is a miss
-      waiting to happen on a phone. A <button> rather than a styled <div>, so
-      the keyboard reaches it and a screen reader announces it. */
-  .cp-row{
-    display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;
-    font-family:inherit;cursor:pointer;
-    border:1px solid var(--line);border-left:3px solid var(--line);
-    border-radius:12px;background:var(--paper);padding:14px 16px;transition:.18s ease;
-  }
-  .cp-row:hover{border-color:var(--gold);}
-  .cp-row.is-live{border-left-color:var(--success);}
-  .cp-row.is-gap{border-left-color:var(--danger);}
-  .cp-row.is-on{border-color:var(--brand-800);background:#fff;}
-  .cp-row-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
-  .cp-row-nm{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
-    color:var(--brand-900);
-  }
-  /*  The website key, in a monospace chip. It is what the address bar says
-      and what every sign-up is filed under, and it is the one word on this
-      screen nobody may change from here. */
-  .cp-key{
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.85rem;
-    background:var(--card);border:1px solid var(--line);border-radius:6px;
-    padding:2px 7px;color:var(--muted);
-  }
-  .cp-pill{
-    font-size:.79rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
-    padding:3px 9px;border-radius:999px;border:1px solid transparent;
-  }
-  .cp-pill-open{background:rgba(47,94,54,.12);border-color:rgba(47,94,54,.4);color:var(--success-ink);}
-  .cp-pill-shut{background:var(--card);border-color:var(--line);color:var(--muted);}
-  .cp-state{font-size:.93rem;font-weight:700;}
-  .cp-state-live{color:var(--success-ink);}
-  .cp-state-gap{color:var(--danger-ink);}
-  .cp-why{font-size:.9rem;line-height:1.55;color:var(--muted);}
-  .cp-row-meta{
-    font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums;
-  }
-  .cp-empty{
-    text-align:center;padding:24px 18px;color:var(--muted);font-size:.965rem;
-    line-height:1.6;background:var(--paper);border:1px dashed var(--line);border-radius:12px;
+  .ap-count.is-over{color:var(--danger-ink);font-weight:800;}
+  .ap-warn{
+    font-size:.9rem;line-height:1.55;color:var(--danger-ink);
+    background:rgba(180,83,47,.07);border:1px solid rgba(180,83,47,.3);
+    border-radius:9px;padding:9px 12px;
   }
 
-  /* ---- the repeating editors ---- */
-  .cp-rows{display:flex;flex-direction:column;gap:12px;}
-  .cp-item{
+  /* ---- who it goes to ----
+     A fieldset, because five radio buttons without a shared name are five
+     unlabelled circles to anybody using a screen reader. The legend is the
+     question; each row is a whole label, so the tap target is the row and not
+     the 20px circle inside it. */
+  .ap-aud{border:0;display:flex;flex-direction:column;gap:9px;}
+  .ap-aud legend{
+    font-size:.88rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);padding:0;margin-bottom:9px;
+  }
+  .ap-aud-opt{
+    display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+    background:var(--paper);border:1px solid var(--line);border-radius:11px;
+    padding:13px 15px;min-height:52px;
+    font-size:.986rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink);
+  }
+  .ap-aud-opt:hover{border-color:var(--gold);}
+  .ap-aud-opt:has(input:checked){border-color:var(--gold);background:#fff;}
+  /*  44px, not the 16px the rest of the portal uses for a tick-box. Every
+      other tick-box on this site changes a record somebody can change back;
+      this one chooses whose phone rings. The congregation this was built for
+      is an ageing one, and the whole row is a label as well, so a miss still
+      lands. */
+  .ap-aud-opt input{
+    accent-color:var(--brand-700);width:44px;height:44px;flex-shrink:0;margin:0;
+  }
+  .ap-aud-t{display:block;min-width:0;}
+  .ap-aud-n{display:block;font-size:1rem;font-weight:700;color:var(--ink);}
+  .ap-aud-d{display:block;font-size:.92rem;line-height:1.45;color:var(--muted);margin-top:3px;}
+
+  /* The keep-it checkbox is the same row shape as an audience row, because it
+     is the same kind of decision: one tick that changes who ends up reading
+     this in three days' time. */
+  .ap-keep{
+    display:flex;gap:12px;align-items:flex-start;cursor:pointer;
+    background:var(--paper);border:1px solid var(--line);border-radius:11px;
+    padding:13px 15px;min-height:52px;
+    font-size:.986rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--ink);
+  }
+  .ap-keep input{
+    accent-color:var(--brand-700);width:44px;height:44px;flex-shrink:0;margin:0;
+  }
+
+  /* ---- the poster ---- */
+  .ap-pic{
     border:1px solid var(--line);border-radius:12px;background:var(--paper);
-    padding:13px 15px;display:flex;flex-direction:column;gap:11px;
+    padding:14px 16px;display:flex;flex-direction:column;gap:11px;
   }
-  .cp-item-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-  .cp-item-n{
-    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  .ap-pic h4{font-size:1rem;}
+  .ap-file{font-family:inherit;font-size:.95rem;color:var(--ink);padding:10px 0;min-height:44px;}
+  .ap-shot{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+  .ap-thumb{
+    width:96px;height:96px;object-fit:cover;border-radius:9px;
+    border:1px solid var(--line);background:#fff;
+  }
+  .ap-size{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .ap-shot .btn{width:auto;}
+
+  /* ---- the lock screen ----
+     Not decoration. The heading is the only part most people will ever read,
+     because it is read through a pocket at arm's length, and the only way to
+     know whether it survives that is to look at it in the shape it arrives in. */
+  .ap-lock{
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:10px;
+  }
+  .ap-lock-cap{
+    font-size:.8rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--gold-bright);
+  }
+  .ap-lock-card{
+    background:rgba(252,250,243,.94);border-radius:12px;padding:12px 14px;
+    display:flex;flex-direction:column;gap:4px;max-width:420px;
+  }
+  .ap-lock-top{
+    display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+    font-size:.8rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
     color:var(--muted);
   }
-  .cp-acts{display:flex;gap:7px;flex-wrap:wrap;margin-left:auto;}
-  .cp-mini{width:auto;padding:7px 14px;font-size:.92rem;}
-  .cp-no{color:var(--danger-ink);}
-  /*  Label and value side by side once there is room, stacked on a phone. A
-      value box the width of the label box invites a sentence, and a fact
-      value is capped at 24 characters. */
-  .cp-pair{display:grid;grid-template-columns:1fr;gap:9px;align-items:start;}
-  @media (min-width:640px){ .cp-pair{grid-template-columns:1fr 1fr auto;} }
-  .cp-grid2{display:grid;grid-template-columns:1fr;gap:10px;}
-  @media (min-width:640px){ .cp-grid2{grid-template-columns:1fr 1.4fr;} }
-
-  .cp-head{
-    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-    padding-bottom:12px;border-bottom:1px solid var(--line);
-  }
-  .cp-head h3{margin-top:0;}
-
-  /* ---- the preview ----
-     Deliberately drawn to look like the real class page rather than like the
-     form above it: the plum masthead, the fact strip in the rail, the
-     what-to-know list as a description list, and the sign-up block with the
-     session buttons and the experience question in it. Somebody about to put
-     words on a public page should be able to recognise what they are about to
-     publish. */
-  .cp-pv{
-    border:1px solid var(--line);border-radius:12px;background:#fff;
-    overflow:hidden;
-  }
-  .cp-pv-mast{
-    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
-    padding:20px 18px;
-  }
-  .cp-pv-eyebrow{
-    display:block;font-size:.78rem;font-weight:800;letter-spacing:.16em;
-    text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;
-  }
-  .cp-pv-mast h4{color:#F3EFE3;font-size:1.28rem;margin-bottom:6px;}
-  .cp-pv-tag{color:rgba(243,239,227,.84);font-size:.98rem;line-height:1.6;}
-  .cp-pv-body{padding:18px;display:grid;grid-template-columns:1fr;gap:18px;}
-  @media (min-width:700px){ .cp-pv-body{grid-template-columns:1fr 1.25fr;} }
-  .cp-pv-facts{
-    display:flex;flex-direction:column;gap:0;border:1px solid var(--line);
-    border-radius:10px;overflow:hidden;margin-bottom:14px;
-  }
-  .cp-pv-fact{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;}
-  .cp-pv-fact + .cp-pv-fact{border-top:1px solid var(--line);}
-  .cp-pv-k{font-size:.82rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
-  .cp-pv-v{font-size:.95rem;font-weight:700;color:var(--brand-900);}
-  .cp-pv-form{
-    border:1px solid var(--line);border-radius:10px;background:var(--paper);padding:14px;
-  }
-  .cp-pv-when{
-    display:block;font-size:.78rem;font-weight:800;letter-spacing:.09em;
-    text-transform:uppercase;color:var(--gold-ink);margin-bottom:6px;
-  }
-  .cp-pv-lead{font-size:.95rem;line-height:1.6;color:var(--ink);margin-bottom:12px;}
-  .cp-pv-q{
-    display:block;font-size:.86rem;font-weight:700;letter-spacing:.05em;
-    text-transform:uppercase;color:var(--muted);margin:10px 0 6px;
-  }
-  .cp-pv-opts{display:flex;flex-direction:column;gap:6px;}
-  .cp-pv-opt{
-    display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--ink);
-    background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;
-  }
-  .cp-pv-opt::before{
-    content:"";width:12px;height:12px;border-radius:50%;flex-shrink:0;
-    border:2px solid var(--gold);
-  }
-  .cp-pv-shut{
-    margin-top:12px;padding:11px 12px;border-radius:9px;
-    background:var(--card);border:1px dashed var(--line);
-    font-size:.93rem;line-height:1.6;color:var(--muted);
-  }
-  .cp-pv-intro{font-size:.99rem;line-height:1.72;color:var(--muted);margin-bottom:12px;}
-  .cp-pv-rules dt{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1rem;
-    color:var(--brand-800);margin-top:10px;
-  }
-  .cp-pv-rules dd{font-size:.95rem;line-height:1.62;color:var(--ink);margin-top:3px;}
-  /*  The card on the Education index, shown as well as the page itself: it is
-      how anybody reaches the page at all, and it is written from three boxes
-      that are easy to leave empty because nothing on the class page shows
-      them. */
-  .cp-pv-tile{
-    margin:0 18px 18px;border:1px solid var(--line);border-radius:10px;
-    padding:13px 15px;background:var(--paper);
-  }
-  .cp-pv-tag2{
-    display:block;font-size:.78rem;font-weight:800;letter-spacing:.09em;
-    text-transform:uppercase;color:var(--gold-ink);margin-bottom:5px;
-  }
-  .cp-pv-th{display:block;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.05rem;color:var(--brand-900);}
-  .cp-pv-tp{display:block;font-size:.94rem;line-height:1.6;color:var(--muted);margin-top:4px;}
-  .cp-pv-tm{display:block;font-size:.88rem;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums;}
-  .cp-pv-bad{
-    font-size:.82rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-    color:var(--danger-ink);
+  .ap-lock-app{min-width:0;overflow-wrap:anywhere;}
+  .ap-lock-when{flex-shrink:0;}
+  .ap-lock-title{font-size:1.02rem;font-weight:700;color:var(--ink);line-height:1.3;overflow-wrap:anywhere;}
+  .ap-lock-body{
+    font-size:.95rem;line-height:1.45;color:#463A42;overflow-wrap:anywhere;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
   }
 
-  .cp-meta{
-    font-size:.9rem;line-height:1.55;color:var(--muted);
-    margin-top:2px;font-variant-numeric:tabular-nums;
+  /* ---- the confirmation ----
+     A panel, not one of the browser's own dialogs: those cannot show the
+     message back, cannot be styled to say which audience this is, and on a
+     phone they are a grey box somebody dismisses without reading. This is the
+     last thing between a volunteer and a thousand pockets, so it shows the
+     whole thing. */
+  /*  The headings inside the working card need air above them, or the list of
+      what has been sent reads as part of the form above it. */
+  .card.is-wide > h3{margin-top:30px;margin-bottom:2px;}
+  .ap-confirm{
+    border:2px solid var(--gold);border-radius:12px;background:#fff;
+    padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px;margin-top:16px;
+  }
+  .ap-confirm.is-grave{border-color:var(--danger);}
+  .ap-confirm h3{font-size:1.15rem;}
+  .ap-confirm-p{font-size:.97rem;line-height:1.6;color:var(--ink);}
+  .ap-confirm-rows{display:flex;flex-direction:column;gap:9px;}
+  .ap-confirm-row{
+    display:flex;flex-direction:column;gap:2px;
+    border-left:3px solid var(--line);padding-left:11px;
+  }
+  .ap-confirm-row dt{
+    font-size:.8rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  }
+  .ap-confirm-row dd{font-size:.99rem;line-height:1.5;color:var(--ink);overflow-wrap:anywhere;white-space:pre-wrap;}
+  .ap-confirm .row{display:flex;gap:10px;flex-wrap:wrap;}
+  .ap-confirm .row .btn{width:auto;min-width:min(200px,100%);}
+
+  /* ---- what has been sent ---- */
+  .ap-list{display:flex;flex-direction:column;gap:11px;margin:10px 0 6px;}
+  .ap-item{
+    border:1px solid var(--line);border-radius:12px;background:var(--paper);
+    padding:14px 16px;display:flex;flex-direction:column;gap:8px;
+  }
+  .ap-item.is-sent{border-left:3px solid var(--success);}
+  .ap-item.is-sending{border-left:3px solid var(--gold);}
+  .ap-item.is-failed{border-left:3px solid var(--danger);}
+
+  .ap-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .ap-chip{
+    font-size:.8rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;
+    background:rgba(94,22,56,.10);color:#5E1638;
+  }
+  .ap-head{
+    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
+    color:var(--brand-900);overflow-wrap:anywhere;min-width:0;
+  }
+  /* The state wraps rather than staying on one line, because "still sending,
+     or it did not finish" is a sentence and not a word — and it is the state
+     somebody most needs to read. */
+  .ap-state{
+    font-size:.8rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;margin-left:auto;white-space:normal;line-height:1.35;
+  }
+  .ap-sent{background:rgba(47,94,54,.14);color:var(--success-ink);}
+  .ap-sending{background:rgba(198,162,76,.18);color:var(--gold-ink);}
+  .ap-failed{background:rgba(180,83,47,.14);color:var(--danger-ink);}
+  .ap-when{font-size:.93rem;line-height:1.55;color:var(--muted);overflow-wrap:anywhere;}
+  .ap-you{
+    font-size:.8rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--brand-700);
+  }
+  .ap-why{
+    font-size:.92rem;line-height:1.5;color:var(--danger-ink);overflow-wrap:anywhere;
+    background:rgba(180,83,47,.07);border-radius:8px;padding:8px 11px;
+  }
+  .ap-empty{
+    text-align:center;padding:30px 20px;color:var(--muted);font-size:.986rem;
+    background:var(--paper);border:1px dashed var(--line);border-radius:12px;
   }
 </style>
 <style>
@@ -460,12 +437,12 @@
     <div class="brand-inner">
       <img class="logo" src="data:image/png;base64,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" alt="Taiyabah Masjid">
       <div class="eyebrow">Taiyabah Masjid</div>
-      <h1>What a class says</h1>
-      <p>Every class on the website has a page of its own &mdash; the sentence under its heading, the opening paragraph, the list of what to know, and the wording people read when sign-ups are shut. Sign in to write those words for a class the masjid already runs.</p>
+      <h1>Send to the app</h1>
+      <p>A notification arrives on the phone of everybody in the congregation who has the masjid&rsquo;s app and has left that kind of alert switched on. It takes seconds, it reaches people who are asleep, and once it has gone there is no way to call it back.</p>
       <!-- Administrators only, so this always points at the admin centre.
-           There is no lesser role that reaches a class page, and app.js does
-           not rewrite this link — unlike /venue/, where hall_office still
-           exists as a role and must not be sent somewhere that refuses it. -->
+           There is no lesser role that may send to the app — the database
+           refuses anybody who is not a verified administrator with two-step —
+           and app.js does not rewrite this link. -->
       <a class="back" href="../portals/">&larr; Back to the admin centre</a>
     </div>
 
@@ -523,7 +500,7 @@
     <!-- MFA: enrol -->
     <div class="card" id="view-enrol" hidden>
       <h2>Set up two-step verification</h2>
-      <p class="sub">Your account can change the wording on a public page of the website, and can put a class on it or take one off, so it needs a second factor before you can continue.</p>
+      <p class="sub">Your account can put a message on every phone in the congregation, so it needs a second factor before you can continue.</p>
       <div class="err" id="enrol-error" hidden></div>
 
       <ul class="steps">
@@ -552,7 +529,11 @@
     <!-- signed in -->
     <div class="card is-wide" id="view-app" hidden>
       <div class="who">
-        <span class="av" id="app-av">✓</span>
+        <!-- The other staff screens put a tick character in here. It is
+             decoration, it is hidden the moment the rail is up, and a glyph
+             the Unicode tables count as an emoji has no business on a screen
+             that announces deaths. The dot is drawn in CSS instead. -->
+        <span class="av" id="app-av" aria-hidden="true"></span>
         <span class="who-t">
           <strong id="app-name">—</strong>
           <span id="app-email">—</span>
@@ -561,166 +542,173 @@
       <div class="roles" id="app-roles"></div>
       <div class="err" id="app-error" hidden></div>
 
-      <h2>What a class says</h2>
-      <p class="lede">This is the wording on <strong>each class&rsquo;s own page
-         on the website</strong> &mdash; the line under the heading, the opening
-         paragraph, the what-to-know list, the session buttons on the form, and
-         the sentence people read when sign-ups are shut. <strong>There is no
-         draft here.</strong> Notices and the prayer timetable wait for you to
-         publish them; this one does not. Whatever you save is on the website
-         the moment you save it, so read the preview at the bottom first.</p>
+      <h2>Write the notification</h2>
+      <p class="lede">This goes to the masjid&rsquo;s phone app, not to the
+         website. <strong>It is sent the moment you confirm it, and nothing
+         takes it back</strong> &mdash; not deleting it here, not sending a
+         correction afterwards. Read it once more than feels necessary.</p>
 
-      <div class="cp-note">
-        <h4>A brand-new class is started on the Adult classes screen</h4>
-        <p>This screen writes the words for a class that <strong>already
-           exists</strong>. Adding one, renaming it, changing how many places
-           it has or opening and closing sign-ups all happen on <strong>Adult
-           classes</strong>; come back here afterwards to write its page.</p>
-        <p>A new class does <strong>not appear on the website at all</strong>
-           until its page here is finished. Half a class page &mdash; a heading
-           over an empty body &mdash; would look entirely normal and be wrong,
-           so the website skips it instead.</p>
-      </div>
+      <div class="err" id="ap-error" hidden></div>
+      <div class="ok"  id="ap-ok" hidden></div>
 
-      <div class="err" id="cp-error" hidden></div>
-      <div class="ok"  id="cp-ok" hidden></div>
+      <div class="ap-form" id="ap-form">
 
-      <div class="cp-form" id="cp-form">
+        <fieldset class="ap-aud">
+          <legend>Who this goes to</legend>
+          <p class="ap-hint">People choose these for themselves in the app&rsquo;s
+             Alerts tab, so each one reaches a different number of phones.</p>
 
-        <h3>The classes</h3>
-        <p class="cp-hint">Click a class to write its page. The grey word is
-           its <strong>website key</strong> &mdash; what the address bar says
-           and what every sign-up is filed under. It cannot be changed, here or
-           anywhere.</p>
-        <div class="cp-list" id="cp-list"></div>
-
-        <div id="cp-editor" hidden>
-
-          <div class="cp-head">
-            <h3 id="cp-editing">&mdash;</h3>
-            <span class="cp-key" id="cp-editing-key">&mdash;</span>
-            <span class="cp-acts">
-              <button type="button" class="btn btn-ghost cp-mini" id="cp-close">Back to the list</button>
+          <label class="ap-aud-opt">
+            <input type="radio" name="ap-topic" value="janazah" id="ap-topic-janazah">
+            <span class="ap-aud-t">
+              <span class="ap-aud-n">Jan&#0257;zah</span>
+              <span class="ap-aud-d">Nearly everybody with the app. This is the one alert people leave switched on, and it will reach them whatever the hour.</span>
             </span>
+          </label>
+
+          <label class="ap-aud-opt">
+            <input type="radio" name="ap-topic" value="jamaah" id="ap-topic-jamaah">
+            <span class="ap-aud-t">
+              <span class="ap-aud-n">Jam&#0257;&#703;ah reminders</span>
+              <span class="ap-aud-d">People who asked to be reminded before the prayers. They hear from this every day, so an announcement sent here is easy to miss.</span>
+            </span>
+          </label>
+
+          <label class="ap-aud-opt">
+            <input type="radio" name="ap-topic" value="announcements" id="ap-topic-announcements" checked>
+            <span class="ap-aud-t">
+              <span class="ap-aud-n">Announcements</span>
+              <span class="ap-aud-d">Everybody who has not turned masjid news off. This is the ordinary choice for anything that is not one of the others.</span>
+            </span>
+          </label>
+
+          <label class="ap-aud-opt">
+            <input type="radio" name="ap-topic" value="events" id="ap-topic-events">
+            <span class="ap-aud-t">
+              <span class="ap-aud-n">Events &amp; talks</span>
+              <span class="ap-aud-d">Only people who switched this on themselves, so it reaches the fewest phones of the five. Put anything that matters to everyone under Announcements as well.</span>
+            </span>
+          </label>
+
+          <label class="ap-aud-opt">
+            <input type="radio" name="ap-topic" value="kahf" id="ap-topic-kahf">
+            <span class="ap-aud-t">
+              <span class="ap-aud-n">S&#363;rah al-Kahf</span>
+              <span class="ap-aud-d">People who asked for the Friday reminder to read S&#363;rah al-Kahf, and who are not expecting anything else from it.</span>
+            </span>
+          </label>
+        </fieldset>
+
+        <label class="fld">
+          <span>Heading</span>
+          <input type="text" id="ap-title" maxlength="70"
+                 placeholder="Jan&#0257;zah after &#7826;uhr today">
+        </label>
+        <p class="ap-hint">This is the line that shows on a locked phone. Most
+           people will read this and nothing else, so put the important part
+           first.</p>
+        <p class="ap-count" id="ap-title-count">70 characters left</p>
+
+        <label class="fld">
+          <span>Message</span>
+          <textarea id="ap-body" rows="6" maxlength="2000"
+                    placeholder="&#7778;al&#0257;t al-Jan&#0257;zah will be after &#7826;uhr, about 1.15pm, at the masjid."></textarea>
+        </label>
+        <p class="ap-count" id="ap-body-count">2000 characters left</p>
+
+        <label class="ap-keep">
+          <input type="checkbox" id="ap-keep" checked>
+          <span class="ap-aud-t">
+            <span class="ap-aud-n">Keep this on the app&rsquo;s Notices tab</span>
+            <span class="ap-aud-d">A notification is gone the moment somebody
+              swipes it away; a notice stays in the app for the person who was
+              driving, and for anybody who installs the app tomorrow.</span>
+          </span>
+        </label>
+
+        <div class="ap-pic">
+          <h4>Poster (optional)</h4>
+          <p class="ap-hint">A JPEG, PNG or WebP, up to 5&nbsp;MB. A photograph
+             of a printed poster is usually fine once it is exported rather
+             than sent at full size.</p>
+          <input type="file" class="ap-file" id="ap-file"
+                 accept="image/jpeg,image/png,image/webp"
+                 aria-label="Choose a poster to send with this">
+          <div class="ap-shot" id="ap-pic-preview" hidden>
+            <img class="ap-thumb" id="ap-thumb" alt="The poster you have chosen">
+            <span class="ap-size" id="ap-size"></span>
+            <button type="button" class="btn btn-ghost" id="ap-pic-clear">Remove the poster</button>
           </div>
+          <p class="ap-warn" id="ap-pic-forced" hidden>A poster can only be
+             shown on the Notices tab, so &ldquo;keep this on the app&rsquo;s
+             Notices tab&rdquo; has been ticked and held for you. Remove the
+             poster if you want to untick it.</p>
+        </div>
 
-          <h3>The heading and the line under it</h3>
-          <label class="fld">
-            <span>The class name as the page shows it</span>
-            <input type="text" id="cp-name" maxlength="120" placeholder="Arabic Classes">
-            <span class="cp-hint">Keep this the same as the name on the Adult
-              classes screen. Renaming the class itself is done there.</span>
-          </label>
-          <label class="fld">
-            <span>The one-line description</span>
-            <input type="text" id="cp-tagline" maxlength="260"
-                   placeholder="Evening Arabic for adults, taught at the masjid.">
-          </label>
-          <p class="cp-count" id="cp-tagline-count">180 characters left</p>
+        <label class="fld">
+          <span>Date of the event (optional)</span>
+          <input type="datetime-local" id="ap-event-at">
+        </label>
+        <p class="ap-hint">This is <strong>not</strong> a time to send at.
+           Everything on this page goes out the moment you confirm it. This is
+           the date the thing happens, and the notice takes itself off the
+           app&rsquo;s Notices tab a day afterwards instead of sitting there
+           until somebody remembers it.</p>
 
-          <h3>The opening paragraph</h3>
-          <label class="fld">
-            <span>What the class is for</span>
-            <textarea id="cp-intro" rows="6" maxlength="1400"
-                      placeholder="The aim is to get you reading and understanding…"></textarea>
-          </label>
-          <p class="cp-count" id="cp-intro-count">1200 characters left</p>
-
-          <h3>The fact strip beside the form</h3>
-          <p class="cp-hint">Up to four, and they can be left out altogether.
-             Both halves are <strong>24 characters at most</strong> &mdash; they
-             sit in a narrow box on a phone, and a fifth wraps into a mess.</p>
-          <div class="cp-rows" id="cp-facts"></div>
-          <div class="row">
-            <button type="button" class="btn btn-ghost" id="cp-add-fact">Add a fact</button>
-            <span class="cp-hint" id="cp-fact-ceiling" hidden>Four facts is as
-              many as the strip will hold. Remove one before adding another.</span>
+        <div class="ap-lock">
+          <span class="ap-lock-cap">On a locked phone</span>
+          <div class="ap-lock-card">
+            <div class="ap-lock-top">
+              <span class="ap-lock-app">Taiyabah Masjid</span>
+              <span class="ap-lock-when">now</span>
+            </div>
+            <div class="ap-lock-title" id="ap-lock-title">Your heading goes here</div>
+            <div class="ap-lock-body" id="ap-lock-body">And the first lines of your message.</div>
           </div>
+        </div>
 
-          <h3>What to know</h3>
-          <p class="cp-hint">Between one and eight rows &mdash; when it runs, who
-             it is for, how many places there are. The label is the short half
-             (&ldquo;When&rdquo;), up to 28 characters.</p>
-          <div class="cp-rows" id="cp-rules"></div>
-          <div class="row">
-            <button type="button" class="btn btn-ghost" id="cp-add-rule">Add a row</button>
-            <span class="cp-hint" id="cp-rule-ceiling" hidden>Eight rows is as
-              many as the list will hold. Remove one before adding another.</span>
-          </div>
+        <p class="ap-hint" id="ap-changed" hidden>You changed something, so the
+           check closed itself. Press send again when you are ready.</p>
 
-          <h3>The sessions this class runs</h3>
-          <p class="cp-hint" id="cp-cohort-why">&mdash;</p>
-          <div class="cp-rows" id="cp-cohorts"></div>
-
-          <h3>The experience question</h3>
-          <label class="fld">
-            <span>The question people are asked</span>
-            <input type="text" id="cp-exp-label" maxlength="180"
-                   placeholder="How much Arabic do you have already?">
-          </label>
-          <p class="cp-count" id="cp-exp-label-count">120 characters left</p>
-          <p class="cp-hint">Between two and six answers &mdash; one answer is
-             not a question. Each needs a <strong>filing name</strong> as well as
-             the wording: lower case letters, numbers and underscores, and it is
-             what gets recorded against the sign-up rather than shown to
-             anybody.</p>
-          <div class="cp-rows" id="cp-exps"></div>
-          <div class="row">
-            <button type="button" class="btn btn-ghost" id="cp-add-exp">Add an answer</button>
-            <span class="cp-hint" id="cp-exp-ceiling" hidden>Six answers is as
-              many as the question will hold. Remove one before adding another.</span>
-          </div>
-
-          <h3>What the page says about signing up</h3>
-          <p class="cp-hint">Both are needed. The shut wording is what most
-             people read, most of the year &mdash; leaving it empty leaves a bare
-             heading on the page.</p>
-          <label class="fld">
-            <span>While sign-ups are open</span>
-            <textarea id="cp-open" rows="3" maxlength="500"
-                      placeholder="Fill in the form below. Places go in the order they are taken."></textarea>
-          </label>
-          <p class="cp-count" id="cp-open-count">400 characters left</p>
-          <label class="fld">
-            <span>While sign-ups are shut</span>
-            <textarea id="cp-closed" rows="3" maxlength="500"
-                      placeholder="Ring the office to put your name down in the meantime."></textarea>
-          </label>
-          <p class="cp-count" id="cp-closed-count">400 characters left</p>
-
-          <h3>The card on the Education page</h3>
-          <p class="cp-hint">The three lines on the card somebody clicks to
-             reach this class. Leave them empty and the website falls back to
-             the one-line description.</p>
-          <label class="fld">
-            <span>The small line above the name</span>
-            <input type="text" id="cp-tile-tag" maxlength="60" placeholder="Weekly · Adults 16+">
-          </label>
-          <label class="fld">
-            <span>The sentence on the card</span>
-            <input type="text" id="cp-tile-p" maxlength="200"
-                   placeholder="Read and understand the language of the Qur'an.">
-          </label>
-          <label class="fld">
-            <span>The line underneath</span>
-            <input type="text" id="cp-tile-meta" maxlength="90" placeholder="One evening a week · 7–8pm · 15 places">
-          </label>
-
-          <h3>What the website will show</h3>
-          <p class="cp-hint">This is the class page as visitors will see it,
-             drawn from what is in the boxes above &mdash; not from what is
-             saved.</p>
-          <div class="cp-pv" id="cp-pv"></div>
-
-          <div class="err" id="cp-complaints" hidden></div>
-
-          <div class="row">
-            <button type="button" class="btn btn-gold" id="cp-save" disabled>Save &mdash; this goes live at once</button>
-            <button type="button" class="btn btn-ghost" id="cp-revert">Undo my changes</button>
-          </div>
-          <p class="cp-meta" id="cp-meta">Looking&hellip;</p>
+        <div class="row">
+          <button type="button" class="btn btn-gold" id="ap-send" disabled>Send it to the app</button>
         </div>
       </div>
+
+      <div class="ap-confirm" id="ap-confirm" hidden role="group" aria-labelledby="ap-confirm-h">
+        <h3 id="ap-confirm-h">Send this now?</h3>
+        <p class="ap-confirm-p" id="ap-confirm-p"></p>
+        <dl class="ap-confirm-rows">
+          <div class="ap-confirm-row">
+            <dt>Going to</dt>
+            <dd id="ap-confirm-aud">&mdash;</dd>
+          </div>
+          <div class="ap-confirm-row">
+            <dt>Heading</dt>
+            <dd id="ap-confirm-title">&mdash;</dd>
+          </div>
+          <div class="ap-confirm-row">
+            <dt>Message</dt>
+            <dd id="ap-confirm-body">&mdash;</dd>
+          </div>
+          <div class="ap-confirm-row">
+            <dt>Afterwards</dt>
+            <dd id="ap-confirm-keep">&mdash;</dd>
+          </div>
+        </dl>
+        <div class="row">
+          <button type="button" class="btn btn-ghost" id="ap-back">Go back</button>
+          <button type="button" class="btn btn-gold" id="ap-go">Send it</button>
+        </div>
+      </div>
+
+      <h3>What has been sent</h3>
+      <p class="lede">Everything sent from here, by anybody, with the name of
+         whoever sent it. <strong>Look here before you send.</strong> If a
+         notification appears to have failed, it may already be on a thousand
+         phones &mdash; this list is how you find out, rather than by sending it
+         twice.</p>
+      <div class="ap-list" id="ap-list">Looking&hellip;</div>
 
       <div class="card-foot">
         <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>

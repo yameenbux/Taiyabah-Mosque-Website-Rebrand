@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 
@@ -166,6 +167,53 @@ def timetable_year():
     return re.search(r'(\d{4})', names[0]).group(1)
 
 
+def timetable_js():
+    """A year of prayer times, ONE DAY PER LINE.
+
+    This used to be substituted straight in as the raw file, which is one JSON
+    array on one line: 365 rows and **forty-two thousand characters without a
+    single newline**. It was correct, it was the smallest thing to write, and
+    it was the largest single line in the repository by a factor of four.
+
+    That caused a real problem the day somebody tried to put the site on
+    GitHub through a browser. A 42,000-character line is not a size problem —
+    the whole file is only 624 KB — it is a RENDERING problem: a diff viewer,
+    a syntax highlighter or an editor asked to lay out one line that long will
+    sit there chewing, and on a phone or a modest laptop the tab stops
+    responding. "Git crashes on the HTML files" is what that looks like from
+    the outside, and nothing about it says "one long line".
+
+    So: one row per line. The data is IDENTICAL — it is parsed and re-emitted,
+    and the round trip is asserted below, because a build step that silently
+    reshapes a year of prayer times would be a far worse bug than the one it
+    fixes. The cost is 364 newlines and some indentation, about 2 KB, which
+    gzip gives back almost entirely. The gain is a file a human being can open.
+
+    json.dumps with separators, NOT str(), because Python would write True and
+    None and single quotes, none of which are JavaScript.
+    """
+    raw = load('build-inputs/full2026.json')
+    rows = json.loads(raw)
+
+    if not isinstance(rows, list) or not rows:
+        raise SystemExit('build-inputs/full2026.json is not a list of rows')
+
+    out = ',\n'.join(
+        '    ' + json.dumps(r, ensure_ascii=False, separators=(',', ':'))
+        for r in rows
+    )
+    js = '[\n' + out + '\n  ]'
+
+    #  THE ROUND TRIP, CHECKED. Not ceremony: this function's whole promise is
+    #  that it changes the whitespace and nothing else, and the thing it would
+    #  quietly break is the masjid's prayer times for a year.
+    if json.loads(js) != rows:
+        raise SystemExit(
+            'the timetable changed while being reformatted — refusing to build')
+
+    return js
+
+
 def image(slug):
     path = f"img/{slug}.jpg"
     if not os.path.exists(path):
@@ -197,7 +245,7 @@ subs = {
     '{{BANNER_ACCENT_B64}}': image('banner-accent'),
     '{{GIRIH_TILE_B64}}': load('build-inputs/girih_tile_b64.txt'),
     '{{GIRIH_SOLID_B64}}': load('build-inputs/girih_solid_b64.txt'),
-    '{{FULL_2026_JSON}}': load('build-inputs/full2026.json'),
+    '{{FULL_2026_JSON}}': timetable_js(),
     #  Which year that file covers. Read from its NAME rather than written
     #  here as a literal, so the two cannot disagree — a page that believes it
     #  holds 2027 while carrying 2026's rows would show the wrong prayer times

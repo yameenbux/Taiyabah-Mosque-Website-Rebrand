@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/32258237/README.md)
 # app-notify
 
 Sends a notification to the masjid's phone app, on behalf of a committee
