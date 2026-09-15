@@ -1,116 +1,101 @@
 // ===========================================================================
+//  *** SUPERSEDED. DO NOT DEPLOY THIS FILE. ***
+//
+//  Kept only as a record of what the webhook looked like before the donate
+//  page existed: it knows HH- and NK- references and nothing about DN-, so
+//  deploying it would stop every donation being recorded and would take the
+//  Gift Aid fix with it.
+//
+//  Until 15 September 2026 this sat LOOSE at supabase/functions/index.ts,
+//  outside any function directory, named exactly like a file you would
+//  deploy, and with nothing on it saying it was old. It is the third copy of
+//  this webhook in the tree; the other two are index.ts, which is live, and
+//  index.OUTDATED-DO-NOT-DEPLOY.ts, which was at least labelled.
+//
+//  Three generations of one file, one of them disguised as the current one,
+//  in a repository that has already been caught four times deploying a stale
+//  copy over production. Renamed rather than deleted so the history survives,
+//  but if you are reading this and it is no longer useful, delete it.
+// ===========================================================================
+
+// ===========================================================================
 //  stripe-webhook — records a payment made to the masjid
 //
 //  Taiyabah Masjid · Bolton Central Islamic Society · Charity 1041569
 //
-//  THE CODE IN THIS FILE MATCHES WHAT IS DEPLOYED. The comments do not —
-//  production carries a shorter version of them, because a deploy from the
-//  dashboard condensed them and nobody wrote that back.
+//  ONE ENDPOINT, TWO KINDS OF PAYMENT
+//  ----------------------------------
+//  Which one is decided by the reference prefix the payment carries:
 //
-//  NO VERSION NUMBER IS WRITTEN HERE ANY MORE. It used to say "version 16",
-//  and by 15 September production was on 18 while the line still said 16. A
-//  version number in a comment is a claim that rots silently, and it rots
-//  into the most dangerous shape there is: a reassurance. Somebody reads it,
-//  believes the file is current, and deploys.
+//      HH-26-0001  a hall hire deposit    -> mark_deposit_paid()
+//      NK-26-0001  a nikāḥ fee            -> mark_nikah_fee_paid()
 //
-//  To find out what is actually deployed, ASK:
-//      mcp__Supabase__get_edge_function(project_id, 'stripe-webhook')
-//  or `supabase functions download stripe-webhook`, and diff.
+//  One endpoint rather than two because Stripe signs every delivery with the
+//  same endpoint secret; a second function would need its own secret, its own
+//  deployment and its own chance to be forgotten when something changes here.
+//  The prefix comes from the database's own reference sequences, so it cannot
+//  drift out of step with the tables.
 //
-//  This repository has been caught FOUR times holding a copy that did not
-//  match production — twice on this function, once on notify, once on
-//  invite-user. Read production before you deploy over it, every time.
-//
-//  ONE ENDPOINT, THREE KINDS OF PAYMENT
-//  ------------------------------------
-//  Decided by what the payment carries in client_reference_id:
-//
-//      HH-26-0001                 a hall hire deposit -> mark_deposit_paid()
-//      NK-26-0001                 a nikāḥ fee         -> mark_nikah_fee_paid()
-//      DN-…                       a donation with a reference already made
-//      general|sadaqah|lillah|newbuild
-//                                 a donation from the DONATE PAGE
-//                                                     -> record_public_donation()
-//
-//  THE LAST ONE IS NEW, AND IT IS WHY THE MASJID'S FIRST REAL PAYMENT WENT
-//  MISSING. The donate page sends the PURPOSE as client_reference_id, because
-//  a Stripe Payment Link cannot carry an amount or anything else in its URL
-//  and that is the only field available. But this function was already
-//  routing on the first three characters of that same field, so "sadaqah"
-//  matched nothing, was logged as an unrecognised reference, and no donation
-//  was recorded. Reading Stripe's documentation on client_reference_id was
-//  not enough: the code already listening on the other end had its own
-//  meaning for it.
-//
-//  A purpose has no prefix and never will, so it is checked BEFORE the prefix
-//  table rather than bolted into it. The reference for such a donation is
-//  minted by the DATABASE — donations.reference is UNIQUE, so a fixed string
-//  like "DN-sadaqah" would collide on the second sadaqah donation. See db/032.
-//
-//  One endpoint rather than several because Stripe signs every delivery with
-//  the same endpoint secret; another function would need its own secret, its
-//  own deployment and its own chance to be forgotten.
-//
-//  The kinds are NOT the same transaction, and the difference is deliberate:
+//  The two are NOT the same transaction, and the difference is deliberate:
 //
 //    - Paying a hall deposit CONFIRMS the booking. The site knows what is
 //      free, so it can sell a date outright (migration 017).
 //    - Paying a nikāḥ fee confirms NOTHING. The masjid does not publish its
 //      nikāḥ diary, so the site cannot know whether a date is available. The
-//      office agrees the date on the phone; this is only a way to pay without
-//      coming in with cash (migration 018).
-//    - A donation confirms nothing and nobody has to act on it.
+//      office agrees the date on the phone; this is only a way to pay the fee
+//      without coming in with cash (migration 018).
 //
 //  If you are tempted to unify them, read the header of 018 first.
 //
 //  Stripe tells us a deposit has been paid. This is the ONLY thing that may
-//  say so: a browser claiming "I have paid" is not evidence of anything,
-//  which is why mark_deposit_paid() has EXECUTE revoked from anon and
-//  authenticated and is reached here with the service role key.
+//  say so: a browser claiming "I have paid" is not evidence of anything, which
+//  is why mark_deposit_paid() has EXECUTE revoked from anon and authenticated
+//  and is reached here with the service role key.
 //
 //  Two rules that are easy to get wrong and expensive to get wrong:
 //
 //    1. VERIFY THE SIGNATURE FIRST. Anything else — reading the body, looking
 //       up the reference, being helpful — happens after. Without it, anybody
 //       who finds this URL can mark any booking paid by posting some JSON.
-//       Checked with constructEventAsync, because Deno has no synchronous
-//       crypto and the sync version silently fails here.
+//       The signature is checked with constructEventAsync, because Deno has no
+//       synchronous crypto and the sync version silently fails here.
 //
 //    2. ALWAYS RETURN 200 ONCE THE SIGNATURE IS GOOD. Stripe retries a
-//       non-2xx for days. Retrying cannot fix an unknown reference, and a
-//       retry storm buries the real problem. Those cases are recorded in
-//       admin_audit and answered 200.
-//
-//       AND THE AUDIT WRITE HAS TO ACTUALLY WORK. Until 14 September 2026 it
-//       did not: service_role held no INSERT on admin_audit and no USAGE on
-//       its sequence, so every "money arrived that I cannot match" row was
-//       silently discarded — the one mechanism meant to make the bug above
-//       visible was itself mute. Migration 032 grants both. GRANT and RLS are
-//       different things and you need both.
+//       non-2xx for days. Retrying cannot fix an unknown reference or a date
+//       somebody else has taken, and a retry storm buries the real problem.
+//       Those cases are recorded in admin_audit and answered 200.
 //
 //  Deploy:
 //      supabase functions deploy stripe-webhook --no-verify-jwt
 //
 //  --no-verify-jwt is REQUIRED. Stripe does not send a Supabase JWT, so with
-//  verification on, every delivery is rejected before this file ever runs.
+//  verification on every delivery is rejected before this file ever runs. The
+//  Stripe signature is what authenticates the caller here.
 //
 //  Secrets — and none of them is the Stripe API key:
 //      STRIPE_WEBHOOK_SECRET       whsec_… — the LIVE endpoint in Stripe
 //      STRIPE_WEBHOOK_SECRET_TEST  whsec_… — optional, a test-mode endpoint
+//
+//  Two, because test mode and live mode sign with different secrets and a
+//  function that only knows one of them cannot be tested without breaking the
+//  other. Each delivery is checked against whichever secrets are set. The test
+//  one can be removed once you have finished testing; nothing depends on it.
 //      SUPABASE_URL               provided by the platform
 //      SUPABASE_SERVICE_ROLE_KEY  provided by the platform
 //
 //  There is deliberately no STRIPE_SECRET_KEY here. Verifying a webhook
 //  signature is a local HMAC of the raw body against the WEBHOOK secret; it
-//  makes no call to Stripe. A leaked whsec_ lets somebody forge events into
-//  this one function; a leaked sk_live_ can issue refunds and read every
-//  customer. Do not add one "just in case".
+//  makes no call to Stripe and never touches an API key. Storing sk_live_
+//  anyway would put the masjid's most dangerous credential — one that can
+//  issue refunds, read every customer and create charges — into a system that
+//  has no use for it. A leaked whsec_ lets somebody forge events into this
+//  one function, which is bad; a leaked sk_live_ is a different order of
+//  problem. Do not add one "just in case".
 //
 //  In Stripe, add an endpoint pointing at this function and subscribe it to
 //  `checkout.session.completed` and nothing else.
 // ===========================================================================
 
-import { readGiftAid, donorDetails } from "./giftaid.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -133,11 +118,6 @@ const db = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   { auth: { persistSession: false } },
 );
-
-// The donate page's own vocabulary. Kept here rather than inferred, so that a
-// stray client_reference_id cannot talk this function into creating donations
-// out of somebody else's payment.
-const PURPOSES = ["general", "sadaqah", "lillah", "newbuild"];
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -196,75 +176,16 @@ Deno.serve(async (req) => {
   }
 
   if (!reference) {
-    // Somebody paid a link without going through the form that sets the
-    // reference — typically by opening a Payment Link URL directly. Real
-    // money, so it is logged rather than shrugged off: the office has to find
-    // them, work out what it was for, and refund it if it cannot be placed.
+    // Somebody paid the link without going through the booking form, so there
+    // is no booking to attach it to. Real money, so it is logged rather than
+    // shrugged off — the office has to find them and refund it.
     console.error(`stripe-webhook: ${sessionId} arrived with no client_reference_id`);
     await db.from("admin_audit").insert({
       action: "payment_without_reference",
       detail: { session: sessionId, amount_pence: amount,
-                payment_link: (session.payment_link as string) ?? null,
                 email: session.customer_details?.email ?? null },
     });
     return new Response(JSON.stringify({ ok: true, note: "no reference" }), {
-      status: 200, headers: { "content-type": "application/json" },
-    });
-  }
-
-  // -----------------------------------------------------------------------
-  //  A DONATION FROM THE DONATE PAGE.
-  //
-  //  Checked before the prefix table because a purpose has no prefix. See the
-  //  header: this is the case that was missing, and the case that made the
-  //  masjid's first real donation vanish.
-  // -----------------------------------------------------------------------
-  const purpose = reference.trim().toLowerCase();
-  if (PURPOSES.includes(purpose)) {
-    const ga = readGiftAid(session.custom_fields as never);
-    const who = donorDetails(ga.giftAid, session.customer_details?.name,
-                             session.customer_details?.address);
-
-    console.log(`stripe-webhook: donation (${purpose}) gift aid = ${ga.giftAid} ` +
-                `(matched by ${ga.matchedBy}, answer "${ga.answer}")`);
-
-    // A donation link with no Gift Aid question on it. Every donation through
-    // it records as "no", no error is raised, no payment fails — and 25p in
-    // every eligible pound is quietly not claimed. The only way anybody finds
-    // out is if something says so here.
-    if (ga.fieldMissing) {
-      console.error(`stripe-webhook: a ${purpose} donation had NO Gift Aid field on the checkout`);
-      await db.from("admin_audit").insert({
-        action: "gift_aid_field_missing",
-        detail: { session: sessionId, purpose,
-                  payment_link: (session.payment_link as string) ?? null },
-      });
-    }
-
-    const { data, error } = await db.rpc("record_public_donation", {
-      p_session_id: sessionId,
-      p_amount_p: amount,
-      p_purpose: purpose,
-      p_gift_aid: ga.giftAid,
-      p_name: who.name,
-      p_address: who.address,
-      p_postcode: who.postcode,
-    });
-
-    if (error) {
-      // 500 so Stripe retries: unlike an unknown reference, this one might
-      // genuinely be transient.
-      console.error(`stripe-webhook: record_public_donation failed for ${purpose} —`, error.message);
-      return new Response("Could not record the donation", { status: 500 });
-    }
-
-    console.log(`stripe-webhook: donation ${data?.reference} (${purpose}) recorded` +
-                (data?.already_recorded ? " (already recorded)" : ""));
-
-    // Deliberately no email. Nobody has to act when a donation arrives, and
-    // one message per donation would bury the two that DO need a human — a
-    // nikāḥ request waiting for a call, and a refund the masjid owes somebody.
-    return new Response(JSON.stringify({ ok: true, result: data }), {
       status: 200, headers: { "content-type": "application/json" },
     });
   }
@@ -274,9 +195,8 @@ Deno.serve(async (req) => {
   // and not by which payment link was used (the masjid can add links without
   // this file knowing).
   const KINDS: Record<string, { rpc: string; state: string; what: string }> = {
-    "HH-": { rpc: "mark_deposit_paid",     state: "deposit_status", what: "hall deposit" },
-    "NK-": { rpc: "mark_nikah_fee_paid",   state: "fee_status",     what: "nikāḥ fee" },
-    "DN-": { rpc: "record_donation_paid",  state: "status",         what: "donation" },
+    "HH-": { rpc: "mark_deposit_paid",   state: "deposit_status", what: "hall deposit" },
+    "NK-": { rpc: "mark_nikah_fee_paid", state: "fee_status",     what: "nikāḥ fee" },
   };
   const kind = KINDS[reference.slice(0, 3).toUpperCase()];
 
@@ -288,7 +208,6 @@ Deno.serve(async (req) => {
     await db.from("admin_audit").insert({
       action: "payment_with_unknown_reference_kind",
       detail: { session: sessionId, reference, amount_pence: amount,
-                payment_link: (session.payment_link as string) ?? null,
                 email: session.customer_details?.email ?? null },
     });
     return new Response(JSON.stringify({ ok: true, note: "unknown reference kind" }), {
@@ -296,43 +215,11 @@ Deno.serve(async (req) => {
     });
   }
 
-  // A donation carries two things the other two do not: the donor's answer to
-  // the Gift Aid dropdown, and — only if they said yes — the name and address
-  // HMRC needs. Both come from Stripe rather than from anything the masjid's
-  // website could have made up.
-  let args: Record<string, unknown> = {
+  const { data, error } = await db.rpc(kind.rpc, {
     p_reference: reference,
     p_session_id: sessionId,
     p_amount_p: amount,
-  };
-
-  if (kind.rpc === "record_donation_paid") {
-    const ga = readGiftAid(session.custom_fields as never);
-    const who = donorDetails(ga.giftAid, session.customer_details?.name,
-                             session.customer_details?.address);
-
-    console.log(`stripe-webhook: gift aid = ${ga.giftAid} ` +
-                `(matched by ${ga.matchedBy}, answer "${ga.answer}")`);
-
-    if (ga.fieldMissing) {
-      console.error(`stripe-webhook: ${reference} had NO Gift Aid field on the checkout`);
-      await db.from("admin_audit").insert({
-        action: "gift_aid_field_missing",
-        detail: { reference, session: sessionId,
-                  payment_link: (session.payment_link as string) ?? null },
-      });
-    }
-
-    args = {
-      ...args,
-      p_gift_aid: ga.giftAid,
-      p_name: who.name,
-      p_address: who.address,
-      p_postcode: who.postcode,
-    };
-  }
-
-  const { data, error } = await db.rpc(kind.rpc, args);
+  });
 
   if (error) {
     // The database refused. 500 so Stripe retries, because unlike an unknown
@@ -348,7 +235,10 @@ Deno.serve(async (req) => {
   // Tell somebody. Until now a paid deposit sold a Saturday and nothing said
   // so until a human opened the portal; a refund owed sat in a tab nobody was
   // watching. This is the only moment either of those is known.
-  if (!data?.already_recorded && kind.rpc !== "record_donation_paid") {
+  //
+  // A retry that recorded nothing sends nothing, or the office gets the same
+  // booking emailed to them every time Stripe retries.
+  if (!data?.already_recorded) {
     await notify(reference, kind, data, session);
   }
 
