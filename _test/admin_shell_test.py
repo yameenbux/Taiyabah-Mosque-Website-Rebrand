@@ -87,6 +87,7 @@ SCREENS = {
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
+    "app": "appsend",
 }
 
 #  What each role should be offered. Deliberately written out rather than
@@ -96,7 +97,7 @@ SCREENS = {
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
               "Adult classes", "Food Bank volunteers", "Gift Aid",
-              "Madrasah portal",
+              "Madrasah portal", "Send a notification",
               "Notices", "Hall hire charges", "Prayer timetable",
               "The new build page", "User access"],
     #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
@@ -119,8 +120,13 @@ EXPECTED = {
 #  word website, not the word settings. The label before it, "The masjid's own
 #  pages", was vague in exactly that way, which is how User access and the
 #  Madrasah portal came to be filed in with the page editors.
+#  "The app" sits above the website-content group deliberately. Sending a
+#  notification is not editing a page: it reaches every phone in the
+#  congregation, at whatever hour it is sent, and cannot be recalled. Filing it
+#  in with "change the hall hire prices" would file it by subject when the
+#  thing that matters about it is the consequence.
 EXPECTED_LABELS = ["What people have asked for", "Money", "The madrasah",
-                   "Change what the website says", "Settings"]
+                   "The app", "Change what the website says", "Settings"]
 
 #  WHAT EACH SCREEN ACTUALLY ADMITS, read out of its own app.js by hand.
 #
@@ -151,6 +157,11 @@ ADMITS = {
     "notices":     ["admin"],                  # db
     "rates":       ["admin"],                  # db
     "times":       ["admin"],                  # db
+    #  app/ has no role test of its own either. The Edge Function behind it
+    #  calls app_notification_start(), which runs verified_admin() before
+    #  anything is sent — so the rail is a convenience here and the refusal
+    #  happens in Postgres. Admin only, like the other three.
+    "appsend":     ["admin"],                  # db
 }
 
 # ---------------------------------------------------------------- 1. wiring

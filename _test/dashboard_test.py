@@ -274,15 +274,16 @@ with sync_playwright() as p:
     #  list is drawn from ROLES now, so a payload that omits a key no longer
     #  removes a door.
     want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
-            "../giftaid/", "../portal/", "../notices/", "../rates/",
+            "../giftaid/", "../portal/", "../app/", "../notices/", "../rates/",
             "../times/", "../newbuild/", "../access/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
     joined = " ".join(areas)
     for name in ["Hall Hire", "Charity collections", "Adult classes", "Gift Aid",
-                 "Food Bank", "Madrasah", "Notices", "Hall hire charges",
-                 "Prayer timetable", "The new build page", "User access"]:
+                 "Food Bank", "Madrasah", "Send a notification", "Notices",
+                 "Hall hire charges", "Prayer timetable", "The new build page",
+                 "User access"]:
         check(name in joined, "%r is missing from the areas" % name)
 
     # ---------------------------------------------------------------------
@@ -463,7 +464,7 @@ with sync_playwright() as p:
     #  the database rather than in their own app.js, so the rail is the only
     #  thing standing between the office and a screen full of red text.
     for locked in ("Notices", "Hall hire charges", "Prayer timetable",
-                   "The new build page"):
+                   "The new build page", "Send a notification"):
         check(locked not in areas,
               "an office account was offered %r, which the database will "
               "refuse them: %r" % (locked, areas))
