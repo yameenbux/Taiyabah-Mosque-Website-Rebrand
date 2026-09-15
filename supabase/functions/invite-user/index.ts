@@ -170,7 +170,14 @@ Deno.serve(async (req) => {
   const who = await gate.json();
   if (!who || who.allowed !== true) {
     return reply(403, {
-      error: "Only an administrator who has completed two-step can invite somebody.",
+      //  "can do that", not "can invite somebody": this endpoint now sends
+      //  password RESETS as well as invitations, and the narrower wording was
+      //  confusing for the half of its job that is not an invitation. Fixed
+      //  in production on 13 September and, as usual, not written back here —
+      //  found on 15 September by diffing every deployed function against
+      //  this repository. Deploying the repo over production would have
+      //  quietly reinstated the wrong message.
+      error: "Only an administrator who has completed two-step can do that.",
     });
   }
 
