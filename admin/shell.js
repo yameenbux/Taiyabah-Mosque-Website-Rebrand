@@ -75,7 +75,10 @@
     pen:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>',
     grid:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
     clock:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12V7M12 12l3.5 2.2"/></svg>',
-    menu:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>'
+    menu:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+    /*  A bell, not a phone. The row is "send a notification"; a phone outline
+        would read as "the app", which is a place, and this row is an action. */
+    bell:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 10-12 0c0 5.2-2 6.5-2 6.5h16s-2-1.3-2-6.5"/><path d="M10.4 20.5a1.9 1.9 0 003.2 0"/></svg>'
   };
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
@@ -151,6 +154,21 @@
       { key: "madrasah",    href: "portal/",      icon: "people", name: "Madrasah portal",
         needs: ["admin", "teacher"],
         what: "Pupils, classes and staff — the most tightly held area on the site" }
+    ]},
+    /*  THE APP IS A DIFFERENT PLACE, not a page of this website, and it gets
+        its own heading for the same reason the madrasah does: what is behind
+        it belongs to something else.
+
+        It sits ABOVE the website-content group on purpose. Sending a
+        notification is not editing a page — it is the one irreversible thing
+        in this whole portal. It reaches every phone in the congregation, at
+        whatever hour it is sent, and it cannot be recalled. Filing it in with
+        "change the hall hire prices" would be filing it by subject when the
+        thing that matters about it is the consequence. */
+    { label: "The app", areas: [
+      { key: "appsend",     href: "app/",         icon: "bell",   name: "Send a notification",
+        needs: ["admin"],
+        what: "Send an alert to everybody's phone, and see what has already gone out" }
     ]},
     { label: "Change what the website says", areas: [
       { key: "notices",     href: "notices/",     icon: "notice", name: "Notices",
