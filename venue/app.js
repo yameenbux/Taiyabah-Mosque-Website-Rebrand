@@ -866,6 +866,20 @@
   })();
 
   function renderApp(identity) {
+    //  THE RAIL. Mounted here and nowhere else: this function runs only
+    //  once the page knows who is signed in, so the list of areas can
+    //  never be drawn for somebody who is not. It is a convenience, not
+    //  a permission — see admin/shell.js.
+    if (window.AdminShell) {
+      AdminShell.mount({
+        current: 'venue',
+        title:   'Hall Hire & Nikāḥ',
+        roles:   identity.roles || [],
+        name:    (identity.profile && identity.profile.full_name) || "",
+        email:   (identity.user && identity.user.email) || ""
+      });
+    }
+
     var name = identity.profile.full_name || identity.user.email;
     var roles = identity.roles.length ? identity.roles : ["no role assigned"];
 
