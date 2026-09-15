@@ -61,9 +61,38 @@ def variant(path, switch_on):
     switch was turned on for real, and then failed for a reason that had
     nothing to do with the code. A test should not depend on which state the
     site is in this week.
+
+    A REGEX, AND A COUNT THAT MUST NOT BE ZERO. The first version did a plain
+    string replace of "var GIFT_AID_OPEN = true;". The page now says
+
+        var GIFT_AID_OPEN = window.GIFT_AID_OPEN = true;
+
+    because a second block further down reads window.GIFT_AID_OPEN — so the
+    replacement stopped matching and QUIETLY DID NOTHING. Both variants were
+    then copies of whatever the site currently ships: the off-state test was
+    testing the on-state and failing, and the on-state tests were passing by
+    accident. It went unnoticed because this file was ALSO crashing on the
+    missing db/022 before it could print its failures.
+
+    So the substitution now asserts it actually substituted. A fixture that
+    silently does nothing is worse than no fixture, because it reports green.
     """
-    out = src.replace("var GIFT_AID_OPEN = true;",  "var GIFT_AID_OPEN = false;") \
-          if not switch_on else src.replace("var GIFT_AID_OPEN = false;", "var GIFT_AID_OPEN = true;")
+    want = "true" if switch_on else "false"
+    out, n = re.subn(
+        r"(var\s+GIFT_AID_OPEN\s*=\s*(?:window\.GIFT_AID_OPEN\s*=\s*)?)(?:true|false)\s*;",
+        lambda m: m.group(1) + want + ";",
+        src)
+    if n == 0:
+        raise AssertionError(
+            "the GIFT_AID_OPEN switch was not found in index.html, so this "
+            "test would have checked the shipped state twice and proved "
+            "nothing. Has the declaration been reworded?")
+    #  And prove the file really says what we asked for, not merely that a
+    #  replacement ran.
+    if not re.search(r"var\s+GIFT_AID_OPEN\s*=\s*(?:window\.GIFT_AID_OPEN\s*=\s*)?"
+                     + want + r"\s*;", out):
+        raise AssertionError("the switch did not end up %s after %d substitution(s)"
+                             % (want, n))
     open(path, "w", encoding="utf-8").write(out)
     return path
 
