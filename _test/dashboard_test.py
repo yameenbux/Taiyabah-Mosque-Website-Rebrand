@@ -260,15 +260,66 @@ with sync_playwright() as p:
     #  added, which is how a real omission gets "fixed" by changing the 6 to a
     #  7 without looking.
     hrefs = pg.eval_on_selector_all(".area", "els => els.map(e => e.getAttribute('href'))")
-    want = ["../venue/", "../courses/", "../giftaid/", "../volunteers/",
-            "../portal/", "../newbuild/", "../access/"]
+    #  ALL ELEVEN. This list said SEVEN until 15 September, and the omissions
+    #  were not an oversight in the test — they were an accurate record of a
+    #  page that had gone stale. Notices, Hall hire charges and Prayer
+    #  timetable were built, given rail rows in admin/shell.js, and never
+    #  added to the Admin Centre's own copy of the list. So this page offered
+    #  seven ways in and every screen you reached offered eleven, and three
+    #  rows appeared the moment you clicked anything.
+    #
+    #  `../collections/` was missing for a different reason and the same one:
+    #  the row was drawn only when the dashboard payload carried a
+    #  `collections` key, and the BUSY fixture below does not carry one. The
+    #  list is drawn from ROLES now, so a payload that omits a key no longer
+    #  removes a door.
+    want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
+            "../giftaid/", "../portal/", "../notices/", "../rates/",
+            "../times/", "../newbuild/", "../access/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
     joined = " ".join(areas)
-    for name in ["Hall Hire", "Adult classes", "Gift Aid", "Food Bank", "Madrasah",
-                 "User access"]:
+    for name in ["Hall Hire", "Charity collections", "Adult classes", "Gift Aid",
+                 "Food Bank", "Madrasah", "Notices", "Hall hire charges",
+                 "Prayer timetable", "The new build page", "User access"]:
         check(name in joined, "%r is missing from the areas" % name)
+
+    # ---------------------------------------------------------------------
+    #  THE TWO MENUS ARE ONE MENU.
+    #
+    #  This is the check that would have caught the whole thing. The Admin
+    #  Centre home draws its rows here; every screen you click into draws its
+    #  rail from admin/shell.js. They were separate lists that agreed by
+    #  nothing but care, and they stopped agreeing.
+    #
+    #  Compared as ORDERED PAIRS of (heading, row) rather than as two sets,
+    #  because a menu whose contents match and whose order does not is still a
+    #  menu that changes shape when you click it — which is the complaint.
+    # ---------------------------------------------------------------------
+    shown = pg.evaluate("""() => {
+      const out = [];
+      document.querySelectorAll('#dash-areas .rail-lab').forEach(lab => {
+        const g = lab.nextElementSibling;
+        g.querySelectorAll('.area .n').forEach(n =>
+          out.push([lab.textContent, n.textContent]));
+      });
+      return out;
+    }""")
+    from_shell = pg.evaluate("""roles => {
+      if (!window.AdminShell) return null;
+      const out = [];
+      window.AdminShell.visible(roles).forEach(g =>
+        g.areas.forEach(a => out.push([g.label, a.name])));
+      return out;
+    }""", ["admin", "hall_office"])
+    check(from_shell is not None,
+          "portals/ does not load admin/shell.js, so the Admin Centre is back "
+          "to keeping its own list of areas")
+    check(shown == from_shell,
+          "the Admin Centre home and the rail inside every screen no longer "
+          "list the same things in the same order.\n     home:  %r\n     rail:  %r"
+          % (shown, from_shell))
     #  WHAT YOU CAN DO THERE, which is the difference between a dashboard and a
     #  list of links. Moving the areas into a rail took the sentence off the
     #  card, so it has to be somewhere else — and "somewhere else" must not
@@ -404,6 +455,18 @@ with sync_playwright() as p:
           "AN OFFICE ACCOUNT WAS DRAWN THE ACCESS SCREEN")
     check("Hall Hire" in areas, "an office account cannot see hall hire")
     check("Food Bank" in areas, "an office account cannot see the volunteers")
+    check("Charity collections" in areas,
+          "an office account cannot see charity collections, which is one of "
+          "the two things the office answers the post about")
+    #  The page editors are admin-only, and an office account must not be
+    #  offered a door it will be turned away from. These three are gated in
+    #  the database rather than in their own app.js, so the rail is the only
+    #  thing standing between the office and a screen full of red text.
+    for locked in ("Notices", "Hall hire charges", "Prayer timetable",
+                   "The new build page"):
+        check(locked not in areas,
+              "an office account was offered %r, which the database will "
+              "refuse them: %r" % (locked, areas))
     check(not pg.is_visible("#dash-house-pane"),
           "an office account was shown the staff account figures")
     check(errs == [], "uncaught exceptions for an office account: %s" % errs)
@@ -421,8 +484,21 @@ with sync_playwright() as p:
           "from a quiet day")
     check("Couldn't load" in err or "could not load" in err.lower(),
           "the error does not say what went wrong: %r" % err)
-    check(pg.query_selector(".area") is not None,
-          "a failed load left no way to reach any area at all")
+    #  EVERY area, not a hand-picked three.
+    #
+    #  The catch block used to pass drawAreas a stub — {venue, collections,
+    #  volunteers} — because the list was built from the payload and there was
+    #  no payload. So the screen that says "The areas below still work — open
+    #  one directly" offered three of the eleven, and the eight it dropped
+    #  included the two an administrator is most likely to be in a hurry for.
+    #  A list built from roles has nothing to lose when the call fails.
+    fail_hrefs = pg.eval_on_selector_all(
+        ".area", "els => els.map(e => e.getAttribute('href'))")
+    check(sorted(fail_hrefs) == sorted(want),
+          "the dashboard call failed and the page dropped %d of its %d areas, "
+          "while telling the reader the areas below still work.\n     lost: %r"
+          % (len(want) - len(fail_hrefs), len(want),
+             sorted(set(want) - set(fail_hrefs))))
     check(errs == [], "uncaught exceptions on a failed load: %s" % errs)
     pg.close()
 

@@ -96,11 +96,61 @@ SCREENS = {
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
               "Adult classes", "Food Bank volunteers", "Gift Aid",
+              "Madrasah portal",
               "Notices", "Hall hire charges", "Prayer timetable",
-              "Madrasah portal", "The new build page", "User access"],
-    "hall_office": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections"],
+              "The new build page", "User access"],
+    #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
+    #  hall_office and always has; the Admin Centre home drew it for the
+    #  office; this rail said admin-only. The office could open the screen
+    #  from one menu and not find it in the other.
+    "hall_office": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
+                    "Food Bank volunteers"],
     "teacher": ["Admin Centre", "Madrasah portal"],
     "__none__": ["Admin Centre"],
+}
+
+#  The headings, in order, for an administrator. Written out for the same
+#  reason the rows are: this is the thing somebody reads to decide which four
+#  rows they can skip, so it is content, not layout.
+#
+#  "Change what the website says" is deliberately NOT "Settings". Settings
+#  means configuration — who may sign in, where mail goes. These are pages you
+#  EDIT, and a volunteer looking for the hall hire prices searches for the
+#  word website, not the word settings. The label before it, "The masjid's own
+#  pages", was vague in exactly that way, which is how User access and the
+#  Madrasah portal came to be filed in with the page editors.
+EXPECTED_LABELS = ["What people have asked for", "Money", "The madrasah",
+                   "Change what the website says", "Settings"]
+
+#  WHAT EACH SCREEN ACTUALLY ADMITS, read out of its own app.js by hand.
+#
+#  Not parsed. A parser for this would have to understand that portal/ gates
+#  its admin panel with canSee() and then shows a teacher a DIFFERENT panel
+#  further down, and that access/ names hall_office and teacher all over the
+#  place while admitting neither — which is two false alarms for one genuine
+#  catch, and this file has already deleted one heuristic for doing that.
+#
+#  Hand-written means somebody changing a screen's gate has to come here. That
+#  is the point: the rail offering a door that is locked, or hiding one that
+#  is open, is not a cosmetic bug — it is the difference between a volunteer
+#  finding their job and being told they have no access.
+#
+#  "db" means the screen has no role test of its own and relies on the
+#  database refusing anybody who is not a verified admin. Those are the rows
+#  where the rail is the ONLY thing keeping the wrong person out of a screen
+#  full of error messages, so they must be admin-only here.
+ADMITS = {
+    "venue":       ["admin", "hall_office"],   # app.js:144
+    "collections": ["admin", "hall_office"],   # app.js:147
+    "courses":     ["admin"],                  # app.js:134
+    "volunteers":  ["admin", "hall_office"],   # app.js:130
+    "giftaid":     ["admin"],                  # app.js:117
+    "madrasah":    ["admin", "teacher"],       # portal/app.js:212 and :357
+    "newbuild":    ["admin"],                  # app.js:138
+    "access":      ["admin"],                  # app.js:143
+    "notices":     ["admin"],                  # db
+    "rates":       ["admin"],                  # db
+    "times":       ["admin"],                  # db
 }
 
 # ---------------------------------------------------------------- 1. wiring
@@ -129,6 +179,64 @@ for href in sorted(set(re.findall(r'href:\s*"([a-z/]+)"', shell_js))):
 check(os.path.exists("img/masjid-logo.png"),
       "img/masjid-logo.png is missing — the logo in the corner of every staff "
       "screen would be a broken image")
+
+# --------------------------------------------- 10. THERE IS ONLY ONE LIST
+#
+#  The Admin Centre home (portals/) used to keep its own copy of the areas:
+#  eleven `if (areas.x)` branches, eight duplicated icons and its own three
+#  group headings. Nothing kept the two copies in step but care, and care ran
+#  out — by September this rail listed eleven areas and that page listed
+#  eight, so clicking any row on the home page made Notices, Hall hire
+#  charges and Prayer timetable appear out of nowhere.
+#
+#  That is a navigation bug that no screenshot and no per-screen test can
+#  find, because each page is perfectly correct on its own. It is only visible
+#  when you compare two files, which is what this does.
+portals_html = open("portals/index.html", encoding="utf-8").read()
+portals_js = open("portals/app.js", encoding="utf-8").read()
+
+check("admin/shell.js" in portals_html,
+      "portals/index.html does not load admin/shell.js, so the Admin Centre "
+      "cannot be reading the shared list of areas")
+#  Guarded, because str.find returns -1 for a string that is not there, and
+#  -1 is less than every real index — so with shell.js absent entirely this
+#  comparison would PASS while the check above it failed. A check that reports
+#  "in the right order" about a file that is not loaded is worse than no
+#  check; it is one that only ever agrees with you.
+if "admin/shell.js" in portals_html:
+    check(portals_html.find("admin/shell.js") < portals_html.find('src="app.js"'),
+          "portals/index.html loads app.js before admin/shell.js, so AdminShell "
+          "is undefined when the areas are drawn")
+check("AdminShell.visible" in portals_js,
+      "portals/app.js does not call AdminShell.visible(), so it is deciding "
+      "for itself which areas exist")
+
+#  No second list. Both halves matter: a folder written into portals/app.js
+#  is a hard-coded destination, and a group heading written there is a second
+#  opinion about the shape of the menu.
+#
+#  Comments are stripped first. The comment above drawAreas explains the bug
+#  by quoting it, which is the third time on this project that a comment
+#  describing a banned pattern has been mistaken for the pattern.
+code_only = re.sub(r"/\*.*?\*/", "", portals_js, flags=re.S)
+code_only = re.sub(r"^\s*//.*$", "", code_only, flags=re.M)
+
+for folder in sorted(SCREENS):
+    check('"../%s/"' % folder not in code_only,
+          "portals/app.js hard-codes a link to %s/. Destinations live in "
+          "admin/shell.js — a second copy here is how the Admin Centre came "
+          "to offer a different menu from the screens it links to." % folder)
+#  The distinctive headings only. "Money" and "Settings" are one common word
+#  each and cannot be told apart from prose — the first draft of this check
+#  flagged the tile labelled "Money owed to the masjid", which is a false
+#  alarm on a page that is mostly about money. A copied list would carry the
+#  long headings with it, and those are unmistakable.
+for label in ("What people have asked for", "The madrasah",
+              "Change what the website says", "The masjid's own pages"):
+    check(label not in code_only,
+          "portals/app.js contains the group heading %r. The headings are part "
+          "of the shared list — written here as well, they will disagree with "
+          "the rail the first time one of them is edited." % label)
 
 # ------------------------------------------- 9. the screen says what it is
 #
@@ -316,6 +424,66 @@ with sync_playwright() as p:
         check(len(r["labels"]) <= max(0, len(want) - 1),
               "a %s account sees headings %r for only %d row(s) — an empty "
               "heading reads as a broken screen" % (role, r["labels"], len(want) - 1))
+        #  The weaker counting check above lets a heading with nothing under it
+        #  through as long as SOME other group is long enough. This is the
+        #  exact version: every heading must be followed by at least one row.
+        empty = pg.evaluate("""() => [...document.querySelectorAll('.ashell-lab')]
+            .filter(l => !l.nextElementSibling ||
+                         !l.nextElementSibling.querySelector('.area'))
+            .map(l => l.textContent)""")
+        check(empty == [],
+              "a %s account is shown the heading(s) %r with nothing under "
+              "them" % (role, empty))
+
+    #  THE HEADINGS THEMSELVES, for an administrator — the only account that
+    #  sees all of them.
+    pg.evaluate("() => { const r = document.querySelector('.ashell'); if (r) r.remove(); "
+                "const b = document.querySelector('.ashell-bar'); if (b) b.remove(); "
+                "const s = document.querySelector('.ashell-scrim'); if (s) s.remove(); "
+                "document.body.classList.remove('has-ashell'); }")
+    pg.evaluate(MOUNT, ["venue", "Hall Hire", ["admin"]])
+    pg.wait_for_timeout(200)
+    labels = pg.evaluate(READ)["labels"]
+    check(labels == EXPECTED_LABELS,
+          "the rail's headings are %r, expected %r" % (labels, EXPECTED_LABELS))
+
+    # -------------------------------------- 11. NO DOOR THAT IS NOT THERE
+    #
+    #  A row whose `needs` is narrower than the screen behind it hides a job
+    #  from the person whose job it is. A row whose `needs` is wider sends
+    #  them to a locked door and tells them they have no access. Both happened
+    #  here: volunteers/ admits the hall office and its row said admin-only.
+    needs = pg.evaluate("""() => {
+      const out = {};
+      window.AdminShell.GROUPS.forEach(g =>
+        g.areas.forEach(a => { out[a.key] = a.needs.slice().sort(); }));
+      return out;
+    }""")
+    check(sorted(needs) == sorted(ADMITS),
+          "the rail's areas are %r and the hand-read list of what each screen "
+          "admits covers %r. A new area needs an entry in ADMITS, read out of "
+          "its own app.js." % (sorted(needs), sorted(ADMITS)))
+    for key, admits in sorted(ADMITS.items()):
+        if key in needs:
+            check(needs[key] == sorted(admits),
+                  "the rail offers %s to %r, but %s/ admits %r. %s"
+                  % (key, needs[key], key, sorted(admits),
+                     "The rail is hiding a screen from somebody who can use it."
+                     if set(needs[key]) < set(admits) else
+                     "The rail is sending somebody to a door that will refuse them."))
+
+    #  Every row says what you can do there, in words. It is the same sentence
+    #  the Admin Centre home prints at the foot of its column, and it is the
+    #  most useful text on the whole site at handover.
+    missing = pg.evaluate("""() => {
+      const out = [];
+      window.AdminShell.GROUPS.forEach(g =>
+        g.areas.forEach(a => { if (!a.what || a.what.length < 20) out.push(a.key); }));
+      return out;
+    }""")
+    check(missing == [],
+          "these rail rows carry no description of what you can do there: %r"
+          % missing)
     pg.close()
 
     # ------------------------------------------------ 7 and 8: the drawer

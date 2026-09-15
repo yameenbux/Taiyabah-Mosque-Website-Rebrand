@@ -339,10 +339,30 @@ with sync_playwright() as p:
           "THE VOLUNTEER LIST IS VISIBLE WITHOUT SIGNING IN")
     check(perrs == [], "the volunteers portal threw on load: %s" % perrs)
 
-    hub = open("portals/app.js", encoding="utf-8").read()
-    check('"../volunteers/"' in hub,
-          "the admin centre does not link to the volunteers portal, so the "
-          "office has no way to find it")
+    #  THE OFFICE CAN FIND IT.
+    #
+    #  This used to read `'"../volunteers/"' in portals/app.js`, which was
+    #  true and was checking the wrong thing. The Admin Centre kept its own
+    #  hard-coded list of destinations, separate from the rail on every other
+    #  staff screen, and the two drifted until they offered different menus —
+    #  so this assertion was quietly requiring the duplication that caused it.
+    #
+    #  There is one list now, in admin/shell.js, and this asks the question
+    #  that actually matters: is there a row for this screen, and does it
+    #  admit the people who use it? The office answers the food bank calls.
+    #  The row said admin-only for a fortnight while THIS page let the office
+    #  straight in, so they could use it and could not find it.
+    shell = open("admin/shell.js", encoding="utf-8").read()
+    row = re.search(r'\{\s*key:\s*"volunteers".*?needs:\s*\[([^\]]*)\]', shell, re.S)
+    check(row is not None,
+          "admin/shell.js has no row for the volunteers portal, so neither "
+          "the Admin Centre nor any staff screen offers a way to reach it")
+    if row:
+        admits = set(re.findall(r'"([a-z_]+)"', row.group(1)))
+        check(admits == {"admin", "hall_office"},
+              "the volunteers row is offered to %r, but this screen admits "
+              "admin and hall_office (volunteers/app.js). The office would be "
+              "able to use it and unable to find it." % sorted(admits))
 
     check(errs == [], "uncaught exceptions: %s" % errs)
     b.close()
