@@ -30,11 +30,31 @@
    where the browser cannot reach it. This list is a convenience, and the
    footer says so in as many words so that nobody mistakes it for a lock.
 
-   THE ROLE RULES ARE COPIED FROM portals/app.js drawAreas() ON PURPOSE. Two
-   copies of a rule is one too many, and the honest fix is for the Admin
-   Centre to use this file too — which is the next thing to do here. Until
-   then, AREAS below is the single list and portals/ should be pointed at it
-   rather than a third copy being written.
+   THIS IS NOW THE ONLY LIST, AND THAT WAS NOT FREE.
+   -------------------------------------------------
+   The note that used to sit here said the role rules were copied from
+   portals/app.js drawAreas() "on purpose", that two copies of a rule is one
+   too many, and that pointing the Admin Centre at this file was the next
+   thing to do. It was not done, and here is the bill for that:
+
+     * The Admin Centre home listed EIGHT areas. This rail listed ELEVEN.
+       Notices, Hall hire charges and Prayer timetable were added here and
+       never added there, so clicking any tile on the home page made three
+       rows appear that had not been on the page you came from. Somebody
+       using the site reported that as "when i click on one, more tabs
+       appear ... not straight forward and a tad confusing". They were not
+       describing a layout problem. They were describing two menus.
+
+     * volunteers said needs:["admin"] here while volunteers/app.js admits
+       admin OR hall_office and the home page showed it to both. The hall
+       office could open Food Bank volunteers from one menu and not see it
+       in the other. Fixed below — the screen decides, and the rail agrees
+       with the screen.
+
+   So portals/index.html now loads this file and portals/app.js reads GROUPS
+   from it. There is one list. _test/admin_shell_test.py fails if a second
+   one is ever written, and fails if a row's `needs` disagrees with the roles
+   its own screen actually admits.
    =========================================================================== */
 (function (w, d) {
   "use strict";
@@ -60,46 +80,96 @@
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
 
-      `needs` is the role test. It is the same test the Admin Centre applies,
-      written once here instead of twice.
+      `needs` is the role test, and it must match the roles the screen behind
+      it actually admits — a row that appears and then refuses you is worse
+      than no row. A test checks this pair by pair.
 
-      Grouped, because eleven undifferentiated rows is just a longer list. A
-      group whose rows are all hidden is not drawn at all, so an office
+      `what` is the sentence describing what you can do there. It is written
+      here, once, and used in three places: as the row's title attribute, in
+      "What each area is for" at the foot of the Admin Centre home, and by
+      nothing else. It used to live in portals/app.js, which is how the two
+      menus came to disagree in the first place.
+
+      THE HEADINGS ARE NOT DECORATION — they are what lets somebody skip four
+      rows without reading them, so each one has to be true.
+
+        "What people have asked for" — things that ARRIVED. A booking, a
+        chanda request, a sign-up, an offer to help. Most weeks this is the
+        only group anybody opens, so it stays at the top and stays biggest.
+
+        "Money" — one row, and it earns its heading, because somebody hunting
+        for Gift Aid looks for the money before they look for the name.
+
+        "The madrasah" — its own heading, because a teacher account sees this
+        row and NOTHING ELSE. Filed under a general heading it read as an
+        odd single entry under a label that did not describe it.
+
+        "Change what the website says" — NOT "Settings". Settings means
+        configuration: who may sign in, where mail goes. These are pages you
+        edit, and somebody wanting to change the hall hire prices will look
+        for the word website, not the word settings. The previous label,
+        "The masjid's own pages", was vague in the same way and is why User
+        access and the Madrasah portal ended up filed in with the editors.
+
+        "Settings" — the genuinely administrative thing, at the bottom,
+        where the twice-a-year jobs belong.
+
+      A group whose rows are all hidden is not drawn at all, so an office
       account gets a shorter rail rather than empty headings — which reads as
       a working screen rather than a broken one. */
   var GROUPS = [
     { label: "What people have asked for", areas: [
       { key: "venue",       href: "venue/",       icon: "hall",   name: "Hall Hire & Nikāḥ",
-        needs: ["admin", "hall_office"] },
+        needs: ["admin", "hall_office"],
+        what: "Confirm, decline, take a cash deposit, cancel and refund" },
       { key: "collections", href: "collections/", icon: "tin",    name: "Charity collections",
-        needs: ["admin", "hall_office"] },
+        needs: ["admin", "hall_office"],
+        what: "Chanda requests from outside charities — ring the trustee, then approve or decline" },
       /*  ONE ROW FOR CLASSES, NOT TWO. There was a second, "What a class
           says", pointing at a screen that held the website copy while this
           one held the settings. A class is one thing to a volunteer and the
           split was mine, not theirs — everything about a class is behind
-          this row now. */
+          this row now, which is also why it stays in this group rather than
+          moving down with the page editors. */
       { key: "courses",     href: "courses/",     icon: "book",   name: "Adult classes",
-        needs: ["admin"] },
+        needs: ["admin"],
+        what: "Offer a place from the waiting list, record who came, and change what the website says about a class" },
+      /*  admin OR hall_office, because volunteers/app.js admits both and has
+          since it was written. This said ["admin"] for a fortnight, so the
+          hall office saw Food Bank volunteers on the Admin Centre home and
+          not in the rail. */
       { key: "volunteers",  href: "volunteers/",  icon: "basket", name: "Food Bank volunteers",
-        needs: ["admin"] }
+        needs: ["admin", "hall_office"],
+        what: "Mark rung, helping or withdrawn; download the list" }
     ]},
     { label: "Money", areas: [
       { key: "giftaid",     href: "giftaid/",     icon: "heart",  name: "Gift Aid",
-        needs: ["admin"] }
+        needs: ["admin"],
+        what: "Copy the rows for HMRC, then mark them claimed" }
     ]},
-    { label: "The masjid's own pages", areas: [
-      { key: "notices",     href: "notices/",     icon: "notice", name: "Notices",
-        needs: ["admin"] },
-      { key: "rates",       href: "rates/",       icon: "tag",    name: "Hall hire charges",
-        needs: ["admin"] },
-      { key: "times",       href: "times/",       icon: "clock",  name: "Prayer timetable",
-        needs: ["admin"] },
+    { label: "The madrasah", areas: [
       { key: "madrasah",    href: "portal/",      icon: "people", name: "Madrasah portal",
-        needs: ["admin", "teacher"] },
+        needs: ["admin", "teacher"],
+        what: "Pupils, classes and staff — the most tightly held area on the site" }
+    ]},
+    { label: "Change what the website says", areas: [
+      { key: "notices",     href: "notices/",     icon: "notice", name: "Notices",
+        needs: ["admin"],
+        what: "Write a notice, change one, or take it down" },
+      { key: "rates",       href: "rates/",       icon: "tag",    name: "Hall hire charges",
+        needs: ["admin"],
+        what: "Change what the hall costs. The deposit is fixed and is not set here" },
+      { key: "times",       href: "times/",       icon: "clock",  name: "Prayer timetable",
+        needs: ["admin"],
+        what: "Upload next year's timetable, or correct a single day" },
       { key: "newbuild",    href: "newbuild/",    icon: "crane",  name: "The new build page",
-        needs: ["admin"] },
+        needs: ["admin"],
+        what: "Change the appeal figure, what it pays for, and the timeline of phases" }
+    ]},
+    { label: "Settings", areas: [
       { key: "access",      href: "access/",      icon: "lock",   name: "User access",
-        needs: ["admin"] }
+        needs: ["admin"],
+        what: "Invite somebody, change what they can do, suspend an account" }
     ]}
   ];
 
@@ -116,23 +186,41 @@
       screen is ever moved deeper, there is exactly one place to change. */
   function up(p) { return "../" + p; }
 
+  /*  THE ROWS THIS ACCOUNT MAY SEE, GROUPED, EMPTY GROUPS DROPPED.
+
+      Both menus call this. It is the whole point of the file: the Admin
+      Centre home and the rail inside every screen get the same answer from
+      the same code, so they cannot list different things again.
+
+      It returns groups rather than a flat list because the grouping is part
+      of the answer — the home page needs the same headings in the same
+      order, or clicking in still changes the shape of the menu. */
+  function visible(roles) {
+    var r = roles || [];
+    var has = function (list) {
+      for (var i = 0; i < list.length; i++) {
+        if (r.indexOf(list[i]) !== -1) return true;
+      }
+      return false;
+    };
+    var out = [];
+    GROUPS.forEach(function (g) {
+      var areas = g.areas.filter(function (a) { return has(a.needs); });
+      if (areas.length) out.push({ label: g.label, areas: areas });
+    });
+    return out;
+  }
+
   function row(a, current) {
     var here = a.key === current;
     return '<a class="area" href="' + esc(up(a.href)) + '"' +
+           (a.what ? ' title="' + esc(a.what) + '"' : "") +
            (here ? ' aria-current="page"' : "") + ">" +
            '<span class="ic" aria-hidden="true">' + ICON[a.icon] + "</span>" +
            '<span class="bd"><span class="n">' + esc(a.name) + "</span></span></a>";
   }
 
   function railHtml(opts) {
-    var roles = opts.roles || [];
-    var has = function (list) {
-      for (var i = 0; i < list.length; i++) {
-        if (roles.indexOf(list[i]) !== -1) return true;
-      }
-      return false;
-    };
-
     var out = [];
 
     out.push('<div class="ashell-top"><a href="' + esc(up(HOME.href)) +
@@ -148,13 +236,11 @@
     //  they do not know where to go.
     out.push('<div class="ashell-group">' + row(HOME, opts.current) + "</div>");
 
-    GROUPS.forEach(function (g) {
-      var rows = g.areas
-        .filter(function (a) { return has(a.needs); })
-        .map(function (a) { return row(a, opts.current); });
-      if (!rows.length) return;
+    visible(opts.roles).forEach(function (g) {
       out.push('<div class="ashell-lab">' + esc(g.label) + "</div>" +
-               '<div class="ashell-group">' + rows.join("") + "</div>");
+               '<div class="ashell-group">' +
+               g.areas.map(function (a) { return row(a, opts.current); }).join("") +
+               "</div>");
     });
 
     out.push("</nav>");
@@ -282,5 +368,8 @@
     });
   }
 
-  w.AdminShell = { mount: mount, GROUPS: GROUPS, ICON: ICON };
+  /*  `visible` is the one the Admin Centre home uses. GROUPS and ICON stay
+      exported because a screen may want an icon, but nothing should filter
+      GROUPS by hand — that is how the second menu got written. */
+  w.AdminShell = { mount: mount, visible: visible, GROUPS: GROUPS, ICON: ICON };
 })(window, document);
