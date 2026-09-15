@@ -287,6 +287,49 @@ wrong spreadsheet on purpose:
   shifts the whole year by up to eleven months with every individual row still
   looking perfectly valid.
 
+#### The office's spreadsheet, dropped straight in
+
+The timetable lives in a spreadsheet in the masjid office. Getting it onto the
+website meant opening it, Save As, choosing CSV, finding the file again and
+pasting it — **five chances to do the wrong thing with the one document several
+hundred people set their day by**. So the `.xlsx` goes in whole.
+
+**No library, deliberately.** SheetJS is about 900 KB to read a file this
+screen opens a few times a year, and this project vendors rather than reaching
+for a CDN on principle. An `.xlsx` is a ZIP of XML, and the browser inflates a
+stream on its own through `DecompressionStream`, so the whole reader is about
+200 lines. Entries are found through the ZIP's central directory rather than by
+scanning for local headers, because a local header records a length of zero
+when the writer streamed the file — and half the spreadsheet software in the
+world streams.
+
+**It is not a shortcut past anything.** The file becomes exactly the CSV
+somebody would have pasted, lands in the paste box, and the ordinary Check
+runs. Every rule still applies, and a spreadsheet with two columns transposed
+is refused by the same order rule that refuses a paste.
+
+Excel stores a time as a fraction of a day and a date as a count of days from
+1899-12-30, and converting those wrongly is the one failure that would put a
+**plausible-looking wrong time** on the website. So the fixtures are built from
+`build-inputs/full2026.json` — the masjid's actual year — written out three
+ways (real date and time cells, everything as text, and the year on a second
+sheet behind a cover page) and **every one of the 365 days is compared cell by
+cell**, not counted. A reader returning 365 rows of the wrong times passes a
+count.
+
+#### The Year box used to beat the file
+
+`var year = wantYear || found[0]` meant the number in the Year box won
+outright. The box defaults to next year, so uploading or pasting the current
+timetable while it still said 2027 filed **365 days of 2026 times as 2027** —
+silently. Every row looked right, the day count was right, and the report said
+2027 and meant it. The rows carry a month and a day and **no year at all**, so
+nothing downstream could have caught it.
+
+The dates in the file are the truth now, and a box that disagrees is a
+complaint rather than an override. Found by writing a test that checked which
+year came back, rather than only how many rows did.
+
 `_test/timetable_editor_test.py` round-trips the masjid's real 2026 file
 through the parser — all 365 days, no complaints — and then feeds it twelve
 wrong pastes: a time written `6.36`, two columns transposed, a day listed
@@ -320,69 +363,51 @@ earth to produce one. Every policy tests `bucket_id = 'notices'` — without tha
 they would apply to every bucket the project ever gains, including one somebody
 creates later for something private.
 
-On the public page the section is `hidden` until a fetch comes back with rows.
-An empty "Notices" heading on the front page of a masjid reads as neglect,
-which is worse than no section at all, and for most of the year there will be
-nothing to say. Everything is escaped: these rows are written by verified
-administrators, and "only trustworthy people can write here" is an argument
-that holds exactly until one of their accounts does not.
+**Nothing about a notice reaches the public website at the moment, and that is
+a decision rather than an omission.** Three designs were built and all three
+were rejected: a section of its own under the at-a-glance row, a fifth card in
+that row showing the poster, and a band above the hero showing every notice as
+text. The editor, the database, the poster uploads and the validation are all
+here and working; the website shows none of it until somebody decides how it
+should look.
 
-**Measured CLS with three notices on screen: 0.0000**, at 1280px and at 390px.
-The section lands below the fold, so revealing it moves nothing anybody is
-looking at. That number was only believed after the measuring harness was made
-to report a deliberate 300px shove at the top of the page — it read 0.2344, so
-the zero means something.
+`_test/notices_test.py` checks the public page stays **clean** — no fetch, no
+empty section, no stylesheet full of rules for nothing. A half-removed feature
+is worse than either keeping it or taking it out, because the next person
+cannot tell which it is.
 
-#### What 041 cost, and what it bought
+**What the attempts cost, and what they bought.** The band above the hero
+measured **CLS 0.5397 on a phone**, against a "good" threshold of 0.1 —
+anything revealed above the fold after the page has painted pushes the whole
+page down. Starting the request in the `<head>` instead of at the bottom of a
+630 KB document took it to **0.0000**, and remembering the band's height in the
+browser kept repeat visits at 0.0000 even on a slow reply. Neither is in the
+site now, but the measurement is the reason to be careful about ever putting
+anything above that hero.
 
-`040` said it reconstructed `notices` from the live schema. It reconstructed
-the columns and **missed every constraint**, because it was written from a
-column listing rather than from `pg_constraint`. Three CHECKs were already on
-the table, put there through the dashboard, and no file mentioned them.
-**CHECKs are AND, not OR**, so what the table permitted was the intersection:
-
-- `ramadan` and `madrasah` were offered by the new constraint and refused by
-  the old one. `kahf` was the other way round. Three of six topics were dead.
-- `check_notice()` told volunteers the heading limit was 120. The table refused
-  anything over 70.
-
-Then `041`'s own self-test found a third divergence that no amount of reading
-would have: **`body` is `NOT NULL` on the live table**. `create table if not
-exists` is a no-op against a table that exists, so `040`'s nullable declaration
-never took effect and never could — and `save_notice()` writes NULL for a blank
-body, so every bodyless notice was failing in production. "Masjid closed
-Monday" needs no paragraph.
-
-`041` therefore ends with a `DO` block that tries **all nine accepted cases and
-four refused ones against the real table** and rolls them back, refusing to
-commit if the validator and the constraints disagree. Two of the three faults
-were found by a person reading a catalogue. The third was found by the
-migration refusing to commit, which is the difference between a check somebody
-remembers to run and a check that cannot be skipped.
+Three other faults came out of the same work, each invisible at a glance:
+`[hidden]` does nothing against `.glance-card{display:flex}`, because an author
+rule beats the browser's own; `loading="lazy"` on an image inside a
+`display:none` element **never loads at all**; and `object-fit:cover` on a
+poster slices the sides off a picture whose whole job is to be read.
 
 ### Classes the masjid can open and close
 
 `courses` held the name, the capacity and the `is_open` switch that
 `register_for_course()` reads, and **nothing could write to it** — no function,
 no policy, no screen. The two rows in it were put there by `004` and had never
-changed. The masjid could not close a class that was full.
+changed.
 
-**The switch could not be added on its own**, and this is the interesting part.
-`register_for_course()` raises when a course is closed:
-
-> `raise exception 'Sign-ups for % are closed at the moment', v_course.name;`
-
-and the website's course list was a hard-coded `COURSES` object with its own
-idea of what was open. A volunteer closing the Arabic class in the portal would
-have changed nothing a visitor could see; the next person would have filled in
-eleven fields and been handed a raw 400 by Postgres. **This is the third time
-on this project that half a feature was the whole bug** — the other two are the
-course sign-ups nobody could read back, and the notices nobody could write.
+**The switch could not be added on its own.** `register_for_course()` raises
+when a course is closed, and the website's course list was a hard-coded object
+with its own idea of what was open. A volunteer closing the Arabic class in the
+portal would have changed nothing a visitor could see; the next person would
+have filled in eleven fields and been handed a raw 400 by Postgres. **This is
+the third time on this project that half a feature was the whole bug.**
 
 So the website reads `courses_public()` now, and **the upgrade only ever takes
 away**. The built-in state is "open", so the worst a failed or slow request can
-do is leave up a form the database will decline politely, and it can never
-wrongly close a class that is running. Reopening needs no deploy either.
+do is leave up a form the database will decline politely.
 
 `044` exists because `043`'s capacity check read its count outside any lock,
 while the comment above it explained at length why holding sixteen names for
@@ -390,15 +415,11 @@ fifteen seats matters. **A comment that claims more than the code delivers** is
 what this project keeps being bitten by, so the code was changed rather than
 the comment softened. What is still open — an administrator saving while a
 visitor registers — is written into `044`'s header rather than left to be
-discovered, along with why serialising every sign-up behind every other one is
-not worth it for two classes of fifteen in Bolton.
+discovered.
 
-**What the committee still cannot do from here is add a new KIND of class.**
-The website holds more about a course than the database does — which cohorts it
-runs, what the experience question asks, the wording shown when it is closed —
-and none of that is in a table. `save_course()` will create the row, but a row
-with no section on the website is invisible. The screen says exactly that, in
-those words, rather than letting somebody find out.
+There is **no delete**, deliberately: `course_registrations` has a foreign key
+to `courses`, so deleting a class somebody signed up for either fails or erases
+the record of the people who registered.
 
 ### Hall hire charges
 
@@ -419,8 +440,7 @@ charges in.
 `check_newbuild()` was executable by `anon` while every other validator on the
 project is executable by nobody. Not a hole — it is `immutable`, reads no table
 and returns an English sentence about a shape — but **an inconsistent grant is
-a question somebody has to answer again at every audit**, and "it is fine
-because it is immutable" is a judgement that only has to be got wrong once.
+a question somebody has to answer again at every audit**.
 
 **The £100 deposit is not editable and cannot be.** It is a Stripe Payment Link
 with the amount fixed at Stripe; change the number on the page and the button
@@ -822,7 +842,7 @@ and nothing keeps them in step. **After ever changing it, run
 ```bash
 cd db/harness && ./run-all.sh          # 16 SQL suites
 deno test supabase/functions/notify/messages_test.ts    # 66 assertions
-python3 _test/<name>.py                # 24 suites
+python3 _test/<name>.py                # 25 suites
 python3 tools/build_admin_fonts.py     # after changing the site's fonts
 ```
 
@@ -946,6 +966,18 @@ not, which is what steps 2 and 6 fix.
 ---
 
 ## Rules learned the hard way
+
+**Two bare-class rules setting `display` is a tie, and the later one wins.**
+This has now bitten the same stylesheet three times, and every time it looked
+like a design choice rather than a rule that failed: `.cc-yn input` stretched a
+checkbox across its row, `.glance-notice` put a white border round a poster,
+and `.fb-vol` — declared `inline-flex` early and `inline-block` by a later
+tap-target rule — wrapped the food bank arrow onto a line of its own, which the
+masjid noticed before any test did. `sweep_test.py` now reads the stylesheet
+and fails on any class given two different **layout** displays at the top
+level. `none` against anything is left alone: that is the ordinary
+hide-by-default, show-in-a-media-query idiom, and the first draft of the check
+reported six of those as faults, which is how a check gets deleted.
 
 **A CHECK constraint nobody wrote down is still a CHECK constraint, and CHECKs
 are AND.** A table made in the dashboard carries rules that exist only in

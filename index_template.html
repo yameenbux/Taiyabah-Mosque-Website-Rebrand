@@ -65,6 +65,7 @@ window.TAIYABAH_PUBLIC = {
   SUPABASE_URL:      "https://phenbhmobxwyvdeshvqw.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
 };
+
 </script>
 <!-- Two icons on purpose. The data URI paints instantly and works from a
      file:// URL, which the whole site is built to do. /favicon.ico is the
@@ -554,41 +555,40 @@ window.TAIYABAH_PUBLIC = {
   .ei-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.08rem;color:var(--ink);letter-spacing:.01em;}
   .ei-sub{font-size:.926rem;color:var(--muted);line-height:1.55;}
 
-  /* ---------- HOME: NOTICES ----------
-     Built on the same card as the glance row so it reads as part of the same
-     page rather than an announcement bolted on. The section is display:none
-     until there is something in it — see the comment on the markup. */
-  .notices-row{background:var(--paper);padding:0 0 64px;}
-  .nt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
-           padding-bottom:10px;margin-bottom:16px;border-bottom:1px solid var(--line);}
-  .nt-head h2{font-size:1.45rem;letter-spacing:-.01em;}
-  .nt-sub{font-size:.88rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
-  .nt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
-  .nt-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-           padding:15px 16px 16px;display:flex;flex-direction:column;gap:8px;min-width:0;}
-  /* Gold is 2.3:1 on a light card and unreadable as text — --gold-ink is the
-     same colour dark enough to read. The chip uses a tint for its ground and
-     the ink for its letters. */
-  .nt-chip{align-self:flex-start;font-size:.735rem;font-weight:800;letter-spacing:.09em;
-           text-transform:uppercase;color:var(--gold-ink);background:rgba(198,162,76,.13);
-           border-radius:999px;padding:3px 9px;}
-  .nt-card h3{font-size:1.06rem;line-height:1.3;}
-  .nt-when{font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums;}
-  .nt-body{font-size:.94rem;line-height:1.58;color:var(--ink);white-space:pre-line;}
-  /* width and height are set on the element from the database, so the box is
-     the right shape before the picture arrives and nothing moves when it
-     does — the same reason the fonts carry metric-matched fallbacks. */
-  .nt-card img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);
-               display:block;}
-  @media(max-width:700px){
-    .notices-row{padding-bottom:48px;}
-    .nt-grid{grid-template-columns:1fr;}
-  }
-
   /* ---------- HOME: AT-A-GLANCE ROW (prayer / new build / quick links / donate) ---------- */
   .glance-row{background:var(--paper);padding:56px 0 68px;}
-  .glance-grid{display:grid;grid-template-columns:1fr 1.05fr 1.05fr .85fr;gap:14px;align-items:stretch;}
+  /*  auto-fit rather than four named column widths. The widths used to be
+      written out one per card — 1fr 1.05fr 1.05fr .85fr — which means the row
+      only ever has as many columns as somebody typed. This says "as many as
+      fit", so a card added or removed needs no second rule to keep in step. */
+  .glance-grid{display:grid;gap:14px;align-items:stretch;
+               grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
+
+  /*  A POSTER IS SHOWN WHOLE OR IT IS NOT A POSTER.
+      The first version stretched it to the height of the row with
+      object-fit:cover, which is the right answer for a decorative photograph
+      and the wrong one for a picture whose entire job is to be read — it
+      sliced the sides off, so the speaker's name and half the title were
+      gone. align-self:start lets this card be as tall as the poster needs
+      rather than as tall as the row, which is a card of a different height
+      and a poster somebody can actually read. */
+  /*  [hidden] HAS TO BE SAID OUT LOUD HERE. The browser's own rule is
+      [hidden]{display:none}, and .glance-card sets display:flex — an author
+      rule beats a user-agent one, so the card stayed in the layout as an
+      empty box in a row of four. It looked exactly like a broken page, which
+      is the thing hiding it was meant to avoid, and the test did not catch it
+      because it asked whether the element was `hidden` rather than whether
+      the row had a gap in it. */
   .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px;display:flex;flex-direction:column;}
+  /*  AFTER .glance-card, NOT BEFORE, AND THAT IS THE WHOLE POINT.
+      Both of these are single-class selectors, so they carry identical
+      specificity and the tie breaks on SOURCE ORDER. Written above
+      .glance-card, `padding:0` lost to its `padding:16px` and the poster
+      sat in the middle of the card with a white border round it — which
+      looks like a design choice rather than a rule that failed, and is
+      exactly how this project lost an evening to `.cc-yn input` once
+      already. */
+  .glance-card[hidden]{display:none;}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
   .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
@@ -1207,9 +1207,25 @@ window.TAIYABAH_PUBLIC = {
      Inline links inside a sentence are deliberately left alone. WCAG exempts
      them, and padding every link in a paragraph would space the prose out
      and undo the typography work. These are the standalone ones. */
-  .hh-rate-line a, .hh-notice a, .cc-help a, .fb-vol{
+  .hh-rate-line a, .hh-notice a, .cc-help a{
     display:inline-block;padding-block:3px;
   }
+  /*  .fb-vol GETS THE PADDING AND KEEPS ITS OWN display, and that separation
+      is the whole point of it being on its own line here.
+
+      It used to be in the list above. `.fb-vol` is declared inline-flex
+      further up the sheet — that is what holds "Register as a volunteer" and
+      its arrow on one line with a gap between them — and this rule is LATER
+      in the file with identical specificity, so `display:inline-block` won
+      the tie and quietly undid it. The arrow stopped being a flex item,
+      wrapped onto a line of its own, and the underline ran the full width of
+      the card. Nothing was broken enough to fail a test; it just looked wrong,
+      and the masjid spotted it before any of my checks did.
+
+      Third time this file has been bitten by a source-order tie between two
+      single-class selectors. The first was `.cc-yn input`, the second the
+      poster card's padding. */
+  .fb-vol{padding-block:3px;}
 
   .snapshot{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;}
   .snapshot .sk{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-700);margin-bottom:6px;}
@@ -2563,28 +2579,6 @@ window.TAIYABAH_PUBLIC = {
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- ======================= NOTICES =======================
-       What the masjid is telling people this week. Written from /notices/ in
-       the portal and read from the notices_live view, which shows only what
-       somebody deliberately published and has not expired.
-
-       HIDDEN UNTIL THERE IS SOMETHING TO SAY. An empty "Notices" heading on
-       the front page of a masjid reads as neglect — worse than no section at
-       all — and for most of the year there will be nothing here. So the
-       section starts `hidden` and is only ever revealed by a fetch that came
-       back with rows. If the request fails, is slow, or the masjid has posted
-       nothing, the page is exactly as it was before this section existed.
-  ====================================================================== -->
-  <section class="notices-row" id="noticesRow" aria-labelledby="noticesHead" hidden>
-    <div class="container">
-      <div class="nt-head">
-        <h2 id="noticesHead">Notices</h2>
-        <p class="nt-sub">From the masjid committee</p>
-      </div>
-      <div class="nt-grid" id="noticesGrid"></div>
     </div>
   </section>
 
@@ -8697,220 +8691,6 @@ window.TAIYABAH_PUBLIC = {
       /* The built copy stays on screen. An appeal that is a version behind is
          a great deal better than one that is not there. */
       if(window.console && console.warn) console.warn('new build content:', e.message);
-    });
-  })();
-
-  /* ---------------- notices ----------------
-     The other half of /notices/ in the portal. A table the committee can
-     write to that no visitor can read is exactly as useless as the reverse,
-     and this project has already done the reverse once: course sign-ups
-     landed correctly in a table no administrator could see.
-
-     EVERYTHING HERE IS ESCAPED. These rows are written by a verified
-     administrator, so the realistic risk is small — but "the only people who
-     can write here are trustworthy" is an argument that survives exactly
-     until one of their accounts does not, and escaping costs nothing. The
-     body is rendered with white-space:pre-line so line breaks survive
-     without any markup being interpreted.
-
-     On any failure the section simply stays hidden. There is no spinner and
-     no error: somebody who came for Maghrib does not care that a background
-     request failed, and an empty "Notices" heading reads as neglect. */
-  (function(){
-    var row = document.getElementById('noticesRow');
-    var grid = document.getElementById('noticesGrid');
-    if(!row || !grid) return;
-
-    var cfg = window.TAIYABAH_PUBLIC || {};
-    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
-       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
-
-    var base = String(cfg.SUPABASE_URL).trim()
-                 .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
-
-    /* The six the database allows. A topic here that the database refuses is
-       dead; a topic the database allows that is missing here would fall back
-       to its own key, which is why the fallback is the key and not a blank. */
-    var TOPIC = {
-      announcements: 'Announcement', events: 'Event', janazah: 'Janāzah',
-      kahf: 'Sūrat al-Kahf', ramadan: 'Ramadan', madrasah: 'Madrasah'
-    };
-
-    function esc(v){
-      return String(v == null ? '' : v)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-    }
-
-    function when(iso){
-      if(!iso) return '';
-      var d = new Date(iso);
-      if(isNaN(d)) return '';
-      return d.toLocaleDateString('en-GB',
-        { weekday:'long', day:'numeric', month:'long' }) +
-        (d.getHours() || d.getMinutes()
-          ? ', ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
-          : '');
-    }
-
-    fetch(base + '/rest/v1/notices_live?select=id,topic,title,body,image_url,' +
-                 'image_w,image_h,event_at&limit=6', {
-      headers: { 'apikey': cfg.SUPABASE_ANON_KEY,
-                 'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY }
-    }).then(function(r){
-      if(!r.ok) throw new Error('notices ' + r.status);
-      return r.json();
-    }).then(function(rows){
-      if(!Array.isArray(rows) || !rows.length) return;
-
-      var html = rows.map(function(n){
-        if(!n || !n.title) return '';
-        var parts = ['<article class="nt-card">'];
-        parts.push('<span class="nt-chip">' +
-                   esc(TOPIC[n.topic] || n.topic) + '</span>');
-        parts.push('<h3>' + esc(n.title) + '</h3>');
-        var w = when(n.event_at);
-        if(w) parts.push('<p class="nt-when">' + esc(w) + '</p>');
-
-        /* An https address, because that is what the database permits, and
-           both dimensions or neither, because that is what it requires — so
-           the box is the right shape before the picture lands and the page
-           does not move under somebody who is reading it. */
-        if(n.image_url && /^https:\/\//.test(n.image_url) && n.image_w && n.image_h){
-          parts.push('<img src="' + esc(n.image_url) + '" alt="" loading="lazy" ' +
-                     'decoding="async" width="' + (+n.image_w) +
-                     '" height="' + (+n.image_h) + '">');
-        }
-        if(n.body) parts.push('<p class="nt-body">' + esc(n.body) + '</p>');
-        parts.push('</article>');
-        return parts.join('');
-      }).join('');
-
-      if(!html) return;
-      grid.innerHTML = html;
-      row.hidden = false;
-    }).catch(function(e){
-      if(window.console && console.warn) console.warn('notices:', e.message);
-    });
-  })();
-
-  /* ---------------- hall hire rates ----------------
-     The rate card, from the database, so the committee can change a price
-     without a deploy. Until tonight £350 became £375 by editing a template,
-     running two Python scripts and pushing to GitHub — which in practice
-     meant ringing Yameen, and in the meantime the website quoted a price the
-     office had stopped charging. A figure on screen that turns out to be
-     wrong is worse than no figure: somebody books on the strength of it.
-
-     WHAT THIS DELIBERATELY DOES NOT TOUCH. #hh-bands and #hh-contacts only.
-     The £100 deposit paragraph and the bank details sit OUTSIDE those two
-     elements, and they stay exactly where the build put them. The deposit is
-     a Stripe Payment Link with its amount fixed at Stripe; change the number
-     on the page and the button underneath still takes £100. db/045's
-     check_hallhire() refuses a body that so much as mentions a deposit, so
-     this is enforced in the database as well as here — a boundary that lives
-     only in a comment is a boundary until somebody reads the comment.
-
-     Built with DOM calls rather than innerHTML. Everything here is written
-     by a verified administrator and the escaping would be easy, but this is
-     the one panel on the site where the text is a PRICE, and a price is the
-     thing worth being careful with.
-
-     On any failure the built-in card stays. Same rule as the timetable and
-     the courses: whatever is already on screen is correct as of the last
-     deploy, and a stale price is better than a missing one. */
-  (function(){
-    var bandsHost = document.getElementById('hh-bands');
-    var consHost  = document.getElementById('hh-contacts');
-    if(!bandsHost && !consHost) return;
-
-    var cfg = window.TAIYABAH_PUBLIC || {};
-    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
-       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
-
-    var base = String(cfg.SUPABASE_URL).trim()
-                 .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
-
-    function line(name, price, href){
-      var row = document.createElement('div');
-      row.className = 'hh-rate-line';
-      var n = document.createElement('span');
-      n.className = 'n'; n.textContent = name;
-      var p = document.createElement('span');
-      p.className = 'p tnum';
-      if(href){
-        var a = document.createElement('a');
-        a.href = 'tel:' + href; a.textContent = price;
-        p.appendChild(a);
-      } else {
-        p.textContent = price;
-      }
-      row.appendChild(n); row.appendChild(p);
-      return row;
-    }
-
-    fetch(base + '/rest/v1/site_content?key=eq.hallhire&select=body', {
-      headers: { 'apikey': cfg.SUPABASE_ANON_KEY,
-                 'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY }
-    }).then(function(r){
-      if(!r.ok) throw new Error('hallhire ' + r.status);
-      return r.json();
-    }).then(function(rows){
-      var body = rows && rows[0] && rows[0].body;
-      if(!body) return;
-
-      /* Nothing is replaced until the whole card has been checked. Half a
-         rate card — the weekday prices from the database and the weekend
-         prices from the build — would be worse than either on its own, and
-         would look completely normal. */
-      var bands = body.bands;
-      if(bandsHost){
-        if(!Array.isArray(bands) || !bands.length) return;
-        for(var i = 0; i < bands.length; i++){
-          var b = bands[i];
-          if(!b || !b.when || !Array.isArray(b.lines) || !b.lines.length) return;
-          for(var j = 0; j < b.lines.length; j++){
-            if(!b.lines[j] || !b.lines[j].n || !b.lines[j].p) return;
-          }
-        }
-
-        var frag = document.createDocumentFragment();
-        bands.forEach(function(b){
-          var wrap = document.createElement('div');
-          wrap.className = 'hh-rate-band';
-          var when = document.createElement('span');
-          when.className = 'hh-rate-when';
-          when.textContent = b.when;
-          wrap.appendChild(when);
-          b.lines.forEach(function(l){ wrap.appendChild(line(l.n, l.p, null)); });
-          if(b.note){
-            var note = document.createElement('p');
-            note.className = 'hh-rate-note';
-            note.textContent = b.note;
-            wrap.appendChild(note);
-          }
-          frag.appendChild(wrap);
-        });
-        bandsHost.textContent = '';
-        bandsHost.appendChild(frag);
-
-        var intro = document.querySelector('#hh-charges .hh-rate-eff');
-        if(intro && body.intro) intro.textContent = body.intro;
-      }
-
-      var cons = body.contacts;
-      if(consHost && Array.isArray(cons) && cons.length){
-        for(var k = 0; k < cons.length; k++){
-          var c = cons[k];
-          if(!c || !c.n || !c.shown || !/^[0-9]{7,15}$/.test(String(c.tel || ''))) return;
-        }
-        var cf = document.createDocumentFragment();
-        cons.forEach(function(c){ cf.appendChild(line(c.n, c.shown, String(c.tel))); });
-        consHost.textContent = '';
-        consHost.appendChild(cf);
-      }
-    }).catch(function(e){
-      if(window.console && console.warn) console.warn('hall hire rates:', e.message);
     });
   })();
 
