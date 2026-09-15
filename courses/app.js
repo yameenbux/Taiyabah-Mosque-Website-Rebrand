@@ -534,10 +534,487 @@
       return load().then(render);
     }
 
-    return { mount: mount };
+    // Every group heading here quotes a capacity. The panel above can change
+    // one, so without this the register goes on quoting the old number until
+    // somebody thinks to reload the page — and a stale "12 of 15" is exactly
+    // the sort of thing an office acts on.
+    function refresh() {
+      if (!mounted) return Promise.resolve();
+      return load().then(render);
+    }
+
+    return { mount: mount, refresh: refresh };
   })();
 
+  /* =========================================================================
+     THE CLASSES THEMSELVES
+
+     `courses` holds the name, the number of places and the is_open switch that
+     register_for_course() reads, and until 043 nothing could write to it. The
+     two rows were put there by 004 and had never changed: the masjid could not
+     close a class that was full, could not raise a capacity and could not
+     rename one. 043 gave the table three guarded functions and 044 gave the
+     writer the lock its own comment implied. This is the screen that calls
+     them.
+
+     WHAT THIS SCREEN CANNOT DO, AND WHY IT SAYS SO ON THE PAGE
+     ----------------------------------------------------------
+     save_course() will create a row. It will not create a class. The website
+     holds more about a class than this table does — which sessions it runs,
+     what the experience question asks, the wording shown when sign-ups are
+     closed — and none of that is in the database, so a brand new row with no
+     section on the website is invisible to every visitor. Somebody who adds
+     one here and waits for it to appear will wait forever, so the panel says
+     that in those words rather than leaving it to be discovered.
+
+     THERE IS NO DELETE, and that is deliberate in 043 rather than missing
+     here. course_registrations has a foreign key to this table: deleting a
+     class somebody signed up for either fails with a constraint error or, with
+     a cascade, silently erases the record of people who registered. Closing is
+     the reversible thing, and it is what somebody actually means.
+
+     THE COMPLAINTS ARE THE DATABASE'S OWN. check() below is check_course()
+     from 043, rule for rule. A rule here that Postgres does not have stops a
+     volunteer doing something they are perfectly entitled to do, and nothing
+     will ever contradict it; a rule Postgres has that is not here is a raw
+     constraint name in front of that same volunteer. Both have happened on
+     this project, which is why 041 and 043 both carry a validator.
+     ======================================================================= */
+  var classes = (function () {
+    var rows      = [];      // courses_admin_list()
+    var editing   = null;    // the class being amended, or null when adding
+    var saveLabel = "Add the class";
+    var wired     = false;
+
+    var KEY_RE   = /^[a-z0-9_]{2,40}$/;
+    var NAME_MAX = 80;
+
+    // The two values courses_cohort_mode_check allows, and what a person
+    // calls them. Anything else in this object would be refused by the table.
+    var MODES = {
+      separate: "Men’s and women’s sessions",
+      single:   "One session for everyone"
+    };
+
+    function canSee(identity) {
+      return identity.roles.indexOf("admin") !== -1;
+    }
+
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function trim(v) { return String(v == null ? "" : v).trim(); }
+
+    function note(id, msg) {
+      var n = el(id); if (!n) return;
+      if (!msg) { n.hidden = true; n.textContent = ""; return; }
+      n.textContent = msg; n.hidden = false;
+    }
+
+    /* =====================================================================
+       check() — check_course() from 043, in the browser
+
+       PURE. No DOM, no network, no session. It takes the plain object the
+       form makes and returns everything wrong with it, empty when there is
+       nothing. Postgres returns only the first complaint because a plpgsql
+       function returns once; somebody filling a form would rather see all of
+       them at once, so this collects them in the same order.
+
+       The capacity-against-taken rule at the end is save_course()'s rather
+       than check_course()'s, and it is here for the same reason as the rest:
+       lowering the places below the number of people already told they have a
+       seat is refused by the database, and meeting that refusal after pressing
+       Save teaches nobody anything. It only fires when `taken` is known, so a
+       brand new class is never blocked by it.
+       =================================================================== */
+    function check(o) {
+      o = o || {};
+      var out   = [];
+      var key   = trim(o.key).toLowerCase();
+      var name  = trim(o.name);
+      var mode  = trim(o.cohort_mode).toLowerCase();
+      var cap   = trim(o.capacity);
+      var sort  = trim(o.sort_order);
+      var taken = trim(o.taken);
+
+      if (key === "") {
+        out.push("A class needs a short name for the website to use, like arabic.");
+      } else if (!KEY_RE.test(key)) {
+        out.push("The website name must be 2 to 40 characters, lower case letters, " +
+                 "numbers and underscores only — like arabic or ghusl. No spaces.");
+      }
+
+      if (name === "") {
+        out.push("A class needs a name people will read, like Arabic Classes.");
+      } else if (name.length > NAME_MAX) {
+        //  The number is quoted back, because "too long" without a number
+        //  means deleting words until it stops complaining.
+        out.push("That name is " + name.length + " characters. The limit is " +
+                 NAME_MAX + ".");
+      }
+
+      if (mode !== "separate" && mode !== "single") {
+        out.push("Choose whether the class runs separate sessions for men and women, " +
+                 "or a single session.");
+      }
+
+      if (cap === "" || !/^[0-9]+$/.test(cap)) {
+        out.push("How many places are there? It has to be a whole number.");
+      } else if (Number(cap) < 1 || Number(cap) > 500) {
+        out.push("Places must be between 1 and 500. It is " + cap + ".");
+      } else if (/^[0-9]+$/.test(taken) && Number(cap) < Number(taken)) {
+        out.push("There are already " + taken + " people holding a place on that " +
+                 "class, so it cannot be set to " + cap + " places. Move somebody to " +
+                 "the waiting list first.");
+      }
+
+      if (sort !== "" && !/^[0-9]{1,4}$/.test(sort)) {
+        out.push("The order has to be a whole number.");
+      }
+
+      return out;
+    }
+
+    // ---- the form ----------------------------------------------------------
+    function readForm() {
+      return {
+        key:         el("cc-key").value,
+        name:        el("cc-name").value,
+        cohort_mode: el("cc-mode").value,
+        capacity:    el("cc-capacity").value,
+        sort_order:  el("cc-order").value,
+        // Only a class that already exists has anybody on it.
+        taken:       editing ? editing.taken : ""
+      };
+    }
+
+    /*  Re-run after every keystroke. The Save button is the only way to reach
+        save_course(), so this is where "nothing is saveable until the form is
+        valid" actually lives — the `disabled` in the markup only covers the
+        first paint. */
+    function revalidate() {
+      var f = readForm();
+
+      var left  = NAME_MAX - trim(f.name).length;
+      var count = el("cc-name-count");
+      if (count) {
+        count.textContent = left >= 0
+          ? left + " characters left"
+          : (-left) + " characters too many — the limit is " + NAME_MAX;
+        count.classList.toggle("cc-over", left < 0);
+      }
+
+      var complaints = check(f);
+      var box = el("cc-complaints");
+      if (complaints.length) {
+        box.innerHTML = "<ul>" + complaints.map(function (c) {
+          return "<li>" + esc(c) + "</li>";
+        }).join("") + "</ul>";
+        box.hidden = false;
+      } else {
+        box.hidden = true;
+        box.innerHTML = "";
+      }
+      el("cc-save").disabled = complaints.length > 0;
+      return complaints;
+    }
+
+    function resetForm() {
+      editing = null;
+      el("cc-key").value       = "";
+      el("cc-key").disabled    = false;
+      el("cc-name").value      = "";
+      el("cc-mode").value      = "separate";
+      el("cc-capacity").value  = "15";
+      el("cc-order").value     = "0";
+      el("cc-key-hint").hidden   = false;
+      el("cc-key-locked").hidden = true;
+      el("cc-form-head").textContent = "Add a class";
+      el("cc-form-lede").textContent =
+        "This adds a row to the database and nothing else. Read the note above " +
+        "first — a class the website has no section for cannot be reached by anybody.";
+      el("cc-places-note").textContent =
+        "Anything from 1 to 500 places. The order decides which class comes first " +
+        "on the website; the smaller number goes first.";
+      el("cc-cancel").hidden = true;
+      saveLabel = "Add the class";
+      el("cc-save").textContent = saveLabel;
+      revalidate();
+    }
+
+    function fillForm(c) {
+      editing = c;
+      el("cc-key").value      = c.key || "";
+      //  THE WEBSITE NAME IS THE FOREIGN KEY. Every registration ever taken is
+      //  filed under it, so letting somebody retype it here would leave those
+      //  people attached to a class that no longer exists — and save_course()
+      //  would not complain, because a new key is simply a new row. Disabled,
+      //  with the reason printed beside it.
+      el("cc-key").disabled   = true;
+      el("cc-name").value     = c.name || "";
+      el("cc-mode").value     = c.cohort_mode === "single" ? "single" : "separate";
+      el("cc-capacity").value = c.capacity == null ? "" : c.capacity;
+      el("cc-order").value    = c.sort_order == null ? "0" : c.sort_order;
+      el("cc-key-hint").hidden   = true;
+      el("cc-key-locked").hidden = false;
+      el("cc-form-head").textContent = "Amend " + (c.name || c.key);
+      el("cc-form-lede").textContent =
+        "Changes here are on the website as soon as you save them. This does not " +
+        "open or close sign-ups — that is the button on the class above.";
+
+      var taken = Number(c.taken || 0);
+      el("cc-places-note").textContent = taken > 0
+        ? (taken === 1
+            ? "One person already holds a place on this class"
+            : taken + " people already hold a place on this class") +
+          ", so the places cannot be set below " + taken + ". The database refuses " +
+          "it: those people have already been told they have a seat. Move somebody " +
+          "to the waiting list first."
+        : "Nobody holds a place on this class yet, so anything from 1 to 500 is fine.";
+
+      el("cc-cancel").hidden = false;
+      saveLabel = "Save changes";
+      el("cc-save").textContent = saveLabel;
+      revalidate();
+      el("cc-form-head").scrollIntoView({ block: "start" });
+      el("cc-name").focus();
+    }
+
+    // ---- the list ----------------------------------------------------------
+    function byKey(key) {
+      for (var i = 0; i < rows.length; i++) if (rows[i].key === key) return rows[i];
+      return null;
+    }
+
+    function draw() {
+      var box = el("cc-list");
+      if (!box) return;
+      if (!rows.length) {
+        box.innerHTML = '<div class="cc-empty">No classes are set up yet.</div>';
+        return;
+      }
+      box.innerHTML = rows.map(function (c) {
+        var open    = c.is_open !== false;
+        var taken   = Number(c.taken || 0);
+        var waiting = Number(c.waiting || 0);
+        var facts   = (MODES[c.cohort_mode] || c.cohort_mode) + " · " +
+                      taken + " of " + c.capacity + " places taken" +
+                      (waiting ? " · " + waiting + " waiting" : "");
+
+        return '<div class="cc-item ' + (open ? "cc-live" : "cc-dark") + '">' +
+          '<div class="cc-top">' +
+            '<span class="cc-nm">' + esc(c.name) + "</span>" +
+            '<span class="cc-key">' + esc(c.key) + "</span>" +
+            '<span class="cc-state ' + (open ? "cc-on" : "cc-off") + '">' +
+              (open ? "Sign-ups open" : "Sign-ups closed") + "</span>" +
+          "</div>" +
+          '<div class="cc-facts">' + esc(facts) + "</div>" +
+          '<div class="cc-acts">' +
+            '<button type="button" class="btn btn-ghost cc-edit" data-key="' +
+              esc(c.key) + '">Edit</button>' +
+            '<button type="button" class="btn btn-ghost' + (open ? " cc-shut" : "") +
+              '" data-key="' + esc(c.key) + '" data-open="' + (open ? "0" : "1") + '">' +
+              (open ? "Close sign-ups" : "Open sign-ups") + "</button>" +
+          "</div>" +
+        "</div>";
+      }).join("");
+    }
+
+    function load() {
+      return sb.rpc("courses_admin_list").then(function (res) {
+        if (res.error) {
+          // Until 043 is applied none of these functions exist. That is "not
+          // set up yet", not "broken", and saying so saves somebody hunting a
+          // fault that isn't there.
+          if (/does not exist|schema cache|function/i.test(res.error.message || "")) {
+            throw new Error("Managing the classes needs " +
+                            "043_courses_the_committee_can_open_and_close.sql, " +
+                            "which hasn't been run yet.");
+          }
+          throw new Error(res.error.message);
+        }
+        rows = (Array.isArray(res.data) ? res.data : []).slice().sort(function (a, b) {
+          return (a.sort_order || 0) - (b.sort_order || 0) ||
+                 String(a.key).localeCompare(String(b.key));
+        });
+        draw();
+      });
+    }
+
+    // The register below shows the same classes, so both are re-read together.
+    function refresh() {
+      return load().then(function () {
+        try { register.refresh(); } catch (e) {
+          if (window.console) console.warn("register wouldn't reload:", e);
+        }
+      });
+    }
+
+    // ---- writing -----------------------------------------------------------
+    function save() {
+      if (revalidate().length) return;   // belt and braces; the button is disabled too
+
+      var f   = readForm();
+      var btn = el("cc-save");
+      var p   = {
+        key:         trim(f.key).toLowerCase(),
+        name:        trim(f.name),
+        cohort_mode: trim(f.cohort_mode).toLowerCase(),
+        capacity:    trim(f.capacity),
+        sort_order:  trim(f.sort_order) === "" ? "0" : trim(f.sort_order)
+      };
+
+      busy(btn, true, saveLabel);
+      note("cc-error", ""); note("cc-ok", "");
+
+      //  The argument is named `p` — save_course(p jsonb). Supabase sends the
+      //  keys of this object as the function's named arguments, so a wrapper
+      //  key of any other name is a "function does not exist" error.
+      sb.rpc("save_course", { p: p }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        var d = res.data || {};
+        note("cc-ok", d.is_new
+          // is_open defaults to false (004), so a new class is not quietly
+          // taking sign-ups the moment it is added.
+          ? "Added, with sign-ups closed. Open them on the class above when you are " +
+            "ready — and remember the website needs a section for it before anybody " +
+            "can reach the form."
+          : "Saved. Whether sign-ups are open is unchanged.");
+        resetForm();
+        return refresh();
+      }).catch(function (e) {
+        note("cc-error", e.message || String(e));
+      }).finally(function () {
+        busy(btn, false, saveLabel);
+        revalidate();
+      });
+    }
+
+    function setOpen(key, open, name) {
+      //  Closing is what a visitor sees immediately: the sign-up form stops
+      //  taking people the moment this returns. Opening only ever gives
+      //  somebody a way in, so it does not ask.
+      if (!open && !window.confirm(
+            "Close sign-ups for “" + (name || key) + "”?\n\n" +
+            "The website stops taking sign-ups for it straight away. Everybody " +
+            "already on the list keeps their place, and you can open it again " +
+            "whenever you like.")) return null;
+
+      note("cc-error", ""); note("cc-ok", "");
+      return sb.rpc("set_course_open", { p_key: key, p_open: open })
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          note("cc-ok", open
+            ? "Sign-ups for “" + (name || key) + "” are open. The website is taking " +
+              "them now."
+            : "Sign-ups for “" + (name || key) + "” are closed. Nobody new can sign " +
+              "up; everybody already on the list keeps their place.");
+          return refresh();
+        })
+        .catch(function (e) { note("cc-error", e.message || String(e)); });
+    }
+
+    // ---- wiring ------------------------------------------------------------
+    function wire() {
+      if (wired) { resetForm(); return true; }
+
+      ["cc-key", "cc-name", "cc-mode", "cc-capacity", "cc-order"].forEach(function (id) {
+        var node = el(id);
+        if (!node) return;
+        node.addEventListener("input", revalidate);
+        node.addEventListener("change", revalidate);
+      });
+
+      el("cc-save").addEventListener("click", save);
+      el("cc-cancel").addEventListener("click", function () {
+        resetForm();
+        note("cc-error", ""); note("cc-ok", "");
+      });
+
+      el("cc-list").addEventListener("click", function (ev) {
+        var btn = ev.target.closest("button[data-key]");
+        if (!btn || btn.disabled) return;
+        var key = btn.getAttribute("data-key");
+        var c   = byKey(key);
+
+        if (btn.classList.contains("cc-edit")) {
+          if (c) fillForm(c);
+          return;
+        }
+        btn.disabled = true;
+        //  A cancelled confirm does nothing at all, so the button has to come
+        //  back — otherwise the row is dead until the list is next drawn.
+        if (!setOpen(key, btn.getAttribute("data-open") === "1", c && c.name)) {
+          btn.disabled = false;
+        }
+      });
+
+      wired = true;
+      resetForm();
+      return true;
+    }
+
+    function mount(identity) {
+      var panel = el("cc-panel");
+      var card  = el("view-app");
+      if (!panel) return;
+
+      // Same rule as the register: the database refuses every one of these
+      // calls to anybody who is not a verified administrator, but there is no
+      // reason to show somebody a panel they cannot use.
+      if (!canSee(identity)) { panel.hidden = true; return; }
+      panel.hidden = false;
+      if (card) card.classList.add("is-wide");
+      wire();
+
+      return load().catch(function (e) {
+        var box = el("cc-list");
+        if (box) box.innerHTML = '<div class="cc-empty">The class list couldn’t ' +
+                                 'be read — the message above says why.</div>';
+        note("cc-error", "Couldn't read the classes: " + (e.message || e));
+      });
+    }
+
+    return { mount: mount, _check: check, _wire: wire };
+  })();
+
+  /*  EXPOSED FOR THE TESTS, on the same reasoning as __NOTICE_FORM in notices/.
+
+      check() is pure — no DOM, no network, no state — and it is the half of
+      this panel worth testing, because it has to agree with check_course() in
+      043 exactly. Where the two disagree a volunteer is told a class is fine
+      and then handed a raw Postgres constraint name, which is the fault 041
+      and 043 both carry a validator to prevent.
+
+      wire() is not pure, and it is here because of a trap this project has
+      already fallen into twice. The rule "nothing is saveable until the form
+      is valid" would otherwise live only inside mount(), which runs after a
+      real sign-in — so no test could reach it, and the Save button is disabled
+      in the markup as well, so it would read as disabled whether the rule was
+      there or had been deleted. Wiring the form on a page nobody is signed in
+      to gives a Save button whose click calls save_course(), which Postgres
+      refuses to anybody who is not a verified admin with two-step. The
+      permission is in the database, not in this file. */
+  window.__COURSE_FORM = { check: classes._check, wire: classes._wire };
+
   function renderApp(identity) {
+    //  THE RAIL. Mounted here and nowhere else: this function runs only
+    //  once the page knows who is signed in, so the list of areas can
+    //  never be drawn for somebody who is not. It is a convenience, not
+    //  a permission — see admin/shell.js.
+    if (window.AdminShell) {
+      AdminShell.mount({
+        current: 'courses',
+        title:   'Adult classes',
+        roles:   identity.roles || [],
+        name:    (identity.profile && identity.profile.full_name) || "",
+        email:   (identity.user && identity.user.email) || ""
+      });
+    }
+
     el("app-name").textContent  = identity.profile.full_name || identity.user.email;
     el("app-email").textContent = identity.user.email;
 
@@ -561,9 +1038,15 @@
 
     show("view-app");
 
-    // A panel that fails to load must never take the sign-in shell with it.
+    // A panel that fails to load must never take the sign-in shell with it,
+    // and the two panels must not take each other down either — a fault in
+    // the class editor would otherwise hide the register, which is the part
+    // the office needs every week.
     try { register.mount(identity); } catch (e) {
       if (window.console) console.warn("register panel unavailable:", e);
+    }
+    try { classes.mount(identity); } catch (e) {
+      if (window.console) console.warn("class editor unavailable:", e);
     }
   }
 
