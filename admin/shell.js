@@ -73,9 +73,12 @@
         needs: ["admin", "hall_office"] },
       { key: "collections", href: "collections/", icon: "tin",    name: "Charity collections",
         needs: ["admin", "hall_office"] },
+      /*  ONE ROW FOR CLASSES, NOT TWO. There was a second, "What a class
+          says", pointing at a screen that held the website copy while this
+          one held the settings. A class is one thing to a volunteer and the
+          split was mine, not theirs — everything about a class is behind
+          this row now. */
       { key: "courses",     href: "courses/",     icon: "book",   name: "Adult classes",
-        needs: ["admin"] },
-      { key: "classpages",  href: "classpages/",  icon: "pen",    name: "What a class says",
         needs: ["admin"] },
       { key: "volunteers",  href: "volunteers/",  icon: "basket", name: "Food Bank volunteers",
         needs: ["admin"] }
