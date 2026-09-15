@@ -151,7 +151,8 @@ Deno.test("NO EMAIL EVER CONTAINS THE HIRER'S ADDRESS", () => {
   // lives in the portal and nowhere else.
   const withAddress = { ...HALL } as Event & { address: string };
   withAddress.address = "12 Astley Street, Bolton";
-  for (const kind of ["deposit_paid", "refund_due", "nikah_requested", "nikah_fee_paid"] as const) {
+  for (const kind of ["deposit_paid", "refund_due", "nikah_requested",
+                      "nikah_fee_paid", "charity_requested"] as const) {
     const o = officeMessage({ ...withAddress, kind });
     const p = publicMessage({ ...withAddress, kind });
     for (const m of [o, p]) {
@@ -160,6 +161,132 @@ Deno.test("NO EMAIL EVER CONTAINS THE HIRER'S ADDRESS", () => {
       assert(!m.text.includes("Astley Street"), `${kind}: address leaked into the text`);
     }
   }
+});
+
+/* ------------------------------------------------ charity collections --- */
+
+const CHANDA: Event = {
+  kind: "charity_requested",
+  reference: "CC-26-0042",
+  booking_date: "2026-10-30",
+  org_name: "Testville Relief Trust",
+  name: "A Collector",
+  phone: "07000 000000",
+  email: "office@example.test",
+  charity_number: "1041569",
+  collector_paid: false,
+  portal: "https://example.test/collections/",
+};
+
+Deno.test("the office is told it is a REQUEST and who to ring", () => {
+  const m = officeMessage(CHANDA)!;
+  // "booking" in the subject and the office starts treating it as one. The
+  // masjid allows one collection a day and the website is never told which
+  // days are taken, so nothing here has reserved anything.
+  assertStringIncludes(m.subject, "request");
+  assert(!/booking/i.test(m.subject), "the subject calls a request a booking");
+  assertStringIncludes(m.html, "Testville Relief Trust");
+  assertStringIncludes(m.html, "CC-26-0042");
+  // The masjid rings the TRUSTEE, not the collector. That is the whole point
+  // of asking for a trustee, and the email has to say so.
+  assertStringIncludes(m.html, "trustee");
+  assertStringIncludes(m.text, "TRUSTEE");
+});
+
+Deno.test("A PAID COLLECTOR IS IN THE SUBJECT LINE", () => {
+  // On the paper form this is a tick in a box on page one that nobody reads
+  // twice. Somebody opening this on a phone should see it before they open it.
+  const m = officeMessage({ ...CHANDA, collector_paid: true })!;
+  assertStringIncludes(m.subject, "PAID COLLECTOR");
+  assertStringIncludes(m.html, "YES");
+  assertStringIncludes(m.text, "PAID");
+
+  const no = officeMessage(CHANDA)!;
+  assert(!/PAID COLLECTOR/.test(no.subject),
+    "an unpaid collector is being announced as paid");
+});
+
+Deno.test("NO EMAIL CARRIES THE TRUSTEE'S DETAILS", () => {
+  // The trustee did not fill this form in and has not agreed to anything.
+  // They are rung from the portal, where the outcome is recorded anyway — so
+  // a forwarded email must not carry their number. Same rule as the hirer's
+  // address. The Event type has no trustee field at all; this proves that
+  // stays true if somebody adds one.
+  const leaky = { ...CHANDA } as Event & Record<string, unknown>;
+  leaky.trustee_name = "A Trustee";
+  leaky.trustee_phone = "07999 999999";
+  leaky.trustee_email = "trustee@example.test";
+  const m = officeMessage(leaky)!;
+  for (const secret of ["A Trustee", "07999 999999", "trustee@example.test"]) {
+    assert(!m.html.includes(secret), `the trustee's ${secret} leaked into the HTML`);
+    assert(!m.text.includes(secret), `the trustee's ${secret} leaked into the text`);
+  }
+});
+
+Deno.test("a missing charity number says so rather than showing a blank", () => {
+  const m = officeMessage({ ...CHANDA, charity_number: null })!;
+  assertStringIncludes(m.html, "not given");
+});
+
+/*  The collector's own acknowledgement.
+
+    This branch was LIVE AND UNTESTED for a day: it existed in the deployed
+    function and not in this repository, so nothing here covered it and a
+    redeploy from the repo would have deleted it silently. These four tests
+    are what stop that happening a second time. */
+
+Deno.test("the collector is told this is NOT a booking", () => {
+  const m = publicMessage(CHANDA)!;
+  assertStringIncludes(m.html, "not a booking yet");
+  assertStringIncludes(m.text, "NOT A BOOKING YET");
+  assert(!/^.*\bbooked\b/i.test(m.subject), "the subject says booked");
+  assertStringIncludes(m.html, "CC-26-0042");
+});
+
+Deno.test("the collector is given Rafik Patel's number and nobody else's", () => {
+  // The masjid asked for exactly one number on this form. The office landline
+  // is answered by whoever is in; a charity ringing from abroad about a
+  // collection needs the person who actually deals with them.
+  //
+  // The landline still appears in the address block at the foot of every
+  // email — that is the masjid's address, not an instruction. What must not
+  // happen is being TOLD to ring it, the way the nikāḥ and hall emails do.
+  const m = publicMessage(CHANDA)!;
+  assertStringIncludes(m.html, "Rafik Patel");
+  assertStringIncludes(m.html, "07951");
+  assertStringIncludes(m.text, "07951 795 465");
+  assert(!/ring[^.]*01204/i.test(m.html) && !/ring[^.]*01204/i.test(m.text),
+    "the collector is being told to ring the office landline");
+  assert(!/questions:\s*01204/i.test(m.text),
+    "the collector is being pointed at the office landline for questions");
+
+  // CONTROL — the nikāḥ acknowledgement really does point at the landline,
+  // so the two assertions above are capable of failing.
+  const nk = publicMessage(NIKAH)!;
+  assert(/ring[^.]*01204/i.test(nk.html),
+    "this test cannot bite: nothing points at the landline anywhere");
+});
+
+Deno.test("the collector's email does not carry the trustee either", () => {
+  const leaky = { ...CHANDA } as Event & Record<string, unknown>;
+  leaky.trustee_name = "A Trustee";
+  leaky.trustee_phone = "07999 999999";
+  leaky.trustee_email = "trustee@example.test";
+  const m = publicMessage(leaky)!;
+  for (const secret of ["A Trustee", "07999 999999", "trustee@example.test"]) {
+    assert(!m.html.includes(secret), `the trustee's ${secret} leaked to the collector`);
+    assert(!m.text.includes(secret), `the trustee's ${secret} leaked to the collector`);
+  }
+  // It must still TELL them a trustee will be rung — that is the one thing
+  // that stops them being surprised by the call.
+  assertStringIncludes(m.html, "trustee");
+});
+
+Deno.test("no acknowledgement is sent when there is no address or reference", () => {
+  // publicMessage is the only thing standing between a blank org_email and an
+  // attempt to send mail to "".
+  assertEquals(publicMessage({ ...CHANDA, email: null }), null);
+  assertEquals(publicMessage({ ...CHANDA, reference: null }), null);
 });
 
 /* -------------------------------------------------- the public's email --- */
@@ -515,4 +642,214 @@ Deno.test("CONTROL — the reset wording really is different", () => {
   assert(invite.subject !== reset.subject, "reset and invitation share a subject line");
   // And the invitation still says the thing the reset must not.
   assertStringIncludes(invite.html, "has given your existing account access");
+});
+
+/* ===========================================================================
+   THE THREE FORMS THAT TOLD NOBODY
+
+   15 September 2026. Found by asking, of every anon-callable function that
+   writes a row, "and then who is told?" — the question that was not asked
+   before the charity collection form went live.
+
+   The answer for madrasah admissions, course registrations and foodbank
+   volunteers was nobody. Not the office, not the person who filled it in.
+   Three forms, live, writing rows into tables that only get looked at if
+   somebody thinks to look.
+
+   These tests are mostly about what must NOT be in an email. The madrasah
+   application is the sharp one: it carries children's dates of birth,
+   schools, SEND status, EHCP, allergies and medical conditions, and none of
+   that may be handed to a mail provider or sit in a shared inbox.
+   =========================================================================== */
+
+const ADMISSION: Event = {
+  kind: "admission_requested",
+  reference: "AD-26-0003",
+  academic_year: "2026/27",
+  name: "Parent Name",
+  phone: "07000 000000",
+  email: "parent@example.test",
+  portal: "https://example.test/apply/",
+};
+
+Deno.test("NO CHILD'S DETAILS ARE IN EITHER ADMISSION EMAIL", () => {
+  // The Event type has no field for a child at all. This proves that stays
+  // true if somebody adds one and starts filling it in.
+  const leaky = { ...ADMISSION } as Event & Record<string, unknown>;
+  leaky.child_name = "A Child";
+  leaky.date_of_birth = "2018-04-02";
+  leaky.school_name = "Somewhere Primary";
+  leaky.has_send = true;
+  leaky.allergy_detail = "peanuts";
+  leaky.medical_conditions = "asthma";
+  leaky.address_line1 = "12 Astley Street";
+  //  NOT the masjid's own postcode. The first version of this test used
+  //  BL1 8HD and failed, because every email's footer carries the masjid's
+  //  address — the test was wrong, not the code. A fake secret has to be one
+  //  that cannot appear legitimately.
+  leaky.postcode = "ZZ99 9ZZ";
+
+  const secrets = ["A Child", "2018-04-02", "Somewhere Primary",
+                   "peanuts", "asthma", "Astley Street", "ZZ99 9ZZ"];
+
+  for (const m of [officeMessage(leaky)!, publicMessage(leaky)!]) {
+    for (const secret of secrets) {
+      assert(!m.html.includes(secret), `"${secret}" leaked into an admission email`);
+      assert(!m.text.includes(secret), `"${secret}" leaked into an admission email`);
+    }
+  }
+
+  //  CONTROL — the search itself works. If `includes` were somehow always
+  //  false the loop above would pass on an email that printed everything.
+  const proof = officeMessage(ADMISSION)!;
+  assert(proof.html.includes("Parent Name"),
+    "this test cannot bite: the search finds nothing even when it is there");
+});
+
+Deno.test("the office admission email says the children are NOT in it", () => {
+  // Not decoration. Somebody who expects the details in the email and cannot
+  // find them will forward it asking for them, which is the thing this avoids.
+  const m = officeMessage(ADMISSION)!;
+  assertStringIncludes(m.html, "not in this email");
+  assertStringIncludes(m.text, "NOT IN");
+  assertStringIncludes(m.html, "AD-26-0003");
+  assertStringIncludes(m.html, "2026/27");
+});
+
+Deno.test("the parent is told this is NOT a place yet", () => {
+  const m = publicMessage(ADMISSION)!;
+  assertStringIncludes(m.html, "not a place yet");
+  assertStringIncludes(m.text, "NOT A PLACE YET");
+  assert(!/\boffered?\b|\baccepted\b/i.test(m.html),
+    "the acknowledgement implies a place has been given");
+});
+
+const COURSE: Event = {
+  kind: "course_registered",
+  reference: "CR-26-0011",
+  course_name: "Arabic Classes",
+  cohort: "womens",
+  outcome: "place",
+  name: "A Learner",
+  phone: "07000 000000",
+  email: "learner@example.test",
+  portal: "https://example.test/courses/",
+};
+const WAITING: Event = { ...COURSE, outcome: "waiting" };
+
+Deno.test("A WAITING-LIST REGISTRATION NEVER SAYS A PLACE IS BOOKED", () => {
+  // The failure this prevents: somebody told nothing, or told the wrong
+  // thing, turns up on the first night and is sent home in front of the room.
+  const m = publicMessage(WAITING)!;
+  assertStringIncludes(m.subject, "waiting list");
+  assert(!/place is booked|you have a place/i.test(m.subject + m.html + m.text),
+    "a waiting-list registration claims a place");
+  assertStringIncludes(m.html, "do not have a place yet");
+  assertStringIncludes(m.html, "should not come to the first session");
+
+  // CONTROL — a real place really does say so, so the assertion can fail.
+  const ok = publicMessage(COURSE)!;
+  assertStringIncludes(ok.subject, "Your place is booked");
+  assertStringIncludes(ok.html, "You have a place");
+  assert(!/waiting list/i.test(ok.subject), "a confirmed place says waiting list");
+});
+
+Deno.test("the office sees WAITING LIST in the subject, not buried", () => {
+  assertStringIncludes(officeMessage(WAITING)!.subject, "WAITING LIST");
+  assert(!/WAITING LIST/.test(officeMessage(COURSE)!.subject),
+    "a confirmed place is announced as a waiting-list entry");
+});
+
+Deno.test("the course cohort is words, not a database key", () => {
+  assertStringIncludes(officeMessage(COURSE)!.html, "Women's");
+  assert(!officeMessage(COURSE)!.html.includes(">womens<"),
+    "the raw cohort key is being shown to a person");
+  // An unknown key falls back to itself rather than vanishing — a blank row
+  // reads as "none", which is worse than something that looks wrong.
+  assertStringIncludes(officeMessage({ ...COURSE, cohort: "elders" })!.html, "elders");
+});
+
+Deno.test("free text the learner typed stays out of the email", () => {
+  const leaky = { ...COURSE } as Event & Record<string, unknown>;
+  leaky.experience = "I have a criminal record I want to mention";
+  leaky.notes = "please do not seat me near my brother";
+  for (const m of [officeMessage(leaky)!, publicMessage(leaky)!]) {
+    assert(!m.html.includes("criminal record") && !m.text.includes("criminal record"),
+      "free text leaked into a course email");
+    assert(!m.html.includes("near my brother") && !m.text.includes("near my brother"),
+      "free text leaked into a course email");
+  }
+});
+
+const VOLUNTEER: Event = {
+  kind: "volunteer_registered",
+  reference: "FB-26-0007",
+  name: "A Volunteer",
+  phone: "07000 000000",
+  email: "vol@example.test",
+  preferred_contact: "phone",
+  frequency: "fortnightly",
+  sunday_mornings: true,
+  portal: "https://example.test/volunteers/",
+};
+
+Deno.test("the office is told HOW the volunteer asked to be contacted", () => {
+  // The first thing the masjid does with a volunteer, and the first chance to
+  // get it wrong. Somebody who asked for a phone call and gets an email has
+  // already been told their preference did not matter.
+  const m = officeMessage(VOLUNTEER)!;
+  assertStringIncludes(m.html, "a phone call");
+  assertStringIncludes(m.html, "the way they asked");
+  assertStringIncludes(m.html, "FB-26-0007");
+});
+
+Deno.test("the volunteer is told they are NOT on the rota yet", () => {
+  // Somebody who thinks they are expected will turn up to a foodbank that is
+  // not expecting them.
+  const m = publicMessage(VOLUNTEER)!;
+  assertStringIncludes(m.html, "not on the rota yet");
+  assertStringIncludes(m.text, "NOT ON THE ROTA YET");
+  assertStringIncludes(m.html, "a phone call");
+});
+
+Deno.test("a volunteer who gave no email gets no email", () => {
+  // foodbank_volunteers.email is nullable — it is only required when they
+  // asked to be contacted by email. Building a message for "" would mean
+  // trying to send one.
+  assertEquals(publicMessage({ ...VOLUNTEER, email: null }), null);
+  // The office is still told, which is the whole point.
+  assert(officeMessage({ ...VOLUNTEER, email: null }) !== null,
+    "a volunteer with no email tells nobody at all");
+});
+
+Deno.test("a volunteer's age and gender never reach an email", () => {
+  const leaky = { ...VOLUNTEER } as Event & Record<string, unknown>;
+  leaky.age = 34;
+  leaky.gender = "female";
+  leaky.skills = "first aid";
+  for (const m of [officeMessage(leaky)!, publicMessage(leaky)!]) {
+    assert(!/\bfemale\b/i.test(m.html + m.text), "gender leaked into a volunteer email");
+    assert(!/first aid/i.test(m.html + m.text), "skills leaked into a volunteer email");
+  }
+});
+
+Deno.test("all three new subjects are ASCII and say what they are", () => {
+  for (const e of [ADMISSION, COURSE, WAITING, VOLUNTEER]) {
+    for (const m of [officeMessage(e), publicMessage(e)]) {
+      if (!m) continue;
+      assertEquals(m.subject, ascii(m.subject), `non-ASCII subject for ${e.kind}`);
+      assert(m.subject.length <= 75, `subject too long for ${e.kind}: ${m.subject.length}`);
+      assertStringIncludes(m.subject, e.reference!);
+    }
+  }
+});
+
+Deno.test("every new kind produces an office email — none is silently dropped", () => {
+  // The bug this whole section exists for. A kind that falls through every
+  // branch returns null, and null means nobody is told.
+  for (const kind of ["admission_requested", "course_registered",
+                      "volunteer_registered"] as const) {
+    const e = { ...ADMISSION, kind } as Event;
+    assert(officeMessage(e) !== null, `${kind} tells nobody`);
+  }
 });

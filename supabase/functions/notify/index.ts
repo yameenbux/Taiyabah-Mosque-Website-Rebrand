@@ -7,6 +7,17 @@
      - stripe-webhook, server to server, when a deposit or a nikāḥ fee is
        recorded — including when the money has to go back
      - a Supabase database webhook on INSERT into nikah_requests
+     - a Supabase database webhook on INSERT into charity_collections,
+       admission_applications, course_registrations and foodbank_volunteers
+     - invite-user, when an administrator invites somebody to a staff account
+       or sends them a password reset
+
+   EVERY FORM ON THE WEBSITE IS IN THAT LIST, AND THAT IS THE POINT. Three of
+   them were added on 15 September 2026 after somebody asked, of each form
+   that writes a row, "and then who is told?" For madrasah admissions, course
+   registrations and foodbank volunteers the answer had been nobody: not the
+   office, not the person who filled it in. If a form is ever added to this
+   site and does not appear above, it is almost certainly telling nobody too.
 
    WHY one.com AND NOT A THIRD-PARTY EMAIL SERVICE
    -----------------------------------------------
@@ -34,13 +45,18 @@
 
    WHAT IS DELIBERATELY NOT SENT
    -----------------------------
-   The hirer's home address, in any email, to anybody. See messages.ts.
+   The hirer's home address; a charity collection's trustee; and ANYTHING AT
+   ALL ABOUT A CHILD on a madrasah application — names, dates of birth,
+   schools, SEND status, EHCP, allergies, medical conditions. Most of that
+   last group is special category data under Article 9 and none of it goes to
+   a mail provider or into a shared inbox. See messages.ts.
 
    SECURITY
    --------
    This is a public URL. It does nothing at all without the shared secret, and
    the public-facing address it sends to is only ever one the person gave for
-   their own booking — never a list, never a bcc.
+   their own booking — never a list, never a bcc. The one exception is the
+   staff invitation, which has its own fence; see that branch below.
 
    Secrets (Edge Functions -> notify -> Secrets):
        NOTIFY_SECRET   a long random string, also given to whoever calls this
@@ -158,6 +174,79 @@ export function toEvent(body: Record<string, unknown>): Event | null {
       email: r.contact_email as string,
     };
   }
+
+  if (body.type === "INSERT" && body.table === "charity_collections") {
+    const r = (body.record ?? {}) as Record<string, unknown>;
+    return {
+      kind: "charity_requested",
+      reference: r.reference as string,
+      booking_date: r.requested_date as string,
+      org_name: r.org_name as string,
+      name: r.collector_name as string,
+      phone: r.org_phone as string,
+      email: r.org_email as string,
+      charity_number: (r.charity_number as string) ?? null,
+      collector_paid: r.collector_paid === true,
+      // The trustee's name, number and email are deliberately NOT carried.
+      // They belong to somebody who did not fill the form in; the office
+      // rings them from the portal, where the outcome is recorded anyway.
+      // Same rule as the hirer's home address — see messages.ts.
+    };
+  }
+
+  if (body.type === "INSERT" && body.table === "admission_applications") {
+    const r = (body.record ?? {}) as Record<string, unknown>;
+    return {
+      kind: "admission_requested",
+      reference: r.reference as string,
+      academic_year: r.academic_year as string,
+      name: [r.parent_first_name, r.parent_surname]
+              .map((x) => (x ?? "").toString().trim()).filter(Boolean).join(" "),
+      phone: (r.mobile as string) || (r.telephone as string) || null,
+      email: r.email as string,
+      // The home address is NOT carried, and neither is anything about a
+      // child — they are in admission_students, a different table this
+      // webhook never sees. Dates of birth, schools, SEND, EHCP, allergies
+      // and medical conditions stay in the portal. See messages.ts.
+    };
+  }
+
+  if (body.type === "INSERT" && body.table === "course_registrations") {
+    const r = (body.record ?? {}) as Record<string, unknown>;
+    return {
+      kind: "course_registered",
+      reference: r.reference as string,
+      course_name: (r.course_key as string) ?? null,
+      cohort: (r.cohort as string) ?? null,
+      // 'place' or 'waiting'. The database decides this, not the email, and
+      // getting it wrong means somebody turns up to a full room.
+      outcome: (r.outcome as string) ?? null,
+      name: [r.first_name, r.surname]
+              .map((x) => (x ?? "").toString().trim()).filter(Boolean).join(" "),
+      phone: r.mobile as string,
+      email: r.email as string,
+      // `experience` and `notes` are free text the person typed. They are not
+      // carried: the office reads them in the portal.
+    };
+  }
+
+  if (body.type === "INSERT" && body.table === "foodbank_volunteers") {
+    const r = (body.record ?? {}) as Record<string, unknown>;
+    return {
+      kind: "volunteer_registered",
+      reference: r.reference as string,
+      name: r.full_name as string,
+      phone: r.phone as string,
+      // NULLABLE. A volunteer who gave no email gets no confirmation, and
+      // publicMessage already refuses to build one without an address.
+      email: (r.email as string) ?? null,
+      preferred_contact: (r.preferred_contact as string) ?? null,
+      frequency: (r.frequency as string) ?? null,
+      sunday_mornings: r.sunday_mornings === true,
+      // Age, gender and `skills` are deliberately not carried.
+    };
+  }
+
   if (body.type && body.table) return null;   // some other table — not ours
 
   const kind = body.kind as Event["kind"];
@@ -220,7 +309,7 @@ Deno.serve(async (req) => {
     }), { status: 200, headers: { "content-type": "application/json" } });
   }
 
-  /* --- a staff invitation ------------------------------------------------
+  /* --- a staff invitation, or a password reset ---------------------------
      The only message this function sends to an address the CALLER supplies.
      Everything else goes to MAIL_TO or to the contact on a booking that is
      already in the database, so this one needs its own fence.
@@ -280,6 +369,28 @@ Deno.serve(async (req) => {
   if (!event) return ok("nothing to send for this");
 
   event.portal = event.portal ?? PORTAL_URL;
+
+  /*  A course is stored by key — 'arabic', 'ghusl' — and "Your place is
+      booked - arabic" is not something to send to a person. This turns the
+      key into the course's real name.
+
+      BEST EFFORT ON PURPOSE. If the lookup fails for any reason the key is
+      used and the email still goes. A slightly ugly email is enormously
+      better than no email, and this whole function exists because a form once
+      told nobody anything.
+
+      It needs `grant select on public.courses to service_role` — see
+      db/035. service_role bypasses RLS but a GRANT is a different thing, and
+      this repository has now been caught by that three times. */
+  if (event.kind === "course_registered" && event.course_name) {
+    try {
+      const { data } = await db.from("courses").select("name")
+        .eq("key", event.course_name).maybeSingle();
+      if (data?.name) event.course_name = data.name as string;
+    } catch (err) {
+      console.warn("notify: could not resolve the course name —", (err as Error).message);
+    }
+  }
 
   const results: string[] = [];
 

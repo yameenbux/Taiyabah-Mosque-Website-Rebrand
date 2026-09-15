@@ -145,12 +145,41 @@ Supabase → Integrations → **Database Webhooks** → Create a new hook.
 Insert only. Tick Update and the office gets an email every time somebody edits
 a note, which is how people learn to ignore them.
 
+### 6. The charity collection hook
+
+The same thing again on `public.charity_collections`, named
+`notify-charity-collection`.
+
+**Do not build it by hand.** Run `db/033_notify_charity_collections.sql`
+instead. It reads the `notify-nikah` trigger out of the database, swaps the
+name and the table, and executes the result — so the URL, the headers and the
+two secrets inside them are copied across without anybody typing or seeing
+them, and the new hook cannot drift from the working one.
+
+> **This step was missed once and cost a live request.** The form, the table,
+> the portal tile and the email text were all built and all worked. The first
+> real collection request, CC-26-0001, was recorded perfectly and told nobody,
+> because the hook connecting the two had never been created. Every piece
+> passed its own test; the gap was between them.
+>
+> Both of these hooks live only in the database, because a Supabase webhook
+> stores a service_role JWT and the `NOTIFY_SECRET` in plain text in its
+> definition and neither may be committed. So this README and `033` are the
+> only record that they exist. **If you add a table that should email
+> somebody, the hook is a separate job and nothing will remind you.**
+
 ---
 
 ## Checking the real thing
 
 **Nikāḥ:** submit a request on the website. The office addresses and the
 address on the form should both have an email within seconds.
+
+**Charity collections:** the same, from `/collection`. The office email must
+say **PAID COLLECTOR** in its subject line when the collector ticked that box,
+and neither email may contain the trustee's name, number or address. To prove
+the hook fires without emailing anybody, run the rolled-back probe in the
+comments at the foot of `db/033_notify_charity_collections.sql`.
 
 **The payment ones:** they fire on a real Stripe payment, so they are proved by
 the same test that proves the deposit flow — Stripe test mode, card

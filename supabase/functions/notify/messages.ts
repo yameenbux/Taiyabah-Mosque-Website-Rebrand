@@ -13,6 +13,10 @@
      provider never processes it, inboxes never accumulate it, and a forwarded
      email cannot leak one. It lives in the portal, which is where the outcome
      gets recorded anyway.
+
+     The same rule now covers a charity collection's TRUSTEE. They did not
+     fill the form in and have not agreed to anything; the office rings them
+     from the portal.
    =========================================================================== */
 
 export type Kind =
@@ -20,6 +24,10 @@ export type Kind =
   | "refund_due"
   | "nikah_requested"
   | "nikah_fee_paid"
+  | "charity_requested"
+  | "admission_requested"
+  | "course_registered"
+  | "volunteer_registered"
   | "digest";
 
 export interface Event {
@@ -35,6 +43,43 @@ export interface Event {
   slot?: string | null;           // nikāḥ prayer slot
   reason?: string | null;         // why a refund is owed
   portal?: string | null;         // link to the right portal page
+
+  // A charity collection (chanda). The trustee's name and number are NOT
+  // here, and there is deliberately no field for them: the office rings the
+  // trustee from the portal, where the outcome gets recorded anyway, and a
+  // forwarded email should not carry the details of somebody who did not fill
+  // the form in. Same rule as the hirer's address.
+  org_name?: string | null;
+  collector_paid?: boolean | null;
+  charity_number?: string | null;
+
+  // A madrasah admission application.
+  //
+  // THERE IS NO FIELD HERE FOR A CHILD, AND THAT IS THE POINT. The
+  // application carries every child's name, date of birth, gender, school,
+  // SEND status, EHCP, allergies and medical conditions. Most of that is
+  // special category data under Article 9 and the rest belongs to a child who
+  // cannot consent to anything. None of it may be handed to a mail provider,
+  // sit in a shared inbox, or be forwarded by somebody being helpful. The
+  // office opens the portal; the email only says an application arrived.
+  //
+  // The home address is out for the same reason it is out of a hall booking.
+  academic_year?: string | null;
+
+  // A course registration. `outcome` is 'place' or 'waiting' and MUST reach
+  // the person: telling somebody they are registered when they are on the
+  // waiting list is the kind of wrong that is only discovered on the night.
+  course_name?: string | null;
+  cohort?: string | null;
+  outcome?: string | null;
+
+  // A foodbank volunteer. Their age and gender are on the form and are NOT
+  // here: the rota is planned in the portal, and an email is a bell, not a
+  // record. `preferred_contact` is carried because it changes what the office
+  // should do next.
+  preferred_contact?: string | null;
+  frequency?: string | null;
+  sunday_mornings?: boolean | null;
 
   // The Monday digest only. Counts, never people.
   new_nikah?: number;
@@ -129,6 +174,34 @@ const SLOTS: Record<string, string> = {
 export function slotLabel(s?: string | null): string {
   if (!s) return "";
   return SLOTS[s] ?? s;
+}
+
+/* The database stores these as short keys. An email is read by a person, so
+   it says the words. Each falls back to the raw key rather than to an empty
+   string: an unexpected value should look wrong in the email, not vanish and
+   leave a blank row that reads as "none". */
+const COHORTS: Record<string, string> = {
+  mens: "Men's", womens: "Women's", all: "Open to all",
+};
+export function cohortLabel(c?: string | null): string {
+  if (!c) return "";
+  return COHORTS[c] ?? c;
+}
+
+const CONTACT: Record<string, string> = {
+  phone: "a phone call", text: "a text message", email: "email",
+};
+export function contactLabel(c?: string | null): string {
+  if (!c) return "(not said)";
+  return CONTACT[c] ?? c;
+}
+
+const FREQUENCY: Record<string, string> = {
+  weekly: "Weekly", fortnightly: "Fortnightly", monthly: "Monthly",
+};
+export function frequencyLabel(f?: string | null): string {
+  if (!f) return "";
+  return FREQUENCY[f] ?? f;
 }
 
 /* --------------------------------------------------------------------------
@@ -284,6 +357,155 @@ export function officeMessage(e: Event): Message | null {
         "Somebody has asked for a nikāḥ date",
         "This is a REQUEST, not a booking. They are waiting for a call.",
         rows, "Ring them, agree the date, then record it in the portal.",
+        e.portal ?? undefined),
+    };
+  }
+
+  if (e.kind === "charity_requested") {
+    // THE PAID ANSWER IS IN THE SUBJECT LINE, NOT BURIED IN A TABLE.
+    // On the paper form it is a tick in a box on page one that nobody reads
+    // twice. A collector who takes a wage or commission is a different
+    // proposition, and whoever opens this on a phone should see it before
+    // they open it.
+    const paid = e.collector_paid === true;
+    const rows: [string, string][] = [
+      ["Charity", `<strong>${esc(e.org_name ?? "")}</strong>`],
+      ["Date asked for", `<strong>${esc(longDate(e.booking_date))}</strong>`],
+      ["Collecting", esc(e.name ?? "")],
+      ["Phone", phoneCell],
+      ["Charity number", esc(e.charity_number || "not given")],
+      ["Paid collector", paid ? "<strong>YES — they take a wage or commission</strong>" : "No"],
+      ["Reference", esc(ref)],
+    ];
+    return {
+      // REQUEST, not booking — same reasoning as the nikāḥ subject above. The
+      // masjid allows one collection a day and the website is never told
+      // which days are taken, so nothing here has reserved anything.
+      subject: ascii(
+        `Charity collection request${paid ? " - PAID COLLECTOR" : ""} - ` +
+        `${shortDate(e.booking_date)} (${ref})`),
+      html: shell(
+        "A charity has asked to collect at the masjid",
+        "This is a <strong>request</strong>, not a booking. Nothing has been " +
+        "reserved. The masjid rings the <strong>trustee</strong> named on the " +
+        "form — not the collector — to confirm the collection is genuine, then " +
+        "approves or declines it in the portal." +
+        (paid
+          ? " <strong>This collector says they are paid for doing it.</strong> " +
+            "That is allowed, and the committee should know before they stand " +
+            "in the masjid asking people for money."
+          : ""),
+        rows,
+        "The trustee's details, the address and the rest of the form are in the " +
+        "portal. They are deliberately not in this email.",
+        e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+      text: plain(
+        "A charity has asked to collect at the masjid",
+        "This is a REQUEST, not a booking. Ring the TRUSTEE named on the form " +
+        "to confirm it is genuine, then approve or decline in the portal." +
+        (paid ? " THIS COLLECTOR IS PAID FOR DOING IT." : ""),
+        rows,
+        "The trustee's details and the rest of the form are in the portal.",
+        e.portal ?? undefined),
+    };
+  }
+
+  if (e.kind === "admission_requested") {
+    // Deliberately four rows. Everything that would make this email useful to
+    // read instead of opening the portal is exactly the data that must not be
+    // in it — see the Event type above.
+    const rows: [string, string][] = [
+      ["Parent", `<strong>${esc(e.name ?? "")}</strong>`],
+      ["Phone", phoneCell],
+      ["Academic year", esc(e.academic_year ?? "")],
+      ["Reference", esc(ref)],
+    ];
+    return {
+      subject: ascii(`Madrasah application - ${ref}`),
+      html: shell(
+        "A madrasah application has been submitted",
+        "A parent has applied for a place. <strong>The children's details are " +
+        "not in this email and will not be.</strong> They include dates of " +
+        "birth, schools, allergies and medical needs, which belong in the " +
+        "portal and nowhere else.",
+        rows,
+        "Open the portal to see the children, the second contact and the rest " +
+        "of the form.",
+        e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+      text: plain(
+        "A madrasah application has been submitted",
+        "A parent has applied for a place. THE CHILDREN'S DETAILS ARE NOT IN " +
+        "THIS EMAIL and will not be — they are in the portal.",
+        rows, "Open the portal to see the rest of the form.",
+        e.portal ?? undefined),
+    };
+  }
+
+  if (e.kind === "course_registered") {
+    const waiting = e.outcome === "waiting";
+    const rows: [string, string][] = [
+      ["Course", `<strong>${esc(e.course_name ?? "")}</strong>`],
+      ["Group", esc(cohortLabel(e.cohort))],
+      ["Name", `<strong>${esc(e.name ?? "")}</strong>`],
+      ["Phone", phoneCell],
+      ["Outcome", waiting
+        ? "<strong>WAITING LIST &mdash; the course is full</strong>"
+        : "Has a place"],
+      ["Reference", esc(ref)],
+    ];
+    return {
+      // The full/not-full answer is in the subject for the same reason the
+      // paid collector is: it changes what the office does, and it should not
+      // need the email opening to be seen.
+      subject: ascii(`Course registration${waiting ? " - WAITING LIST" : ""} - ` +
+                     `${e.course_name ?? ""} (${ref})`),
+      html: shell(
+        waiting ? "Somebody has joined the waiting list" : "Somebody has registered for a course",
+        waiting
+          ? "This course is <strong>full</strong>, so they have been put on the " +
+            "waiting list and told so plainly. They move up automatically when " +
+            "somebody withdraws."
+          : "They have a place. Nothing needs doing &mdash; the registration " +
+            "took the place itself.",
+        rows,
+        "Anything they wrote about their experience is in the portal, not here.",
+        e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+      text: plain(
+        waiting ? "Somebody has joined the waiting list" : "Somebody has registered for a course",
+        waiting
+          ? "This course is FULL. They are on the waiting list and have been told so."
+          : "They have a place. Nothing needs doing.",
+        rows, "What they wrote about their experience is in the portal.",
+        e.portal ?? undefined),
+    };
+  }
+
+  if (e.kind === "volunteer_registered") {
+    const rows: [string, string][] = [
+      ["Name", `<strong>${esc(e.name ?? "")}</strong>`],
+      ["Phone", phoneCell],
+      ["Prefers", `<strong>${esc(contactLabel(e.preferred_contact))}</strong>`],
+      ["Sunday mornings", e.sunday_mornings === true ? "Yes" : "No"],
+      ["How often", esc(frequencyLabel(e.frequency))],
+      ["Reference", esc(ref)],
+    ];
+    return {
+      subject: ascii(`Foodbank volunteer - ${e.name ?? ""} (${ref})`),
+      html: shell(
+        "Somebody has offered to help at the foodbank",
+        "They are waiting to hear from the masjid. <strong>Contact them the " +
+        "way they asked to be contacted</strong> &mdash; it is the first thing " +
+        "the masjid does with them and the first chance to get it wrong.",
+        rows,
+        "Their age, what they can do and anything else they wrote are in the " +
+        "portal. Mark them contacted there so nobody rings them twice.",
+        e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+      text: plain(
+        "Somebody has offered to help at the foodbank",
+        "They are waiting to hear from the masjid. CONTACT THEM THE WAY THEY " +
+        "ASKED TO BE CONTACTED.",
+        rows,
+        "The rest is in the portal. Mark them contacted so nobody rings twice.",
         e.portal ?? undefined),
     };
   }
@@ -451,6 +673,131 @@ export function publicMessage(e: Event): Message | null {
         rows,
         "Keep this email — the reference is what a payment is matched by. Please " +
         "do not pay anything until a date has been agreed. 01204 535 997."),
+    };
+  }
+
+  if (e.kind === "charity_requested") {
+    const rows: [string, string][] = [
+      ["Date you asked for", `<strong>${esc(longDate(e.booking_date))}</strong>`],
+      ["Charity", esc(e.org_name ?? "")],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(`We have your collection request - ${ref}`),
+      html: shell(
+        "We have your request",
+        "Thank you. <strong>This is not a booking yet.</strong> The masjid allows " +
+        "one collection a day and will contact the <strong>trustee</strong> you " +
+        "named to confirm whether this date can be given.",
+        rows,
+        "Keep this email — the office will ask for the reference above. Please " +
+        "tell your trustee to expect a call. If you need to reach us first, ring " +
+        "Rafik Patel on 07951&nbsp;795&nbsp;465."),
+      text: plain(
+        "We have your request",
+        "Thank you. THIS IS NOT A BOOKING YET. The masjid will contact the TRUSTEE " +
+        "you named to confirm whether this date can be given.",
+        rows,
+        "Keep this email — the office will ask for the reference. Please tell your " +
+        "trustee to expect a call. Rafik Patel: 07951 795 465."),
+    };
+  }
+
+  if (e.kind === "admission_requested") {
+    const rows: [string, string][] = [
+      ["Academic year", `<strong>${esc(e.academic_year ?? "")}</strong>`],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(`We have your madrasah application - ${ref}`),
+      html: shell(
+        "We have your application",
+        "Thank you. <strong>This is not a place yet.</strong> The madrasah " +
+        "reviews every application and will contact you about each child you " +
+        "applied for.",
+        rows,
+        "Keep this email &mdash; the office will ask for the reference above. " +
+        "If anything you told us changes, particularly anything medical, ring " +
+        "the masjid on 01204&nbsp;535&nbsp;997 rather than sending it by email."),
+      text: plain(
+        "We have your application",
+        "Thank you. THIS IS NOT A PLACE YET. The madrasah reviews every " +
+        "application and will contact you about each child.",
+        rows,
+        "Keep this email — the office will ask for the reference. If anything " +
+        "changes, particularly anything medical, ring 01204 535 997."),
+    };
+  }
+
+  if (e.kind === "course_registered") {
+    //  THE WAITING LIST IS THE WHOLE REASON THIS EMAIL EXISTS.
+    //  A person who has been told nothing assumes they have a place, turns up
+    //  on the first night, and is turned away in front of everybody. That is
+    //  the failure this prevents, so the two versions of this message say
+    //  opposite things and share as little wording as possible.
+    const waiting = e.outcome === "waiting";
+    const rows: [string, string][] = [
+      ["Course", `<strong>${esc(e.course_name ?? "")}</strong>`],
+      ["Group", esc(cohortLabel(e.cohort))],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(waiting
+        ? `You are on the waiting list - ${e.course_name ?? ""} (${ref})`
+        : `Your place is booked - ${e.course_name ?? ""} (${ref})`),
+      html: shell(
+        waiting ? "You are on the waiting list" : "Your place is booked",
+        waiting
+          ? "Thank you for registering. <strong>This course is currently full, " +
+            "so you do not have a place yet</strong> and should not come to the " +
+            "first session unless we contact you. If somebody withdraws we will " +
+            "get in touch, and you do not need to do anything in the meantime."
+          : "Thank you for registering. <strong>You have a place.</strong> " +
+            "There is nothing else to do &mdash; we will be in touch before it starts.",
+        rows,
+        "Keep this email &mdash; the reference above is how the office finds " +
+        "your registration. If you can no longer come, please ring " +
+        "01204&nbsp;535&nbsp;997 so somebody else can have the place."),
+      text: plain(
+        waiting ? "You are on the waiting list" : "Your place is booked",
+        waiting
+          ? "Thank you for registering. THIS COURSE IS FULL, SO YOU DO NOT HAVE " +
+            "A PLACE YET. Please do not come to the first session unless we " +
+            "contact you. We will get in touch if somebody withdraws."
+          : "Thank you for registering. YOU HAVE A PLACE. We will be in touch " +
+            "before it starts.",
+        rows,
+        "Keep this email — the reference is how the office finds you. If you " +
+        "can no longer come, ring 01204 535 997 so somebody else can have the place."),
+    };
+  }
+
+  if (e.kind === "volunteer_registered") {
+    const rows: [string, string][] = [
+      ["You can help", esc(frequencyLabel(e.frequency))],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(`Thank you for offering to help - ${ref}`),
+      html: shell(
+        "Thank you for offering to help",
+        "The masjid has your details and somebody will be in touch " +
+        `<strong>by ${esc(contactLabel(e.preferred_contact))}</strong>, which is ` +
+        "what you asked for. <strong>You are not on the rota yet</strong> " +
+        "&mdash; please do not come along until somebody has spoken to you.",
+        rows,
+        "Keep this email &mdash; the office will ask for the reference above. " +
+        "If you change your mind, ring 01204&nbsp;535&nbsp;997 and we will take " +
+        "you off the list; there is no obligation at all."),
+      text: plain(
+        "Thank you for offering to help",
+        "The masjid has your details and somebody will be in touch by " +
+        contactLabel(e.preferred_contact) + ", which is what you asked for. " +
+        "YOU ARE NOT ON THE ROTA YET — please do not come along until somebody " +
+        "has spoken to you.",
+        rows,
+        "Keep this email — the office will ask for the reference. If you change " +
+        "your mind, ring 01204 535 997. There is no obligation at all."),
     };
   }
 
