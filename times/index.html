@@ -434,6 +434,38 @@
       found it. */
   .lede{font-size:.99rem;line-height:1.62;color:var(--muted);margin:6px 0 14px;}
   .lede strong{color:var(--ink);}
+  /*  The upload block. Set apart from the paste box so it reads as the
+      easier of two ways in rather than as another field to fill. */
+  .tt-upload{
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;
+    padding:15px 16px 16px;margin-bottom:14px;
+  }
+  .tt-up-lab{
+    display:block;font-size:.79rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+  }
+  .tt-up-help{font-size:.93rem;line-height:1.55;color:var(--muted);margin-bottom:12px;}
+  .tt-up-help code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;
+  }
+  /*  The input itself is off-screen rather than display:none, and the label
+      is the button. display:none would take it out of the tab order
+      entirely, so a keyboard user could never reach it — the classic way a
+      styled file input becomes unusable. Parked at -9999px it is still
+      focusable, and focusing it rings the label. */
+  #tt-file{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
+  .tt-up-btn{cursor:pointer;width:auto;}
+  #tt-file:focus-visible + .tt-up-name,
+  #tt-file:focus-visible ~ .tt-up-name{outline:none;}
+  #tt-file:focus-visible{outline:none;}
+  .tt-upload:focus-within .tt-up-btn{outline:2px solid var(--gold);outline-offset:2px;}
+  .tt-up-name{font-size:.93rem;color:var(--muted);align-self:center;min-width:0;
+              overflow-wrap:anywhere;}
+  .tt-or{
+    font-size:.83rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);text-align:center;margin:0 0 14px;
+  }
+
   .fld{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
   .fld > span{
     font-size:.79rem;font-weight:800;letter-spacing:.09em;
@@ -587,8 +619,9 @@
       <div id="tt-years" class="tt-years">Looking&hellip;</div>
 
       <h3>Add or replace a year</h3>
-      <p class="lede">Export the masjid&rsquo;s timetable as CSV and paste it
-         below &mdash; one row a day, in this order:</p>
+      <p class="lede">Upload the masjid&rsquo;s spreadsheet and the times are
+         read straight out of it. If you would rather paste them in, it is one
+         row a day, in this order:</p>
       <p class="tt-cols"><code>date, hijri, fajr begins, fajr jam&#0257;&#703;ah,
          sunrise, zuhr begins, zuhr jam&#0257;&#703;ah, asr begins,
          asr jam&#0257;&#703;ah, maghrib, isha begins, isha jam&#0257;&#703;ah,
@@ -598,6 +631,30 @@
          Leave the Jumu&#703;ah column empty except on Fridays, where it is the
          two times separated by a comma: <code>13:15,14:00</code>.
          A heading row is ignored.</p>
+
+      <!-- THE SPREADSHEET GOES STRAIGHT IN. Asking somebody to open the
+           file, Save As, choose CSV, find it again and paste it is five
+           chances to do the wrong thing with the one document several hundred
+           people set their day by.
+
+           It is not a shortcut past anything: the file is turned into exactly
+           the CSV somebody would have pasted, dropped in the box below, and
+           checked by the same code. Every rule still runs. -->
+      <div class="tt-upload">
+        <span class="tt-up-lab">Upload the spreadsheet</span>
+        <p class="tt-up-help">Choose the masjid&rsquo;s Excel file and the times
+           are read straight out of it. Nothing is saved until you have looked
+           at the check below. <strong>If you only have an older
+           <code>.xls</code>, open it and use File &rarr; Save As to make it
+           <code>.xlsx</code>.</strong></p>
+        <div class="row">
+          <label class="btn btn-ghost tt-up-btn" for="tt-file">Choose a file&hellip;</label>
+          <input type="file" id="tt-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+          <span class="tt-up-name" id="tt-file-name" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <p class="tt-or">or paste it in by hand</p>
 
       <label class="fld">
         <span>Year</span>

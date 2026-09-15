@@ -249,7 +249,23 @@
         problems.push("The paste covers more than one year (" + found.join(", ") +
           "). Upload one year at a time.");
       }
-      var year = wantYear || found[0];
+      /*  THE DATES DECIDE THE YEAR, NOT THE BOX.
+          This was `wantYear || found[0]`, so the number in the Year box won
+          outright. Paste or upload the 2026 timetable while the box still
+          says 2027 — and it defaults to next year, so it usually does — and
+          365 days of 2026 times were saved as 2027, silently. Every row
+          looked right, the day count was right, the report said 2027 and
+          meant it. The rows carry a month and a day and no year at all, so
+          nothing downstream could have caught it either.
+
+          The file is the truth now, and a box that disagrees is a complaint
+          rather than an override. */
+      var year = found.length === 1 ? found[0] : (wantYear || found[0]);
+      if (wantYear && found.length === 1 && wantYear !== found[0]) {
+        problems.push("The Year box says " + wantYear + " but every date in " +
+          "this timetable is " + found[0] + ". Change the box to " + found[0] +
+          ", or check you have the right file.");
+      }
       return { rows: rows, year: year, problems: problems };
     }
 
@@ -329,9 +345,340 @@
         it opens no session and fetches nothing, and Save still goes through
         save_prayer_year, which the database refuses to anyone who is not a
         verified admin. */
+    /* =====================================================================
+       READING AN EXCEL FILE
+
+       The office keeps the year in a spreadsheet. Asking somebody to open it,
+       Save As, pick CSV, find the file again and paste it in is five chances
+       to do the wrong thing with the one document several hundred people set
+       their day by — so the file goes straight in.
+
+       NO LIBRARY, AND THAT IS DELIBERATE. SheetJS is about 900 KB to read a
+       file this screen opens a few times a year, and this project vendors
+       rather than reaching for a CDN on principle: no third party gets to see
+       what the masjid's office is doing. An .xlsx is a ZIP of XML files, and
+       the browser will inflate a stream on its own, so the whole reader is
+       the code below.
+
+       WHAT PROTECTS THE PRAYER TIMES. This converts a spreadsheet into
+       exactly the CSV somebody would otherwise have pasted, drops it in the
+       paste box, and stops. EVERY check still runs: the HH:MM test, the
+       prayer-order test that catches two transposed columns, the duplicate-day
+       test, the day count, the year check. Nothing here can put a time on the
+       website that the paste route could not, and a misread cell fails loudly
+       rather than quietly.
+    ===================================================================== */
+
+    /*  Just enough ZIP to get four files out of an .xlsx.
+
+        Entries are found through the central directory at the end of the
+        file, NOT by scanning for local headers: a local header records a
+        length of zero when the writer streamed the file, and half the
+        spreadsheet software in the world streams. */
+    function unzip(buf) {
+      var v = new DataView(buf), u = new Uint8Array(buf), i;
+
+      //  End of central directory. Scanned backwards because a ZIP comment
+      //  can follow it, and 22 is its length with no comment.
+      var eocd = -1;
+      for (i = u.length - 22; i >= 0 && i > u.length - 66000; i--) {
+        if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error("not-a-zip");
+
+      var count = v.getUint16(eocd + 10, true);
+      var at = v.getUint32(eocd + 16, true);
+      var out = {};
+
+      for (i = 0; i < count; i++) {
+        if (v.getUint32(at, true) !== 0x02014b50) throw new Error("not-a-zip");
+        var method = v.getUint16(at + 10, true);
+        var csize  = v.getUint32(at + 20, true);
+        var nlen   = v.getUint16(at + 28, true);
+        var mlen   = v.getUint16(at + 30, true);
+        var klen   = v.getUint16(at + 32, true);
+        var lho    = v.getUint32(at + 42, true);
+        var name   = new TextDecoder().decode(u.subarray(at + 46, at + 46 + nlen));
+
+        //  The local header repeats the name and extra field, and its extra
+        //  field is NOT always the same length as the central one.
+        var lnlen = v.getUint16(lho + 26, true);
+        var lxlen = v.getUint16(lho + 28, true);
+        var start = lho + 30 + lnlen + lxlen;
+
+        out[name] = { method: method, bytes: u.subarray(start, start + csize) };
+        at += 46 + nlen + mlen + klen;
+      }
+      return out;
+    }
+
+    /*  Stored (0) or deflated (8) — the only two methods anything writes.
+        DecompressionStream does the inflating, so there is no inflate
+        implementation in this file to get wrong. */
+    function inflate(entry) {
+      if (!entry) return Promise.resolve("");
+      if (entry.method === 0) {
+        return Promise.resolve(new TextDecoder().decode(entry.bytes));
+      }
+      if (entry.method !== 8) return Promise.reject(new Error("zip-method"));
+      if (typeof DecompressionStream === "undefined") {
+        return Promise.reject(new Error("no-decompressor"));
+      }
+      //  A copy, because the view is onto the whole file's buffer and
+      //  Response would otherwise read past the end of this entry.
+      var copy = entry.bytes.slice();
+      var ds = new DecompressionStream("deflate-raw");
+      return new Response(new Blob([copy]).stream().pipeThrough(ds)).text();
+    }
+
+    function xml(text) {
+      //  Parsed as XML, not HTML: an XML document runs no script and has no
+      //  innerHTML. The only things read out of it are text nodes.
+      var d = new DOMParser().parseFromString(text, "application/xml");
+      if (d.getElementsByTagName("parsererror").length) throw new Error("bad-xml");
+      return d;
+    }
+
+    //  "BC12" -> 54. Needed because a row omits empty cells entirely, so the
+    //  only way to know which column a value is in is its reference.
+    function colOf(ref) {
+      var n = 0;
+      for (var i = 0; i < ref.length; i++) {
+        var c = ref.charCodeAt(i);
+        if (c < 65 || c > 90) break;
+        n = n * 26 + (c - 64);
+      }
+      return n - 1;
+    }
+
+    /*  Excel keeps a time as a fraction of a day and a date as a count of
+        days from 1899-12-30. Neither looks like anything until it is
+        converted, and getting it wrong is the one failure that would put a
+        plausible-looking wrong time on the website — which is why the result
+        goes back through the same checker as a paste.
+
+        The split is by magnitude and it is safe: a time is under 1, and a
+        date from 2020 onwards is over 43000. Nothing in a prayer timetable
+        lands between. */
+    function fromSerial(n) {
+      if (n > 0 && n < 1) {
+        var mins = Math.round(n * 1440) % 1440;
+        return ("0" + Math.floor(mins / 60)).slice(-2) + ":" +
+               ("0" + (mins % 60)).slice(-2);
+      }
+      if (n >= 20000 && n < 80000) {
+        var d = new Date(Math.round(n) * 86400000 + Date.UTC(1899, 11, 30));
+        return d.getUTCFullYear() + "-" +
+               ("0" + (d.getUTCMonth() + 1)).slice(-2) + "-" +
+               ("0" + d.getUTCDate()).slice(-2);
+      }
+      //  A whole number of minutes past midnight written as a plain number,
+      //  and anything else, is handed back as it was for the checker to
+      //  reject rather than guessed at.
+      return String(n);
+    }
+
+    /*  The sheet, as a grid of strings. Returns { rows } or throws a short
+        code that readFile() turns into a sentence. */
+    function sheetToRows(sheetXml, shared) {
+      var doc = xml(sheetXml);
+      var rowEls = doc.getElementsByTagName("row");
+      var rows = [];
+
+      for (var r = 0; r < rowEls.length; r++) {
+        var cells = rowEls[r].getElementsByTagName("c");
+        var line = [];
+        for (var c = 0; c < cells.length; c++) {
+          var cell = cells[c];
+          var at = colOf(cell.getAttribute("r") || "");
+          var t = cell.getAttribute("t");
+          var val = "";
+
+          if (t === "s") {
+            var vs = cell.getElementsByTagName("v")[0];
+            var idx = vs ? parseInt(vs.textContent, 10) : -1;
+            val = (idx >= 0 && shared[idx] != null) ? shared[idx] : "";
+          } else if (t === "inlineStr") {
+            var ts = cell.getElementsByTagName("t");
+            for (var k = 0; k < ts.length; k++) val += ts[k].textContent;
+          } else {
+            var v2 = cell.getElementsByTagName("v")[0];
+            var raw = v2 ? v2.textContent : "";
+            if (raw !== "" && t !== "str" && !isNaN(Number(raw))) {
+              val = fromSerial(Number(raw));
+            } else {
+              val = raw;
+            }
+          }
+          if (at >= 0) line[at] = String(val).trim();
+        }
+        //  Holes become empty strings so the columns line up.
+        for (var f = 0; f < line.length; f++) if (line[f] == null) line[f] = "";
+        rows.push(line);
+      }
+      return rows;
+    }
+
+    /*  Rows to the CSV the paste box expects. A field containing a comma is
+        quoted — the Jumuʿah column is two times with a comma between them,
+        and this is the same shape a spreadsheet exports. */
+    function rowsToCsv(rows) {
+      return rows.map(function (line) {
+        return line.map(function (f) {
+          f = f == null ? "" : String(f);
+          return /[",\n]/.test(f) ? '"' + f.replace(/"/g, '""') + '"' : f;
+        }).join(",");
+      }).join("\n");
+    }
+
+    var FILE_TROUBLE = {
+      "not-a-zip":
+        "That does not look like an Excel file. If it is an older .xls, open " +
+        "it and use File → Save As to make it .xlsx, or save it as CSV and " +
+        "paste it in below.",
+      "zip-method":
+        "That spreadsheet is compressed in a way this page cannot open. Open " +
+        "it and save it again as .xlsx.",
+      "no-decompressor":
+        "This browser cannot open a spreadsheet. Save the timetable as CSV and " +
+        "paste it into the box below instead.",
+      "bad-xml":
+        "That spreadsheet could not be read. Open it, save it again as .xlsx, " +
+        "and try once more.",
+      "no-sheet":
+        "There is no worksheet in that file.",
+      "no-dates":
+        "No column in that spreadsheet looks like a date. The timetable needs " +
+        "one row a day with the date in the first column — check you have " +
+        "opened the right sheet, and that there are no merged cells across " +
+        "the top.",
+      "too-few":
+        "That sheet has fewer than twenty rows of times in it. A year needs " +
+        "one row a day."
+    };
+
+    /*  The whole job: bytes in, CSV out. Refuses rather than half-reads —
+        anything it cannot make sense of is handed back as a sentence, and
+        nothing reaches the paste box. A part-read timetable that looks
+        complete is how a wrong prayer time gets published. */
+    function readWorkbook(buf) {
+      var files;
+      try { files = unzip(buf); }
+      catch (e) { return Promise.reject(e); }
+
+      var sheetNames = Object.keys(files).filter(function (n) {
+        return /^xl\/worksheets\/sheet\d+\.xml$/.test(n);
+      }).sort();
+      if (!sheetNames.length) return Promise.reject(new Error("no-sheet"));
+
+      return inflate(files["xl/sharedStrings.xml"]).then(function (ssText) {
+        var shared = [];
+        if (ssText) {
+          var si = xml(ssText).getElementsByTagName("si");
+          for (var i = 0; i < si.length; i++) {
+            //  A string can be split across several <t> runs when part of it
+            //  is formatted differently. Joined, or "13:15,14:00" arrives as
+            //  "13:15".
+            var ts = si[i].getElementsByTagName("t"), str = "";
+            for (var k = 0; k < ts.length; k++) str += ts[k].textContent;
+            shared.push(str);
+          }
+        }
+
+        /*  EVERY SHEET IS TRIED, not just the first. A workbook often opens
+            on a summary tab with the year on another, and "sheet1.xml" is
+            the first sheet as written rather than the one anybody looks at.
+            The one with the most rows the checker recognises wins. */
+        return sheetNames.reduce(function (chain, name) {
+          return chain.then(function (best) {
+            return inflate(files[name]).then(function (text) {
+              var rows;
+              try { rows = sheetToRows(text, shared); }
+              catch (e) { return best; }
+              var dated = rows.filter(function (line) {
+                return line.length >= 12 && readDate(line[0]);
+              }).length;
+              return (!best || dated > best.dated)
+                ? { rows: rows, dated: dated, name: name } : best;
+            });
+          });
+        }, Promise.resolve(null));
+      }).then(function (best) {
+        if (!best || !best.dated) throw new Error("no-dates");
+        if (best.dated < 20) throw new Error("too-few");
+        return { csv: rowsToCsv(best.rows), days: best.dated };
+      });
+    }
+
     function wireEditor() {
       var yearBox = el("tt-year");
       if (yearBox && !yearBox.value) yearBox.value = new Date().getFullYear() + 1;
+
+      /*  The spreadsheet, read here and checked below. It fills the paste box
+          and then presses Check for the person, so what they see next is the
+          same report a paste produces — same rules, same wording, same Save
+          button that stays disabled until it is clean.
+
+          On any trouble the paste box is left ALONE. Half a timetable in the
+          box, looking finished, is the one outcome worth engineering against:
+          the checker would pass it, the day count would be short, and short
+          is exactly what somebody clicks past at the end of a long evening. */
+      var fileBox = el("tt-file");
+      if (fileBox) fileBox.addEventListener("change", function () {
+        var f = this.files && this.files[0];
+        note("tt-error", ""); note("tt-ok", "");
+        el("tt-file-name").textContent = "";
+        if (!f) return;
+
+        if (!/\.xlsx$/i.test(f.name)) {
+          note("tt-error", FILE_TROUBLE["not-a-zip"]);
+          this.value = "";
+          return;
+        }
+        //  A year of prayer times is a few tens of kilobytes. Anything of a
+        //  size that could lock the browser up is refused before it is read.
+        if (f.size > 8 * 1024 * 1024) {
+          note("tt-error", "That file is " + Math.round(f.size / 1048576) +
+               " MB, which is far larger than a timetable. Check it is the " +
+               "right file.");
+          this.value = "";
+          return;
+        }
+
+        var input = this;
+        el("tt-file-name").textContent = "Reading " + f.name + "\u2026";
+
+        f.arrayBuffer().then(readWorkbook).then(function (out) {
+          el("tt-paste").value = out.csv;
+
+          /*  The Year box is set FROM THE FILE, and the year is said out loud
+              on screen. The box defaults to next year, so leaving it alone
+              would mean every upload of the current year's timetable is met
+              with a complaint about a mismatch the person did not make — and
+              a complaint somebody sees on every single upload is one they
+              stop reading. Saying "365 days read for 2026" is the honest
+              version: they can see which year went in. */
+          var peek = read(out.csv, null);
+          if (peek.year) el("tt-year").value = peek.year;
+
+          el("tt-file-name").textContent = f.name + " \u2014 " + out.days +
+            " day" + (out.days === 1 ? "" : "s") + " read" +
+            (peek.year ? " for " + peek.year : "");
+          //  Straight into the ordinary check, so the person never has to
+          //  know the file took a different road in.
+          el("tt-check").click();
+        }).catch(function (e) {
+          var why = FILE_TROUBLE[e && e.message];
+          note("tt-error", why ||
+               "That spreadsheet could not be read. Save it as CSV and paste " +
+               "it into the box below instead.");
+          el("tt-file-name").textContent = "";
+          //  Cleared so choosing the SAME file again still fires a change
+          //  event — otherwise a second attempt after fixing the file does
+          //  nothing at all and looks like the page has frozen.
+          input.value = "";
+        });
+      });
 
       el("tt-check").addEventListener("click", function () {
         note("tt-error", ""); note("tt-ok", "");
@@ -412,6 +759,8 @@
     //  Exported for the tests: the parser is the part worth testing and it
     //  needs no browser, no database and nobody signed in.
     return { mount: mount, _wire: wireEditor, _read: read, _readDate: readDate,
+             _readWorkbook: readWorkbook, _rowsToCsv: rowsToCsv,
+             _fromSerial: fromSerial, _colOf: colOf,
              _splitCsvLine: splitCsvLine, _daysIn: daysIn };
   })();
 
@@ -435,6 +784,10 @@
       out no access that a signed-in admin does not already have, and none at
       all to anybody else. The check is in the database, not in this file. */
   window.__TIMETABLE_PARSER = {
+    readWorkbook: timetable._readWorkbook,
+    rowsToCsv:    timetable._rowsToCsv,
+    fromSerial:   timetable._fromSerial,
+    colOf:        timetable._colOf,
     read: timetable._read,
     wire: timetable._wire,
     readDate: timetable._readDate,
