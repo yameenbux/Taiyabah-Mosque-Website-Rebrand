@@ -62,6 +62,7 @@ If you only remember three things about this repository:
 | **`newbuild/`** | **The new build page editor** — the appeal figure, what it pays for and the timeline of phases, so the masjid can keep its own page current. |
 | **`notices/`** | **Notices** — what the masjid is telling people this week. Write it, attach a poster, publish it. It appears on the front page; nothing is visible to anybody until somebody presses Publish. |
 | **`times/`** | **Prayer timetable** — paste a year in, check it, save it as a draft, publish it when it is complete. The masjid changes its own prayer times here; nobody needs a developer and nobody needs to push to GitHub. |
+| **`app/`** | **Send a notification** — reaches every phone with the masjid's app on it. Behind a confirmation step, because it is the one thing in this portal that cannot be undone, and it keeps a list of what has been sent and by whom. |
 | **`portal/`** | **Madrasah portal** — for parents, teachers and administrators. |
 | **`apply/`** | The madrasah application form, published as a **preview that cannot send**. |
 
@@ -273,6 +274,78 @@ same way, which is how User access and the Madrasah portal ended up filed in
 with the page editors. Those two now sit where they belong: one under Settings,
 where the twice-a-year jobs are, and one under its own heading, because a
 teacher account sees that row and nothing else.
+
+### The phone app, and the seam nobody was watching
+
+The masjid runs two things against **one** Supabase project: this website, and
+the phone app (`yameenbux/Taiyabah-Mosque-App`), a PWA whose notifications are
+sent by a Cloudflare Worker holding the OneSignal key. They share
+`public.notices` — the app's own first migration says so and names this
+project by id.
+
+Neither repository's tests can see the other. So on the morning of 15 September,
+`040` dropped `publish_notice()` — correctly, it had no admin check in it at
+all — and the Worker went on calling it. Because the Worker sends the push
+*after* writing the notice row, **the app's send button failed and no
+notification went out either**. Every test in both repositories passed
+throughout. A janāzah announcement would have gone nowhere, and the only sign
+was an error the trustee had no way to interpret.
+
+`_test/app_bridge_test.py` is the check that would have caught it. It reads the
+Worker's own source, pulls out every `supaRpc(env, "…")` call by regex, and
+fails if this project does not define that function. Not a list kept by hand
+here — a list would have been exactly as out of date as the migration was. It
+needs a checkout of the app repository and **skips loudly** without one, saying
+in full what it did not check, because a cross-repository test that reports
+success when it could not see the other repository is the kind of reassurance
+that caused this.
+
+It also holds the two vocabularies apart. Notice topics and push topics
+*overlap* and are not the same set: `jamaah` is a push audience with no notice
+behind it, `ramadan` and `madrasah` are notice topics the app has no switch
+for. The test asserts the **difference**, not either list, so it fails if
+somebody tidies them into one — which is the tempting and wrong fix the first
+time one of them is edited.
+
+#### Sending from the Admin Centre
+
+The Worker authenticates with **one shared password**, and its bearer token's
+entire payload is `{"exp": …}` — no subject, no name. Fine for one screen used
+by two trustees on a phone. Wrong for the Admin Centre, where a committee
+member has already signed in with an account *and* an authenticator, and where
+asking for a second shared password would undo the point of both.
+
+So `/app/` calls the `app-notify` Edge Function, which holds the password as a
+secret nobody on the committee sees. The order is the design:
+
+1. `app_notification_start()` **with the caller's own token** — which runs
+   `verified_admin()` and writes a row whose actor is `auth.uid()`. The Edge
+   Function is never told who the sender is and cannot say. A bug there can
+   fail to send; it cannot write the wrong person's name against an
+   announcement of a death.
+2. Send.
+3. `app_notification_finish()` with the service key, saying only how it went.
+
+**Nothing in Cloudflare or the app repository changes.** This is server to
+server, so there is no `Origin` header and nothing for the Worker's CORS to
+reject — `ALLOWED_ORIGIN` does not need the website adding to it.
+
+**`ok` means received, not saved.** The Worker answers HTTP 200 with
+`sent: {sent:false, error:…}` when the notice was stored and the push refused.
+`app-notify` reads success from `sent.sent` and the bridge test enforces that,
+because a screen saying "sent" about something nobody received is worse than
+one that says nothing.
+
+The app's own trustee screen stays. A janāzah notice usually needs sending from
+a phone, at the masjid, in a hurry — the worst possible moment to be asked for
+a desktop sign-in and a six-digit code. That is the fast path; this is the
+considered one, and it is the one that leaves a record.
+
+**Setup, once:** `APP_SENDER_URL` and `APP_SENDER_PASSWORD` in *Project
+settings → Edge Functions → Secrets*. Until both are set the screen says so
+plainly and records nothing — a log entry saying somebody tried to send, when
+the site was never configured to send, is a misleading entry in a log that has
+to be trustworthy.
 
 ### The prayer timetable
 
@@ -735,6 +808,8 @@ Migrations are pasted into the SQL editor in order.
 | `038_retention_actually_runs` | **The two most sensitive tables were the two nothing ever purged.** Eight cron jobs ran the retention policy; `purge_old_admission_applications` and `purge_old_charity_collections` existed and were never scheduled — so children's dates of birth, SEND status, allergies and medical conditions, and charity trustees who never contacted the masjid at all, were kept indefinitely while everything else was purged on time. They could not have been scheduled either: both opened with `if not is_admin()`, and pg_cron has no JWT, so a schedule would have failed silently every night. The guard now allows an internal caller and requires `verified_admin()` of a signed-in one — which also matters because one administrator still has no authenticator. Both now run nightly at twelve months. |
 | `037_rate_limit_every_public_form` | **Four more forms with no limit at all.** A first pass searching each function for "rate" or "limit" said they were protected; the word that matched was `limit` in unrelated SQL. Searching source for a reassuring word is not a test. Looking for `now() - interval` gave the real answer: nikāḥ, admissions, courses and volunteers had nothing. One generic `rate_limit_by_contact()` trigger, parameterised by column names, applied to all four. It does **not** stop somebody varying both phone and email — nothing in Postgres can, since it cannot see an IP — and if that ever happens the answer is Cloudflare in front of the site, not a lower number here. |
 | `035_notify_the_other_three_forms` | **Three more forms that wrote a row and told nobody**, found by asking of every anon-callable function "and then who is told?" Madrasah admissions, course registrations and foodbank volunteers all collected an email address and never used it. Adds their webhooks the same way `033` does, plus `grant select on courses to service_role` so a course key becomes its real name. The madrasah email deliberately carries **nothing at all about a child** — no name, date of birth, school, SEND, EHCP, allergy or medical detail. |
+| `050_the_app_can_publish_a_notice_again` | **A production outage this project caused, and did not notice.** `040` dropped `publish_notice()` — rightly; it had no admin check at all and was safe only by its grant. What nobody asked was who else was calling it. The phone app's Cloudflare Worker was, and it sends the push *after* writing the row, so from that morning **pressing "Send notification" on the app's trustee screen failed and no notification went out either**. Restores it with the same name, argument and return shape the Worker expects, service_role only, and validating through `check_notice()` — so the app and the website have one definition of a valid notice and two doors to it. |
+| `051_a_push_has_a_sender` | **The one irreversible action in the whole system had no record of who took it.** Every hall booking, Gift Aid claim and role change leaves an `admin_audit` row naming a person; a notification reaching every phone in the congregation left nothing, and its history lived in one browser's `localStorage` — so two trustees could not see each other's sends. Adds `app_notifications` and **two** functions rather than one: `app_notification_start()` runs under the caller's own JWT so `auth.uid()` decides who the sender is, and `app_notification_finish()` is service_role only and may change nothing but how it went. The row is written **before** the send, because a record written afterwards is missing exactly the sends somebody will be trying to reconstruct. |
 
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs
