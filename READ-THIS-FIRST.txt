@@ -1,0 +1,48 @@
+TAIYABAH MASJID — FILES TO PUSH
+Rebuilt 15 September 2026, at commit 8f30332.
+
+WHAT IS IN HERE
+  111 files, every one changed or added since the last thing on origin/main.
+  Copy them over the top of your local clone, keeping the folder structure,
+  then commit and push.
+
+THREE THINGS A ZIP CANNOT EXPRESS
+  A zip can add and replace files. It cannot delete them. Run these three in
+  your clone before you commit, or the deleted files will still be on the
+  live site:
+
+      rm -f img/test
+      git rm --cached -f portal/supabase2.112.4.js 2>/dev/null; rm -f portal/supabase2.112.4.js
+      git rm --cached -f supabase/functions/index.ts 2>/dev/null; rm -f supabase/functions/index.ts
+
+  (The first is a stray one-byte file. The other two are old copies that were
+  moved; leaving them behind serves stale JavaScript to the masjid.)
+
+WHAT CHANGED THIS TIME — read this bit
+  The Admin Centre home page and the menu inside every staff screen were two
+  separate lists. They had drifted: the home page offered eight areas and the
+  screens offered eleven, so clicking a tile made three rows appear that had
+  not been on the page you came from. That is the "more tabs appear" problem.
+
+  There is one list now. After you push, check the Admin Centre: the menu down
+  the left should read the same on the home page and on every screen you open
+  from it —
+
+      What people have asked for   Hall Hire & Nikah, Charity collections,
+                                   Adult classes, Food Bank volunteers
+      Money                        Gift Aid
+      The madrasah                 Madrasah portal
+      Change what the website says Notices, Hall hire charges,
+                                   Prayer timetable, The new build page
+      Settings                     User access
+
+  Nothing in the database changed. No migration to run for this one.
+
+ONE MIGRATION STILL TO APPLY, if you have not already
+  db/049_one_person_is_not_people.sql — run it in the Supabase SQL editor.
+  Everything up to 048 is already on production.
+
+SECRETS
+  Nothing in this zip contains a secret key. If GitHub secret scanning blocks
+  the push, do NOT click "Allow Secret" — cancel, tell me, and the key gets
+  replaced and rotated.

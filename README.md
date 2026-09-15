@@ -217,6 +217,63 @@ under it, every destination is a folder that exists, the current page is
 marked, the logo loads and sits in the corner, and the closed drawer is
 `visibility:hidden` so Tab cannot walk into a menu nobody can see.
 
+#### Two menus, and then one
+
+The rail above was added to twelve screens and **the Admin Centre was not one
+of them** — it is the place the rail links *back* to, so it kept drawing its
+own list of areas. Two lists, agreeing by nothing but care.
+
+They stopped agreeing. Notices, Hall hire charges and Prayer timetable were
+built in September, given rows in `admin/shell.js`, and never added to the
+Admin Centre's copy. So the home page offered **eight** ways in and every
+screen you reached offered **eleven**: click any tile and three rows appeared
+that had not been on the page you came from. Reported from the masjid as *"when
+i click on one, more tabs appear … not straight forward and a tad confusing"* —
+which is an exact description of the bug, not a complaint about layout.
+
+Two smaller ones came out of the same root. `volunteers/app.js` admits admin
+**or** hall office, the Admin Centre drew the row for both, and the rail said
+admin-only — the office could open the screen and could not find it. And
+because the home page's list was built from the dashboard payload rather than
+from roles, a failed database call left the page saying *"the areas below still
+work — open one directly"* above three links out of eleven.
+
+There is one list now, in `admin/shell.js`. `portals/index.html` loads it and
+`portals/app.js` calls `AdminShell.visible(roles)`; the `where` links on
+**Needs you** and the *See who* link on the housekeeping pane look their
+folders up in it rather than repeating them. Roles decide, not the payload, so
+a dashboard that will not load no longer removes doors.
+
+Guarded three ways, each proved by deliberately breaking it: `dashboard_test`
+compares the home page's rows against `AdminShell.visible()` as **ordered
+(heading, row) pairs** — same contents in a different order is still a menu
+that changes shape when you click it; `admin_shell_test` refuses a hard-coded
+destination or group heading in `portals/app.js`; and `ADMITS` in that file
+records, by hand, what roles each screen's own `app.js` lets in, so a row that
+is narrower or wider than the door behind it fails.
+
+#### What the headings say
+
+Five groups, and the one the masjid asked for is **not** called Settings:
+
+| Heading | Rows |
+|---|---|
+| What people have asked for | Hall Hire & Nikāḥ, Charity collections, Adult classes, Food Bank volunteers |
+| Money | Gift Aid |
+| The madrasah | Madrasah portal |
+| Change what the website says | Notices, Hall hire charges, Prayer timetable, The new build page |
+| Settings | User access |
+
+The request was for a Settings section at the bottom holding the screens that
+amend pages. The grouping is right and the word is not: *settings* means
+configuration — who may sign in, where mail goes — and a volunteer looking for
+the hall hire prices will search for the word *website*, not the word
+*settings*. The label it replaced, "The masjid's own pages", was vague in the
+same way, which is how User access and the Madrasah portal ended up filed in
+with the page editors. Those two now sit where they belong: one under Settings,
+where the twice-a-year jobs are, and one under its own heading, because a
+teacher account sees that row and nothing else.
+
 ### The prayer timetable
 
 **This was a deadline, not a feature request.** The timetable was
