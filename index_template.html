@@ -79,7 +79,74 @@ window.TAIYABAH_PUBLIC = {
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/site.webmanifest">
+{{FONT_PRELOAD}}
 <style>{{FONT_FACES}}</style>
+<style>
+/* ---------- METRIC-MATCHED FALLBACKS ----------
+
+   Moving the fonts out of the document on 15 September made the first paint
+   44% faster and introduced a layout shift: CLS went from 0.001 to 0.054.
+   Measured on a throttled connection, the whole hero jumped DOWN 14px at
+   2288ms — .eyebrow from y=170 to 184, .hero-cta from 583 to 597 — at the
+   moment Fraunces swapped in for the fallback serif.
+
+   That is not a font-loading problem, it is a METRICS problem. A fallback
+   serif has a shorter ascent than Fraunces, so every line box built with it
+   is shorter, and when the real font arrives every one of them grows and
+   pushes the page down. The visitor is reading, and the thing they are
+   reading moves.
+
+   These two faces are not fonts. They are the SAME fallback the browser was
+   already going to use, re-declared with Fraunces's and Hanken's own vertical
+   metrics forced onto it, so the line box is exactly the same height before
+   and after the swap and nothing moves. Read out of the real files with
+   fontTools: Fraunces ascent 1956/2000 and descent 510/2000; Hanken Grotesk
+   1000/1000 and 303/1000.
+
+   src:local() only — this downloads nothing, ever. If none of the named
+   families exists on the device the face simply fails and the stack falls
+   through to plain `serif` as before, so the worst case is exactly today's
+   behaviour.
+
+   Vertical only. Matching WIDTH needs size-adjust, and the right percentage
+   depends on which physical font the device actually has — Georgia on a Mac,
+   Liberation on Linux, Roboto on Android — so a single number would be wrong
+   almost everywhere. The vertical shift was all of the measured CLS. */
+@font-face{
+  font-family:'Fraunces fallback';
+  src:local('Georgia'),local('Times New Roman'),local('DejaVu Serif'),
+      local('Liberation Serif'),local('Nimbus Roman'),local('Times');
+  ascent-override:97.8%;descent-override:25.5%;line-gap-override:0%;
+}
+@font-face{
+  font-family:'Hanken fallback';
+  src:local('Arial'),local('Helvetica Neue'),local('Helvetica'),local('Roboto'),
+      local('DejaVu Sans'),local('Liberation Sans');
+  ascent-override:100%;descent-override:30.3%;line-gap-override:0%;
+}
+/*  AND AMIRI, WHICH TURNED OUT TO BE THE ONE THAT ACTUALLY MATTERED.
+
+    The first version of this block covered Fraunces and Hanken and changed
+    the measured CLS by nothing at all. The shift was never theirs: the
+    element that moves is `.salam .ar` in the hero — the Arabic greeting —
+    and it is set in Amiri, which had no fallback of its own.
+
+    Amiri is an unusually TALL font. Its ascent is 112.4% of the em and its
+    descent 63.4%, so a line of it occupies 176% of the font size against
+    roughly 125% for an ordinary serif. Swapping that in grew one line in the
+    hero by 14px and pushed the headline, the buttons and the card below it
+    all down together, 2.1 seconds in, while somebody was reading.
+
+    Worth saying plainly: the fix was aimed at the wrong font first because I
+    assumed the body text was to blame instead of measuring which element
+    moved. The measurement took a minute and would have saved the guess. */
+@font-face{
+  font-family:'Amiri fallback';
+  src:local('Scheherazade New'),local('Noto Naskh Arabic'),local('Geeza Pro'),
+      local('Times New Roman'),local('DejaVu Serif'),local('FreeSerif');
+  ascent-override:112.4%;descent-override:63.4%;line-gap-override:0%;
+}
+</style>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -123,14 +190,14 @@ window.TAIYABAH_PUBLIC = {
   *{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;background:var(--brand-900);}
   body{
-    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    font-family:"Hanken Grotesk","Hanken fallback", system-ui, -apple-system, sans-serif;
     font-weight:400;
     color:var(--ink); background:var(--brand-900);
     overflow-x:hidden; -webkit-font-smoothing:antialiased;
   }
-  .display{font-family:"Fraunces", Georgia, serif;}
-  .arabic{font-family:"Amiri", serif;}
-  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.14; font-weight:600; letter-spacing:-.01em;}
+  .display{font-family:"Fraunces","Fraunces fallback", Georgia, serif;}
+  .arabic{font-family:"Amiri","Amiri fallback", serif;}
+  h1,h2,h3,h4{font-family:"Fraunces","Fraunces fallback", Georgia, serif; color:var(--ink); line-height:1.14; font-weight:600; letter-spacing:-.01em;}
   a{text-decoration:none;color:inherit;}
   img,svg{display:block;max-width:100%;}
   ul{list-style:none;}
@@ -232,7 +299,7 @@ window.TAIYABAH_PUBLIC = {
   .brand{display:flex;align-items:center;gap:12px;}
   .brand img{height:32px;width:auto;}
   .brand .txt{line-height:1.22;}
-  .brand .txt strong{display:block;font-family:"Fraunces",serif;color:#F3EFE3;font-size:1.08rem;}
+  .brand .txt strong{display:block;font-family:"Fraunces","Fraunces fallback",serif;color:#F3EFE3;font-size:1.08rem;}
   .brand .txt span{display:block;font-size:.829rem;letter-spacing:.16em;text-transform:uppercase;color:#BBA9B4;}
 
   /* ---------- HEADER UTILITY BAR (live times, desktop only — mobile already has the hero chip + drawer) ---------- */
@@ -345,7 +412,7 @@ window.TAIYABAH_PUBLIC = {
     background:rgba(198,162,76,.1);border:1px solid rgba(198,162,76,.35);
     border-radius:10px;padding:9px 13px;margin-bottom:9px;
   }
-  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.92rem;font-family:"Fraunces",serif;line-height:1.25;}
+  .nav-app-cta strong{display:block;color:var(--gold-bright);font-size:.92rem;font-family:"Fraunces","Fraunces fallback",serif;line-height:1.25;}
   .nav-app-cta span{display:block;color:rgba(243,239,227,.6);font-size:.84rem;margin-top:1px;line-height:1.3;}
   .nav-app-cta .go{color:var(--gold-bright);font-size:1.08rem;}
   .nav-live-cta{margin-bottom:16px;}
@@ -355,7 +422,7 @@ window.TAIYABAH_PUBLIC = {
   @keyframes livepulse{0%{box-shadow:0 0 0 0 rgba(225,91,91,.55);}70%{box-shadow:0 0 0 7px rgba(225,91,91,0);}100%{box-shadow:0 0 0 0 rgba(225,91,91,0);}}
   .nav-stack{display:flex;flex-direction:column;}
   .nav-stack li a{
-    display:flex;align-items:center;gap:12px;padding:13px 4px;color:#F3EFE3;font-family:"Fraunces",serif;
+    display:flex;align-items:center;gap:12px;padding:13px 4px;color:#F3EFE3;font-family:"Fraunces","Fraunces fallback",serif;
     font-size:1.08rem;border-bottom:1px solid rgba(255,255,255,.07);transition:.25s ease;cursor:pointer;
   }
   /* An icon says what the section is; 01..11 only said how long the list was. */
@@ -484,8 +551,39 @@ window.TAIYABAH_PUBLIC = {
   .explore-item:hover .ei-ic{background:var(--brand-900);color:var(--gold-bright);}
   .ei-ic{width:42px;height:42px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;transition:.25s ease;flex-shrink:0;}
   .ei-ic svg{width:18px;height:18px;}
-  .ei-label{font-family:"Fraunces",serif;font-weight:600;font-size:1.08rem;color:var(--ink);letter-spacing:.01em;}
+  .ei-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.08rem;color:var(--ink);letter-spacing:.01em;}
   .ei-sub{font-size:.926rem;color:var(--muted);line-height:1.55;}
+
+  /* ---------- HOME: NOTICES ----------
+     Built on the same card as the glance row so it reads as part of the same
+     page rather than an announcement bolted on. The section is display:none
+     until there is something in it — see the comment on the markup. */
+  .notices-row{background:var(--paper);padding:0 0 64px;}
+  .nt-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+           padding-bottom:10px;margin-bottom:16px;border-bottom:1px solid var(--line);}
+  .nt-head h2{font-size:1.45rem;letter-spacing:-.01em;}
+  .nt-sub{font-size:.88rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);}
+  .nt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+  .nt-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+           padding:15px 16px 16px;display:flex;flex-direction:column;gap:8px;min-width:0;}
+  /* Gold is 2.3:1 on a light card and unreadable as text — --gold-ink is the
+     same colour dark enough to read. The chip uses a tint for its ground and
+     the ink for its letters. */
+  .nt-chip{align-self:flex-start;font-size:.735rem;font-weight:800;letter-spacing:.09em;
+           text-transform:uppercase;color:var(--gold-ink);background:rgba(198,162,76,.13);
+           border-radius:999px;padding:3px 9px;}
+  .nt-card h3{font-size:1.06rem;line-height:1.3;}
+  .nt-when{font-size:.86rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .nt-body{font-size:.94rem;line-height:1.58;color:var(--ink);white-space:pre-line;}
+  /* width and height are set on the element from the database, so the box is
+     the right shape before the picture arrives and nothing moves when it
+     does — the same reason the fonts carry metric-matched fallbacks. */
+  .nt-card img{width:100%;height:auto;border-radius:10px;border:1px solid var(--line);
+               display:block;}
+  @media(max-width:700px){
+    .notices-row{padding-bottom:48px;}
+    .nt-grid{grid-template-columns:1fr;}
+  }
 
   /* ---------- HOME: AT-A-GLANCE ROW (prayer / new build / quick links / donate) ---------- */
   .glance-row{background:var(--paper);padding:56px 0 68px;}
@@ -493,7 +591,7 @@ window.TAIYABAH_PUBLIC = {
   .glance-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px;display:flex;flex-direction:column;}
   .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
   .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
-  .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+  .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
   .glance-title svg{width:14px;height:14px;color:var(--brand-800);flex-shrink:0;}
   .glance-more{font-size:.838rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--gold-ink);cursor:pointer;white-space:nowrap;}
   .glance-more:hover{text-decoration:underline;}
@@ -512,7 +610,7 @@ window.TAIYABAH_PUBLIC = {
   .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;align-items:center;text-align:center;justify-content:center;}
   .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.825rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:9px;}
   .glance-promo .fc-eyebrow{font-size:.833rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.75;}
-  .glance-promo h3{font-family:"Fraunces",serif;font-size:1.094rem;line-height:1.25;margin:5px 0 4px;}
+  .glance-promo h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.094rem;line-height:1.25;margin:5px 0 4px;}
   .glance-promo .gp-when{font-size:.867rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:7px;}
   .glance-promo p{font-size:.907rem;line-height:1.4;opacity:.85;margin-bottom:11px;max-width:30ch;}
   .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.943rem;}
@@ -561,7 +659,7 @@ window.TAIYABAH_PUBLIC = {
   .glance-donate{background:var(--brand-900);color:#F3EFE3;border:1px solid rgba(198,162,76,.3);align-items:center;text-align:center;justify-content:center;}
   .glance-donate .gd-ic{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
   .glance-donate .gd-ic svg{width:14px;height:14px;}
-  .glance-donate h3{font-family:"Fraunces",serif;font-size:1.042rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;color:#F3EFE3;}
+  .glance-donate h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.042rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px;color:#F3EFE3;}
   .glance-donate p{font-size:.92rem;color:rgba(243,239,227,.78);line-height:1.45;margin-bottom:11px;max-width:26ch;}
   .glance-donate .btn{padding:9px 20px;font-size:.943rem;}
   .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.853rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
@@ -581,7 +679,7 @@ window.TAIYABAH_PUBLIC = {
   .store-badge svg{width:22px;height:22px;flex-shrink:0;}
   .store-badge .sb-text{display:flex;flex-direction:column;line-height:1.15;}
   .store-badge .sb-text .sb-small{font-size:.822rem;color:rgba(255,255,255,.75);letter-spacing:.03em;text-transform:uppercase;}
-  .store-badge .sb-text .sb-big{font-size:1.003rem;font-weight:600;color:#fff;font-family:"Fraunces",serif;}
+  .store-badge .sb-text .sb-big{font-size:1.003rem;font-weight:600;color:#fff;font-family:"Fraunces","Fraunces fallback",serif;}
   .qr-mini{display:flex;align-items:center;gap:10px;}
   .qr-mini img{width:50px;height:50px;border-radius:6px;background:#fff;padding:4px;display:block;}
   .qr-mini span{font-size:.88rem;color:rgba(243,239,227,.68);max-width:92px;line-height:1.3;}
@@ -596,8 +694,37 @@ window.TAIYABAH_PUBLIC = {
   /* ---------- SUBSECTION PATTERN ---------- */
   .subsection{margin-bottom:64px;scroll-margin-top:110px;}
   .subsection:last-child{margin-bottom:0;}
+
+  /* ---------- THE PRAYER PAGE'S TWO-UP ROWS ----------
+
+     These were written as inline styles — style="display:grid;
+     grid-template-columns:1fr 1fr" — directly on two .subsection divs. AN
+     INLINE STYLE CANNOT BE OVERRIDDEN BY A MEDIA QUERY, so both rows stayed
+     two columns wide at every screen size, including a 360px phone.
+
+     What that cost, measured on 15 September 2026: at 360px the container is
+     328px wide, and the two columns plus the 20px gap wanted 345px. The
+     second card ran to 362px — past the container AND past the screen. It
+     was invisible because `body{overflow-x:hidden}` clips the overflow
+     rather than scrolling, so the right-hand edge of Today's Times was
+     simply sliced off. It came right at about 390px, which is why every
+     phone the site was checked on looked fine.
+
+     `min-width:0` on the children is the other half. A grid item defaults to
+     `min-width:auto`, which means it REFUSES to shrink below its content's
+     intrinsic width — so `1fr` does not actually mean "share what there is",
+     and a long unbroken word or a wide number pushes the whole row out.
+     Without this line the single-column fallback below can be overflowed by
+     its own contents in exactly the same way. */
+  .two-up{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .two-up.gap-24{gap:24px;}
+  .two-up.flush{margin-top:0;}
+  .two-up > *{min-width:0;}
+  @media (max-width:400px){
+    .two-up{grid-template-columns:1fr;}
+  }
   .subhead{display:flex;align-items:baseline;gap:16px;margin-bottom:28px;}
-  .subhead .idx{font-family:"Fraunces",serif;font-size:.931rem;color:var(--gold);font-weight:600;}
+  .subhead .idx{font-family:"Fraunces","Fraunces fallback",serif;font-size:.931rem;color:var(--gold);font-weight:600;}
   .subhead h3{font-size:1.316rem;}
   .subhead .rule{margin-left:4px;}
 
@@ -608,7 +735,7 @@ window.TAIYABAH_PUBLIC = {
   /* ---------- ABOUT ---------- */
   .about-hero{background:linear-gradient(160deg,var(--brand-800),var(--brand-900));color:#F3EFE3;border-radius:20px;padding:44px 38px;margin-bottom:56px;position:relative;overflow:hidden;}
   .ab-est{font-size:.853rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:10px;}
-  .ab-lead{font-family:"Fraunces",Georgia,serif;font-size:1.6rem;line-height:1.25;color:#F3EFE3;margin-bottom:12px;}
+  .ab-lead{font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-size:1.6rem;line-height:1.25;color:#F3EFE3;margin-bottom:12px;}
   .ab-sub{color:rgba(243,239,227,.82);line-height:1.75;max-width:60ch;}
   .ab-sub b{color:var(--gold-bright);}
   .roll{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;}
@@ -618,7 +745,7 @@ window.TAIYABAH_PUBLIC = {
   .ab-video{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px 17px;margin-top:22px;}
   .ab-play{width:38px;height:38px;border-radius:50%;background:var(--brand-800);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .ab-play svg{width:15px;height:15px;}
-  .ab-v1{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:1.02rem;}
+  .ab-v1{display:block;font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.02rem;}
   .ab-v2{display:block;font-size:.907rem;color:var(--muted);}
   .plans-row{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0;}
   .plans-row span{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:.931rem;color:var(--brand-800);font-weight:600;}
@@ -636,8 +763,8 @@ window.TAIYABAH_PUBLIC = {
   }
   .nb-body{background:var(--paper);}
   .hadith-block{text-align:center;max-width:44ch;margin:0 auto 60px;}
-  .h-ar{font-family:"Amiri",serif;font-size:1.408rem;color:var(--brand-800);line-height:2;direction:rtl;margin-bottom:14px;}
-  .h-en{font-family:"Fraunces",Georgia,serif;font-size:1.27rem;line-height:1.5;color:var(--ink);margin-bottom:12px;font-style:italic;}
+  .h-ar{font-family:"Amiri","Amiri fallback",serif;font-size:1.408rem;color:var(--brand-800);line-height:2;direction:rtl;margin-bottom:14px;}
+  .h-en{font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-size:1.27rem;line-height:1.5;color:var(--ink);margin-bottom:12px;font-style:italic;}
   .h-src{font-size:.907rem;color:var(--muted);}
   .newbuild-page-hero .hadith-block{
     text-align:left;max-width:none;margin:0;
@@ -693,7 +820,7 @@ window.TAIYABAH_PUBLIC = {
   }
   .dn-main-head .eyebrow{margin-bottom:4px;}
   .dn-main-head h2{
-    font-family:"Fraunces",serif;font-weight:600;font-size:clamp(1.4rem,2.6vw,1.8rem);
+    font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:clamp(1.4rem,2.6vw,1.8rem);
     color:var(--brand-900);margin:0;line-height:1.15;
   }
   .dn-secure{
@@ -842,7 +969,7 @@ window.TAIYABAH_PUBLIC = {
   }
   @media(min-width:720px){ .dn-nb{grid-template-columns:1fr auto;gap:26px;} }
   .dn-nb .eyebrow{color:var(--gold-bright);margin-bottom:7px;}
-  .dn-nb h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.19rem;color:#F3EFE3;margin:0 0 6px;}
+  .dn-nb h4{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.19rem;color:#F3EFE3;margin:0 0 6px;}
   .dn-nb p{font-size:.977rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0;max-width:62ch;}
 
   /* --- WHAT STUDENTS LEARN, in the hero -------------------------------
@@ -868,7 +995,7 @@ window.TAIYABAH_PUBLIC = {
     border-bottom:1px solid rgba(198,162,76,.45);
   }
   .mh-curric .mc-top h4{
-    font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;
+    font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.094rem;
     color:#F3EFE3;margin:0;line-height:1.2;
   }
   .mh-curric .mc-top .mc-lab{
@@ -914,7 +1041,7 @@ window.TAIYABAH_PUBLIC = {
 
   .phase-card{background:var(--brand-900);color:#F3EFE3;border-radius:18px;padding:32px 30px;margin-bottom:16px;}
   .ph-tag{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;}
-  .ph-h{font-family:"Fraunces",Georgia,serif;font-size:1.408rem;color:#F3EFE3;margin-bottom:10px;}
+  .ph-h{font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-size:1.408rem;color:#F3EFE3;margin-bottom:10px;}
   .ph-p{color:rgba(243,239,227,.78);line-height:1.7;margin-bottom:18px;}
   .needs{display:flex;flex-wrap:wrap;gap:8px;}
   .needs span{background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);color:var(--gold-bright);border-radius:999px;padding:6px 13px;font-size:.92rem;font-weight:600;}
@@ -932,7 +1059,7 @@ window.TAIYABAH_PUBLIC = {
      up. ------------------------------------------------------------------ */
   .ph-meter{margin:20px 0 4px;}
   .ph-meter-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-  .ph-raised{font-family:"Hanken Grotesk",system-ui,sans-serif;font-weight:700;font-size:1.8rem;line-height:1;color:#F3EFE3;}
+  .ph-raised{font-family:"Hanken Grotesk","Hanken fallback",system-ui,sans-serif;font-weight:700;font-size:1.8rem;line-height:1;color:#F3EFE3;}
   .ph-raised .of{display:block;font-size:.931rem;font-weight:500;color:rgba(243,239,227,.72);margin-top:6px;letter-spacing:.01em;}
   .ph-pct{font-size:.88rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright);}
   .ph-track{height:11px;border-radius:999px;background:rgba(198,162,76,.2);overflow:hidden;}
@@ -960,7 +1087,7 @@ window.TAIYABAH_PUBLIC = {
   .nb-tl-item.nb-tl-done .nb-tl-dot{border-color:var(--success);background:var(--success);}
   .nb-tl-item.nb-tl-active .nb-tl-dot{border-color:var(--gold);background:var(--gold-bright);box-shadow:0 0 0 4px rgba(198,162,76,.18);}
   .nb-tl-date{font-size:.88rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink);font-weight:700;margin-bottom:4px;}
-  .nb-tl-body h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+  .nb-tl-body h4{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.094rem;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
   .nb-tl-body p{color:var(--muted);font-size:.977rem;line-height:1.6;max-width:62ch;}
   .nb-tl-status{display:inline-block;font-size:.829rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:3px 10px;border-radius:999px;}
   .nb-tl-status.done{background:rgba(63,122,70,.13);color:var(--success-ink);border:1px solid rgba(63,122,70,.35);}
@@ -977,7 +1104,7 @@ window.TAIYABAH_PUBLIC = {
   }
   .nb-give-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px 24px;}
   .nb-give-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;}
-  .nb-give-head h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
+  .nb-give-head h4{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
   .nb-give-head .tag{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
   .nb-give-card .tiers{grid-template-columns:1fr 1fr;}
   .nb-give-card .dc-note{margin-bottom:0;}
@@ -1003,7 +1130,7 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 17px;margin-bottom:18px;
   }
   .ga-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:9px;}
-  .ga-head h5{font-family:"Fraunces",serif;font-weight:600;font-size:1.065rem;color:var(--brand-900);}
+  .ga-head h5{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.065rem;color:var(--brand-900);}
   .ga-head .ga-boost{font-size:.853rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#7A5B10;white-space:nowrap;}
   .ga-lead{font-size:.954rem;line-height:1.6;color:var(--ink);}
   .ga-lead b{color:var(--brand-900);}
@@ -1030,12 +1157,12 @@ window.TAIYABAH_PUBLIC = {
   .t-silver{border-color:#C4BFC2;} .t-silver .t-name{color:#837A80;}
   .t-gold{border-color:#D8BC72;}   .t-gold .t-name{color:var(--gold-ink);}
   .t-plat{border-color:#B39BD0;}  .t-plat .t-name{color:#6E5691;}
-  .t-amt{font-family:"Fraunces",serif;font-size:1.362rem;font-weight:700;color:var(--ink);}
+  .t-amt{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.362rem;font-weight:700;color:var(--ink);}
   .t-name{font-size:.853rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
 
   .donate-cta{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--brand-900);border-radius:14px;padding:18px;text-align:center;margin-bottom:14px;transition:.2s ease;}
   .donate-cta:hover{background:var(--brand-800);}
-  .dc-main{font-family:"Fraunces",serif;font-weight:600;color:#F3EFE3;font-size:1.08rem;}
+  .dc-main{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;color:#F3EFE3;font-size:1.08rem;}
   .dc-sub{font-size:.867rem;letter-spacing:.08em;text-transform:uppercase;color:var(--gold-bright);}
   .dc-note{font-size:.943rem;color:var(--muted);line-height:1.6;text-align:center;max-width:50ch;margin:0 auto 40px;}
   .dc-note b{color:var(--brand-800);}
@@ -1058,14 +1185,35 @@ window.TAIYABAH_PUBLIC = {
   /* ---------- PRAYER TIMES ---------- */
   .live-card{background:var(--brand-900);color:#F3EFE3;border-radius:18px;padding:26px;margin-bottom:16px;}
   .live-card .lk{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);}
-  .live-card .lc-name{font-family:"Fraunces",serif;font-size:1.27rem;color:#F3EFE3;margin:6px 0 2px;}
-  .live-card .lc-time{font-family:"Fraunces",serif;font-size:2.3rem;color:var(--gold-bright);}
+  .live-card .lc-name{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.27rem;color:#F3EFE3;margin:6px 0 2px;}
+  .live-card .lc-time{font-family:"Fraunces","Fraunces fallback",serif;font-size:2.3rem;color:var(--gold-bright);}
   .live-card .lc-count{font-size:.96rem;color:rgba(243,239,227,.72);margin-top:4px;}
   .live-card .lc-note{font-size:.88rem;color:rgba(243,239,227,.78);margin-top:12px;line-height:1.5;}
   .jumuah-flag{display:flex;align-items:center;gap:10px;background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.949rem;color:var(--gold-bright);}
+  /* ---------- TAP TARGETS ----------
+
+     WCAG 2.2 SC 2.5.8 asks for 24x24 CSS pixels. These links were 20-21px
+     tall, which is what a 1rem line of text comes to and what you get if you
+     never think about it.
+
+     It matters more here than the number suggests. These are the masjid's
+     PHONE NUMBERS — the funeral service's out-of-hours line, the hall hire
+     contacts, and Rafik Bhai's number on the collection form. They are
+     tapped by people who are bereaved, elderly, or both, on a phone, often
+     in a hurry. The whole reason this site's type was enlarged in September
+     was that the congregation found it hard to read; a number they can read
+     and then miss with their thumb is the same failure one step later.
+
+     Inline links inside a sentence are deliberately left alone. WCAG exempts
+     them, and padding every link in a paragraph would space the prose out
+     and undo the typography work. These are the standalone ones. */
+  .hh-rate-line a, .hh-notice a, .cc-help a, .fb-vol{
+    display:inline-block;padding-block:3px;
+  }
+
   .snapshot{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;}
   .snapshot .sk{font-size:.84rem;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-700);margin-bottom:6px;}
-  .snapshot .sv{font-family:"Fraunces",serif;font-size:1.08rem;margin-bottom:14px;}
+  .snapshot .sv{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.08rem;margin-bottom:14px;}
   .snap-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.986rem;}
   .snap-row:last-of-type{border-bottom:none;}
   .snap-row .k{color:var(--muted);}
@@ -1077,7 +1225,7 @@ window.TAIYABAH_PUBLIC = {
   .pt-nav button{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--brand-800);font-size:1.08rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
   .pt-nav button:hover{background:var(--brand-900);color:#F3EFE3;border-color:var(--brand-900);}
   .pt-nav button:disabled{opacity:.35;cursor:not-allowed;}
-  .pt-nav .pt-month{font-family:"Fraunces",serif;font-size:1.15rem;min-width:160px;text-align:center;}
+  .pt-nav .pt-month{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.15rem;min-width:160px;text-align:center;}
   .pt-jump,.pt-print{background:none;border:1.5px solid var(--brand-800);color:var(--brand-800);border-radius:999px;padding:8px 16px;font-weight:700;font-size:.92rem;cursor:pointer;}
   .pt-jump:hover,.pt-print:hover{background:var(--brand-800);color:#F3EFE3;}
   .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--line);}
@@ -1089,7 +1237,7 @@ window.TAIYABAH_PUBLIC = {
   .pt-note{margin-top:14px;font-size:.931rem;color:var(--muted);line-height:1.6;}
   .jummah-note{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
   .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:.949rem;}
-  .jummah-note .jc b{display:block;font-family:"Fraunces",serif;color:var(--brand-800);margin-bottom:3px;}
+  .jummah-note .jc b{display:block;font-family:"Fraunces","Fraunces fallback",serif;color:var(--brand-800);margin-bottom:3px;}
 
   /* ---------- MADRASAH ---------- */
   .soon-list{display:flex;flex-direction:column;gap:8px;}
@@ -1170,7 +1318,7 @@ window.TAIYABAH_PUBLIC = {
   .shop-tile{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 10px;cursor:default;}
   .shop-tile .sh-ic{width:36px;height:36px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
   .shop-tile .sh-ic svg{width:17px;height:17px;}
-  .shop-tile .sh-label{font-family:"Fraunces",serif;font-weight:600;font-size:.92rem;color:var(--ink);line-height:1.25;}
+  .shop-tile .sh-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:.92rem;color:var(--ink);line-height:1.25;}
   .shop-tile.has-photo{padding:0 0 14px;overflow:hidden;}
   .shop-tile .sh-photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;border-top-left-radius:12px;border-top-right-radius:12px;margin-bottom:2px;}
   .shop-tile.has-photo .sh-label{padding:0 10px;margin-top:7px;}
@@ -1226,7 +1374,7 @@ window.TAIYABAH_PUBLIC = {
     display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
     padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid rgba(243,239,227,.16);
   }
-  .hf-slot{font-family:"Fraunces",serif;font-size:1.094rem;color:#F3EFE3;margin-bottom:2px;}
+  .hf-slot{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.094rem;color:#F3EFE3;margin-bottom:2px;}
   .hf-when{font-size:.931rem;color:rgba(243,239,227,.65);}
   .hf-back{
     background:none;border:1px solid rgba(243,239,227,.3);color:rgba(243,239,227,.8);
@@ -1285,7 +1433,7 @@ window.TAIYABAH_PUBLIC = {
   }
   .hf-pay .hp-head{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:12px;}
   .hf-pay .hp-amt{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.6rem;
+    font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-weight:600;font-size:1.6rem;
     color:var(--gold-bright);line-height:1;
   }
   .hf-pay .hp-what{font-size:.96rem;color:#F3EFE3;font-weight:600;}
@@ -1300,7 +1448,7 @@ window.TAIYABAH_PUBLIC = {
     border-radius:10px;padding:14px 16px;margin:16px 0;
   }
   .hp-label{font-size:.893rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(243,239,227,.75);}
-  .hp-val{font-family:"Fraunces",serif;font-size:1.5rem;font-weight:700;color:var(--gold-bright);margin-left:auto;}
+  .hp-val{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.5rem;font-weight:700;color:var(--gold-bright);margin-left:auto;}
   .hp-badge{
     width:100%;font-size:.867rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
     color:#F0A88E;
@@ -1319,10 +1467,10 @@ window.TAIYABAH_PUBLIC = {
   }
   .hh-term .ht-n{
     width:30px;height:30px;border-radius:50%;background:var(--brand-900);
-    color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.96rem;
+    color:var(--gold-bright);font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.96rem;
     display:flex;align-items:center;justify-content:center;
   }
-  .hh-term h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.065rem;color:var(--ink);margin-bottom:5px;line-height:1.3;}
+  .hh-term h4{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.065rem;color:var(--ink);margin-bottom:5px;line-height:1.3;}
   .hh-term p{font-size:.969rem;line-height:1.65;color:var(--muted);}
   .hh-terms-foot{
     margin-top:18px;padding:14px 16px;border-radius:10px;
@@ -1344,7 +1492,7 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 18px;margin-bottom:16px;
   }
   .hh-rates h4{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
+    font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-weight:600;font-size:1.08rem;
     color:var(--brand-900);margin:0 0 3px;
   }
   .hh-rate-eff{font-size:.92rem;line-height:1.55;color:var(--muted);margin:0 0 12px;}
@@ -1381,7 +1529,7 @@ window.TAIYABAH_PUBLIC = {
     padding:16px 18px;margin-top:14px;
   }
   .nk-pay h4{
-    font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.08rem;
+    font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-weight:600;font-size:1.08rem;
     color:var(--brand-900);margin:0 0 3px;
   }
   .nk-pay .np-when{
@@ -1439,7 +1587,7 @@ window.TAIYABAH_PUBLIC = {
   .hh-sample-banner.on{display:block;}
 
   .hh-cal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}
-  .hh-month{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
+  .hh-month{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.115rem;color:var(--ink);}
   .hh-nav{
     width:34px;height:34px;border-radius:50%;cursor:pointer;
     background:var(--paper);border:1px solid var(--line);color:var(--brand-800);
@@ -1485,7 +1633,7 @@ window.TAIYABAH_PUBLIC = {
     background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
     padding:22px 24px;margin-top:16px;
   }
-  .hh-panel h4{font-family:"Fraunces",serif;font-size:1.115rem;color:#F3EFE3;margin-bottom:4px;}
+  .hh-panel h4{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.115rem;color:#F3EFE3;margin-bottom:4px;}
   .hh-panel .hh-p-sub{font-size:.943rem;color:rgba(243,239,227,.7);margin-bottom:16px;}
   .hh-sessions{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
   .hh-session{
@@ -1546,7 +1694,7 @@ window.TAIYABAH_PUBLIC = {
   .pillars-grid{display:grid;grid-template-columns:1fr;gap:14px;margin:20px 0 18px;}
   @media (min-width:640px){ .pillars-grid{grid-template-columns:1fr 1fr;} }
   .pillar-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
-  .pillar-num{width:28px;height:28px;border-radius:50%;background:var(--brand-900);color:var(--gold-bright);font-family:"Fraunces",serif;font-weight:700;font-size:.96rem;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .pillar-num{width:28px;height:28px;border-radius:50%;background:var(--brand-900);color:var(--gold-bright);font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.96rem;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
   .pillar-card h3{font-size:1.065rem;margin-bottom:6px;line-height:1.3;}
   .pillar-card p{font-size:.96rem;line-height:1.6;margin-bottom:0;}
   .art-shop{display:flex;gap:18px;align-items:center;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:var(--radius);padding:18px 20px;margin:30px 0 0;}
@@ -1568,21 +1716,21 @@ window.TAIYABAH_PUBLIC = {
   .svc-qtile.is-soon:hover{transform:none;border-color:var(--line);}
   .svc-qtile .sv-ic{width:42px;height:42px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--brand-800);display:flex;align-items:center;justify-content:center;}
   .svc-qtile .sv-ic svg{width:19px;height:19px;}
-  .svc-qtile .sv-label{font-family:"Fraunces",serif;font-weight:600;font-size:.954rem;color:var(--ink);line-height:1.3;}
+  .svc-qtile .sv-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:.954rem;color:var(--ink);line-height:1.3;}
   .svc-qtile .sv-sub{font-size:.867rem;color:var(--muted);line-height:1.4;}
 
   .svc-facts{display:flex;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:18px;}
   .svc-fact{flex:1;text-align:center;padding:16px 8px;border-right:1px solid var(--line);}
   .svc-fact:last-child{border-right:none;}
   .svc-fact .k{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
-  .svc-fact .v{font-size:1.5rem;font-weight:700;color:var(--brand-700);font-family:"Fraunces",serif;margin-top:2px;}
+  .svc-fact .v{font-size:1.5rem;font-weight:700;color:var(--brand-700);font-family:"Fraunces","Fraunces fallback",serif;margin-top:2px;}
 
   /* ---- Holiday Planner -------------------------------------------------- */
   .hp-status{display:flex;gap:14px;align-items:flex-start;border-radius:var(--radius);padding:17px 19px;margin-bottom:22px;border:1px solid var(--line);background:var(--card);}
   .hp-status .dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:6px;}
   .hp-status.is-open .dot{background:var(--success);}
   .hp-status.is-shut .dot{background:var(--danger);}
-  .hp-status .t{display:block;font-family:"Fraunces",serif;font-weight:600;font-size:1.094rem;color:var(--ink);}
+  .hp-status .t{display:block;font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.094rem;color:var(--ink);}
   .hp-status .d{display:block;font-size:.969rem;color:var(--muted);line-height:1.6;margin-top:3px;}
   .hp-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 20px;font-size:.92rem;color:var(--muted);}
   .hp-legend span{display:inline-flex;align-items:center;gap:7px;}
@@ -1595,7 +1743,7 @@ window.TAIYABAH_PUBLIC = {
   @media(min-width:600px){ .hp-months{grid-template-columns:1fr 1fr;} }
   @media(min-width:980px){ .hp-months{grid-template-columns:repeat(3,1fr);} }
   .hp-m{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;}
-  .hp-m h4{font-family:"Fraunces",serif;font-size:1.02rem;font-weight:600;color:var(--ink);margin:0 0 9px;}
+  .hp-m h4{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.02rem;font-weight:600;color:var(--ink);margin:0 0 9px;}
   .hp-wd,.hp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
   .hp-wd span{font-size:.825rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);text-align:center;padding-bottom:4px;}
   .hp-d{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:.88rem;font-variant-numeric:tabular-nums;color:var(--ink);border-radius:5px;border:1px solid transparent;}
@@ -1639,7 +1787,7 @@ window.TAIYABAH_PUBLIC = {
   .nk-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     padding:20px;position:sticky;top:95px;}
   @media(max-width:899px){ .nk-panel{position:static;} }
-  .nk-panel h4{font-family:"Fraunces",serif;font-size:1.094rem;margin:0 0 4px;color:var(--ink);}
+  .nk-panel h4{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.094rem;margin:0 0 4px;color:var(--ink);}
   .nk-panel .sub{font-size:.943rem;color:var(--muted);line-height:1.6;margin:0 0 14px;}
   .nk-pick{display:grid;gap:0;border-top:1px solid var(--line);margin-bottom:14px;}
   .nk-pick > div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
@@ -1689,7 +1837,7 @@ window.TAIYABAH_PUBLIC = {
   .nk-ph .num{width:27px;height:27px;border-radius:50%;background:var(--gold);
     color:var(--brand-900);font-size:.88rem;font-weight:800;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
-  .nk-ph h5{font-family:"Fraunces",serif;font-size:1.115rem;color:var(--ink);margin:0;}
+  .nk-ph h5{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.115rem;color:var(--ink);margin:0;}
   /* Two columns on a desktop, one on a phone. `wide` spans both — a street
      address in a half-width box is the field people get wrong most. */
   /* Six columns, so a field can be a half, a third or two thirds of a row and
@@ -1709,7 +1857,7 @@ window.TAIYABAH_PUBLIC = {
   .nk-panel.nk-wide #nkAction .cf-submit{width:auto;padding-left:34px;padding-right:34px;}
 
   .nk-closed{background:var(--brand-900);color:#F3EFE3;border-radius:12px;padding:17px 18px;}
-  .nk-closed h5{font-family:"Fraunces",serif;font-size:1.065rem;color:#F3EFE3;margin:0 0 7px;}
+  .nk-closed h5{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.065rem;color:#F3EFE3;margin:0 0 7px;}
   .nk-closed p{font-size:.949rem;line-height:1.65;color:rgba(243,239,227,.82);margin:0 0 12px;}
   .nk-closed .tel{display:block;font-size:1.094rem;font-weight:700;color:var(--gold-bright);
     text-decoration:none;font-variant-numeric:tabular-nums;}
@@ -1729,7 +1877,7 @@ window.TAIYABAH_PUBLIC = {
   .edu-tile .et-body{display:flex;flex-direction:column;gap:5px;padding:17px 19px 20px;}
   .edu-tile .et-tag{font-size:.833rem;letter-spacing:.1em;text-transform:uppercase;
     color:var(--gold-ink);font-weight:700;}
-  .edu-tile .et-h{font-family:"Fraunces",serif;font-weight:600;font-size:1.166rem;
+  .edu-tile .et-h{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.166rem;
     color:var(--ink);line-height:1.25;margin:2px 0 1px;}
   .edu-tile .et-p{font-size:.977rem;line-height:1.6;color:var(--muted);}
   .edu-tile .et-meta{font-size:.907rem;color:var(--muted);opacity:.85;margin-top:4px;}
@@ -1761,14 +1909,14 @@ window.TAIYABAH_PUBLIC = {
   .ar-problems.on{display:block;}
   .ar-done{display:none;text-align:center;padding:10px 0 4px;}
   .ar-done.on{display:block;}
-  .ar-done h4{font-family:"Fraunces",serif;font-size:1.15rem;color:var(--ink);margin-bottom:8px;}
+  .ar-done h4{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.15rem;color:var(--ink);margin-bottom:8px;}
   .ar-done p{font-size:.986rem;color:var(--muted);line-height:1.65;margin-bottom:12px;}
   .ar-ref{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.094rem;
     font-weight:700;letter-spacing:.05em;background:var(--paper);border:1px solid var(--line);
     border-radius:9px;padding:9px 18px;color:var(--brand-800);}
   .adm-status{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:22px 22px 20px;}
   .adm-status .lab{font-size:.84rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);display:block;margin-bottom:9px;}
-  .adm-status h3{font-family:"Fraunces",serif;font-size:1.136rem;color:#F3EFE3;margin-bottom:9px;line-height:1.3;}
+  .adm-status h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.136rem;color:#F3EFE3;margin-bottom:9px;line-height:1.3;}
   .adm-status p{font-size:.969rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:12px;}
   .adm-status .adm-preview{width:100%;padding:12px 20px;font-size:.969rem;margin-top:2px;}
   .adm-status .adm-preview-note{font-size:.907rem;line-height:1.6;color:rgba(243,239,227,.6);margin:10px 0 0;}
@@ -1790,7 +1938,7 @@ window.TAIYABAH_PUBLIC = {
 
   .svc-quote{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px;margin-bottom:12px;}
   .svc-quote .ar{font-size:1.08rem;line-height:2;color:var(--gold-ink);direction:rtl;text-align:right;}
-  .svc-quote .en{font-family:"Fraunces",Georgia,serif;font-size:1.02rem;line-height:1.6;color:var(--ink);margin-top:8px;}
+  .svc-quote .en{font-family:"Fraunces","Fraunces fallback",Georgia,serif;font-size:1.02rem;line-height:1.6;color:var(--ink);margin-top:8px;}
   .svc-quote .src{font-size:.84rem;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-ink);margin-top:8px;}
 
   .svc-notprovided{display:flex;align-items:center;gap:9px;margin:4px 0 12px;padding:11px 13px;border-radius:11px;background:#FBF0EB;border:1px solid #EBCDBF;font-size:.949rem;font-weight:600;color:#7C3A20;}
@@ -1803,7 +1951,7 @@ window.TAIYABAH_PUBLIC = {
   /* ---- Funeral services ---- */
   .fs-urgent{background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);padding:22px 24px;margin-bottom:26px;}
   .fs-urgent .u-lab{font-size:.853rem;letter-spacing:.11em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:8px;display:block;}
-  .fs-urgent h3{font-family:"Fraunces",serif;font-size:1.19rem;color:#F3EFE3;margin-bottom:9px;}
+  .fs-urgent h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.19rem;color:#F3EFE3;margin-bottom:9px;}
   .fs-urgent p{font-size:1.003rem;line-height:1.7;color:rgba(243,239,227,.82);margin-bottom:14px;max-width:58ch;}
   .fs-nums{display:flex;flex-wrap:wrap;gap:10px;}
   .fs-num{display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.07);border:1px solid rgba(198,162,76,.34);border-radius:11px;padding:11px 17px;text-decoration:none;transition:.2s ease;}
@@ -1843,7 +1991,7 @@ window.TAIYABAH_PUBLIC = {
     background:var(--brand-900);color:#F3EFE3;border-radius:var(--radius);
     padding:20px 22px;margin:0 0 20px;
   }
-  .cc-rules h4{font-family:"Fraunces",serif;font-weight:600;font-size:1.115rem;
+  .cc-rules h4{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.115rem;
     color:#F3EFE3;margin:0 0 4px;}
   .cc-rules .cc-ver{font-size:.84rem;letter-spacing:.08em;text-transform:uppercase;
     color:var(--gold-bright);margin-bottom:12px;}
@@ -1871,7 +2019,25 @@ window.TAIYABAH_PUBLIC = {
      question ends up with no way to answer it and nobody notices. This keeps
      the radio in the accessibility tree and in the tab order; the label is
      what everybody actually presses. */
-  .cc-yn input{
+  /* `.cc-yn label input`, NOT `.cc-yn input`, AND THAT IS THE WHOLE POINT.
+
+     The short selector scores (0,1,1) and so does `.cf-row input` two hundred
+     lines below, which sets `width:100%`. A specificity TIE is broken by
+     source order, the other rule is later, and it won — so these radios were
+     rendering 360px wide on a phone rather than 1px, absolutely positioned
+     against the viewport, inside a parent 138px wide.
+
+     Nothing looked wrong, because `clip-path:inset(50%)` still hid them and
+     still kept them out of hit-testing, and the labels carried on working.
+     It was found on 15 September 2026 by a sweep measuring every element
+     against the viewport, not by anybody looking at the page.
+
+     The extra `label` makes it (0,1,2) and the tie disappears. Left as it was
+     it is a trap: anything that later changes how clip-path affects pointer
+     events turns a hidden control into a full-width invisible one sitting
+     over the form, and the question it answers is the one that decides
+     whether the office is warned about a PAID COLLECTOR. */
+  .cc-yn label input{
     position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
     overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;
   }
@@ -2058,7 +2224,7 @@ window.TAIYABAH_PUBLIC = {
   /* ---- Legal pages (privacy) ---- */
   .legal-body{max-width:none;}
   .legal-wrap{max-width:74ch;margin:0 auto;}
-  .legal-wrap h2{font-family:"Fraunces",serif;font-size:1.298rem;color:var(--brand-900);margin:38px 0 12px;letter-spacing:-.01em;}
+  .legal-wrap h2{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.298rem;color:var(--brand-900);margin:38px 0 12px;letter-spacing:-.01em;}
   .legal-wrap h2:first-of-type{margin-top:6px;}
   .legal-wrap p{color:var(--ink-2, var(--muted));font-size:1.058rem;line-height:1.8;margin-bottom:14px;}
   .legal-wrap ul{margin:0 0 16px;padding-left:20px;}
@@ -2066,7 +2232,7 @@ window.TAIYABAH_PUBLIC = {
   .legal-wrap li strong{color:var(--ink);font-weight:600;}
   .legal-wrap a{color:var(--brand-700);border-bottom:1px solid rgba(94,24,68,.3);}
   .legal-wrap a:hover{border-color:var(--brand-700);}
-  .legal-sub{font-family:'Fraunces',Georgia,serif;font-size:1.094rem;font-weight:600;
+  .legal-sub{font-family:'Fraunces',"Fraunces fallback",Georgia,serif;font-size:1.094rem;font-weight:600;
              color:var(--brand-800);margin:22px 0 6px;}
   .legal-note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);
     border-radius:0 10px 10px 0;padding:16px 20px;margin:22px 0;}
@@ -2400,6 +2566,28 @@ window.TAIYABAH_PUBLIC = {
     </div>
   </section>
 
+  <!-- ======================= NOTICES =======================
+       What the masjid is telling people this week. Written from /notices/ in
+       the portal and read from the notices_live view, which shows only what
+       somebody deliberately published and has not expired.
+
+       HIDDEN UNTIL THERE IS SOMETHING TO SAY. An empty "Notices" heading on
+       the front page of a masjid reads as neglect — worse than no section at
+       all — and for most of the year there will be nothing here. So the
+       section starts `hidden` and is only ever revealed by a fetch that came
+       back with rows. If the request fails, is slow, or the masjid has posted
+       nothing, the page is exactly as it was before this section existed.
+  ====================================================================== -->
+  <section class="notices-row" id="noticesRow" aria-labelledby="noticesHead" hidden>
+    <div class="container">
+      <div class="nt-head">
+        <h2 id="noticesHead">Notices</h2>
+        <p class="nt-sub">From the masjid committee</p>
+      </div>
+      <div class="nt-grid" id="noticesGrid"></div>
+    </div>
+  </section>
+
   <section class="banner">
     <img class="bg" src="{{BANNER_PHOTO_B64}}" alt="An architect's render of the new Taiyabah Masjid building at night, showing its dome and minaret." loading="lazy" decoding="async">
     <img class="bg-accent" src="{{BANNER_ACCENT_B64}}" alt="" aria-hidden="true" loading="lazy" decoding="async">
@@ -2728,7 +2916,7 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="subsection" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:0;">
+      <div class="subsection two-up flush">
         <div class="live-card" id="liveCard" aria-live="polite">
           <div class="lk">Next Jamā&#703;ah</div>
           <div class="lc-name" id="lc-name">—</div>
@@ -2745,7 +2933,7 @@ window.TAIYABAH_PUBLIC = {
           <div class="snap-row"><span class="k">Asr</span><span class="v" id="s-asr">—</span></div>
           <div class="snap-row"><span class="k">Maghrib</span><span class="v" id="s-maghrib">—</span></div>
           <div class="snap-row"><span class="k">Isha</span><span class="v" id="s-isha">—</span></div>
-          <p class="snap-note">Computed in your browser from the masjid's published 2026 timetable (Europe/London time).</p>
+          <p class="snap-note">Computed in your browser from the masjid&rsquo;s published timetable (Europe/London time).</p>
         </div>
       </div>
 
@@ -2798,7 +2986,7 @@ window.TAIYABAH_PUBLIC = {
         </a>
       </div>
 
-      <div class="subsection" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="subsection two-up gap-24">
         <div>
           <div class="subhead"><span class="idx">02</span><h3>Founders</h3><span class="rule"></span></div>
           <div class="card">
@@ -4220,6 +4408,7 @@ window.TAIYABAH_PUBLIC = {
             <h4>Charges</h4>
             <p class="hh-rate-eff">Every hall booking includes the kitchen and the cleaning. Hire is for the whole day.</p>
 
+            <div id="hh-bands">
             <div class="hh-rate-band">
               <span class="hh-rate-when">Monday &ndash; Thursday</span>
               <div class="hh-rate-line"><span class="n">1 hall</span><span class="p tnum">&pound;350</span></div>
@@ -4246,7 +4435,23 @@ window.TAIYABAH_PUBLIC = {
               <div class="hh-rate-line"><span class="n">Utility charge, if you cook in the kitchen</span><span class="p tnum">45p per person</span></div>
               <div class="hh-rate-line"><span class="n">Damage to the venue</span><span class="p tnum">&pound;100</span></div>
             </div>
+            </div><!-- /#hh-bands -->
 
+            <!-- THE DEPOSIT AND THE BANK DETAILS ARE OUTSIDE #hh-bands ON
+                 PURPOSE, and this comment is the only thing standing between
+                 that and somebody helpfully tidying them inside it.
+
+                 The rate card above is replaced wholesale from the database
+                 so the committee can change prices without a deploy. These
+                 two paragraphs are not, and must not be. The £100 is a Stripe
+                 Payment Link with the amount fixed at Stripe when it was
+                 created: change the number here and the button underneath
+                 still takes £100, so the site would be lying about money in
+                 the one place where being wrong costs the masjid an argument
+                 with a customer rather than an apology.
+
+                 check_hallhire() in db/045 refuses a body that even mentions
+                 a deposit, so the database agrees with this comment. -->
             <p class="hh-rate-note"><strong>&pound;100 deposit, paid online when you book.</strong> That is what reserves the date &mdash; nothing else holds it. It is not refundable if you cancel, but it is refunded in full if the masjid cannot give you the date.</p>
             <p class="hh-rate-note">The <strong>balance</strong> is due 30 days before your booking date and is paid at the office: cash, or bank transfer to <strong>Bolton Central Islamic Society</strong>, sort code <span class="tnum">30-99-50</span>, account <span class="tnum">59286668</span>.</p>
           </div>
@@ -4254,10 +4459,12 @@ window.TAIYABAH_PUBLIC = {
           <div class="hh-rates">
             <h4>Hall bookings</h4>
             <p class="hh-rate-eff">Ring the office, or any of the booking team directly.</p>
+            <div id="hh-contacts">
             <div class="hh-rate-line"><span class="n">Masjid office</span><span class="p tnum"><a href="tel:01204535997">01204 535 997</a></span></div>
             <div class="hh-rate-line"><span class="n">Rafiq I Patel</span><span class="p tnum"><a href="tel:07951795465">07951 795465</a></span></div>
             <div class="hh-rate-line"><span class="n">Mustaq Adam</span><span class="p tnum"><a href="tel:07909973776">07909 973776</a></span></div>
             <div class="hh-rate-line"><span class="n">Alibhai Khotiwala</span><span class="p tnum"><a href="tel:07729297676">07729 297676</a></span></div>
+            </div><!-- /#hh-contacts -->
           </div>
 
           <a class="svc-cta-row" href="https://www.google.com/maps?q=Taiyabah+Centre,+Astley+Street,+Bolton+BL1+8EH" target="_blank" rel="noopener">
@@ -5421,17 +5628,48 @@ window.TAIYABAH_PUBLIC = {
 <div class="totop" id="toTop" aria-label="Back to top">↑</div>
 
 <script>
-  const FULL_2026 = {{FULL_2026_JSON}};
+  /*  THE TIMETABLE, AND WHERE IT COMES FROM.
+
+      This used to be a single baked-in constant — 365 rows compiled into the
+      page by build.py. That made the masjid's own prayer times the one thing
+      on this website the masjid could not change: editing a jama'ah time
+      meant editing a JSON file, running two Python scripts and pushing to
+      GitHub.
+
+      It was also a deadline. The file held 2026 and nothing else, so on
+      1 January 2027 the countdown and the whole timetable would have stopped
+      working, on the page that is the most common reason anybody opens this
+      site — and the person who could fix it is the one who is meant to have
+      stepped back by then.
+
+      Now there are two sources, and the built-in one is the FLOOR rather than
+      the ceiling:
+
+        BUILT_IN   compiled into the page, as before. Works offline, works if
+                   Supabase is down, works if nobody ever touches it again.
+        TIMETABLE  what is actually on screen. Starts as BUILT_IN and is
+                   replaced — once, quietly, in the background — only if the
+                   database has a published year that is complete and sane.
+
+      The page renders from BUILT_IN immediately and never waits for the
+      network. See upgradeTimetable() at the foot of this script for the rules
+      an incoming year must pass, and db/039_prayer_times.sql for how the
+      masjid edits one.  */
+  const BUILT_IN_TIMETABLE = {{FULL_2026_JSON}};
+  const BUILT_IN_YEAR      = {{TIMETABLE_YEAR}};
+
+  let TIMETABLE = BUILT_IN_TIMETABLE;
+  let TT_YEAR   = BUILT_IN_YEAR;
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-  function rowsForMonth(m){ return FULL_2026.filter(r => r[0] === m); }
-  function findRow(m,d){ return FULL_2026.find(r => r[0]===m && r[1]===d); }
+  function rowsForMonth(m){ return TIMETABLE.filter(r => r[0] === m); }
+  function findRow(m,d){ return TIMETABLE.find(r => r[0]===m && r[1]===d); }
   function realToday(){ const now = new Date(); return { y: now.getFullYear(), m: now.getMonth()+1, d: now.getDate(), now }; }
   function toMins(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60+m; }
 
   function computeNext(){
     const { y, m, d, now } = realToday();
-    if(y !== 2026) return null;
+    if(y !== TT_YEAR) return null;
     const today = findRow(m, d);
     if(!today) return null;
     const nowMins = now.getHours()*60 + now.getMinutes();
@@ -5446,7 +5684,7 @@ window.TAIYABAH_PUBLIC = {
     let dayLabel = 'today';
     if(!next){
       const tmr = new Date(now); tmr.setDate(tmr.getDate()+1);
-      const tomorrow = (tmr.getFullYear()===2026) ? findRow(tmr.getMonth()+1, tmr.getDate()) : null;
+      const tomorrow = (tmr.getFullYear()===TT_YEAR) ? findRow(tmr.getMonth()+1, tmr.getDate()) : null;
       if(tomorrow){ next = { key:'Fajr', mins: toMins(tomorrow[4]) }; dayLabel = 'tomorrow'; }
       else { next = prayers[0]; dayLabel = 'today'; }
     }
@@ -5520,7 +5758,7 @@ window.TAIYABAH_PUBLIC = {
     if(!r){
       nameEl.textContent = 'Timetable not loaded';
       timeEl.textContent = '--:--';
-      countEl.textContent = 'This site currently embeds the 2026 timetable only.';
+      countEl.textContent = `This site has the ${TT_YEAR} timetable. Today is outside it.`;
       noteEl.textContent = 'For accurate times today, open the app.';
       flagEl.hidden = true;
       return;
@@ -5542,7 +5780,7 @@ window.TAIYABAH_PUBLIC = {
       const { now } = realToday();
       for(let i=1;i<=7;i++){
         const dt = new Date(now); dt.setDate(dt.getDate()+i);
-        if(dt.getFullYear() !== 2026) break;
+        if(dt.getFullYear() !== TT_YEAR) break;
         const row = findRow(dt.getMonth()+1, dt.getDate());
         if(row && row[13]){ found = row; label = dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); break; }
       }
@@ -5556,11 +5794,11 @@ window.TAIYABAH_PUBLIC = {
 
   function renderSnapshot(){
     const { y, m, d } = realToday();
-    const row = (y===2026) ? findRow(m,d) : findRow(8,13);
+    const row = (y===TT_YEAR) ? findRow(m,d) : findRow(8,13);
     if(!row) return;
-    const dateLabel = (y===2026)
+    const dateLabel = (y===TT_YEAR)
       ? new Date(y,m-1,d).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
-      : '13 August 2026 (example)';
+      : `13 August ${TT_YEAR} (example)`;
     document.getElementById('snapDate').textContent = dateLabel;
     document.getElementById('snapHijri').textContent = row[2];
     document.getElementById('s-fajr').textContent = `${row[3]} begins · ${row[4]} jamāʿah`;
@@ -5574,9 +5812,9 @@ window.TAIYABAH_PUBLIC = {
     const dateEl = document.getElementById('gpDate');
     if(!dateEl) return;
     const { y, m, d } = realToday();
-    const row = (y===2026) ? findRow(m,d) : findRow(8,13);
+    const row = (y===TT_YEAR) ? findRow(m,d) : findRow(8,13);
     if(!row) return;
-    const dateLabel = (y===2026)
+    const dateLabel = (y===TT_YEAR)
       ? new Date(y,m-1,d).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' })
       : 'Tue 13 Aug 2026 (example)';
     dateEl.textContent = dateLabel;
@@ -5597,7 +5835,7 @@ window.TAIYABAH_PUBLIC = {
     });
   }
 
-  let currentMonth = (realToday().y === 2026) ? realToday().m : 8;
+  let currentMonth = (realToday().y === TT_YEAR) ? realToday().m : 8;
   function renderMonth(){
     const tbody = document.getElementById('ptBody');
     const rows = rowsForMonth(currentMonth);
@@ -5606,7 +5844,7 @@ window.TAIYABAH_PUBLIC = {
     document.getElementById('pt-prev').disabled = currentMonth === 1;
     document.getElementById('pt-next').disabled = currentMonth === 12;
     tbody.innerHTML = rows.map(r => {
-      const isToday = (y===2026 && r[0]===todayM && r[1]===todayD);
+      const isToday = (y===TT_YEAR && r[0]===todayM && r[1]===todayD);
       const dateStr = `${r[1]} ${MONTH_NAMES[r[0]-1].slice(0,3)}${isToday ? ' · Today' : ''}`;
       return `<tr class="${isToday?'today':''}"><td>${dateStr}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[7]}</td><td>${r[9]}</td><td>${r[10]}</td><td>${r[12]}</td></tr>`;
     }).join('');
@@ -5620,13 +5858,100 @@ window.TAIYABAH_PUBLIC = {
   document.getElementById('pt-next').addEventListener('click', () => { if(currentMonth<12){ currentMonth++; renderMonth(); }});
   document.getElementById('pt-jump').addEventListener('click', () => {
     const { y, m } = realToday();
-    currentMonth = (y===2026) ? m : 8;
+    currentMonth = (y===TT_YEAR) ? m : 8;
     renderMonth();
   });
   document.getElementById('pt-print').addEventListener('click', () => window.print());
 
-  renderChip(); renderLive(); renderSnapshot(); renderGlance(); renderMonth(); renderHeaderBar();
+  function paintTimetable(){
+    renderChip(); renderLive(); renderSnapshot(); renderGlance();
+    renderMonth(); renderHeaderBar();
+  }
+
+  //  PAINT FIRST, ASK SECOND. Everything above is already in the page, so the
+  //  times are on screen before any network call is even started. Nothing
+  //  below can make the visitor wait.
+  paintTimetable();
   setInterval(() => { renderChip(); renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
+
+  /* ---------------- A NEWER TIMETABLE, IF THERE IS ONE ----------------
+
+     The masjid keeps its timetable in the database now, so the committee can
+     publish next year without a developer. This fetches it and — only if it
+     passes every check below — swaps it in and repaints.
+
+     THE RULES AN INCOMING YEAR HAS TO PASS. This is prayer times on a
+     masjid's website: the failure that matters is not "the new one did not
+     load", it is "the new one loaded and was wrong". So the bar is high and
+     the fallback is silent.
+
+       1  the request must succeed, and within 6 seconds
+       2  it must be an array of at least 300 days — a year, not a fragment
+       3  EVERY row must have 14 fields, and every time must be HH:MM
+       4  it must contain TODAY, or there is no point swapping it in
+       5  anything else at all: keep what is already on screen, say nothing
+
+     Rule 5 is why there is no error message and no spinner. A visitor who
+     wanted Maghrib does not care that a background request failed; they care
+     that the number in front of them is right, and it already is.
+
+     Note this runs for the CURRENT year, not the built-in one. That is the
+     whole point: in January 2027 the built-in year is 2026 and stale, and
+     this is what quietly replaces it.  */
+  function looksLikeATimetable(rows, wantYear){
+    if(!Array.isArray(rows) || rows.length < 300) return false;
+    const hhmm = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+    const seen = new Set();
+    for(const r of rows){
+      if(!Array.isArray(r) || r.length < 14) return false;
+      if(!Number.isInteger(r[0]) || r[0] < 1 || r[0] > 12) return false;
+      if(!Number.isInteger(r[1]) || r[1] < 1 || r[1] > 31) return false;
+      for(let i = 3; i <= 12; i++) if(!hhmm.test(r[i])) return false;
+      seen.add(r[0] + '-' + r[1]);
+    }
+    if(seen.size !== rows.length) return false;          // a day twice
+    const t = realToday();
+    if(t.y === wantYear && !seen.has(t.m + '-' + t.d)) return false;
+    return true;
+  }
+
+  async function upgradeTimetable(){
+    const year = realToday().y;
+    //  The keys live on window.TAIYABAH_PUBLIC, set at the top of the page.
+    //  If they are absent — which is how this site is built to behave when it
+    //  has not been configured — there is nothing to ask and the built-in
+    //  timetable simply stands.
+    const cfg = (window.TAIYABAH_PUBLIC || {});
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) return;
+    try{
+      const ctrl = new AbortController();
+      const bail = setTimeout(() => ctrl.abort(), 6000);
+      const res = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/prayer_year', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json',
+                   'apikey': cfg.SUPABASE_ANON_KEY,
+                   'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY },
+        body: JSON.stringify({ p_year: year }),
+        signal: ctrl.signal
+      });
+      clearTimeout(bail);
+      if(!res.ok) return;
+      const rows = await res.json();
+      if(!looksLikeATimetable(rows, year)) return;
+      if(year === TT_YEAR && rows.length === TIMETABLE.length
+         && JSON.stringify(rows) === JSON.stringify(TIMETABLE)) return;  // identical
+      TIMETABLE = rows;
+      TT_YEAR   = year;
+      const t = realToday();
+      currentMonth = (t.y === TT_YEAR) ? t.m : currentMonth;
+      paintTimetable();
+    }catch(_){
+      /*  Deliberately empty. Offline, blocked, slow, malformed, CORS — the
+          answer to every one of them is the same: the built-in timetable is
+          already on the screen and it is correct. */
+    }
+  }
+  upgradeTimetable();
 
   /* ---------------- Gift Aid ----------------
      Committee decision, 12 September 2026: offer Gift Aid on card donations.
@@ -5689,7 +6014,18 @@ window.TAIYABAH_PUBLIC = {
   })();
 
   /* ---------------- page switching ---------------- */
-  const pages = document.querySelectorAll('.page');
+  /*  RE-QUERIED, NOT CAPTURED. This was `const pages =
+      document.querySelectorAll('.page')`, which returns a STATIC NodeList —
+      a snapshot of the document as it was when this line ran. Any page added
+      afterwards was invisible to showPage(), so the class pages the committee
+      can now create would have had working links to a page that never became
+      visible: the URL would change, the old page would stay on screen, and
+      nothing would throw.
+
+      querySelectorAll on navigation is nothing — it happens when somebody
+      clicks, on a document of thirty-odd sections. The static list was a
+      micro-optimisation with a correctness bug inside it. */
+  const pages = () => document.querySelectorAll('.page');
   const navLinks = document.querySelectorAll('[data-nav]');
   const PAGE_TITLES = {
     'svc-hallhire': 'Hall / Room Hire',
@@ -6250,7 +6586,7 @@ window.TAIYABAH_PUBLIC = {
 
   function showPage(name, opts){
     opts = opts || {};
-    pages.forEach(p => p.classList.toggle('page-active', p.dataset.page === name));
+    pages().forEach(p => p.classList.toggle('page-active', p.dataset.page === name));
     navLinks.forEach(l => { if(l.closest('.nav-stack') || l.closest('.topnav-list')) l.classList.toggle('active', l.dataset.nav === name); });
     if(!opts.noScroll) window.scrollTo({top:0, behavior:'auto'});
     /* Navigation used to call replaceState, which OVERWRITES the current
@@ -6495,24 +6831,31 @@ window.TAIYABAH_PUBLIC = {
     function esc(s){ return String(s).replace(/[&<>"]/g, function(c){
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 
+    function closedBlock(C){
+      return '<div class="adm-status"><span class="lab">Registration</span>' +
+        '<h3>Registration opens shortly</h3><p>' + esc(C.closed) + '</p>' +
+        '<p style="margin-bottom:0;"><strong style="color:#F3EFE3;">' +
+        'The office takes calls between 5pm and 7pm.</strong></p></div>';
+    }
+
     var when = document.getElementById('eduWhen');
     if(when && COURSES.arabic.day){
       when.textContent = COURSES.arabic.day + ', 7:00–8:00pm.';
     }
 
-    Array.prototype.forEach.call(document.querySelectorAll('.course-reg'), function(host){
+    /*  ONE COURSE, DRAWN. Lifted out of the forEach it used to be so it can be
+        called AGAIN once the database has answered — see the block below. The
+        first draw uses the copy compiled into the page; the second uses the
+        copy the committee has written, and because it replaces the host's
+        innerHTML outright, the handlers attached to the old markup go with it
+        rather than piling up. */
+    function renderCourse(host){
       var key = host.getAttribute('data-course');
       var C = COURSES[key];
       if(!C) return;
       var p = 'cr_' + key + '_';                       // id prefix, unique per course
 
-      if(!REGISTRATION_OPEN){
-        host.innerHTML =
-          '<div class="adm-status"><span class="lab">Registration</span>' +
-          '<h3>Registration opens shortly</h3><p>' + esc(C.closed) + '</p>' +
-          '<p style="margin-bottom:0;"><strong style="color:#F3EFE3;">The office takes calls between 5pm and 7pm.</strong></p></div>';
-        return;
-      }
+      if(!REGISTRATION_OPEN){ host.innerHTML = closedBlock(C); return; }
 
       host.innerHTML =
         '<div class="cform">' +
@@ -6646,7 +6989,303 @@ window.TAIYABAH_PUBLIC = {
             : 'We could not register you just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
         });
       });
-    });
+    }
+
+    /*  DRAW THEM ONCE, NOW, from the copy compiled into the page.
+
+        This loop was missing for about ten minutes and the consequence was
+        total: renderCourse() was lifted out of the forEach that used to call
+        it, and nothing called it in its place. Every registration form on the
+        site existed only if the database answered — so with no network, a
+        slow reply, or a 500, the Arabic and Ghusl pages had no form on them
+        at all. The site is meant to work without the database and merely be
+        better with it; that had been quietly inverted.
+
+        Found by a test asserting that a failed request takes nothing away. */
+    Array.prototype.forEach.call(document.querySelectorAll('.course-reg'), renderCourse);
+
+    /* ------------- what the masjid has actually decided, today -------------
+       COURSES above is the copy compiled into the page. The database is the
+       truth: courses_public() returns whether sign-ups are open, how many
+       places are left, and — since db/047 — everything the website SAYS about
+       each class. The committee writes all of it from the portal.
+
+       WHY THIS HAD TO EXIST AT ALL. register_for_course() RAISES when a course
+       is closed. A close button in the portal without this would have meant a
+       volunteer closing the Arabic class, nothing visibly changing, and the
+       next person filling in eleven fields and being handed a raw 400.
+
+       THE UPGRADE ONLY EVER TAKES AWAY, for the classes that are compiled in.
+       The built-in state is "open", so the worst a failed or slow request can
+       do is leave up a form the database will decline politely, and it can
+       never wrongly close a class that is running.
+
+       A CLASS THE PAGE HAS NEVER HEARD OF gets built from nothing: a tile on
+       the Education index and a page of its own. That is how the committee
+       adds a class without a deploy. It is deliberately the plainer of the
+       two paths — the Arabic and Ghusl pages are hand-written, are not the
+       same shape as each other, and are left exactly as they are rather than
+       flattened into one template to save having two code paths. Quietly
+       degrading the two best-written pages on the site would be a poor trade
+       for tidiness.
+
+       On any failure whatever is already on screen stays, and nothing is
+       said. Somebody who came to sign up does not care that a request failed. */
+    (function(){
+      var cfg = window.TAIYABAH_PUBLIC || {};
+      if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+         String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
+
+      var base = String(cfg.SUPABASE_URL).trim()
+                   .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
+
+      function txt(el, v){ if(el && v) el.textContent = v; }
+
+      /* Every list on a class page is label-and-value, so one builder does
+         the fact strip and the "what to know" list both. DOM calls rather
+         than innerHTML: this is written by a verified administrator, but it
+         is also the only content on the site that a non-developer types
+         straight onto a public page. */
+      function pairs(host, rows, wrap, kCls, vCls){
+        if(!host || !Array.isArray(rows) || !rows.length) return;
+        var frag = document.createDocumentFragment();
+        rows.forEach(function(r){
+          if(!r || !r.k || !r.v) return;
+          var row = document.createElement(wrap === 'dl' ? 'div' : 'div');
+          if(wrap !== 'dl') row.className = 'svc-fact';
+          var k = document.createElement(wrap === 'dl' ? 'dt' : 'div');
+          var v = document.createElement(wrap === 'dl' ? 'dd' : 'div');
+          if(kCls) k.className = kCls;
+          if(vCls) v.className = vCls;
+          k.textContent = r.k; v.textContent = r.v;
+          row.appendChild(k); row.appendChild(v);
+          frag.appendChild(row);
+        });
+        if(!frag.childNodes.length) return;
+        host.textContent = '';
+        host.appendChild(frag);
+      }
+
+      /* The copy on a page that already exists in the markup, brought up to
+         date in place. Only the parts the portal can edit are touched; the
+         photograph, the layout and the call-the-office row are the build's. */
+      function refreshPage(key, page){
+        var pg = document.querySelector('[data-page="svc-edu-' + key + '"]');
+        if(!pg || !page) return true;
+        txt(pg.querySelector('.section-head h1'), page.name);
+        txt(pg.querySelector('.section-head p'), page.tagline);
+        txt(pg.querySelector('.svc-detail-facts > p'), page.intro);
+        pairs(pg.querySelector('.svc-facts'), page.facts, 'div', 'k', 'v');
+        pairs(pg.querySelector('.adm-rules'), page.rules, 'dl', null, null);
+        return true;
+      }
+
+      /* A class with no page at all. Built plainly and completely: a masthead
+         with a way back, the opening paragraph, the "what to know" list, the
+         fact strip, the registration host and the office number. */
+      function buildPage(c){
+        var page = c.page || {};
+        var pg = document.createElement('div');
+        pg.className = 'page';
+        pg.setAttribute('data-page', 'svc-edu-' + c.key);
+
+        var mast = document.createElement('section');
+        mast.className = 'page-masthead';
+        var mc = document.createElement('div'); mc.className = 'container';
+        var back = document.createElement('a');
+        back.className = 'back-link'; back.href = '#';
+        back.setAttribute('data-nav', 'svc-education');
+        back.textContent = 'Education';
+        var head = document.createElement('div');
+        head.className = 'section-head on-dark';
+        var eb = document.createElement('div'); eb.className = 'eyebrow';
+        eb.textContent = 'Education';
+        var h1 = document.createElement('h1');
+        h1.style.fontSize = 'clamp(1.9rem,4vw,2.6rem)';
+        h1.textContent = c.name || c.key;
+        var tag = document.createElement('p');
+        tag.textContent = page.tagline || '';
+        head.appendChild(eb); head.appendChild(h1); head.appendChild(tag);
+        mc.appendChild(back); mc.appendChild(head); mast.appendChild(mc);
+
+        var body = document.createElement('section');
+        body.className = 'page-body';
+        var bc = document.createElement('div'); bc.className = 'container';
+        var split = document.createElement('div');
+        split.className = 'svc-split is-rail-first';
+
+        var aside = document.createElement('div'); aside.className = 'svc-aside';
+        var facts = document.createElement('div');
+        facts.className = 'svc-facts';
+        facts.style.marginBottom = '16px';
+        pairs(facts, page.facts, 'div', 'k', 'v');
+        if(facts.childNodes.length) aside.appendChild(facts);
+        var host = document.createElement('div');
+        host.className = 'course-reg';
+        host.setAttribute('data-course', c.key);
+        aside.appendChild(host);
+
+        var detail = document.createElement('div');
+        detail.className = 'svc-detail-facts';
+        var intro = document.createElement('p');
+        intro.style.cssText = 'color:var(--muted);font-size:1.02rem;line-height:1.75;';
+        intro.textContent = page.intro || '';
+        detail.appendChild(intro);
+        var dl = document.createElement('dl');
+        dl.className = 'adm-rules';
+        pairs(dl, page.rules, 'dl', null, null);
+        if(dl.childNodes.length) detail.appendChild(dl);
+
+        split.appendChild(aside); split.appendChild(detail);
+        bc.appendChild(split);
+
+        var cta = document.createElement('div');
+        cta.className = 'cs-cta';
+        cta.style.marginTop = '32px';
+        var a1 = document.createElement('a');
+        a1.className = 'btn btn-gold';
+        a1.setAttribute('data-nav', 'contact');
+        a1.textContent = 'Contact the office';
+        var a2 = document.createElement('a');
+        a2.className = 'btn btn-ghost-light';
+        a2.setAttribute('data-nav', 'svc-education');
+        a2.textContent = 'All courses';
+        cta.appendChild(a1); cta.appendChild(a2);
+        bc.appendChild(cta);
+        body.appendChild(bc);
+
+        pg.appendChild(mast); pg.appendChild(body);
+        document.body.appendChild(pg);
+        return host;
+      }
+
+      /* And a card on the Education index, so the page can be reached. An
+         icon rather than a photograph: a new class has no picture, and a
+         broken image is worse than a drawn one. */
+      function buildTile(c){
+        var grid = document.querySelector('.edu-grid');
+        if(!grid) return;
+        /*  Compared attribute by attribute rather than by building a
+            selector string. verify_structure.py reads this source looking for
+            navigation attributes and checks each one points at a page that
+            exists — and a selector assembled by concatenation contains the
+            first half of one, so it read as a link to a page whose name was
+            the concatenation operator. The checker was right to complain.
+
+            Note the comment itself cannot spell the attribute out either,
+            which is the second time tonight: an explanatory comment that
+            quotes the thing it is explaining trips the same check. */
+        var want = 'svc-edu-' + c.key, already = false;
+        Array.prototype.forEach.call(grid.querySelectorAll('.edu-tile'), function(t){
+          if(t.getAttribute('data-nav') === want) already = true;
+        });
+        if(already) return;
+        var page = c.page || {}, tile = page.tile || {};
+        var a = document.createElement('a');
+        a.className = 'edu-tile'; a.href = '#';
+        a.setAttribute('data-nav', 'svc-edu-' + c.key);
+        var media = document.createElement('span');
+        media.className = 'et-media';
+        var ic = document.createElement('span');
+        ic.className = 'et-ic';
+        ic.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+          'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M12 4.5c2.5-1.6 5.2-1.6 7.5 0v13c-2.3-1.6-5-1.6-7.5 0-2.5-1.6-5.2-1.6-7.5 0v-13c2.3-1.6 5-1.6 7.5 0z"/>' +
+          '<path d="M12 4.5v13"/></svg>';
+        media.appendChild(ic);
+        var b = document.createElement('span');
+        b.className = 'et-body';
+        [['et-tag', tile.tag || 'Adults 16+'],
+         ['et-h',   c.name || c.key],
+         ['et-p',   tile.p || page.tagline || ''],
+         ['et-meta', tile.meta || ''],
+         ['et-read', 'Details & sign-up →']].forEach(function(pair){
+          var sp = document.createElement('span');
+          sp.className = pair[0];
+          sp.textContent = pair[1];
+          b.appendChild(sp);
+        });
+        a.appendChild(media); a.appendChild(b);
+        /* The "More courses — coming soon" card is a placeholder and belongs
+           last, after anything real. */
+        var soon = grid.querySelector('.edu-tile.is-soon');
+        grid.insertBefore(a, soon || null);
+      }
+
+      fetch(base + '/rest/v1/rpc/courses_public', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json',
+                  'apikey':cfg.SUPABASE_ANON_KEY,
+                  'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
+        body:'{}'
+      }).then(function(r){
+        if(!r.ok) throw new Error('courses ' + r.status);
+        return r.json();
+      }).then(function(rows){
+        if(!Array.isArray(rows) || !rows.length) return;
+
+        rows.forEach(function(c){
+          if(!c || !c.key) return;
+          var page = c.page || {};
+
+          /* The copy replaces the built-in copy ONLY if it is whole. Half a
+             class page — the committee's heading over the build's rules —
+             would look entirely normal and be wrong. */
+          var whole = page.tagline && page.intro &&
+                      Array.isArray(page.rules) && page.rules.length &&
+                      Array.isArray(page.cohorts) && page.cohorts.length &&
+                      page.exp_label && Array.isArray(page.exp) && page.exp.length >= 2 &&
+                      page.open && page.closed;
+
+          if(whole){
+            COURSES[c.key] = {
+              name: c.name || c.key,
+              cap: c.capacity,
+              day: '',
+              open: page.open,
+              closed: page.closed,
+              cohorts: page.cohorts.map(function(x){ return [x.key, x.label]; }),
+              expLabel: page.exp_label,
+              exp: page.exp.map(function(x){ return [x.key, x.label]; })
+            };
+          }
+
+          var host = document.querySelector('.course-reg[data-course="' + c.key + '"]');
+          if(!host){
+            /* Never invent a page for a class the committee has not finished
+               writing. A masthead over an empty body is worse than no page. */
+            if(!whole) return;
+            buildTile(c);
+            host = buildPage(c);
+          } else if(whole){
+            refreshPage(c.key, page);
+          }
+
+          if(!COURSES[c.key]) return;
+          if(c.is_open === false){
+            host.innerHTML = closedBlock(COURSES[c.key]);
+            return;
+          }
+          renderCourse(host);
+
+          /* Places left, said before somebody fills the form in rather than
+             after. A full class still takes registrations — they go on the
+             waiting list — so this tells them which they are joining instead
+             of letting them find out on the confirmation screen. */
+          var lead = host.querySelector('.cform-lead');
+          if(!lead || typeof c.places_left !== 'number') return;
+          var n = c.places_left;
+          lead.textContent = n > 0
+            ? COURSES[c.key].open + ' There ' +
+              (n === 1 ? 'is 1 place' : 'are ' + n + ' places') + ' left.'
+            : 'All ' + c.capacity + ' places have gone. You can still register ' +
+              'and you will go on the waiting list — the office will contact ' +
+              'you when a place comes up.';
+        });
+      }).catch(function(e){
+        if(window.console && console.warn) console.warn('courses:', e.message);
+      });
+    })();
   })();
 
 
@@ -7382,8 +8021,8 @@ window.TAIYABAH_PUBLIC = {
     // time rather than an invented one.
     function jamaah(dateISO, col){
       var p = dateISO.split('-');
-      if (+p[0] !== 2026 || typeof FULL_2026 === 'undefined') return null;
-      var row = FULL_2026.find(function(r){ return r[0] === +p[1] && r[1] === +p[2]; });
+      if (+p[0] !== TT_YEAR || typeof TIMETABLE === 'undefined') return null;
+      var row = TIMETABLE.find(function(r){ return r[0] === +p[1] && r[1] === +p[2]; });
       return row ? row[col] : null;
     }
     function isSaturday(dateISO){ return parse(dateISO).getDay() === 6; }
@@ -7398,7 +8037,17 @@ window.TAIYABAH_PUBLIC = {
       // above, and shadowing it here made the whole calendar throw.
       var monthStart = new Date(y, m, 1), days = new Date(y, m+1, 0).getDate();
       var lead = (monthStart.getDay() + 6) % 7, html = '';
-      for(var i = 0; i < lead; i++) html += '<button type="button" class="hh-day is-blank" disabled></button>';
+      //  aria-hidden, because these are SPACERS, not days. They pad the grid
+      //  so the 1st lands on the right weekday. Without it a screen reader
+      //  announces up to six unlabelled buttons before the first real date —
+      //  "button, button, button" — and the calendar reads as broken before
+      //  it reads as anything. Disabled already keeps them out of the tab
+      //  order; this keeps them out of the accessibility tree as well.
+      //  The other calendar on this site builds its blanks as plain divs,
+      //  which never had the problem. (Spelled out rather than written as a
+      //  tag: verify_structure.py counts tags textually, and a tag inside a
+      //  comment is still a tag to it.)
+      for(var i = 0; i < lead; i++) html += '<button type="button" class="hh-day is-blank" disabled aria-hidden="true"></button>';
       for(var d = 1; d <= days; d++){
         var dt = new Date(y, m, d), key = iso(dt);
         var out = dt < first || dt > last;
@@ -7737,7 +8386,18 @@ window.TAIYABAH_PUBLIC = {
     renderMonth(); renderSlots(); renderPanel();
   })();
 
-  navLinks.forEach(a => a.addEventListener('click', (e) => {
+  /*  DELEGATED FROM THE DOCUMENT, not bound to a list captured at load.
+      This was navLinks.forEach(a => a.addEventListener(...)), which is the
+      same static-NodeList bug as `pages` and has the same consequence one
+      step earlier: a link added afterwards — the card for a class the
+      committee created — had no handler at all, so clicking it did nothing.
+      The href is "#", so not even the address bar moved.
+
+      One listener on the document instead of eighty on the links, and it
+      cannot go stale. */
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest ? e.target.closest('[data-nav]') : null;
+    if(!a) return;
     e.preventDefault();
     const scrollTarget = a.dataset.scrollTo;
     showPage(a.dataset.nav, { noScroll: !!scrollTarget });
@@ -7758,7 +8418,7 @@ window.TAIYABAH_PUBLIC = {
         }
       });
     }
-  }));
+  });
   const initial = (location.hash || '').replace('#','');
   if(initial && document.querySelector('.page[data-page="'+initial+'"]')) showPage(initial, {noScroll:true, replace:true});
 
@@ -8037,6 +8697,220 @@ window.TAIYABAH_PUBLIC = {
       /* The built copy stays on screen. An appeal that is a version behind is
          a great deal better than one that is not there. */
       if(window.console && console.warn) console.warn('new build content:', e.message);
+    });
+  })();
+
+  /* ---------------- notices ----------------
+     The other half of /notices/ in the portal. A table the committee can
+     write to that no visitor can read is exactly as useless as the reverse,
+     and this project has already done the reverse once: course sign-ups
+     landed correctly in a table no administrator could see.
+
+     EVERYTHING HERE IS ESCAPED. These rows are written by a verified
+     administrator, so the realistic risk is small — but "the only people who
+     can write here are trustworthy" is an argument that survives exactly
+     until one of their accounts does not, and escaping costs nothing. The
+     body is rendered with white-space:pre-line so line breaks survive
+     without any markup being interpreted.
+
+     On any failure the section simply stays hidden. There is no spinner and
+     no error: somebody who came for Maghrib does not care that a background
+     request failed, and an empty "Notices" heading reads as neglect. */
+  (function(){
+    var row = document.getElementById('noticesRow');
+    var grid = document.getElementById('noticesGrid');
+    if(!row || !grid) return;
+
+    var cfg = window.TAIYABAH_PUBLIC || {};
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
+
+    var base = String(cfg.SUPABASE_URL).trim()
+                 .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
+
+    /* The six the database allows. A topic here that the database refuses is
+       dead; a topic the database allows that is missing here would fall back
+       to its own key, which is why the fallback is the key and not a blank. */
+    var TOPIC = {
+      announcements: 'Announcement', events: 'Event', janazah: 'Janāzah',
+      kahf: 'Sūrat al-Kahf', ramadan: 'Ramadan', madrasah: 'Madrasah'
+    };
+
+    function esc(v){
+      return String(v == null ? '' : v)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function when(iso){
+      if(!iso) return '';
+      var d = new Date(iso);
+      if(isNaN(d)) return '';
+      return d.toLocaleDateString('en-GB',
+        { weekday:'long', day:'numeric', month:'long' }) +
+        (d.getHours() || d.getMinutes()
+          ? ', ' + d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+          : '');
+    }
+
+    fetch(base + '/rest/v1/notices_live?select=id,topic,title,body,image_url,' +
+                 'image_w,image_h,event_at&limit=6', {
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY,
+                 'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY }
+    }).then(function(r){
+      if(!r.ok) throw new Error('notices ' + r.status);
+      return r.json();
+    }).then(function(rows){
+      if(!Array.isArray(rows) || !rows.length) return;
+
+      var html = rows.map(function(n){
+        if(!n || !n.title) return '';
+        var parts = ['<article class="nt-card">'];
+        parts.push('<span class="nt-chip">' +
+                   esc(TOPIC[n.topic] || n.topic) + '</span>');
+        parts.push('<h3>' + esc(n.title) + '</h3>');
+        var w = when(n.event_at);
+        if(w) parts.push('<p class="nt-when">' + esc(w) + '</p>');
+
+        /* An https address, because that is what the database permits, and
+           both dimensions or neither, because that is what it requires — so
+           the box is the right shape before the picture lands and the page
+           does not move under somebody who is reading it. */
+        if(n.image_url && /^https:\/\//.test(n.image_url) && n.image_w && n.image_h){
+          parts.push('<img src="' + esc(n.image_url) + '" alt="" loading="lazy" ' +
+                     'decoding="async" width="' + (+n.image_w) +
+                     '" height="' + (+n.image_h) + '">');
+        }
+        if(n.body) parts.push('<p class="nt-body">' + esc(n.body) + '</p>');
+        parts.push('</article>');
+        return parts.join('');
+      }).join('');
+
+      if(!html) return;
+      grid.innerHTML = html;
+      row.hidden = false;
+    }).catch(function(e){
+      if(window.console && console.warn) console.warn('notices:', e.message);
+    });
+  })();
+
+  /* ---------------- hall hire rates ----------------
+     The rate card, from the database, so the committee can change a price
+     without a deploy. Until tonight £350 became £375 by editing a template,
+     running two Python scripts and pushing to GitHub — which in practice
+     meant ringing Yameen, and in the meantime the website quoted a price the
+     office had stopped charging. A figure on screen that turns out to be
+     wrong is worse than no figure: somebody books on the strength of it.
+
+     WHAT THIS DELIBERATELY DOES NOT TOUCH. #hh-bands and #hh-contacts only.
+     The £100 deposit paragraph and the bank details sit OUTSIDE those two
+     elements, and they stay exactly where the build put them. The deposit is
+     a Stripe Payment Link with its amount fixed at Stripe; change the number
+     on the page and the button underneath still takes £100. db/045's
+     check_hallhire() refuses a body that so much as mentions a deposit, so
+     this is enforced in the database as well as here — a boundary that lives
+     only in a comment is a boundary until somebody reads the comment.
+
+     Built with DOM calls rather than innerHTML. Everything here is written
+     by a verified administrator and the escaping would be easy, but this is
+     the one panel on the site where the text is a PRICE, and a price is the
+     thing worth being careful with.
+
+     On any failure the built-in card stays. Same rule as the timetable and
+     the courses: whatever is already on screen is correct as of the last
+     deploy, and a stale price is better than a missing one. */
+  (function(){
+    var bandsHost = document.getElementById('hh-bands');
+    var consHost  = document.getElementById('hh-contacts');
+    if(!bandsHost && !consHost) return;
+
+    var cfg = window.TAIYABAH_PUBLIC || {};
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
+
+    var base = String(cfg.SUPABASE_URL).trim()
+                 .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
+
+    function line(name, price, href){
+      var row = document.createElement('div');
+      row.className = 'hh-rate-line';
+      var n = document.createElement('span');
+      n.className = 'n'; n.textContent = name;
+      var p = document.createElement('span');
+      p.className = 'p tnum';
+      if(href){
+        var a = document.createElement('a');
+        a.href = 'tel:' + href; a.textContent = price;
+        p.appendChild(a);
+      } else {
+        p.textContent = price;
+      }
+      row.appendChild(n); row.appendChild(p);
+      return row;
+    }
+
+    fetch(base + '/rest/v1/site_content?key=eq.hallhire&select=body', {
+      headers: { 'apikey': cfg.SUPABASE_ANON_KEY,
+                 'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY }
+    }).then(function(r){
+      if(!r.ok) throw new Error('hallhire ' + r.status);
+      return r.json();
+    }).then(function(rows){
+      var body = rows && rows[0] && rows[0].body;
+      if(!body) return;
+
+      /* Nothing is replaced until the whole card has been checked. Half a
+         rate card — the weekday prices from the database and the weekend
+         prices from the build — would be worse than either on its own, and
+         would look completely normal. */
+      var bands = body.bands;
+      if(bandsHost){
+        if(!Array.isArray(bands) || !bands.length) return;
+        for(var i = 0; i < bands.length; i++){
+          var b = bands[i];
+          if(!b || !b.when || !Array.isArray(b.lines) || !b.lines.length) return;
+          for(var j = 0; j < b.lines.length; j++){
+            if(!b.lines[j] || !b.lines[j].n || !b.lines[j].p) return;
+          }
+        }
+
+        var frag = document.createDocumentFragment();
+        bands.forEach(function(b){
+          var wrap = document.createElement('div');
+          wrap.className = 'hh-rate-band';
+          var when = document.createElement('span');
+          when.className = 'hh-rate-when';
+          when.textContent = b.when;
+          wrap.appendChild(when);
+          b.lines.forEach(function(l){ wrap.appendChild(line(l.n, l.p, null)); });
+          if(b.note){
+            var note = document.createElement('p');
+            note.className = 'hh-rate-note';
+            note.textContent = b.note;
+            wrap.appendChild(note);
+          }
+          frag.appendChild(wrap);
+        });
+        bandsHost.textContent = '';
+        bandsHost.appendChild(frag);
+
+        var intro = document.querySelector('#hh-charges .hh-rate-eff');
+        if(intro && body.intro) intro.textContent = body.intro;
+      }
+
+      var cons = body.contacts;
+      if(consHost && Array.isArray(cons) && cons.length){
+        for(var k = 0; k < cons.length; k++){
+          var c = cons[k];
+          if(!c || !c.n || !c.shown || !/^[0-9]{7,15}$/.test(String(c.tel || ''))) return;
+        }
+        var cf = document.createDocumentFragment();
+        cons.forEach(function(c){ cf.appendChild(line(c.n, c.shown, String(c.tel))); });
+        consHost.textContent = '';
+        consHost.appendChild(cf);
+      }
+    }).catch(function(e){
+      if(window.console && console.warn) console.warn('hall hire rates:', e.message);
     });
   })();
 

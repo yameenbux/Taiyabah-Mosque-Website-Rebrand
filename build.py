@@ -22,48 +22,148 @@ def load(path):
 # site whose audience is overwhelmingly on phones. optimise-images.py writes
 # them to img/ instead, and this substitutes the path.
 #
-# Anything not listed in that script stays inline on purpose: the fonts, the
-# favicon, the header logo, the QR codes and the two girih tiles are all small
-# and all needed for the first paint, so a request each would cost more than it
-# saves.
+# The favicon, the header logo, the QR codes and the two girih tiles stay
+# inline on purpose: they are small, they are needed for the first paint, and a
+# request each would cost more than it saves.
+#
+# THE FONTS NO LONGER DO. See fonts() below.
 #
 # img/ MUST therefore be uploaded with index.html. It is in DEPLOY.md.
 # ---------------------------------------------------------------------------
 def fonts():
-    """Inline the Latin faces; serve Amiri from a file.
+    """Every face is a FILE. None of them is inlined any more.
 
-    Fraunces and Hanken Grotesk set every word on the site, so they are inlined
-    — a separate request before the first paint would show a flash of fallback
-    text on every page.
+    This used to inline Fraunces and Hanken Grotesk, on the reasoning that they
+    set every word on the site, so a separate request before the first paint
+    would show a flash of fallback text on every page. That was a fair argument
+    when it was written. Measured on 15 September 2026, it had inverted, for
+    three reasons.
 
-    Amiri is different. It sets four Arabic words, on four service pages, and
-    weighs 74 KB — which every visitor was downloading on every page whether
-    they ever opened one of those pages or not. As a file it is fetched only
-    when an element that uses it is actually rendered, and those pages are
-    display:none until someone navigates to them. So it costs nothing until it
-    is needed, and font-display:swap means the heading shows in a fallback
-    serif for a moment rather than not at all.
+    1. THE COST WAS 124 KB ON THE CRITICAL PATH. The document gzipped to 291 KB
+       and 123 KB of that was base64 font. woff2 is already compressed, so
+       base64-ing it inflates it by a third and gzip cannot win that back —
+       the fonts compressed from 162 KB to 123 KB, while the same bytes as
+       .woff2 files are 122 KB. Stripping them takes the render-blocking
+       document from 291 KB to 167 KB, a 43% cut, for no increase in total
+       bytes on a first visit.
+
+    2. INLINING DEFEATED unicode-range ENTIRELY. Each family ships as two
+       subsets — latin and latin-ext — with a unicode-range so a browser
+       fetches only what the page actually needs. That mechanism only works on
+       a FILE. Inlined, both subsets are already in the HTML, so every visitor
+       to an English and Arabic website was downloading 52 KB of Central and
+       Eastern European glyphs that nothing on the site can ever use.
+
+    3. THE FLASH IT AVOIDED WAS PAID FOR WITH A BLANK SCREEN. Inlining does not
+       make the font arrive sooner in absolute terms; it makes the FIRST PAINT
+       arrive later, because nothing renders until the whole document is in.
+       font-display:swap was already set on every face, and preload starts the
+       font fetch in the same round trip as the HTML, so on any normal
+       connection the font still wins the race. On a bad one the visitor now
+       reads the page in Georgia for a moment instead of watching a white
+       screen, which is the better of the two.
+
+    Amiri was already a file, for the same reason arrived at earlier: it sets
+    four Arabic words on four service pages, weighs 74 KB, and is fetched only
+    when one of those pages is actually opened.
+
+    Returns (css, preload_tags). Only the two latin subsets are preloaded —
+    preloading latin-ext would reintroduce exactly the waste point 2 removes,
+    and preloading Amiri would undo the decision above.
     """
     css = load('build-inputs/font_faces.txt')
-    faces = re.split(r'(?=@font-face)', css)
-    kept, amiri = [], None
-    for face in faces:
-        if "font-family:'Amiri'" in face.replace(' ', ''):
-            amiri = face
-        else:
-            kept.append(face)
-    if amiri is None:
-        raise SystemExit("no Amiri @font-face found in font_faces.txt")
-
-    m = re.search(r'base64,([A-Za-z0-9+/=]+)', amiri)
     os.makedirs('fonts', exist_ok=True)
-    with open('fonts/amiri.woff2', 'wb') as f:
-        f.write(base64.b64decode(m.group(1)))
 
-    kept.append(
-        "@font-face{font-family:'Amiri';font-style:normal;font-weight:400;"
-        "font-display:swap;src:url(fonts/amiri.woff2) format('woff2');}")
-    return "".join(kept)
+    chunks = re.split(r'(?=@font-face)', css)
+
+    #  Two passes. The first works out what is there, because how a file
+    #  should be NAMED depends on whether its family has more than one subset:
+    #  Amiri has a single face and stays plain `amiri.woff2`, which is also the
+    #  name DEPLOY.md and the previous build already used. Naming it
+    #  `amiri-latin.woff2` — which a one-pass version did — would be both wrong
+    #  (Amiri is Arabic) and a gratuitous rename of a file already in git.
+    parsed = []
+    for face in chunks:
+        if '@font-face' not in face:
+            parsed.append((face, None))
+            continue
+        fam = re.search(r"font-family:\s*['\"]?([^;'\"]+)", face)
+        b64 = re.search(r'base64,([A-Za-z0-9+/=]+)', face)
+        if not fam or not b64:
+            parsed.append((face, None))
+            continue
+        rng = re.search(r'unicode-range:\s*([^;}]+)', face)
+        parsed.append((face, {
+            'family': fam.group(1).strip(),
+            'b64': b64.group(1),
+            # latin-ext is the one carrying U+0100-024F. Naming the subset
+            # rather than numbering it means a future reader can see at a
+            # glance which file is the one nobody in Bolton ever downloads.
+            'subset': 'latin-ext' if (rng and '0100' in rng.group(1)) else 'latin',
+        }))
+
+    counts = {}
+    for _, info in parsed:
+        if info:
+            counts[info['family']] = counts.get(info['family'], 0) + 1
+
+    out, preload, seen = [], [], {}
+    for face, info in parsed:
+        if not info:
+            out.append(face)
+            continue
+
+        slug = re.sub(r'[^a-z0-9]+', '-', info['family'].lower()).strip('-')
+        name = (f"{slug}-{info['subset']}.woff2" if counts[info['family']] > 1
+                else f'{slug}.woff2')
+
+        # Fail loudly rather than silently overwrite one face with another.
+        if name in seen:
+            raise SystemExit(f'two @font-face blocks both want fonts/{name}')
+        seen[name] = True
+
+        with open(f'fonts/{name}', 'wb') as f:
+            f.write(base64.b64decode(info['b64']))
+
+        out.append(re.sub(r'url\(data:font/woff2;base64,[A-Za-z0-9+/=]+\)',
+                          f'url(fonts/{name})', face))
+
+        #  Preload ONLY the faces that set the words on the first screen. Amiri
+        #  is excluded deliberately — preloading it would undo the earlier
+        #  decision that it costs nothing until an Arabic page is opened — and
+        #  so is latin-ext, which would reintroduce the exact waste this
+        #  change removes.
+        if info['subset'] == 'latin' and info['family'] != 'Amiri' \
+                and counts[info['family']] > 1:
+            preload.append(
+                f'<link rel="preload" href="fonts/{name}" as="font" '
+                f'type="font/woff2" crossorigin>')
+
+    if not preload:
+        raise SystemExit('no latin face found to preload — check font_faces.txt')
+
+    return ''.join(out), '\n'.join(preload)
+
+
+def timetable_year():
+    """The year build-inputs/fullYYYY.json covers, taken from its filename.
+
+    The page needs to know which year its built-in rows are for: it decides
+    whether today is inside the timetable, whether to highlight a row as
+    today, and whether the database has a newer year worth swapping in.
+
+    Derived, not declared. A constant written here would be one more thing to
+    remember to change, and the failure it causes is silent and lasts twelve
+    months — the page would believe it held 2027, match today's date against
+    2026's rows, and display the wrong prayer times while looking completely
+    normal.
+    """
+    names = [f for f in os.listdir('build-inputs') if re.fullmatch(r'full\d{4}\.json', f)]
+    if len(names) != 1:
+        raise SystemExit(
+            "expected exactly one build-inputs/fullYYYY.json, found %d: %s. "
+            "Which year is the site's built-in timetable?" % (len(names), names))
+    return re.search(r'(\d{4})', names[0]).group(1)
 
 
 def image(slug):
@@ -73,8 +173,20 @@ def image(slug):
             f"{path} is missing. Run: python3 optimise-images.py")
     return path
 
+_font_css, _font_preload = fonts()
+
+#  The 404 needs only the two families that set its handful of words, and only
+#  their latin subsets — it has no Arabic on it and never will.
+_font_css_404 = "".join(
+    f"@font-face{{font-family:'{fam}';font-style:normal;font-weight:100 900;"
+    f"font-display:swap;src:url(fonts/{f}) format('woff2');}}"
+    for fam, f in (('Fraunces', 'fraunces-latin.woff2'),
+                   ('Hanken Grotesk', 'hanken-grotesk-latin.woff2'))
+)
+
 subs = {
-    '{{FONT_FACES}}': fonts(),
+    '{{FONT_FACES}}': _font_css,
+    '{{FONT_PRELOAD}}': _font_preload,
     '{{PRIVACY_DATE}}': load('build-inputs/privacy_date.txt'),
     '{{ICON_B64}}': load('build-inputs/icon_b64.txt'),
     '{{CONTACT_BUILDING_B64}}': image('contact-building'),
@@ -86,6 +198,11 @@ subs = {
     '{{GIRIH_TILE_B64}}': load('build-inputs/girih_tile_b64.txt'),
     '{{GIRIH_SOLID_B64}}': load('build-inputs/girih_solid_b64.txt'),
     '{{FULL_2026_JSON}}': load('build-inputs/full2026.json'),
+    #  Which year that file covers. Read from its NAME rather than written
+    #  here as a literal, so the two cannot disagree — a page that believes it
+    #  holds 2027 while carrying 2026's rows would show the wrong prayer times
+    #  for a whole year and look entirely normal doing it.
+    '{{TIMETABLE_YEAR}}': timetable_year(),
     '{{APP_SHOT_TIMES_B64}}': image('app-shot-times'),
     '{{APP_SHOT_LIVE_B64}}': image('app-shot-live'),
     '{{APP_SHOT_DONATE_B64}}': image('app-shot-donate'),
@@ -145,15 +262,47 @@ on_disk = {f"img/{f}" for f in os.listdir("img")
 total = sum(os.path.getsize(p) for p in referenced)
 print(f"  images: {len(referenced)} files, {total/1024/1024:.2f} MB in img/ "
       f"— none of it loads until the page using it is opened")
+
+#  THE STAFF SCREENS ALSO USE img/, and this check could not see them.
+#
+#  It scanned the built index.html and nothing else, so it announced
+#  "masjid-logo.png — safe to delete" about the logo in the corner of every
+#  staff screen. A note that confidently recommends deleting a file that is
+#  needed is worse than no note: somebody will believe it, the logo will
+#  vanish from thirteen screens at once, and the build will not say a word
+#  because index.html never wanted it in the first place. The staff folders
+#  are standalone rather than templated, which is exactly why they were
+#  missed — nothing about them passes through here.
+for folder in sorted(d for d in os.listdir(".")
+                     if os.path.isdir(d) and not d.startswith((".", "_"))):
+    for name in ("index.html", "app.js", "shell.js", "shell.css"):
+        f = os.path.join(folder, name)
+        if os.path.exists(f):
+            with open(f, encoding="utf-8", errors="replace") as fh:
+                referenced |= {m.lstrip("./") for m in
+                               re.findall(r'(?:\.\./)?img/[A-Za-z0-9._-]+', fh.read())}
+
 orphans = sorted(on_disk - referenced)
 if orphans:
-    print(f"  NOTE: {len(orphans)} unused file(s) in img/, safe to delete: "
+    print(f"  NOTE: {len(orphans)} file(s) in img/ that NO page asks for — "
+          f"check the staff screens before deleting: "
           + ", ".join(os.path.basename(o) for o in orphans))
 
 # The 404 page is built too, so it cannot drift back to Google Fonts.
 with open('404_template.html') as f:
     tpl404 = f.read()
-out404 = tpl404.replace('{{FONT_FACES_404}}', load('build-inputs/font_faces_404.txt'))
+#  THE 404 SHARES THE SITE'S FONT FILES rather than inlining its own copy.
+#
+#  build-inputs/font_faces_404.txt carries the same two latin faces the main
+#  site uses, base64'd again — 93 KB of a 96 KB page, for a page whose entire
+#  job is to say "that page has moved" and offer a link home.
+#
+#  Referencing the files instead takes 404.html from 96 KB to about 4 KB, and
+#  because anybody who lands here has almost certainly just come from the site,
+#  the fonts are already in their cache and cost nothing at all. If they are
+#  not, font-display:swap shows the message immediately in a fallback, which
+#  for this page is entirely fine.
+out404 = tpl404.replace('{{FONT_FACES_404}}', _font_css_404)
 remaining404 = re.findall(r'\{\{[A-Z_0-9]+\}\}', out404)
 if remaining404:
     raise SystemExit(f"Unsubstituted placeholders in 404: {remaining404}")
