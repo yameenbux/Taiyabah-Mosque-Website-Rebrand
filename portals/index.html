@@ -760,6 +760,11 @@
 
 <script src="../admin/supabase.js"></script>
 <script src="config.js"></script>
+<!-- The list of areas, and the only one. This page does NOT mount the rail —
+     it IS the place the rail links back to — but it draws the same rows from
+     the same table, so nothing can appear on a screen that was not on this
+     page. Loaded before app.js because app.js reads AdminShell.visible(). -->
+<script src="../admin/shell.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -210,22 +210,44 @@
     return "waiting " + days + " days";
   }
 
+  /*  THREE ICONS, AND THEY ARE THIS PAGE'S OWN.
+
+      There used to be eleven here. Eight of them were the area icons — hall,
+      book, heart, basket, people, lock, crane, tin — kept byte-for-byte in
+      step with the same eight in admin/shell.js by nothing but care. They
+      are gone: the area rows below take their icons from AdminShell.ICON,
+      which is where the rail already got them.
+
+      These three are used by "Needs you", which exists only on this page. */
   var ICON = {
     clock:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 12V7M12 12l3.5 2.2"/></svg>',
     phone:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.5 2.1L8 9.7a16 16 0 006 6l1.2-1.2a2 2 0 012.1-.5c.9.3 1.8.5 2.7.6a2 2 0 011.7 2z"/></svg>',
-    basket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg>',
-    heart:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.35-10-9.3C.5 8.1 2.1 4.5 5.6 4c2-.3 3.7.6 4.9 2.3.4.5 1.1 2.1 1.5 2.1s1.1-1.6 1.5-2.1C14.7 4.6 16.4 3.7 18.4 4c3.5.5 5.1 4.1 3.6 7.7C19 16.65 12 21 12 21z"/></svg>',
-    hall:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V8l7-4 7 4v13"/><path d="M10 21v-5h4v5"/></svg>',
-    book:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>',
-    people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.7 14.3c2.7.3 4.8 2.3 4.8 5.2"/></svg>',
-    lock:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>',
-    tick:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
-    crane:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5l9-2v4"/><path d="M4 9h9"/><path d="M13 7h7l-2.5 4H13z"/><path d="M17 11v4"/><path d="M15 15h4l-1 3h-2z"/></svg>',
-    tin:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10h17v9a2 2 0 01-2 2h-13a2 2 0 01-2-2v-9Z"/><path d="M2.5 6.5h19V10h-19z"/><path d="M12 6.5V21"/><path d="M12 6.5S10.6 3.2 8.6 3.2a2.1 2.1 0 000 4.2"/><path d="M12 6.5s1.4-3.3 3.4-3.3a2.1 2.1 0 010 4.2"/></svg>'
+    tick:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>'
   };
 
-  var WHERE = { venue: "../venue/", volunteers: "../volunteers/",
-                giftaid: "../giftaid/", courses: "../courses/" };
+  /*  WHERE A ROW SENDS YOU, LOOKED UP RATHER THAN WRITTEN DOWN AGAIN.
+
+      This was a four-entry table of folders. Small, correct, and a second
+      copy of destinations that already exist in admin/shell.js — the same
+      shape of thing as the area list above, which is the one that drifted and
+      left the Admin Centre offering a different menu from the screens it
+      links to. A "needs you" row's `where` value from the database IS an area
+      key, so ask for the folder instead of remembering it.
+
+      Returns "" when the key is unknown, and the caller draws a row with no
+      link. A row that looks clickable and goes to "#" is worse than one that
+      does not: it reads as a broken screen, and it loses the reader's place
+      on the page when they press it. */
+  function hrefFor(key) {
+    var found = "";
+    if (!window.AdminShell) return found;
+    window.AdminShell.GROUPS.forEach(function (g) {
+      g.areas.forEach(function (a) {
+        if (a.key === key) found = "../" + a.href;
+      });
+    });
+    return found;
+  }
 
   function drawNeeds(needs) {
     var box = el("dash-needs");
@@ -248,13 +270,16 @@
       var flag = urgent
         ? ICON.clock + "<span>" + esc(leftOn(n.expires_at)) + "</span>"
         : ICON.phone + "<span>" + esc(n.since ? sinceWhen(n.since) : (n.urgency === "later" ? "when you have a minute" : "waiting")) + "</span>";
-      var href = WHERE[n.where] || "#";
-      return '<a class="need' + (urgent ? " now" : "") + '" href="' + esc(href) + '">' +
-        '<span class="flag">' + flag + "</span>" +
+      var href = hrefFor(n.where);
+      var body = '<span class="flag">' + flag + "</span>" +
         '<span class="t">' + esc(n.title) + "</span>" +
         '<span class="d">' + esc(n.detail || "") +
-          (n.ref ? " · " + esc(n.ref) : "") + "</span>" +
-        '<span class="go">Open &rarr;</span></a>';
+          (n.ref ? " · " + esc(n.ref) : "") + "</span>";
+      var cls = "need" + (urgent ? " now" : "");
+      return href
+        ? '<a class="' + cls + '" href="' + esc(href) + '">' + body +
+          '<span class="go">Open &rarr;</span></a>'
+        : '<div class="' + cls + '">' + body + "</div>";
     }).join("");
   }
 
@@ -306,98 +331,75 @@
      alone is no use on a touchscreen.
 
      Groups with no members are not drawn at all, so an office account gets a
-     shorter rail rather than empty headings. */
-  var GROUPS = [
-    { t: "What people have asked for", keys: ["venue", "collections", "courses", "volunteers"] },
-    { t: "Money",                      keys: ["giftaid"] },
-    { t: "The masjid's own pages",     keys: ["madrasah", "newbuild", "access"] }
-  ];
+     shorter rail rather than empty headings.
 
-  //  Written once, used twice: on the rail row as its title, and in the
-  //  "What each area is for" list. Two copies of the same sentence in two
-  //  places is two things to keep in step, and only one of them ever gets
-  //  updated.
-  var SAYS = {};
-  function remember(k, n, d) { SAYS[k] = { n: n, d: d }; return d; }
+     THE LIST ITSELF IS NOT HERE ANY MORE, AND THAT IS THE POINT.
+     ----------------------------------------------------------
+     It was: eleven `if (areas.x)` branches, eight icons and three group
+     headings, all of them a second copy of admin/shell.js. The copies drifted
+     the moment anything was added. By September this page listed EIGHT areas
+     and the rail inside every screen listed ELEVEN — Notices, Hall hire
+     charges and Prayer timetable existed on one menu and not the other — so
+     clicking a row here made three rows appear that had not been on the page
+     you clicked from. That is what somebody using the site meant by "when i
+     click on one, more tabs appear".
 
-  function drawAreas(areas, roles) {
+     There is now one list, in admin/shell.js, and this page asks it what to
+     draw. Nothing else is allowed to decide: not a hard-coded branch here,
+     and not the dashboard payload.
+
+     WHY NOT THE PAYLOAD. drawAreas used to take `areas` from
+     admin_dashboard() and show a row only if its key came back non-null.
+     That sounds safer and is not, for two reasons. It disagreed with the
+     rail — `areas.volunteers` is non-null for the hall office, whose rail
+     said admin-only — so the same person got two different menus. And it
+     made the list a casualty of a failed call: the catch below had to pass a
+     hand-written stub, `{venue:{}, collections:{}, volunteers:{}}`, to keep
+     ANY links on screen, which is a third copy of the list, written in the
+     error path where nobody would ever see it go stale. Roles decide, and
+     roles are already in hand before the call is made, so a dashboard that
+     will not load now leaves every link where it was. The payload is still
+     what fills the figures — it just no longer decides what exists.
+
+     This is not a widening of access. The rail is a list of doors; every one
+     of them asks for the authenticator again on the way in, and row-level
+     security in Postgres decides what is behind it. */
+
+  function drawAreas(roles) {
     var box = el("dash-areas");
     if (!box) return;
-    var has = function (r) { return roles.indexOf(r) !== -1; };
-    var made = {};
-    SAYS = {};
 
-    if (areas.venue) {
-      made.venue = area("../venue/", ICON.hall, "Hall Hire & Nikāḥ",
-        remember("venue", "Hall Hire & Nikāḥ",
-          "Confirm, decline, take a cash deposit, cancel and refund"));
-    }
-    if (areas.courses) {
-      made.courses = area("../courses/", ICON.book, "Adult classes",
-        remember("courses", "Adult classes",
-          "Offer a place from the waiting list, record who came"));
-    }
-    if (areas.giftaid) {
-      made.giftaid = area("../giftaid/", ICON.heart, "Gift Aid",
-        remember("giftaid", "Gift Aid",
-          "Copy the rows for HMRC, then mark them claimed"));
-    }
-    if (areas.volunteers) {
-      made.volunteers = area("../volunteers/", ICON.basket, "Food Bank volunteers",
-        remember("volunteers", "Food Bank volunteers",
-          "Mark rung, helping or withdrawn; download the list"));
-    }
-    //  Same audience as /venue/ — whoever answers the masjid's post answers
-    //  these — so it sits beside it rather than under the madrasah.
-    if (areas.collections) {
-      made.collections = area("../collections/", ICON.tin, "Charity collections",
-        remember("collections", "Charity collections",
-          "Chanda requests from outside charities — ring the trustee, then approve or decline"));
-    }
-    if (has("admin") || has("teacher")) {
-      made.madrasah = area("../portal/", ICON.people, "Madrasah portal",
-        remember("madrasah", "Madrasah portal",
-          "Pupils, classes and staff — the most tightly held area on the site"));
-    }
-    // The one page on this website that goes out of date on its own.
-    if (has("admin")) {
-      made.newbuild = area("../newbuild/", ICON.crane, "The new build page",
-        remember("newbuild", "The new build page",
-          "Change the appeal figure, what it pays for, and the timeline of phases"));
-    }
-    // It deliberately had no card before /access/ existed: a link that goes
-    // nowhere reads as a broken site.
-    //
-    // No `&& house` any more. That guard existed only because the row used to
-    // print house.no_2fa and house.accounts. Left in place it would hide this
-    // row when the dashboard call FAILS — on the one page whose stated job in
-    // that state is "the areas below still work, open one directly".
-    if (has("admin")) {
-      made.access = area("../access/", ICON.lock, "User access",
-        remember("access", "User access",
-          "Invite somebody, change what they can do, suspend an account"));
+    /*  If shell.js failed to load, say so rather than drawing an empty
+        column. A silently area-less Admin Centre looks like an account with
+        no permissions, which is the single most alarming thing this page
+        could tell a volunteer by accident. */
+    if (!window.AdminShell || !window.AdminShell.visible) {
+      box.innerHTML = '<p class="dash-skel">The list of areas could not be ' +
+                      'loaded. Reload the page.</p>';
+      return;
     }
 
-    var out = [];
-    GROUPS.forEach(function (g) {
-      var rows = g.keys.map(function (k) { return made[k]; })
-                       .filter(function (r) { return !!r; });
-      if (!rows.length) return;
-      out.push('<div class="rail-lab">' + esc(g.t) + "</div>" +
-               '<div class="rail-group">' + rows.join("") + "</div>");
-    });
-    box.innerHTML = out.join("");
+    var groups = window.AdminShell.visible(roles);
+    var SHELL_ICON = window.AdminShell.ICON;
+
+    box.innerHTML = groups.map(function (g) {
+      return '<div class="rail-lab">' + esc(g.label) + "</div>" +
+             '<div class="rail-group">' + g.areas.map(function (a) {
+               return area("../" + a.href, SHELL_ICON[a.icon], a.name, a.what);
+             }).join("") + "</div>";
+    }).join("");
 
     //  And the sentences, in the one place on the page that can hold them.
     //  Only for the areas THIS account can actually reach — a list explaining
     //  Gift Aid to somebody who cannot open it is a description of a locked
-    //  door.
+    //  door. Same `what` string as the row's title, because it is the same
+    //  field: there is no longer a second table of sentences to keep in step.
     var what = el("dash-whatfor");
     if (what) {
-      what.innerHTML = GROUPS.reduce(function (acc, g) {
-        return acc.concat(g.keys.filter(function (k) { return !!made[k]; }));
-      }, []).map(function (k) {
-        return "<dt>" + esc(SAYS[k].n) + "</dt><dd>" + esc(SAYS[k].d) + "</dd>";
+      what.innerHTML = groups.reduce(function (acc, g) {
+        return acc.concat(g.areas);
+      }, []).map(function (a) {
+        return "<dt>" + esc(a.name) + "</dt><dd>" + esc(a.what) + "</dd>";
       }).join("");
     }
   }
@@ -464,7 +466,7 @@
       rows.push(row(true, "<b>" + h.no_2fa + " staff account" +
         (h.no_2fa === 1 ? " has" : "s have") + " no authenticator.</b> " +
         "Two-step cannot be re-enforced until that is sorted. " +
-        '<a href="../access/">See who</a>'));
+        '<a href="' + esc(hrefFor("access")) + '">See who</a>'));
     } else {
       rows.push(row(false, "Every staff account has an authenticator"));
     }
@@ -490,7 +492,7 @@
     }
     drawNeeds(d.needs);
     drawTiles(d.estate);
-    drawAreas(d.areas || {}, identity.roles);
+    drawAreas(identity.roles);
     drawLog(d.log, Number(d.auto_count || 0));
     drawHousekeeping(d.housekeeping);
   }
@@ -553,9 +555,17 @@
         " The areas below still work — open one directly.");
       // Draw what can be drawn without the call, so somebody can still get
       // where they were going.
+      //
+      // This used to pass a hand-written stub — {venue:{}, collections:{},
+      // volunteers:{}} — because the list depended on the payload, so a
+      // failed call would otherwise have left the column empty. It drew three
+      // links out of eleven, in an error path nobody reviews. drawAreas takes
+      // roles now and roles are already in hand, so the sentence above this
+      // block ("The areas below still work — open one directly") is finally
+      // true of ALL of them.
       drawNeeds([]);
       el("dash-tiles").innerHTML = "";
-      drawAreas({ venue: {}, collections: {}, volunteers: {} }, identity.roles);
+      drawAreas(identity.roles);
       el("dash-log").innerHTML = '<p class="dash-skel">Not available just now.</p>';
       drawHousekeeping(null);
     });
