@@ -87,7 +87,6 @@ SCREENS = {
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
-    "classpages": "classpages",
 }
 
 #  What each role should be offered. Deliberately written out rather than
@@ -96,8 +95,7 @@ SCREENS = {
 #  self-consistent.
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
-              "Adult classes", "What a class says", "Food Bank volunteers",
-              "Gift Aid",
+              "Adult classes", "Food Bank volunteers", "Gift Aid",
               "Notices", "Hall hire charges", "Prayer timetable",
               "Madrasah portal", "The new build page", "User access"],
     "hall_office": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections"],

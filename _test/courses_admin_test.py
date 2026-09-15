@@ -212,6 +212,97 @@ with sync_playwright() as p:
               "Save stayed disabled after the form was corrected, so the screen "
               "cannot be recovered from once it has complained")
 
+    # ========================= ONE SCREEN, NOT TWO
+    #
+    #  "What a class says" used to be a second rail row and a second folder,
+    #  holding a class's website copy while this screen held its settings. A
+    #  class is one thing to a volunteer and the split was mine, not theirs.
+    #  Both halves live here now, and both validators have to be reachable
+    #  from this one page or the other suite silently stops testing anything.
+    check(os.path.isdir("classpages") is False,
+          "the classpages/ folder is still there. It was merged into this "
+          "screen; leaving it behind means two screens that will drift.")
+    shell = open("admin/shell.js", encoding="utf-8").read()
+    check("classpages" not in shell,
+          "the rail still offers classpages/, which is now a 404 with the "
+          "masjid's logo on it")
+
+    check(pg.evaluate("() => !!(window.__CLASSPAGE_FORM "
+                      "&& window.__CLASSPAGE_FORM.check)"),
+          "the class-page validator is not exposed from this screen, so "
+          "everything the merge absorbed is untested")
+
+    #  The page half still agrees with check_course_page() in 047 — same four
+    #  refusals the migration's own DO block probes.
+    PAGE = {
+        "tagline": "A one-line description.",
+        "intro": "An opening paragraph about the class.",
+        "facts": [{"k": "Time", "v": "6\u20137pm"}],
+        "rules": [{"k": "When", "v": "Tuesdays."}],
+        "cohorts": [{"key": "mens", "label": "Men's class"},
+                    {"key": "womens", "label": "Women's class"}],
+        "exp_label": "How much do you know already?",
+        "exp": [{"key": "none", "label": "Nothing at all"},
+                {"key": "some", "label": "A little"}],
+        "open": "Fill in the form below.",
+        "closed": "Ring the office to be told about the next one.",
+    }
+
+    def page_check(doc, mode="separate"):
+        return pg.evaluate(
+            "a => { try { return { r: window.__CLASSPAGE_FORM.check(a[0], a[1]) }; } "
+            "catch (e) { return { threw: String(e) }; } }", [doc, mode])
+
+    ok = page_check(PAGE)
+    check(ok.get("r") == [],
+          "a complete class page was refused by the merged screen: %r" % ok)
+
+    #  A made-up cohort is the one that matters: it would save happily and then
+    #  refuse every sign-up against it with a raw constraint error.
+    invented = dict(PAGE, cohorts=PAGE["cohorts"] +
+                    [{"key": "children", "label": "Children"}])
+    r = page_check(invented)
+    check(r.get("r") != [],
+          "a made-up cohort was accepted. course_registrations allows only "
+          "mens, womens and all, so every sign-up against it would be refused "
+          "by the database with a message nobody can act on.")
+
+    r = page_check(PAGE, "single")
+    check(r.get("r") != [],
+          "two sessions were accepted for a class set to one session for "
+          "everyone")
+
+    r = page_check(dict(PAGE, closed=""))
+    check(r.get("r") != [],
+          "a class page with no wording for when sign-ups are shut was "
+          "accepted — that is what most people read, most of the year")
+
+    r = page_check(dict(PAGE, exp=[{"key": "a", "label": "x"}]))
+    check(r.get("r") != [],
+          "an experience question with one answer was accepted")
+
+    # ------------------------------------------------- removing a class
+    #
+    #  043 had no delete at all, which was right for a class people had signed
+    #  up for and wrong for one created by mistake five minutes earlier. 048
+    #  added it; 049 fixed the count-of-one wording. The refusal comes from the
+    #  database, so the screen must not invent its own.
+    mig = open("db/049_one_person_is_not_people.sql", encoding="utf-8").read()
+    check("somebody has signed up for it" in mig,
+          "049 no longer carries the singular wording this test was written "
+          "against")
+    check("% people have signed up for it" in mig,
+          "049 no longer carries the plural wording")
+
+    js = open("courses/app.js", encoding="utf-8").read()
+    check("delete_course" in js,
+          "the merged screen never calls delete_course, so a class created by "
+          "mistake can never be taken out")
+    check("window.confirm" in js or "confirm(" in js,
+          "removing a class does not ask first, and it is permanent")
+    check(pg.evaluate("() => !!document.getElementById('cc-list')"),
+          "there is no class list on the merged screen")
+
     check(errs == [], "the courses screen threw: %s" % errs[:2])
     pg.close()
 

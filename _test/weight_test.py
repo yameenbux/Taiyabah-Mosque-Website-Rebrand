@@ -155,7 +155,7 @@ for family in ("Fraunces", "Hanken", "Amiri"):
 #  three times. They share admin/fonts.css now.
 STAFF = ["portals", "venue", "courses", "giftaid", "volunteers", "collections",
          "access", "newbuild", "portal", "apply", "account", "auth", "times",
-         "notices", "rates", "classpages"]
+         "notices", "rates"]
 STAFF_BUDGET_KB = 30   # the heaviest measured 23 on 15 September 2026
 
 check(os.path.exists("admin/fonts.css"),
