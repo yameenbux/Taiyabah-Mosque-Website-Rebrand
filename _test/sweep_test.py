@@ -344,6 +344,101 @@ with sync_playwright() as p:
 
     b.close()
 
+# ============================ two rules, one class, opposite displays
+#
+#  THE SAME BUG HAS NOW BITTEN THIS FILE THREE TIMES, and every time it looked
+#  like a design choice rather than a rule that failed:
+#
+#    .cc-yn input   — a checkbox stretched to the full width of its row
+#    .glance-notice — a poster sitting inside a white border
+#    .fb-vol        — "Register as a volunteer" with its arrow wrapped onto a
+#                     line of its own, which the masjid spotted before any of
+#                     these tests did
+#
+#  Each was two rules with the SAME single-class selector, setting `display`
+#  to two different things, and the one written later in the sheet winning a
+#  tie nobody realised was being held. Nothing throws, nothing overflows,
+#  nothing fails a contrast or tap-target check. It just looks wrong.
+#
+#  So: read the stylesheet, collect every bare `.class{...display:...}` rule,
+#  and complain when one class is given two different displays. Descendant and
+#  compound selectors are left alone — `.a .b` beating `.b` is ordinary
+#  cascade, deliberately used all over this file.
+#
+#  @media BLOCKS ARE STRIPPED FIRST, and that is not a detail. The first draft
+#  of this check did not strip them and reported six faults, every one of them
+#  a deliberate responsive override — `.burger{display:flex}` at the top of
+#  the sheet and `display:none` inside `@media(min-width:1080px)` is exactly
+#  how that is supposed to be written. A check that cries wolf six times for
+#  one real catch gets deleted, and deleting it would be right. Only rules at
+#  the SAME level can tie, and the three faults this has cost were all at the
+#  top level.
+sheet = "\n".join(re.findall(r"<style>(.*?)</style>",
+                             open("index_template.html", encoding="utf-8").read(), re.S))
+#  Comments out first, or a `display:` mentioned in prose counts as a rule.
+sheet = re.sub(r"/\*.*?\*/", "", sheet, flags=re.S)
+
+
+def without_at_blocks(css):
+    """Everything outside @media, @supports and the rest — brace-counted,
+    because a regex cannot match nested braces and these blocks all contain
+    rules of their own."""
+    out, i, n = [], 0, len(css)
+    while i < n:
+        at = css.find("@", i)
+        if at == -1:
+            out.append(css[i:])
+            break
+        out.append(css[i:at])
+        brace = css.find("{", at)
+        if brace == -1:
+            break
+        #  @import / @charset and friends end at the semicolon, not a block.
+        semi = css.find(";", at)
+        if semi != -1 and semi < brace:
+            i = semi + 1
+            continue
+        depth, j = 1, brace + 1
+        while j < n and depth:
+            if css[j] == "{":
+                depth += 1
+            elif css[j] == "}":
+                depth -= 1
+            j += 1
+        i = j
+    return "".join(out)
+
+
+sheet = without_at_blocks(sheet)
+
+seen = {}
+for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", sheet):
+    sel = sel.strip()
+    if not re.fullmatch(r"\.[A-Za-z][A-Za-z0-9_-]*", sel):
+        continue
+    m = re.search(r"(?:^|;)\s*display\s*:\s*([a-z-]+)", body)
+    if not m:
+        continue
+    seen.setdefault(sel, []).append(m.group(1))
+
+#  `none` paired with anything is the ordinary show/hide idiom — declare the
+#  look, hide it by default, bring it back in a media query — and .hu-donate
+#  does exactly that on purpose. What went wrong three times was two LAYOUT
+#  displays disagreeing: inline-flex against inline-block, flex against block.
+#  Those cannot both be intended, and one of them is silently doing nothing.
+LAYOUT = {"flex", "inline-flex", "grid", "inline-grid",
+          "block", "inline-block", "inline", "table"}
+
+for sel, vals in sorted(seen.items()):
+    kinds = {v for v in vals if v in LAYOUT}
+    if len(kinds) > 1:
+        check(False,
+              "%s is given display:%s in one rule and display:%s in another, "
+              "both as a bare class. They have identical specificity, so the "
+              "one written LAST silently wins — which is how the food bank "
+              "arrow ended up on a line of its own."
+              % (sel, sorted(kinds)[0], " and display:".join(sorted(kinds)[1:])))
+
 print("\n" + ("ALL PASS — %d pages x %d viewports, %d staff screens"
               % (len(PAGES), len(VIEWPORTS), len(FOLDERS))
               if not fails

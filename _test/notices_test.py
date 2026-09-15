@@ -17,11 +17,12 @@ WHAT THIS GUARDS
         constraint name — which is precisely the fault 041 exists to fix, and
         it got into production once already.
 
-  *  2  EVERY TOPIC THE DATABASE ALLOWS IS REACHABLE. `kahf` is Sūrat al-Kahf
-        on a Friday. A topic the table permits that no dropdown offers is dead
-        code with a masjid's word on it; a topic the dropdown offers that the
-        table refuses is an error message nobody can act on. The list must
-        match in BOTH directions.
+  *  2  EVERY TOPIC THE DATABASE ALLOWS IS REACHABLE IN THE EDITOR. `kahf` is
+        Sūrat al-Kahf on a Friday. A topic the table permits that no dropdown
+        offers is dead code with a masjid's word on it; a topic the dropdown
+        offers that the table refuses is an error nobody can act on. The list
+        must match in BOTH directions. The topic is a filing label in the
+        portal only; nothing about a notice reaches the website at present.
 
   *  3  NOTHING IS SAVEABLE UNTIL THE FORM IS VALID — tested against a Save
         button that has been deliberately ENABLED first, because the markup
@@ -30,18 +31,21 @@ WHAT THIS GUARDS
         exact trap caught the timetable screen: the check was there, it read
         correctly, and it would have passed with the rule removed.
 
-  *  4  THE PUBLIC PAGE RENDERS NOTICES, AND ESCAPES THEM. These rows are
-        written by verified administrators, so the realistic risk is small —
-        but "only trustworthy people can write here" holds exactly until one
-        of their accounts does not, and escaping costs nothing.
+  *  4  NOTHING REACHES THE PUBLIC WEBSITE, and that is the current
+        decision rather than an omission.
 
-  *  5  AN EMPTY OR FAILING FETCH LEAVES NO TRACE. An empty "Notices" heading
-        on the front page of a masjid reads as neglect, which is worse than
-        no section. For most of the year there will be nothing to say.
+        Three designs were built and all three were rejected by the masjid:
+        a section of its own under the at-a-glance row, a fifth card in that
+        row showing the poster, and a band above the hero showing every
+        notice as text. The work is not lost — the editor, the database, the
+        poster uploads and the validation are all still here — but the
+        website shows none of it until somebody decides how it should look.
 
-  *  6  A PICTURE CANNOT MOVE THE PAGE. width and height come from the
-        database, which requires both or neither, so the box is the right
-        shape before the image lands.
+        So this checks the public page stays CLEAN. A half-removed feature
+        that leaves a fetch running, an empty section in the markup, or a
+        stylesheet full of rules for nothing is the sort of thing that gets
+        rediscovered a year later by somebody who cannot tell whether it is
+        load-bearing.
 
 Run:  python3 _test/notices_test.py
 """
@@ -136,17 +140,12 @@ check(offered == sorted(TOPICS),
       "offers that the database refuses is an error nobody can act on."
       % (offered, sorted(TOPICS)))
 
-#  And the public page has to have a readable label for every one of them, or
-#  a notice appears on the front page of the masjid labelled `janazah`.
-public = open("index.html", encoding="utf-8").read()
-tm = re.search(r"var TOPIC = \{(.*?)\};", public, re.S)
-check(tm is not None, "the public page has no TOPIC label table")
-if tm:
-    labelled = sorted(re.findall(r"([a-z]+):\s*'", tm.group(1)))
-    check(labelled == sorted(TOPICS),
-          "the public page labels %r but the database allows %r — an unlabelled "
-          "topic shows on the front page as its own database key."
-          % (labelled, sorted(TOPICS)))
+#  There is no matching check on the PUBLIC page, and its absence is
+#  deliberate. One version of the front page showed a topic chip on every
+#  notice and needed a readable label for all six keys, or a notice appeared
+#  on the masjid's home page labelled `janazah`. Nothing about a notice
+#  reaches the website now, so there is no chip to label — the topic survives
+#  as a way of filing notices in the portal and nothing more.
 
 with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
@@ -240,98 +239,61 @@ with sync_playwright() as p:
     check(errs == [], "the editor threw: %s" % errs[:2])
     pg.close()
 
-    # =================================================== the public page
+    # ============================================ nothing on the public page
     #
-    #  The fetch is intercepted, because the point is what the page DOES with
-    #  rows — not whether the live database has any today.
-    POISON = "</h3><img src=x onerror=\"window.__pwned=1\">"
+    #  Read from the BUILT page, because that is what a visitor gets, and the
+    #  whole risk here is a fragment left behind in a file nobody re-reads.
+    built = open("index.html", encoding="utf-8").read()
+    for trace, what in [
+        ("notices_live",  "a request to the notices view"),
+        ("eventsRow",     "the events band markup"),
+        ("eventsList",    "the events band's list"),
+        ("ev-item",       "the events band's stylesheet"),
+        ("events-row",    "the events band's stylesheet"),
+        ("has-events",    "the events band's layout class"),
+        ("ev-expect",     "the events band's space reservation"),
+        ("tm_events_h",   "the events band's remembered height"),
+        ("__eventsReady", "the early events fetch"),
+        ("noticeCard",    "the poster card in the at-a-glance row"),
+        ("glance-notice", "the poster card's stylesheet"),
+    ]:
+        check(trace not in built,
+              "%r is still in the built page — %s. Notices are edited in the "
+              "portal and shown nowhere on the website at the moment; a "
+              "half-removed feature is worse than either keeping it or taking "
+              "it out, because the next person cannot tell which it is."
+              % (trace, what))
 
-    def serve(rows):
-        pg = b.new_page(viewport={"width": 1280, "height": 900})
-        seen = []
-        pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
-        pg.route("**/rest/v1/notices_live*", lambda r: r.fulfill(
-            status=200, content_type="application/json", body=json.dumps(rows)))
-        pg.goto(BASE, wait_until="load", timeout=45000)
-        pg.wait_for_timeout(1400)
-        return pg, seen
-
-    # ------------------------------------------- 4 and 6. it renders
-    pg, seen = serve([
-        {"id": "1", "topic": "janazah", "title": "Janāzah after Ẓuhr",
-         "body": "Brother Yusuf, may Allah have mercy on him.",
-         "image_url": None, "image_w": None, "image_h": None,
-         "event_at": "2026-09-20T13:30:00+00:00"},
-        {"id": "2", "topic": "kahf", "title": POISON, "body": None,
-         "image_url": "https://example.test/poster.jpg",
-         "image_w": 800, "image_h": 600, "event_at": None},
-    ])
-    r = pg.evaluate("""() => {
-      const row = document.getElementById('noticesRow');
-      const cards = [...document.querySelectorAll('.nt-card')];
-      const img = document.querySelector('.nt-card img');
-      return {
-        shown: !row.hidden,
-        cards: cards.length,
-        chips: cards.map(c => c.querySelector('.nt-chip').textContent),
-        heads: cards.map(c => c.querySelector('h3').textContent),
-        pwned: !!window.__pwned,
-        extraImgs: document.querySelectorAll('.nt-card img').length,
-        imgW: img ? img.getAttribute('width') : null,
-        imgH: img ? img.getAttribute('height') : null,
-        lazy: img ? img.getAttribute('loading') : null
-      };
-    }""")
-    check(r["shown"], "two notices came back and the section stayed hidden")
-    check(r["cards"] == 2, "expected 2 notice cards, drew %d" % r["cards"])
-    check(r["chips"] == ["Janāzah", "Sūrat al-Kahf"],
-          "the topic chips read %r — a notice on the front page of the masjid "
-          "must not be labelled with a database key" % r["chips"])
-    check(r["pwned"] is False,
-          "A NOTICE'S HEADING WAS EXECUTED AS HTML. Only verified "
-          "administrators can write these rows, which is an argument that "
-          "holds until one of their accounts does not.")
-    check(r["extraImgs"] == 1,
-          "%d images were drawn for one picture — the escaped heading has been "
-          "parsed as markup" % r["extraImgs"])
-    check(POISON in r["heads"],
-          "the poisoned heading was not rendered as literal text: %r" % r["heads"])
-    check(r["imgW"] == "800" and r["imgH"] == "600",
-          "the picture has width %r height %r — without both from the database "
-          "the page moves under the reader when it loads" % (r["imgW"], r["imgH"]))
-    check(r["lazy"] == "lazy", "the notice picture is not lazily loaded")
-    check(seen == [], "the home page threw: %s" % seen[:2])
-    pg.close()
-
-    # --------------------------------- 5. empty, and broken, leave no trace
-    for label, rows in (("an empty list", []),
-                        ("rows with no heading", [{"id": "1", "topic": "events",
-                                                   "title": None, "body": "x"}])):
-        pg, seen = serve(rows)
-        hidden = pg.evaluate("() => document.getElementById('noticesRow').hidden")
-        check(hidden is True,
-              "%s left the Notices section on screen. An empty heading on the "
-              "front page of a masjid reads as neglect — worse than nothing."
-              % label)
-        check(seen == [], "%s made the page throw: %s" % (label, seen[:2]))
-        pg.close()
-
-    #  And an outright failure.
+    #  And the at-a-glance row is back to the four cards it has always had.
     pg = b.new_page(viewport={"width": 1280, "height": 900})
     seen = []
     pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
-    pg.route("**/rest/v1/notices_live*", lambda r: r.fulfill(status=500, body="no"))
+    pg.on("request", lambda r: seen.append("requested notices_live")
+          if "notices_live" in r.url else None)
+    pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    pg.route("**/rest/v1/site_content*", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
     pg.goto(BASE, wait_until="load", timeout=45000)
-    pg.wait_for_timeout(1400)
-    check(pg.evaluate("() => document.getElementById('noticesRow').hidden") is True,
-          "a failed request left the Notices section on screen")
-    check(seen == [], "a failed notices request threw an uncaught error: %s" % seen[:2])
+    pg.wait_for_timeout(1500)
+    r = pg.evaluate("""() => ({
+        cards: [...document.querySelectorAll('.glance-grid > .glance-card')]
+                 .filter(c => c.getBoundingClientRect().width > 1).length,
+        heroTop: Math.round(document.querySelector('.hero').getBoundingClientRect().top)
+    })""")
+    check(r["cards"] == 4,
+          "the at-a-glance row has %d cards. It should be back to the four it "
+          "has always had." % r["cards"])
+    check(r["heroTop"] <= 1,
+          "the hero starts %dpx down the page — something is still being drawn "
+          "above it." % r["heroTop"])
+    check(seen == [], "the home page threw, or still asks for notices: %s" % seen[:2])
     pg.close()
 
     b.close()
 
-print("\n" + ("ALL PASS — %d good cases, %d bad, %d topics, and the public page "
-              "renders, escapes and hides" % (len(GOOD), len(BAD), len(TOPICS))
+print("\n" + ("ALL PASS — %d good cases, %d bad, %d topics, and the public "
+              "page shows nothing" % (len(GOOD), len(BAD), len(TOPICS))
               if not fails
               else "FAILURES (%d):\n  " % len(fails) + "\n  ".join(fails[:20])))
 sys.exit(1 if fails else 0)
