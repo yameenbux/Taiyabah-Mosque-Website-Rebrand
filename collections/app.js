@@ -333,6 +333,8 @@
               '<dt>Wage or commission</dt><dd>' +
                 (r.collector_paid ? '<b>Yes &mdash; they are paid for this</b>' : 'No') +
                 '</dd>' +
+              '<dt>BMCC certificate</dt><dd>' + certificateHtml(r) + '</dd>' +
+              '<dt>Students</dt><dd>' + studentsHtml(r) + '</dd>' +
               '<dt>Signed</dt><dd>' + esc(r.signed_name) +
                 ' &middot; rules version ' + esc(r.rules_version) + '</dd>' +
               '<dt>Requested</dt><dd>' + day(r.requested_date) +
@@ -386,13 +388,63 @@
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
     }
 
+    /*  THE CERTIFICATE IS IN A PRIVATE BUCKET, so there is no address that
+        can simply be put in an href — a public URL would defeat the point of
+        db/059 making the bucket private. A signed link is minted on the click
+        instead, valid for five minutes, which is long enough to look at a
+        certificate and not long enough to be worth forwarding.
+
+        Requests submitted before September 2026 have no certificate at all.
+        They say so rather than showing a broken link: the rule did not exist
+        when they were made, and the office saw those on paper. */
+    function certificateHtml(r) {
+      if (!r.bmcc_certificate_path) {
+        return '<span class="cc-nocert">Not on file &mdash; submitted before the ' +
+               'certificate was asked for on the form</span>';
+      }
+      return '<a href="#" class="cc-cert" data-cert="' + esc(r.bmcc_certificate_path) +
+             '">View the certificate</a> &middot; dated ' + day(r.bmcc_certificate_date);
+    }
+
+    function studentsHtml(r) {
+      if (r.students_total == null && r.students_boarding == null) return 'Not given';
+      var bits = [];
+      if (r.students_total != null) bits.push(esc(String(r.students_total)) + ' altogether');
+      if (r.students_boarding != null) bits.push(esc(String(r.students_boarding)) + ' boarding');
+      return bits.join(' &middot; ');
+    }
+
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest ? e.target.closest("a.cc-cert") : null;
+      if (!a) return;
+      e.preventDefault();
+      var was = a.textContent;
+      a.textContent = "Opening\u2026";
+      sb.storage.from("bmcc").createSignedUrl(a.dataset.cert, 300)
+        .then(function (res) {
+          a.textContent = was;
+          if (res.error || !res.data) throw (res.error || new Error("no url"));
+          window.open(res.data.signedUrl, "_blank", "noopener");
+        })
+        .catch(function () {
+          a.textContent = was;
+          //  Said out loud rather than silently doing nothing: an office that
+          //  cannot see the certificate needs to know that is what happened,
+          //  not assume the charity never sent one.
+          alert("Could not open that certificate. You may need to sign in again, " +
+                "or it may have been removed.");
+        });
+    });
+
     function load() {
       return sb.from("charity_collections")
         .select("id,reference,submitted_at,requested_date,agreed_date,status," +
                 "org_name,org_address,org_phone,org_email,charity_number," +
                 "collector_name,collector_role,collector_paid," +
                 "trustee_name,trustee_phone,trustee_email," +
-                "rules_version,signed_name,office_notes")
+                "rules_version,signed_name,office_notes," +
+                "bmcc_certificate_path,bmcc_certificate_date," +
+                "students_total,students_boarding")
         .order("requested_date", { ascending: true })
         .then(function (res) {
           if (res.error) throw res.error;

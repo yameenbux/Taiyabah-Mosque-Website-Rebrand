@@ -2071,6 +2071,13 @@ window.TAIYABAH_PUBLIC = {
     font-size:.954rem;line-height:1.55;color:var(--ink);
   }
 
+  .cc-required{
+    margin:2px 0 16px;padding:13px 15px;border-radius:12px;
+    border:1px solid rgba(180,83,47,.32);background:rgba(180,83,47,.08);
+    font-size:.95rem;line-height:1.65;color:var(--danger-ink);
+  }
+  .cc-required b{font-weight:700;}
+  .cf-row .opt{text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);}
   .cc-help{
     display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;
     background:var(--paper);border:1px solid var(--line);border-radius:12px;
@@ -4083,6 +4090,42 @@ window.TAIYABAH_PUBLIC = {
                 <p class="field-hint">Leave this empty if the cause is overseas or not
                    registered in England and Wales.</p>
                 <p class="hf-err">That does not look like a charity number.</p>
+              </div>
+              <div class="cf-row" id="ccr-students">
+                <label for="ccStudents">Students altogether <span class="opt">&mdash; optional</span></label>
+                <input type="number" id="ccStudents" min="0" max="100000" autocomplete="off">
+                <p class="hf-err">Please give that as a plain number.</p>
+              </div>
+              <div class="cf-row" id="ccr-boarding">
+                <label for="ccBoarding">Of those, boarding <span class="opt">&mdash; optional</span></label>
+                <input type="number" id="ccBoarding" min="0" max="100000" autocomplete="off">
+                <p class="field-hint">If your madrasah or school has students, it helps the
+                   masjid to know how many, and how many of them board.</p>
+                <p class="hf-err">There cannot be more boarding students than students.</p>
+              </div>
+            </div>
+
+            <!-- ============ THE BMCC CERTIFICATE ============================
+                 The gate. Bolton Masjid Chanda Committee issues it, the masjid
+                 will not approve a collection without seeing it, and it must be
+                 no more than three months old. Enforced in
+                 request_charity_collection() as well as here; see db/059. -->
+            <div class="cform-divider">Your BMCC certificate</div>
+            <p class="cc-required">The masjid <b>cannot take a request without this</b>.
+               Bolton Masjid Chanda Committee issues the certificate, and it must have been
+               issued <b>within the last three months</b>.</p>
+            <div class="nk-fields">
+              <div class="cf-row wide" id="ccr-file">
+                <label for="ccFile">Photo or scan of the certificate</label>
+                <input type="file" id="ccFile" accept="image/jpeg,image/png,image/webp,application/pdf">
+                <p class="field-hint">A clear photo is fine. JPG, PNG, WEBP or PDF, up to 5&nbsp;MB.</p>
+                <p class="hf-err" id="ccFileErr">Please attach your BMCC certificate.</p>
+              </div>
+              <div class="cf-row" id="ccr-certdate">
+                <label for="ccCertDate">The date on the certificate</label>
+                <input type="date" id="ccCertDate" autocomplete="off">
+                <p class="field-hint" id="ccCertHint">&nbsp;</p>
+                <p class="hf-err">Please give a date within the last three months.</p>
               </div>
             </div>
 
@@ -7554,6 +7597,15 @@ window.TAIYABAH_PUBLIC = {
     var RULES_VERSION = '2026-09-14';
     var NOTICE_DAYS   = 14;
     var HORIZON_DAYS  = 365;
+    //  The BMCC certificate. THREE MONTHS IS ENFORCED IN THE DATABASE —
+    //  request_charity_collection(), db/059 — and this copy exists only so the
+    //  form can refuse before somebody waits for an upload. If the masjid
+    //  changes the rule, both have to change, and so does the app's copy.
+    var CERT_MONTHS   = 3;
+    var CERT_BUCKET   = 'bmcc';
+    var CERT_MAX      = 5 * 1024 * 1024;
+    var CERT_TYPES    = { 'image/jpeg':'jpg', 'image/png':'png',
+                          'image/webp':'webp', 'application/pdf':'pdf' };
 
     var $ = function(id){ return document.getElementById(id); };
     var form = $('ccForm');
@@ -7579,6 +7631,15 @@ window.TAIYABAH_PUBLIC = {
 
     $('ccRulesVer').textContent  = RULES_VERSION;
     $('ccNoticeDays').textContent = NOTICE_DAYS;
+
+    //  The certificate window, set from today for the same reason the
+    //  collection window is: a hard-coded date goes stale overnight.
+    var certFrom = new Date(today);
+    certFrom.setMonth(certFrom.getMonth() - CERT_MONTHS);
+    var certEl = $('ccCertDate');
+    certEl.min = iso(certFrom);
+    certEl.max = iso(today);
+    $('ccCertHint').textContent = 'It must be dated on or after ' + pretty(certFrom) + '.';
     var dateEl = $('ccDate');
     dateEl.min = iso(first);
     dateEl.max = iso(last);
@@ -7638,7 +7699,62 @@ window.TAIYABAH_PUBLIC = {
       ok = mark('ccr-rules',  !$('ccRules').checked) && ok;
       ok = mark('ccr-priv',   !$('ccPriv').checked) && ok;
       ok = mark('ccr-sign',   v('ccSign').length    < 2) && ok;
+
+      //  The certificate. Checked here so the person is told before an upload
+      //  starts, and again in the database, which is what actually holds.
+      var f = ($('ccFile').files || [])[0];
+      var fileBad = !f || !CERT_TYPES[f.type] || f.size > CERT_MAX;
+      if(f && !CERT_TYPES[f.type]){
+        $('ccFileErr').textContent = 'That kind of file will not work. Please use a JPG, PNG, WEBP or PDF.';
+      }else if(f && f.size > CERT_MAX){
+        $('ccFileErr').textContent = 'That file is too big. The largest the masjid can take is 5 MB.';
+      }else{
+        $('ccFileErr').textContent = 'Please attach your BMCC certificate.';
+      }
+      ok = mark('ccr-file', fileBad) && ok;
+
+      var cd = v('ccCertDate');
+      var cdOk = false;
+      if(cd){
+        var picked = new Date(cd + 'T00:00:00');
+        cdOk = !isNaN(picked) && picked >= certFrom && picked <= today;
+      }
+      ok = mark('ccr-certdate', !cdOk) && ok;
+
+      //  Optional, so empty passes. Only a pair that cannot both be true fails.
+      var st = v('ccStudents'), bo = v('ccBoarding');
+      ok = mark('ccr-students', st !== '' && !(Number(st) >= 0)) && ok;
+      ok = mark('ccr-boarding',
+                (bo !== '' && !(Number(bo) >= 0)) ||
+                (st !== '' && bo !== '' && Number(bo) > Number(st))) && ok;
       return ok;
+    }
+
+    //  Uploaded under a name nobody can guess, into a PRIVATE bucket that anon
+    //  may write to and may not read, list or overwrite. See db/059 for why
+    //  this one is not public the way `notices` is.
+    function uploadCertificate(){
+      var f = $('ccFile').files[0];
+      var ext = CERT_TYPES[f.type] || 'bin';
+      var rand = (window.crypto && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : String(Date.now()) + '-' + Math.random().toString(36).slice(2);
+      var path = today.getFullYear() + '/' + rand + '.' + ext;
+      var apiBase = String(cfg.SUPABASE_URL).trim()
+                      .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+      return fetch(apiBase + '/storage/v1/object/' + CERT_BUCKET + '/' + path, {
+        method: 'POST',
+        headers: {
+          'apikey': cfg.SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+          'Content-Type': f.type,
+          'x-upsert': 'false'
+        },
+        body: f
+      }).then(function(res){
+        if(!res.ok) throw new Error('upload ' + res.status);
+        return path;
+      });
     }
 
     function fail(msg){
@@ -7673,7 +7789,11 @@ window.TAIYABAH_PUBLIC = {
       var timedOut = false;
       var timer = setTimeout(function(){ timedOut = true; }, 12000);
 
-      fetch(apiBase + '/rest/v1/rpc/request_charity_collection', {
+      //  The certificate first. A request written before the file is stored
+      //  would claim a certificate that does not exist; this order, at worst,
+      //  leaves an unreferenced file in a private bucket.
+      uploadCertificate().then(function(certPath){
+      return fetch(apiBase + '/rest/v1/rpc/request_charity_collection', {
         method: 'POST',
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
@@ -7696,8 +7816,14 @@ window.TAIYABAH_PUBLIC = {
           rules_version:   RULES_VERSION,
           rules_accepted:  true,
           signed_name:     $('ccSign').value.trim(),
-          privacy_accepted: true
+          privacy_accepted: true,
+          bmcc_certificate_path: certPath,
+          bmcc_certificate_date: $('ccCertDate').value,
+          //  Empty means not answered, not zero.
+          students_total:    $('ccStudents').value.trim() || null,
+          students_boarding: $('ccBoarding').value.trim() || null
         }})
+      });
       }).then(function(res){
         clearTimeout(timer);
         return res.text().then(function(body){
@@ -7728,8 +7854,16 @@ window.TAIYABAH_PUBLIC = {
                '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a> and he will ' +
                'take the details.');
         });
-      }).catch(function(){
+      }).catch(function(err){
         clearTimeout(timer);
+        //  A failed upload and a failed request are different problems, and
+        //  telling somebody to try again is only useful for the first.
+        if(/^upload /.test(String(err && err.message))){
+          fail('The certificate did not upload. Check your connection and try again, ' +
+               'or ring Rafik Patel on ' +
+               '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a>.');
+          return;
+        }
         fail((timedOut ? 'That took too long. ' : 'That did not send. ') +
              'Please ring Rafik Patel on ' +
              '<a href="tel:+447951795465">07951&nbsp;795&nbsp;465</a>.');
@@ -7744,6 +7878,7 @@ window.TAIYABAH_PUBLIC = {
     });
     form.addEventListener('change', function(e){
       if(e.target && e.target.name === 'ccPaid') mark('ccr-paid', false);
+      if(e.target && e.target.id === 'ccFile') mark('ccr-file', false);
     });
   })();
 
