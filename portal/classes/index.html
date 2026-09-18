@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>Classes &mdash; Madrasah &mdash; Taiyabah Masjid</title>
+<!-- ===========================================================================
+     THIS SCREEN IS TWO FOLDERS DOWN, NOT ONE.
+
+     Every other staff screen on this site sits directly under the web root —
+     /venue/, /courses/, /giftaid/ — so every path in them is "../something".
+     This one is /portal/staff/, which means every single relative path here is
+     "../../something", and the one that points at the madrasah portal above it
+     is "../".
+
+     That is worth a comment because getting it wrong FAILS SILENTLY. A missing
+     stylesheet does not throw; it renders an unstyled page that looks like a
+     bug in the markup. A missing shell.js does not throw either; it just never
+     draws the rail, which looks exactly like having no rail. If you copy this
+     file to make another madrasah screen, check the six paths below before you
+     check anything else.
+     =========================================================================== -->
+<link rel="preload" href="../../fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../../fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../admin/fonts.css">
+<link rel="stylesheet" href="../../admin/shell.css">
+<script src="../../admin/shell.js" defer></script>
+<script src="../nav.js" defer></script>
+<style>
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
+    --gold:#C6A24C; --gold-bright:#DCBB63;
+    /* Gold is a 2.3:1 text colour on a light card — unreadable. Use
+       --gold for gold on plum, --gold-ink for gold on paper or card.
+       Same rule for green. Matches index_template.html. */
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
+    --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:940px){ .shell{grid-template-columns:1.03fr 1fr;} }
+
+  /* ---- brand panel ----
+     Sign-in furniture. shell.css removes the whole thing the moment somebody
+     is through, because the rail two inches to its left says all of it again. */
+  .brand{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    padding:46px 0 44px;display:flex;flex-direction:column;justify-content:flex-start;
+  }
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
+  .brand::after{
+    content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
+    border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
+  }
+  .brand-inner{position:relative;z-index:2;width:min(470px,86%);margin:auto auto 0;}
+  @media (min-width:940px){ .brand-inner{margin:auto auto 0 max(6vw,32px);} }
+  .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
+  .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
+  .brand p{color:rgba(243,239,227,.82);font-size:1.035rem;line-height:1.65;max-width:44ch;}
+  .brand .back{
+    display:inline-flex;align-items:center;gap:6px;margin-top:26px;min-height:44px;
+    color:rgba(243,239,227,.66);font-size:.943rem;font-weight:600;text-decoration:none;
+  }
+  .brand .back:hover{color:#F3EFE3;}
+  .pcredit{
+    position:relative;z-index:2;margin:auto auto 0;padding-top:28px;
+    width:min(470px,86%);font-size:.88rem;color:rgba(243,239,227,.45);
+  }
+  @media (min-width:940px){ .pcredit{margin:auto auto 0 max(6vw,32px);} }
+  .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
+  .pcredit a:hover{color:var(--gold-bright);}
+
+  /* ---- the working side ---- */
+  .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
+  @media (min-width:940px){ .panel{padding:64px 0;} }
+  .card{
+    width:min(420px,86%);background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
+  }
+  /* The sign-in card is 420px because a login form should be narrow. Forty
+     members of staff and their DBS dates are not a login form, so the shell
+     widens once there is something to show. */
+  .card.is-wide{width:min(880px,94%);}
+  .card h2{font-size:1.408rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.977rem;line-height:1.55;margin-bottom:22px;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  form{display:flex;flex-direction:column;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  input[type=email],input[type=password],input[type=text]{
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
+  }
+  input::placeholder{color:#A99CA4;}
+  input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .pw{position:relative;display:flex;}
+  .pw input{padding-right:70px;}
+  .pw button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.88rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
+    padding:6px 10px;min-height:44px;border-radius:6px;
+  }
+  .pw button:hover{background:var(--paper);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;min-height:44px;border-radius:999px;
+    font-family:inherit;font-weight:700;font-size:1.003rem;
+    cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
+  .btn-ghost{background:none;border-color:var(--line);color:var(--brand-800);}
+  .btn-ghost:hover:not(:disabled){border-color:var(--brand-800);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .err{
+    background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
+    border-radius:9px;padding:11px 13px;font-size:.949rem;line-height:1.5;
+  }
+  .note{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.931rem;line-height:1.6;color:var(--muted);text-align:center;
+  }
+
+  /* ---- two-step ---- */
+  .code-input{
+    font-size:1.5rem !important;letter-spacing:.42em;text-align:center;
+    font-variant-numeric:tabular-nums;font-weight:700;padding:14px 13px !important;
+  }
+  .qr{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:4px;
+  }
+  .qr img{width:172px;height:172px;display:block;}
+  .secret{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.907rem;
+    letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
+    background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+  }
+  .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .steps li{font-size:.954rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li::before{
+    content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold);
+  }
+
+  /* ---- signed in ----
+     No avatar and no roles strip. shell.css hides both the moment the rail is
+     up, because the rail's own footer says who is signed in and does not
+     scroll away — and the first inch of the desk belongs to the work. */
+  .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .who-t{min-width:0;}
+  .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
+  .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+  .role-chip{
+    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
+  }
+  .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+
+  /* ---- loading ---- */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+  .loading p{font-size:.96rem;color:var(--muted);}
+
+  /* ---- the panel heading, shared with every other staff screen ---- */
+  .bk{margin:22px 0 18px;}
+  .bk-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .bk-head h2{font-size:1.19rem;color:var(--brand-900);}
+  .bk-head .bk-sub{font-size:.931rem;color:var(--muted);}
+</style>
+<style>
+  /* ===========================================================================
+     THE CLASSES, AND ONE CLASS.
+
+     WHAT WAS ASKED FOR, IN THE MASJID'S OWN WORDS:
+
+         "each class should be laid out neatly and easily navigable... They
+          should also have the options which are available such as edit, manage
+          students, download pdf etc however would like this to be available
+          when someone clicks INTO the class rather than what ibeams has, as
+          what ibeams has looks unclean and too messy."
+
+     That is a correct instinct and worth writing down properly, because it is
+     not only about tidiness.
+
+     THE OLD SYSTEM PUTS FOUR BUTTONS ON EVERY ROW. With forty-five classes
+     that is a hundred and eighty controls on one screen, of which one hundred
+     and seventy-six are wrong for whatever you actually came to do. Two of
+     them are destructive. A list is for FINDING something; the moment every
+     row carries its own verbs, the list stops being scannable and becomes a
+     control panel you have to read rather than skim — and a red Delete sitting
+     a few pixels from Edit, forty-five times over, is an accident waiting for
+     a quiet afternoon.
+
+     So: the list answers "which class", and it carries nothing but the three
+     things you would sort by — the name, who teaches it, and how many children
+     are in it. Everything you can DO lives one press deeper, on a screen that
+     is about exactly one class and can therefore afford to be explicit about
+     what each action means.
+
+     IT IS A VIEW SWAP, NOT A DIALOG. The detail replaces the list in the same
+     panel with a way back at the top. A modal over a greyed-out list would put
+     a register of children in a box floating over the other forty-four, and
+     nothing about that is easier to read.
+     =========================================================================== */
+
+  /*  `hidden` HAS TO WIN — the same guard as every other screen in this
+      portal. An author `display` rule outranks [hidden]{display:none}, and
+      this page has several. It has caught this project six times now. */
+  .bk [hidden], .cl-view[hidden], .cl-form[hidden], #cl-editor[hidden],
+  #cl-detail[hidden], #cl-list-view[hidden]{ display:none !important; }
+
+  body.has-ashell .card.is-wide{ max-width:none; }
+
+  .cl-scope{
+    font-size:.93rem;line-height:1.6;color:var(--muted);
+    background:var(--paper);border:1px solid var(--line);
+    border-left:3px solid var(--gold);border-radius:10px;
+    padding:12px 14px;margin-bottom:16px;
+  }
+  .cl-scope strong{color:var(--gold-ink);}
+  .cl-ok{
+    background:rgba(63,122,70,.12);border:1px solid rgba(63,122,70,.4);
+    color:var(--success-ink);border-radius:9px;padding:11px 13px;
+    font-size:.949rem;line-height:1.5;margin-bottom:12px;
+  }
+
+  /* ---------- the figures ---------- */
+  .cl-sum{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .cl-fig{
+    flex:1 1 190px;background:var(--card);border:1px solid var(--line);
+    border-left:3px solid var(--brand-700);border-radius:12px;padding:13px 15px;
+  }
+  .cl-fig .n{
+    display:block;font-family:"Fraunces","Fraunces fallback",Georgia,serif;
+    font-size:2rem;line-height:1;color:var(--brand-900);font-variant-numeric:tabular-nums;
+  }
+  .cl-fig .k{
+    display:block;font-size:.83rem;font-weight:800;letter-spacing:.09em;
+    text-transform:uppercase;color:var(--muted);margin-top:6px;
+  }
+
+  /* ---------- the filter row ---------- */
+  .cl-controls{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:16px;}
+  .cl-find,.cl-pick{
+    font:inherit;font-size:.96rem;padding:11px 13px;min-height:44px;
+    border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);
+  }
+  .cl-find{width:100%;max-width:300px;}
+  .cl-find:focus,.cl-pick:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold);}
+
+  /* ---------- the sections ----------
+     Boys, girls and mixed, each its own block with its own colour — the same
+     teal and indigo the Staff screen uses for the two sides, so a person
+     moving between the two screens is not learning a second palette. */
+  .cl-sec{
+    border:1px solid var(--line);border-radius:13px;padding:15px 16px;margin-bottom:20px;
+  }
+  .cl-sec.girls{border-color:rgba(20,96,90,.34);border-left:3px solid #14605A;background:rgba(20,96,90,.07);}
+  .cl-sec.boys  {border-color:rgba(55,66,127,.34);border-left:3px solid #37427F;background:rgba(55,66,127,.07);}
+  .cl-sec.mixed {border-color:rgba(198,162,76,.5);border-left:3px solid var(--gold);background:rgba(198,162,76,.07);}
+  .cl-sec-h{
+    display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+    font-size:1.08rem;padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .cl-sec.girls .cl-sec-h{color:#14605A;border-bottom-color:rgba(20,96,90,.3);}
+  .cl-sec.boys  .cl-sec-h{color:#37427F;border-bottom-color:rgba(55,66,127,.3);}
+  .cl-sec.mixed .cl-sec-h{color:var(--gold-ink);border-bottom-color:rgba(198,162,76,.4);}
+  .cl-sec-n{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    font-size:.83rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;font-variant-numeric:tabular-nums;
+  }
+  .cl-sec.girls .cl-sec-n{color:#14605A;background:rgba(20,96,90,.16);}
+  .cl-sec.boys  .cl-sec-n{color:#37427F;background:rgba(55,66,127,.16);}
+  .cl-sec.mixed .cl-sec-n{color:var(--gold-ink);background:rgba(198,162,76,.18);}
+
+  /* ---------- the cards ----------
+     A grid rather than rows: a class is a small object with three facts, and
+     three facts in a full-width row leaves two-thirds of the line empty. */
+  .cl-grid{display:grid;gap:11px;grid-template-columns:1fr;}
+  @media (min-width:700px){  .cl-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (min-width:1180px){ .cl-grid{grid-template-columns:repeat(3,1fr);} }
+  @media (min-width:1700px){ .cl-grid{grid-template-columns:repeat(4,1fr);} }
+
+  /*  THE WHOLE CARD IS THE BUTTON. One target, one verb - open this class.
+      Not a card with three links in it, which is the pattern that makes you
+      aim. */
+  .cl-card{
+    font:inherit;text-align:left;cursor:pointer;width:100%;min-width:0;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;display:flex;flex-direction:column;gap:7px;color:var(--ink);
+  }
+  .cl-card:hover{border-color:var(--brand-800);}
+  .cl-card:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  .cl-card.off{opacity:.6;}
+  .cl-nm{font-size:1.04rem;font-weight:700;line-height:1.35;}
+  .cl-who{font-size:.92rem;color:var(--muted);line-height:1.5;}
+  .cl-who.none{font-style:italic;}
+  .cl-count{
+    display:inline-flex;align-items:baseline;gap:6px;font-size:.9rem;color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+  .cl-count b{font-size:1.06rem;color:var(--brand-900);font-weight:800;}
+  /*  NOUGHT IS NOT A NUMBER TO GLOSS OVER. An empty class is either one that
+      has not been filled in or one that should not be running, and both are
+      worth noticing from across the list. */
+  .cl-count.empty b{color:var(--danger-ink);}
+  .cl-tag{
+    align-self:flex-start;font-size:.78rem;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);background:var(--paper);
+    border:1px solid var(--line);padding:2px 8px;border-radius:999px;
+  }
+
+  .cl-empty{
+    text-align:center;padding:30px 20px;color:var(--muted);font-size:.98rem;
+    background:var(--paper);border:1px dashed var(--line);border-radius:12px;
+  }
+
+  /* ---------- one class ---------- */
+  .cl-back{
+    display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.96rem;
+    font-weight:700;cursor:pointer;background:none;border:0;color:var(--brand-700);
+    padding:8px 2px;margin-bottom:12px;min-height:44px;
+  }
+  .cl-back:hover{color:var(--brand-900);text-decoration:underline;}
+  .cl-back:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px;}
+
+  .cl-head{
+    border:1px solid var(--line);border-left:3px solid var(--brand-700);
+    background:var(--paper);border-radius:13px;padding:17px 19px;margin-bottom:18px;
+  }
+  .cl-head h3{
+    font-size:1.5rem;color:var(--brand-900);margin:0 0 6px;line-height:1.25;
+  }
+  .cl-facts{display:flex;flex-wrap:wrap;gap:7px 20px;margin-bottom:0;}
+  .cl-fact{font-size:.96rem;color:var(--muted);line-height:1.5;}
+  .cl-fact b{color:var(--ink);font-weight:700;}
+
+  /*  THE FOUR ACTIONS, SPELLED OUT, ONE PRESS INSIDE.
+      Each says what it does in words rather than relying on an icon, and the
+      destructive one is last, separated, and a different weight — not sitting
+      beside Edit where a slipped finger reaches it. */
+  .cl-acts{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0 0;}
+  .cl-acts .btn{width:auto;}
+  .cl-acts .cl-danger{margin-left:auto;}
+  @media (max-width:640px){ .cl-acts .cl-danger{margin-left:0;} }
+
+  .cl-roll{margin-top:20px;}
+  .cl-roll h4{font-size:1.1rem;color:var(--brand-900);margin:0 0 4px;}
+  .cl-roll > p{font-size:.94rem;color:var(--muted);line-height:1.6;margin:0 0 13px;}
+  .cl-pupils{
+    display:grid;gap:8px;grid-template-columns:1fr;
+    counter-reset:pupil;
+  }
+  @media (min-width:640px){  .cl-pupils{grid-template-columns:repeat(2,1fr);} }
+  @media (min-width:1100px){ .cl-pupils{grid-template-columns:repeat(3,1fr);} }
+  .cl-pupil{
+    display:flex;align-items:baseline;gap:10px;min-width:0;
+    background:var(--card);border:1px solid var(--line);border-radius:9px;
+    padding:10px 12px;font-size:.99rem;line-height:1.4;
+  }
+  .cl-pupil::before{
+    counter-increment:pupil;content:counter(pupil);
+    font-size:.82rem;font-weight:800;color:var(--muted);
+    font-variant-numeric:tabular-nums;min-width:22px;flex-shrink:0;
+  }
+  .cl-pupil span{min-width:0;overflow-wrap:anywhere;}
+
+  /* ---------- the editor ---------- */
+  .cl-form{
+    display:flex;flex-direction:column;gap:13px;margin-top:18px;
+    border-top:1px solid var(--line);padding-top:17px;
+  }
+  .cl-form h4{font-size:1.1rem;color:var(--brand-900);margin:0;}
+  .cl-form .fld{display:flex;flex-direction:column;gap:7px;}
+  .cl-form .fld > span{
+    font-size:.88rem;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .cl-form input, .cl-form select{
+    font:inherit;font-size:1rem;padding:12px 13px;min-height:46px;
+    border:1px solid var(--line);border-radius:9px;background:var(--card);color:var(--ink);
+  }
+  .cl-form input:focus, .cl-form select:focus{
+    outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold);
+  }
+  .cl-two{display:grid;grid-template-columns:1fr;gap:13px;}
+  @media (min-width:680px){ .cl-two{grid-template-columns:1fr 1fr;} }
+  .cl-tick{
+    display:flex;align-items:flex-start;gap:11px;background:var(--card);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;
+    font-size:.98rem;line-height:1.5;
+  }
+  .cl-tick input{margin-top:3px;width:17px;height:17px;accent-color:var(--brand-700);flex-shrink:0;}
+
+  .cl-confirm{
+    margin-top:12px;padding:14px 16px;border-radius:11px;
+    border:1px solid rgba(198,162,76,.5);border-left:3px solid var(--gold);
+    background:rgba(198,162,76,.09);
+  }
+  .cl-confirm.is-danger{
+    border-color:rgba(180,83,47,.5);border-left-color:var(--danger);
+    background:rgba(180,83,47,.08);
+  }
+  .cl-confirm-q{font-size:1.02rem;line-height:1.55;color:var(--ink);font-weight:600;margin:0 0 11px;}
+  .cl-confirm-acts{display:flex;gap:9px;flex-wrap:wrap;}
+  .cl-confirm-acts .btn{width:auto;}
+
+  /* ---------- the class list, on paper ----------
+     "Download PDF" is the browser's own Save as PDF, reached through print.
+     No library: this site self-hosts its fonts and inlines its scripts on
+     purpose, and pulling a PDF generator off a CDN to reproduce a document the
+     browser already makes would be a dependency bought for nothing. What it
+     prints is the document the madrasah already hands out - the class, the
+     teacher, and a numbered roll. */
+  .cl-print-head{display:none;}
+  @media print{
+    .ashell, .ashell-scrim, .cl-acts, .cl-form, .cl-confirm, .cl-back,
+    .cl-controls, .cl-sum, .cl-scope, .cl-ok, .err, #app-signout,
+    .bk-head, .cl-sec-h{ display:none !important; }
+    body, .shell, .card{ background:#fff !important; box-shadow:none !important; }
+    .card{ border:0 !important; padding:0 !important; width:auto !important; }
+    .cl-head{ border:0 !important; padding:0 0 10px !important; background:none !important; }
+    .cl-head h3{ font-size:1.5rem; }
+    .cl-print-head{ display:block; text-align:center; margin-bottom:14px; }
+    .cl-print-head img{ height:52px; width:auto; }
+    .cl-pupils{ grid-template-columns:repeat(2,1fr) !important; gap:0 !important; }
+    .cl-pupil{ border:0 !important; border-bottom:1px solid #ccc !important;
+               border-radius:0 !important; padding:6px 8px !important; break-inside:avoid; }
+    .cl-roll h4, .cl-roll > p{ break-after:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand">
+    <div class="brand-inner">
+      <img class="logo" src="data:image/png;base64,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" alt="Taiyabah Masjid">
+      <div class="eyebrow">Taiyabah Masjid</div>
+      <h1>Classes</h1>
+      <p>Every class the madrasah runs, who teaches it and how many children are in it. Press a class to open it &mdash; amending it, seeing the register and printing the class list all live inside the class rather than cluttering the list.</p>
+      <!-- Back to the madrasah, not to the Admin Centre. This screen is inside
+           the portal, and somebody who came from /portal/ expects one press to
+           put them back where they started. The rail carries the longer way
+           out. One dot-dot: this page is /portal/staff/. -->
+      <a class="back" href="../">&larr; Back to the madrasah portal</a>
+    </div>
+
+    <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
+  </div>
+
+  <div class="panel">
+
+    <!-- loading -->
+    <div class="card" id="view-loading">
+      <div class="loading">
+        <div class="spinner" role="status" aria-label="Checking your session"></div>
+        <p>Checking your session&hellip;</p>
+      </div>
+    </div>
+
+    <!-- sign in -->
+    <div class="card" id="view-signin" hidden>
+      <h2>Sign in</h2>
+      <p class="sub">Use the email address the masjid office holds for you.</p>
+      <div class="err" id="signin-error" hidden></div>
+      <form id="signin-form" novalidate>
+        <div class="field">
+          <label for="signin-email">Email address</label>
+          <input type="email" id="signin-email" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="signin-password">Password</label>
+          <div class="pw">
+            <input type="password" id="signin-password" autocomplete="current-password" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
+            <button type="button" id="pw-toggle" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gold" id="signin-submit">Sign in</button>
+      </form>
+      <p class="note">Accounts are issued by the masjid office. If you can't get in, ring 01204 535 997.</p>
+    </div>
+
+    <!-- two-step: verify -->
+    <div class="card" id="view-mfa" hidden>
+      <h2>Two-step verification</h2>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+      <div class="err" id="mfa-error" hidden></div>
+      <form id="mfa-form" novalidate>
+        <div class="field">
+          <label for="mfa-code">Verification code</label>
+          <input type="text" id="mfa-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="mfa-submit">Verify</button>
+      </form>
+      <p class="note">Codes refresh every 30 seconds. If yours keeps failing, check your phone's clock is set automatically.</p>
+    </div>
+
+    <!-- two-step: enrol -->
+    <div class="card" id="view-enrol" hidden>
+      <h2>Set up two-step verification</h2>
+      <p class="sub">This screen holds staff records and contact details, so it needs a second factor before you can continue.</p>
+      <div class="err" id="enrol-error" hidden></div>
+
+      <ul class="steps">
+        <li>Install an authenticator app &mdash; Google Authenticator, Microsoft Authenticator or Authy.</li>
+        <li>Scan the square below with it.</li>
+        <li>Enter the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="enrol-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="enrol-secret"></div>
+      </div>
+      <p class="sub">Can't scan it? Type the code above into your app by hand.</p>
+
+      <form id="enrol-form" novalidate>
+        <div class="field">
+          <label for="enrol-code">Code from your app</label>
+          <input type="text" id="enrol-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="enrol-submit">Confirm and finish setup</button>
+      </form>
+      <p class="note">Keep the app installed &mdash; you'll need it every time you sign in.</p>
+    </div>
+
+    <!-- signed in -->
+    <div class="card" id="view-app" hidden>
+      <div class="who">
+        <div class="who-t">
+          <strong id="app-name">&mdash;</strong>
+          <span id="app-email">&mdash;</span>
+        </div>
+      </div>
+
+      <div class="roles" id="app-roles"></div>
+
+      <div class="err" id="app-error" hidden></div>
+
+      <div class="err" id="app-noaccess" hidden>
+        This account cannot open the madrasah portal. If that is wrong, ask a
+        masjid administrator to check what you have been given on the access
+        screen in the Admin Centre.
+      </div>
+
+      <!-- The staff themselves. Hidden unless the signed-in person is an
+           administrator; the database refuses every one of these calls to
+           anybody else regardless, but there is no reason to show somebody a
+           panel full of error messages and let them think it is broken. -->
+      <section class="bk" id="cl-panel" hidden>
+        <div class="bk-head">
+          <h2>Classes</h2>
+          <span class="bk-sub">Every class the madrasah runs, and who is in it.</span>
+        </div>
+
+        <div class="err" id="cl-error" hidden></div>
+        <div class="cl-ok" id="cl-ok" hidden></div>
+
+        <!-- ================= the list ================= -->
+        <div class="cl-view" id="cl-list-view">
+          <p class="cl-scope" id="cl-scope">
+            Press a class to open it. Everything you can do to a class &mdash; amend it,
+            see who is in it, print the register &mdash; is <strong>inside</strong> the
+            class, so this list stays something you can read rather than a wall of
+            buttons.
+          </p>
+
+          <div class="cl-sum" id="cl-sum"></div>
+
+          <div class="cl-controls">
+            <label class="sr-only" for="cl-find">Search by class or teacher</label>
+            <input type="search" class="cl-find" id="cl-find"
+                   placeholder="Search by class or teacher&hellip;" autocomplete="off">
+            <label class="sr-only" for="cl-side">Show one side only</label>
+            <select class="cl-pick" id="cl-side">
+              <option value="all">Both sides</option>
+              <option value="girls">Girls</option>
+              <option value="boys">Boys</option>
+              <option value="mixed">Mixed</option>
+            </select>
+            <label class="cl-tick" style="border:0;background:none;padding:0;">
+              <input type="checkbox" id="cl-show-off"> <span>Include classes no longer running</span>
+            </label>
+          </div>
+
+          <div id="cl-sections">Looking&hellip;</div>
+        </div>
+
+        <!-- ================= one class ================= -->
+        <div class="cl-view" id="cl-detail" hidden>
+          <button type="button" class="cl-back" id="cl-back">&larr; All classes</button>
+
+          <div class="cl-print-head">
+            <img src="../../img/masjid-logo.png" alt="Taiyabah Masjid" width="220" height="62">
+          </div>
+
+          <div class="cl-head">
+            <h3 id="cl-d-name">&mdash;</h3>
+            <div class="cl-facts" id="cl-d-facts"></div>
+            <div class="cl-acts" id="cl-d-acts" hidden>
+              <button type="button" class="btn btn-gold" id="cl-edit">Amend this class</button>
+              <button type="button" class="btn btn-ghost" id="cl-roll-btn">Who is in it</button>
+              <button type="button" class="btn btn-ghost" id="cl-print">Print the class list</button>
+              <button type="button" class="btn btn-ghost cl-danger" id="cl-remove">Remove this class</button>
+            </div>
+            <div class="cl-acts" id="cl-d-acts-read" hidden>
+              <button type="button" class="btn btn-ghost" id="cl-roll-btn-read">Who is in it</button>
+              <button type="button" class="btn btn-ghost" id="cl-print-read">Print the class list</button>
+            </div>
+          </div>
+
+          <div class="cl-roll" id="cl-roll" hidden>
+            <h4 id="cl-roll-h">Who is in it</h4>
+            <p id="cl-roll-why"></p>
+            <div class="cl-pupils" id="cl-roll-list"></div>
+          </div>
+
+          <!-- ============ amending the class ============ -->
+          <div class="cl-form" id="cl-editor" hidden>
+            <h4 id="cl-form-head">Amend this class</h4>
+            <div class="err" id="cl-complaints" hidden></div>
+
+            <label class="fld"><span>What it is called</span>
+              <input type="text" id="cl-name" maxlength="80" autocomplete="off"></label>
+
+            <div class="cl-two">
+              <label class="fld"><span>Which side</span>
+                <select id="cl-section">
+                  <option value="girls">Girls</option>
+                  <option value="boys">Boys</option>
+                  <option value="mixed">Mixed</option>
+                </select></label>
+              <label class="fld"><span>Year</span>
+                <input type="text" id="cl-year" maxlength="30" autocomplete="off"
+                       placeholder="2026/27"></label>
+            </div>
+
+            <label class="cl-tick">
+              <input type="checkbox" id="cl-active">
+              <span><b>This class is still running.</b> Untick it and the class stops
+                appearing in the list by default, without anybody or anything in it being
+                deleted &mdash; which is what you want at the end of a year, and is not the
+                same as removing it.</span>
+            </label>
+
+            <div class="cl-acts">
+              <button type="button" class="btn btn-gold" id="cl-save">Save</button>
+              <button type="button" class="btn btn-ghost" id="cl-cancel">Cancel</button>
+            </div>
+
+            <div class="cl-confirm" id="cl-confirm" hidden>
+              <p class="cl-confirm-q" id="cl-confirm-q"></p>
+              <div class="cl-confirm-acts">
+                <button type="button" class="btn btn-gold" id="cl-confirm-yes">Yes</button>
+                <button type="button" class="btn btn-ghost" id="cl-confirm-no">No, go back</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+    </div>
+
+  </div>
+</div>
+
+<script src="../../admin/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+  document.getElementById('pw-toggle').addEventListener('click', function(){
+    var i = document.getElementById('signin-password');
+    var showing = i.type === 'text';
+    i.type = showing ? 'password' : 'text';
+    this.textContent = showing ? 'Show' : 'Hide';
+    this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

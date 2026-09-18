@@ -113,7 +113,8 @@
         { key: "md-families", href: "portal/families/", icon: "home",   name: "Families",
           needs: BOTH, soon: true },
         { key: "md-classes",  href: "portal/classes/",  icon: "book",   name: "Classes",
-          needs: BOTH, soon: true },
+          needs: BOTH,
+          what: "Every class, who teaches it, and who is in it" },
         //  STAFF IS ADMIN ONLY, and this is where the DBS figures live.
         { key: "md-staff",    href: "portal/staff/",    icon: "people", name: "Staff",
           needs: ADMIN,
