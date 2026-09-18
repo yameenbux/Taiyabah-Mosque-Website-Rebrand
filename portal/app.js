@@ -227,7 +227,24 @@
       "Products", "Settings"
     ];
 
-    function canSee(identity) { return identity.roles.indexOf("admin") !== -1; }
+    /*  WHO GETS THE CONSOLE.
+
+        It was administrators and nobody else, because when this was written
+        an administrator was the only kind of person who could reach the
+        madrasah at all. Migration 055 added a `madrasah` role for the
+        madrasah's own staff, and if this gate had been left alone they would
+        have signed in, been handed the role, and landed on "you have no
+        access here" — a role that grants nothing is worse than no role,
+        because somebody has been told they were given one.
+
+        WIDER HERE DOES NOT MEAN WIDER EVERYWHERE. This opens the console.
+        Every screen reached from it asks the database its own question, and
+        staff, DBS, fees and admissions all ask verified_admin(). See the note
+        beside ADMIN and BOTH in nav.js. */
+    function canSee(identity) {
+      return identity.roles.indexOf("admin") !== -1
+          || identity.roles.indexOf("madrasah") !== -1;
+    }
 
     /* WHAT A TEACHER WILL BE ABLE TO DO.
        Written now, in the words somebody in a classroom would use, rather than

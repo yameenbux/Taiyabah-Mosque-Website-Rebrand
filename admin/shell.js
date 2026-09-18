@@ -261,6 +261,60 @@
     return out;
   }
 
+  /*  Over this many rows a rail stops being a list and becomes a wall. Six
+      groups and a dozen rows is the Admin Centre and reads fine whole; the
+      madrasah past forty does not. One number, named, in one place. */
+  var LONG_RAIL = 18;
+
+  var CARET = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" ' +
+              'stroke="currentColor" stroke-width="2.2" stroke-linecap="round" ' +
+              'stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  /*  WHAT THIS PERSON LAST DID WITH THIS GROUP, or null if they never have.
+
+      Deliberately three-valued. `false` means "they closed it" and has to beat
+      the open-by-default rule; a plain truthiness check would treat a closed
+      group as no preference and helpfully re-open it every single time, which
+      is the sort of thing that makes people stop touching a control.
+
+      Wrapped in try/catch because localStorage throws rather than returning
+      null in a locked-down browser or a private window, and a rail that cannot
+      be drawn is worse than a rail that forgets. */
+  function remembered(key) {
+    try {
+      var v = w.localStorage.getItem("taiyabah.rail." + key);
+      return v === null ? null : v === "1";
+    } catch (e) { return null; }
+  }
+
+  function remember(key, open) {
+    try { w.localStorage.setItem("taiyabah.rail." + key, open ? "1" : "0"); }
+    catch (e) { /* nothing to do, and nothing worth saying about it */ }
+  }
+
+  /*  The same filter as visible(), applied to sections a caller supplied.
+
+      An area with NO `needs` is shown to everybody who got this far, which
+      keeps every existing section working untouched and makes the property
+      mean "this row is restricted" rather than "somebody remembered to fill
+      it in". Empty groups drop out, so a teaching account does not see the
+      heading "Keeping children safe" with nothing under it. */
+  function forRoles(groups, roles) {
+    var r = roles || [];
+    var out = [];
+    groups.forEach(function (g) {
+      var areas = g.areas.filter(function (a) {
+        if (!a.needs || !a.needs.length) return true;
+        for (var i = 0; i < a.needs.length; i++) {
+          if (r.indexOf(a.needs[i]) !== -1) return true;
+        }
+        return false;
+      });
+      if (areas.length) out.push({ label: g.label, areas: areas });
+    });
+    return out;
+  }
+
   function row(a, current) {
     var here = a.key === current;
     var body = '<span class="ic" aria-hidden="true">' + ICON[a.icon] + "</span>" +
@@ -326,11 +380,69 @@
                    : HOME,
                  opts.current) + "</div>");
 
-    (sections || visible(opts.roles)).forEach(function (g) {
-      out.push('<div class="ashell-lab">' + esc(g.label) + "</div>" +
-               '<div class="ashell-group">' +
-               g.areas.map(function (a) { return row(a, opts.current); }).join("") +
-               "</div>");
+    /*  ------------------------------------------------------------------
+        GROUPS OPEN AND CLOSE, AND THE RULE IS THE LENGTH OF THE RAIL.
+        ------------------------------------------------------------------
+        Asked for: "the main sections should be expandable if needed or like
+        a drop down." The "if needed" is doing the work, so here is the rule.
+
+        The Admin Centre's rail is six groups and about a dozen rows. Every
+        one of them fits, and collapsing a list somebody can already read
+        whole costs a click and gains nothing. The madrasah's rail is a
+        different animal — nine groups, and with fees and incidents opened
+        out it is past forty rows, most of them not built yet. Showing all of
+        that at once buries Register under a wall of "soon".
+
+        So: under LONG_RAIL rows everything stays open and nothing changes.
+        Over it, the group you are standing in is open and the rest are shut,
+        which turns the rail into a map you drill into rather than a list you
+        scroll. Either way, whatever the person opens or closes is remembered
+        for next time and beats the rule.
+
+        <details>/<summary>, not a div and a click handler. It is keyboard
+        operable, it announces expanded/collapsed to a screen reader, it can
+        be opened by find-in-page, and IT STILL WORKS WITH NO JAVASCRIPT —
+        which matters because this rail is how somebody leaves a screen that
+        has just failed.                                                    */
+    /*  A ROW NOT MEANT FOR THIS ACCOUNT IS NOT DRAWN.
+
+        The Admin Centre's own list has always worked this way — every area
+        carries `needs` and visible() filters on it. An area's OWN sections
+        did not, because when the madrasah rail was written everybody who
+        could reach it was an administrator.
+
+        That stopped being true the moment the madrasah role existed. A
+        teaching account has no business being shown "DBS & checks" at all:
+        the database refuses it either way, but a menu row you are refused
+        every time you press it teaches people the system is broken, and
+        naming the safeguarding screens to somebody who cannot open them is
+        not a courtesy either.
+
+        NONE OF THIS IS THE SECURITY. Every one of those screens asks
+        verified_admin() in Postgres and would refuse a teaching account with
+        the rail hand-edited. This is about what a menu should say. */
+    var groups = sections ? forRoles(sections, opts.roles) : visible(opts.roles);
+    var rows = 0;
+    groups.forEach(function (g) { rows += g.areas.length; });
+    var openAll = rows <= LONG_RAIL;
+    var scope = sections ? ("md:" + (opts.area || "madrasah")) : "admin";
+
+    groups.forEach(function (g) {
+      var key  = scope + ":" + g.label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      var here = g.areas.some(function (a) { return a.key === opts.current; });
+      var open = remembered(key);
+      if (open === null) open = openAll || here;
+
+      out.push('<details class="ashell-sec" data-sec="' + esc(key) + '"' +
+               (open ? " open" : "") + ">" +
+                 '<summary class="ashell-lab">' +
+                   "<span>" + esc(g.label) + "</span>" +
+                   '<span class="ashell-caret" aria-hidden="true">' + CARET + "</span>" +
+                 "</summary>" +
+                 '<div class="ashell-group">' +
+                 g.areas.map(function (a) { return row(a, opts.current); }).join("") +
+                 "</div>" +
+               "</details>");
     });
 
     out.push("</nav>");
@@ -431,6 +543,22 @@
       railOut.hidden = false;
       railOut.addEventListener("click", function () { pageOut.click(); });
     }
+
+    /*  REMEMBERING WHICH GROUPS ARE OPEN.
+
+        One listener on the rail rather than one per group, and `true` on the
+        end because `toggle` does not bubble — it is one of a small handful of
+        events that do not, along with focus and blur, so a delegated listener
+        has to catch it going down instead. Wiring this per-<details> would
+        work today and break the moment the rail is redrawn.
+
+        Nothing here decides what is open; the markup already did. This only
+        writes down what the person chose. */
+    rail.addEventListener("toggle", function (ev) {
+      var sec = ev.target;
+      if (!sec || sec.tagName !== "DETAILS" || !sec.hasAttribute("data-sec")) return;
+      remember(sec.getAttribute("data-sec"), sec.open);
+    }, true);
 
     var burger = bar.querySelector(".ashell-burger");
 

@@ -16,7 +16,7 @@ page:
         correct your own phone number, because that is not a privilege
   *  6  the last two administrators are not offered a Suspend button, and
         somebody who is NOT an administrator still is
-  *  7  granting admin or teacher makes you type the address again — a tick
+  *  7  granting admin or the madrasah makes you type the address again — a tick
         box is too easy to press by accident for something that reaches every
         payment, or children's records
   *  8  an invitation cannot be sent without a name and a phone number
@@ -87,7 +87,7 @@ STAFF = {
          "last_in": "2026-09-12T19:05:00+00:00", "since": "2026-08-24T09:00:00+00:00",
          "needs": ["phone", "two_step"], "is_me": False},
         {"id": TEACH, "name": "A Teacher", "email": "teacher@example.test",
-         "phone": "07700 900444", "active": True, "roles": ["teacher"],
+         "phone": "07700 900444", "active": True, "roles": ["madrasah"],
          "two_step": True, "last_in": None, "since": "2026-09-01T09:00:00+00:00",
          "needs": [], "is_me": False},
         {"id": THIRD, "name": "Third Admin", "email": "third@example.test",
@@ -290,7 +290,7 @@ with sync_playwright() as p:
           "have to know what hall_office means: %r" % joined[:300])
     check("Hall bookings and nik" in joined, "the office role is not named in plain English")
     check("Everything" in joined, "the admin role is not named in plain English")
-    check("Madrasah" in joined, "the teacher role is not named in plain English")
+    check("Madrasah" in joined, "the madrasah role is not named in plain English")
     check("No authenticator" in joined, "the account without two-step is not flagged")
     check("Two-step on" in joined, "accounts with two-step are not marked")
 
@@ -515,7 +515,7 @@ with sync_playwright() as p:
         check(len(rc) == 1, "the roles were not saved: %r" % rc)
         if rc:
             got = sorted(rc[0]["args"].get("p_roles") or [])
-            check(got == ["hall_office", "teacher"],
+            check(got == ["hall_office", "madrasah"],
                   "the wrong roles were sent: %r" % got)
         click(pg, "#pp-back")
         pg.wait_for_timeout(200)
@@ -594,11 +594,20 @@ with sync_playwright() as p:
           "the confirm box does not say what is being granted: %r"
           % text(pg, "#inv-confirm-wrap"))
 
-    #  Teacher reaches children's records, so it is loud too. hall_office is
-    #  unticked so the assertion below is about ONE role and says what it means.
+    #  THE ROLE THIS BOX WRITES CHANGED ON 18 SEPTEMBER, AND IT IS NOT A RENAME.
+    #
+    #     It has always been labelled "Madrasah" and it always wrote `teacher` —
+    #     a role the madrasah portal has never looked at. Anybody given it signed
+    #     in, was told they had been granted the madrasah, and landed on "you have
+    #     no access here". Migration 055 added the role the label always meant.
+    #     Nobody held `teacher`, so nothing was lost.
+    #
+    #     The assertion that it asks twice is unchanged and is the point: this
+    #     role reaches children's records. hall_office is unticked so the check
+    #     below is about ONE role and says what it means.                      
     pg.uncheck('.inv-r[value="admin"]')
     pg.uncheck('.inv-r[value="hall_office"]')
-    pg.check('.inv-r[value="teacher"]')
+    pg.check('.inv-r[value="madrasah"]')
     pg.wait_for_timeout(150)
     check(pg.is_visible("#inv-confirm-wrap"),
           "granting the madrasah role does not ask twice — it reaches "
@@ -624,7 +633,9 @@ with sync_playwright() as p:
               "the wrong address was invited: %r" % sent)
         check(sent.get("full_name") == "New Person", "the name was not sent: %r" % sent)
         check(sent.get("phone") == "07700 900123", "the number was not sent: %r" % sent)
-        check(sent.get("roles") == ["teacher"], "the wrong roles were sent: %r" % sent)
+        check(sent.get("roles") == ["madrasah"],
+              "the wrong roles were sent: %r. The box is labelled Madrasah; if this "
+              "says `teacher` the label is lying again." % sent)
         check(sent.get("send_email") is True,
               "the 'email it to them' box was ticked and the request said otherwise")
 

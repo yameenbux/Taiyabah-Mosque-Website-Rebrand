@@ -791,10 +791,21 @@
             <label>What they will be able to do</label>
             <label class="inv-role"><input type="checkbox" value="hall_office" class="inv-r">
               <span><b>Hall bookings and nik&#257;&#7717;</b><i>See and answer hall hire requests and nik&#257;&#7717; dates, take deposits, and see the food bank volunteers.</i></span></label>
-            <label class="inv-role"><input type="checkbox" value="teacher" class="inv-r">
-              <span><b>Madrasah</b><i>The madrasah portal. Holds children&rsquo;s records &mdash; the most sensitive area on the site.</i></span></label>
+            <!--  THIS TICK BOX PROMISED THE MADRASAH PORTAL AND GRANTED NOTHING.
+
+                  It has always said "Madrasah", and it has always written the
+                  `teacher` role - which the madrasah portal has never looked
+                  at. Anybody given it signed in, was told they had been granted
+                  the madrasah, and landed on "you have no access here". A role
+                  that grants nothing is worse than no role, because somebody
+                  has been told they were given one.
+
+                  Migration 055 added the role this box always meant. Nobody
+                  held `teacher`, so nothing was lost changing the value. -->
+            <label class="inv-role"><input type="checkbox" value="madrasah" class="inv-r">
+              <span><b>Madrasah</b><i>The teaching side of the madrasah portal &mdash; classes, the register, homework and the children they teach. <b>Not</b> staff records, DBS, fees or admissions, which stay with &ldquo;Everything&rdquo;.</i></span></label>
             <label class="inv-role"><input type="checkbox" value="admin" class="inv-r">
-              <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do.</i></span></label>
+              <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do. <b>This includes the whole madrasah portal</b>, so it does not need the box above ticked as well.</i></span></label>
           </div>
 
           <!-- Typing the address again, not a tick box. Granting admin or
@@ -911,8 +922,8 @@
             <div id="pp-roles-edit">
               <label class="inv-role"><input type="checkbox" value="hall_office" class="pp-r">
                 <span><b>Hall bookings and nik&#257;&#7717;</b><i>Hall hire requests and nik&#257;&#7717; dates, deposits, and the food bank volunteers.</i></span></label>
-              <label class="inv-role"><input type="checkbox" value="teacher" class="pp-r">
-                <span><b>Madrasah</b><i>The madrasah portal. Holds children&rsquo;s records.</i></span></label>
+              <label class="inv-role"><input type="checkbox" value="madrasah" class="pp-r">
+                <span><b>Madrasah</b><i>The teaching side of the madrasah portal. <b>Not</b> staff records, DBS, fees or admissions.</i></span></label>
               <label class="inv-role"><input type="checkbox" value="admin" class="pp-r">
                 <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do.</i></span></label>
               <div class="pp-acts">

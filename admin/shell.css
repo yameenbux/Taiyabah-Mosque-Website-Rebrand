@@ -82,6 +82,46 @@
 .ashell-lab:first-child{ margin-top:0; }
 .ashell-group{ display:flex; flex-direction:column; }
 
+/*  ---------------------------------------------------------------------
+    GROUPS THAT OPEN AND CLOSE.
+    ---------------------------------------------------------------------
+    The heading was a <div>; it is now a <summary> inside <details>, which
+    brings keyboard operation, expanded/collapsed announced to a screen
+    reader, find-in-page opening a closed group, and correct behaviour with
+    no JavaScript at all. shell.js decides which start open.
+
+    THE HEADING IS NOW A CONTROL, SO IT HAS TO LOOK AND BEHAVE LIKE ONE:
+    a pointer, a hover, a visible focus ring, and a target 44px tall. It
+    keeps the exact type, colour and letter-spacing it had as a label, so
+    the rail does not suddenly read as a row of buttons.                 */
+.ashell-sec{ border:0; }
+.ashell-sec > summary.ashell-lab{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  cursor:pointer; list-style:none; user-select:none;
+  min-height:38px; padding-top:9px; padding-bottom:6px; margin:11px 0 3px;
+  border-radius:8px;
+}
+/* Safari draws its own triangle and ignores list-style on summary. */
+.ashell-sec > summary::-webkit-details-marker{ display:none; }
+.ashell-sec:first-of-type > summary.ashell-lab{ margin-top:0; }
+.ashell-sec > summary.ashell-lab:hover{
+  color:#DCBB63; background:rgba(243,239,227,.05);
+}
+.ashell-sec > summary.ashell-lab:focus-visible{
+  outline:2px solid #DCBB63; outline-offset:-2px; color:#DCBB63;
+}
+.ashell-caret{
+  display:inline-flex; flex-shrink:0; opacity:.7;
+  transition:transform .16s ease;
+}
+.ashell-sec[open] > summary .ashell-caret{ transform:rotate(180deg); }
+
+/*  Somebody who has asked for less motion has asked for less motion. The
+    caret still turns — it just arrives there rather than travelling. */
+@media (prefers-reduced-motion:reduce){
+  .ashell-caret{ transition:none; }
+}
+
 /*  ONE LINE, ONE NAME. Deliberately no counts or badges: the Admin Centre
     already carries every queue and figure in its working column, and a rail
     that repeats them is a rail you have to READ. This one you learn once and

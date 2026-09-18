@@ -155,7 +155,13 @@
     var SAYS = {
       admin:       "Everything",
       hall_office: "Hall bookings and nikāḥ",
-      teacher:     "Madrasah",
+      madrasah:    "Madrasah",
+      //  KEPT, though nothing grants it any more. Until 18 September the
+      //  "Madrasah" tick box wrote `teacher`, and if any account anywhere
+      //  still holds it this list is what stops that row rendering the raw
+      //  word at somebody in the office. It is never offered; it is only
+      //  ever read back.
+      teacher:     "Madrasah (old)",
       parent:      "Parent"
     };
 
@@ -446,10 +452,24 @@
         .map(function (c) { return c.value; });
     }
 
-    // admin reaches every payment and record; teacher reaches children's data.
-    // Both make the confirm box appear.
+    /*  WHICH ROLES MAKE THE PAGE ASK TWICE.
+
+        admin reaches every payment and record; the madrasah reaches children's
+        data. Both make the confirm box appear.
+
+        THIS LIST HAD TO CHANGE WITH THE TICK BOX AND ALMOST DID NOT. When the
+        "Madrasah" box was pointed at the role that actually exists, this still
+        named `teacher` — so the one role on the page that reaches children's
+        records quietly stopped asking anybody to type the address again. It
+        was the existing test for the loud path that caught it, which is the
+        argument for that test in one sentence.
+
+        `teacher` stays in the test. Nothing grants it now, but if an account
+        somewhere still holds it, it still reaches what it always did.        */
     function loud(roles) {
-      return roles.indexOf("admin") !== -1 || roles.indexOf("teacher") !== -1;
+      return roles.indexOf("admin") !== -1
+          || roles.indexOf("madrasah") !== -1
+          || roles.indexOf("teacher") !== -1;
     }
 
     function refreshConfirm() {

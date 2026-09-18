@@ -1,0 +1,45 @@
+-- ===========================================================================
+--  055_the_madrasah_is_a_role.sql
+--  18 September 2026
+--
+--  ONE LINE, IN A FILE OF ITS OWN, AND THAT IS NOT AN ACCIDENT.
+--
+--  `user_roles.role` is not text. It is an enum, `app_role`, holding
+--  admin / teacher / parent / hall_office. Postgres will not let a new enum
+--  value be ADDED and USED inside the same transaction — the second statement
+--  fails with "unsafe use of new value of enum type". So the value lands here
+--  and everything that reads it is in 056.
+--
+--  Splitting it is the whole point of the file. Written the other way round it
+--  applies cleanly on a database where somebody has already added the value by
+--  hand, and fails on a fresh one — which is the worst kind of migration,
+--  because it works on the machine of whoever wrote it.
+--
+--  WHY A ROLE AT ALL. Access to the madrasah portal is presently "are you an
+--  administrator", and an administrator can do everything the masjid does:
+--  hall bookings, donations, Gift Aid, sending a notification to every phone
+--  in the congregation. The madrasah lead needs the register and the classes.
+--  Handing her the rest to get at them is how a system ends up with four
+--  administrators who are administrators because it was the only box to tick.
+--
+--  WHAT THIS ROLE DOES NOT REACH, decided with the masjid: staff records, DBS
+--  and safeguarding, fees, admissions. It is the teaching side and nothing
+--  else. That boundary is enforced in the DATABASE by every one of those
+--  functions asking verified_admin(), not by the menu being shorter — see 056.
+--
+--  Prerequisites: none. Idempotent.
+-- ===========================================================================
+
+alter type public.app_role add value if not exists 'madrasah';
+
+-- ===========================================================================
+--  AFTERWARDS
+--
+--    select enumlabel from pg_enum e join pg_type t on t.oid = e.enumtypid
+--     where t.typname = 'app_role' order by e.enumsortorder;
+--
+--  Expected: admin, teacher, parent, hall_office, madrasah.
+--
+--  Nobody holds it yet. It is granted from the Admin Centre's access screen
+--  like every other role, and 056 is what makes it mean anything.
+-- ===========================================================================
