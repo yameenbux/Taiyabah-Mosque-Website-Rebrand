@@ -562,10 +562,20 @@
           (dbs.todo ? '<span class="st-todo">' + esc(dbs.todo) + "</span>" : "") +
         "</span>" +
 
-        //  The imported note, quietly. It is the instruction for whoever is
-        //  working through this list — what the old system said about this
-        //  person's DBS, and that the certificate date still has to be
-        //  typed in by hand.
+        //  TWO DIFFERENT SENTENCES THAT USED TO BE ONE.
+        //
+        //  Until 054 both of these lived in `note`, as a paragraph naming the
+        //  system the madrasah used before. The masjid asked for that name to
+        //  come off the records, and it had no business in that field anyway:
+        //  `note` belongs to whoever is using this system, and the first
+        //  person to type a real note into it would have destroyed the only
+        //  record of what the previous system said about that person's DBS.
+        //
+        //  So they are separate now and they are shown separately, because
+        //  they carry different weight. priorLine() is hearsay about a
+        //  question this system cannot yet answer. A note is the masjid's own
+        //  words. Running them together made the second look like the first.
+        priorLine(r) +
         (trim(r.note) ? '<span class="st-note">' + esc(r.note) + "</span>" : "") +
 
       "</button>";
@@ -604,6 +614,41 @@
     function sideOf(r) {
       var s = trim(r.side).toLowerCase();
       return (s === "sisters" || s === "brothers") ? s : "";
+    }
+
+    /*  WHAT THE PREVIOUS SYSTEM SAID, WHICH IS NOT THE SAME AS WHAT IS KNOWN.
+
+        Every one of the forty people brought over shows "Nothing on file",
+        and that is honest: no certificate date came across, and none was
+        invented. But it flattens a real difference. Twenty-two of them were
+        recorded elsewhere as holding a valid DBS and are waiting on somebody
+        to key in a date. Sixteen were recorded as having none — and those
+        sixteen are the actual safeguarding question, not a typing job.
+
+        A screen that cannot tell those two apart sends whoever is working
+        through the list at forty names in the order they happen to appear,
+        instead of at the sixteen that matter.
+
+        THIS IS NOT A DBS STATE AND IS NOT COLOURED LIKE ONE. dbs_state()
+        ignores prior_dbs entirely, so the row's edge and its state word still
+        report only what this system can stand behind. This sentence sits
+        underneath in the muted note style, worded as a report of somebody
+        else's records — because that is all it is, and a screen that treats
+        hearsay as a check is worse than one that says nothing. It disappears
+        the moment a real date is entered, because the database clears the
+        column at that point. */
+    function priorLine(r) {
+      var was = trim(r.prior_dbs).toLowerCase();
+      if (!was) return "";
+      var said =
+        was === "valid"   ? "recorded a valid DBS for this person, without a certificate date"
+      : was === "expired" ? "recorded an expired DBS for this person"
+      : was === "none"    ? "recorded no DBS for this person"
+      : "";
+      if (!said) return "";
+      return '<span class="st-note">The madrasah’s previous records ' + said +
+             ". Nothing has been entered here from that and nothing has been " +
+             "invented — it has to come off the certificate.</span>";
     }
 
     function drawList() {
@@ -783,6 +828,7 @@
 
       saved = JSON.stringify(readForm());
       note("st-complaints", "");
+      hideConfirm();   // a question left up from the last record is not this one's
       revalidate();
 
       var box = el("st-editor");
@@ -806,6 +852,7 @@
       var box = el("st-editor");
       if (box) box.hidden = true;
       note("st-complaints", "");
+      hideConfirm();
       if (!wasOpen) return;
       /*  Back to the top of the lists. The "side not set" group when there is
           one, because that is where the person most likely came from and it
@@ -1005,8 +1052,50 @@
         for a screen whose tick boxes are all sitting there in front of
         somebody: if they untick every class and press save, they mean none,
         and an empty array is how that is said. */
+    /*  ASKING FIRST, AND ONLY WHEN THERE IS SOMETHING TO ASK ABOUT.
+
+        Amending an existing record overwrites what the madrasah holds about a
+        real person, from a list of forty rows that look alike. Opening the
+        wrong one and saving over it leaves nothing behind that anybody would
+        notice. So it asks, by name — the name is the whole point of the
+        question, because it is what tells you whether the record in front of
+        you is the one you meant to open.
+
+        ADDING SOMEBODY NEW DOES NOT ASK. It overwrites nothing, an unwanted
+        row is visible on the list the moment it appears, and a confirm on
+        every single save is how a confirm stops being read. */
+    function hideConfirm() {
+      var box = el("st-confirm");
+      if (box) box.hidden = true;
+    }
+
+    function askToSave() {
+      if (!opened) return;
+      var f = readForm();
+      if (check(f).length) { revalidate(); return; }   // the button is disabled too
+
+      //  A record with no id has never been written, so there is nothing to
+      //  overwrite and nothing to be sure about.
+      if (!(editing && editing.id)) { save(); return; }
+
+      var who = trim(f.first_name) + (trim(f.last_name) ? " " + trim(f.last_name) : "");
+      var q   = el("st-confirm-q");
+      if (q) {
+        q.textContent = "Save these changes to " + (who || "this record") + "? " +
+          "This replaces what the madrasah currently holds about them.";
+      }
+      var box = el("st-confirm");
+      if (box) {
+        box.hidden = false;
+        box.scrollIntoView({ block: "nearest" });
+      }
+      var yes = el("st-confirm-yes");
+      if (yes) yes.focus();
+    }
+
     function save() {
       if (!opened) return;
+      hideConfirm();
       var f = readForm();
       if (check(f).length) { revalidate(); return; }   // the button is disabled too
 
@@ -1133,7 +1222,19 @@
       });
 
       var saveBtn = el("st-save");
-      if (saveBtn) saveBtn.addEventListener("click", save);
+      if (saveBtn) saveBtn.addEventListener("click", askToSave);
+
+      var yes = el("st-confirm-yes");
+      if (yes) yes.addEventListener("click", save);
+
+      /*  "No" puts them back in the form with everything still in it. It is
+          not an undo — nothing has been sent — and saying so is what stops it
+          being read as one. */
+      var no = el("st-confirm-no");
+      if (no) no.addEventListener("click", function () {
+        hideConfirm();
+        if (el("st-save")) el("st-save").focus();
+      });
 
       /*  UNDO, WITHOUT ASKING FIRST. Nothing has been sent anywhere, so there
           is nothing to warn about — and there is no browser dialog anywhere on
@@ -1166,6 +1267,9 @@
         tick("st-dbs-nr", was.dbs_not_required);
         drawDayTicks(was.work_days || []);
         drawClassTicks(was.class_ids || []);
+        //  Undo puts values back without typing, so no input event fires and
+        //  the confirm strip would sit there naming a save of the old boxes.
+        hideConfirm();
         revalidate();
         note("st-error", "");
         note("st-ok", "Back to how the record was when you opened it. Nothing had " +
@@ -1180,6 +1284,17 @@
       if (editor) {
         editor.addEventListener("input", revalidate);
         editor.addEventListener("change", revalidate);
+
+        /*  CHANGE ANYTHING AND THE QUESTION IS WITHDRAWN.
+
+            The confirm names the person and says it replaces their record.
+            If somebody puts it up, then edits a box behind it, that sentence
+            is describing a save that is no longer the one that would happen.
+            Answering a stale question is worse than being asked twice, so it
+            closes and has to be raised again against what is now in the form.
+            The typing itself is untouched — only the question goes.          */
+        editor.addEventListener("input", hideConfirm);
+        editor.addEventListener("change", hideConfirm);
       }
 
       return true;

@@ -231,6 +231,39 @@
      the variables at the top of this file.
      =========================================================================== */
 
+  /*  ------------------------------------------------------------------------
+      `hidden` HAS TO WIN, AND ON THIS SCREEN IT DID NOT.
+      ------------------------------------------------------------------------
+      Reported plainly: "there is an Add somebody option, only when clicked
+      should the form open." It was not waiting to be clicked. The editor was
+      on screen from the moment the page loaded, under the list, with every box
+      in it empty — so the first thing anybody saw was a blank form for a
+      person who does not exist, and the Add button appeared to do nothing
+      except scroll.
+
+      Nothing was wrong with the JavaScript. `st-editor` is marked `hidden` in
+      the markup and app.js sets and clears the property correctly. The fault
+      is one line of CSS further down this file:
+
+          .st-form{display:flex; ...}
+
+      ANY author `display` rule beats the browser's own `[hidden]{display:none}`
+      on specificity, so the element stays laid out while its `hidden` property
+      is perfectly true. There is no warning anywhere: the attribute is right,
+      the property is right, the accessibility tree is right, and the thing is
+      still on the screen.
+
+      This is the FIFTH time in this project. `.field` in /auth/, `.bk-tab` in
+      /venue/, `.logauto` in /portals/, `.acc-grid` in /portal/ — each one found
+      by somebody looking at a page and saying it looked wrong. So the guard
+      goes in scoped to this page, exactly as /portal/ carries it, rather than
+      being fixed on the one class that happened to be caught this time. The
+      next `display` rule on a hideable element is covered before it is written.
+
+      `!important` is deliberate and is not a shortcut. It says: whatever else
+      this stylesheet claims, an element the code has hidden is not on screen.  */
+  .bk [hidden], .st-form[hidden], #st-editor[hidden]{display:none !important;}
+
   .st-scope{
     font-size:.93rem;line-height:1.6;color:var(--muted);
     background:var(--paper);border:1px solid var(--line);
@@ -371,6 +404,62 @@
     color:var(--gold-ink);background:rgba(198,162,76,.16);
     padding:3px 9px;border-radius:999px;font-variant-numeric:tabular-nums;
   }
+
+  /*  ------------------------------------------------------------------------
+      ONE COLOUR PER SIDE, AND WHY THESE TWO.
+      ------------------------------------------------------------------------
+      Asked for directly: "I would like the sisters side and brothers side
+      teacher boxes to have differentiating colours so it's easy to notice the
+      difference." At 1180px and up the two lists sit side by side and a person
+      scrolled halfway down is looking at forty near-identical cards; which
+      column they are in is the one thing the cards themselves never say.
+
+      THE ROW'S OWN COLOURS WERE ALREADY SPOKEN FOR. Its left edge is the DBS
+      state — red for none or overdue, amber for due soon, green for valid —
+      and that is the loudest safeguarding signal on the screen. Tinting the
+      rows by side would have put two colour systems on one object and the
+      safeguarding one would have lost. So the side is carried by the PANEL
+      AROUND the list: its edge, its wash, its heading and its count. The rows
+      stay on --card, which is also what keeps their coloured edge legible.
+
+      The two hues had to dodge everything this palette has already claimed:
+      red (overdue), amber and gold (due soon, and the "side not set" group
+      directly above), green (valid), plum (the brand, used by every heading on
+      the site). Teal and indigo are what is left that is dark enough to put
+      words in, and they are deliberately not pink and blue.
+
+      MEASURED, NOT EYEBALLED — against the 7% wash each sits on, which is the
+      background the heading actually has, not the card underneath it:
+
+          #14605A teal    on its wash 5.90:1   on its 16% count pill 5.14:1
+          #37427F indigo  on its wash 7.44:1   on its 16% count pill 6.40:1
+
+      Both clear 4.5:1 with room, which is the rule set out in the contrast
+      pass: --gold / --success / --danger colour backgrounds and borders, the
+      -ink variants colour text.
+
+      WHAT THE COLOUR DOES NOT DO, said plainly. Simulated, these two collapse
+      towards each other — 1.22:1 apart under deuteranopia, 1.25:1 under
+      tritanopia. Roughly one man in twelve will see a grey panel and a blue
+      one rather than teal and indigo. That is acceptable here and would not be
+      if colour were carrying the meaning: each column is titled "Sisters' side"
+      or "Brothers' side" in words directly above its list, and those words are
+      the signal. The colour is the shortcut for everybody who can use it.     */
+  .st-col-sisters, .st-col-brothers{
+    border:1px solid var(--line);border-radius:13px;padding:15px 16px;
+  }
+  .st-col-sisters{
+    border-color:rgba(20,96,90,.34);border-left:3px solid #14605A;
+    background:rgba(20,96,90,.07);
+  }
+  .st-col-brothers{
+    border-color:rgba(55,66,127,.34);border-left:3px solid #37427F;
+    background:rgba(55,66,127,.07);
+  }
+  .st-col-sisters  .st-col-h{color:#14605A;border-bottom-color:rgba(20,96,90,.3);}
+  .st-col-brothers .st-col-h{color:#37427F;border-bottom-color:rgba(55,66,127,.3);}
+  .st-col-sisters  .st-col-n{color:#14605A;background:rgba(20,96,90,.16);}
+  .st-col-brothers .st-col-n{color:#37427F;background:rgba(55,66,127,.16);}
 
   /*  NOBODY FALLS BETWEEN THE TWO COLUMNS.
 
@@ -578,6 +667,24 @@
 
   .st-row-acts{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:4px;}
   .st-row-acts .btn{width:auto;}
+
+  /*  The confirm strip. Gold rather than red: this is a question, not a
+      warning, and colouring an ordinary save like a danger teaches people to
+      click through red. It sits directly under the button that raised it so
+      the answer is where the eye already is, and `display` is deliberately
+      left off the rule itself — see the note at the top of this stylesheet
+      about `[hidden]`, which this element would otherwise have walked into. */
+  .st-confirm{
+    margin-top:10px;padding:14px 16px;border-radius:11px;
+    border:1px solid rgba(198,162,76,.5);border-left:3px solid var(--gold);
+    background:rgba(198,162,76,.09);
+  }
+  .st-confirm-q{
+    font-size:1.02rem;line-height:1.55;color:var(--ink);
+    font-weight:600;margin:0 0 11px;
+  }
+  .st-confirm-acts{display:flex;gap:9px;flex-wrap:wrap;}
+  .st-confirm-acts .btn{width:auto;}
   .st-meta{font-size:.89rem;line-height:1.55;color:var(--muted);font-variant-numeric:tabular-nums;}
 
   /* The complaints are a list inside the shared .err box, which the reset at
@@ -775,7 +882,7 @@
         </section>
 
         <div class="st-cols" id="st-cols">
-          <section class="st-col" aria-labelledby="st-h-sisters">
+          <section class="st-col st-col-sisters" aria-labelledby="st-h-sisters">
             <h3 class="st-col-h" id="st-h-sisters">
               Sisters&rsquo; side <span class="st-col-n" id="st-n-sisters">&mdash;</span>
             </h3>
@@ -784,7 +891,7 @@
             </div>
           </section>
 
-          <section class="st-col" aria-labelledby="st-h-brothers">
+          <section class="st-col st-col-brothers" aria-labelledby="st-h-brothers">
             <h3 class="st-col-h" id="st-h-brothers">
               Brothers&rsquo; side <span class="st-col-n" id="st-n-brothers">&mdash;</span>
             </h3>
@@ -904,9 +1011,12 @@
               <span>Note</span>
               <textarea id="st-note" rows="3" placeholder="Anything the office needs to know about this record."></textarea>
             </label>
-            <p class="st-hint">The note shows on the row in the list. Records brought over
-               from the old system already carry one, saying what it held about their DBS
-               and that the certificate date still has to be keyed in.</p>
+            <p class="st-hint">The note shows on the row in the list, and it is
+               <strong>yours</strong> &mdash; nothing else writes to it. Records brought
+               over from the madrasah&rsquo;s previous system used to arrive with a
+               sentence already sitting here about their DBS; that has been moved out
+               into its own field, so this box starts empty on every record and typing in
+               it cannot destroy anything.</p>
           </section>
 
           <section class="st-grp">
@@ -948,6 +1058,32 @@
           <div class="st-row-acts">
             <button type="button" class="btn btn-gold" id="st-save">Add this person</button>
             <button type="button" class="btn btn-ghost" id="st-revert">Undo my changes</button>
+          </div>
+
+          <!--  ARE YOU SURE — ASKED ON THE PAGE, NOT IN A BROWSER BOX.
+
+                Asked for: amending somebody's record should check before it
+                writes. It should: the list is forty people, the rows look
+                alike, and opening the wrong one and saving over it is a quiet
+                mistake that nothing afterwards would reveal.
+
+                window.confirm() would have been three lines. It is not used
+                anywhere on this screen and is not being introduced here: a
+                browser dialog cannot be zoomed, cannot be read at your own
+                pace, cannot be got back once it has gone, and on this site's
+                own reckoning that is exactly wrong for the people using it.
+                See the note beside "Undo my changes" in app.js.
+
+                So it is a strip on the page. It names the person — the one
+                fact that tells you whether you have the right record open —
+                and it is only ever drawn for a record that already exists.
+                Adding somebody new overwrites nothing, so it does not ask. -->
+          <div class="st-confirm" id="st-confirm" hidden>
+            <p class="st-confirm-q" id="st-confirm-q"></p>
+            <div class="st-confirm-acts">
+              <button type="button" class="btn btn-gold st-mini" id="st-confirm-yes">Yes, save the changes</button>
+              <button type="button" class="btn btn-ghost st-mini" id="st-confirm-no">No, keep editing</button>
+            </div>
           </div>
           <p class="st-meta" id="st-meta"></p>
         </div>
