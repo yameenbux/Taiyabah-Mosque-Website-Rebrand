@@ -322,6 +322,8 @@
             ' &middot; <a href="mailto:' + esc(r.org_email) + '">' + esc(r.org_email) + '</a>' +
           '</div>' +
 
+          certificateBlock(r) +
+
           '<details class="cc-more"><summary>The rest of the form</summary>' +
             '<dl class="cc-dl">' +
               '<dt>Address</dt><dd>' + esc(r.org_address) + '</dd>' +
@@ -333,7 +335,6 @@
               '<dt>Wage or commission</dt><dd>' +
                 (r.collector_paid ? '<b>Yes &mdash; they are paid for this</b>' : 'No') +
                 '</dd>' +
-              '<dt>BMCC certificate</dt><dd>' + certificateHtml(r) + '</dd>' +
               '<dt>Students</dt><dd>' + studentsHtml(r) + '</dd>' +
               '<dt>Signed</dt><dd>' + esc(r.signed_name) +
                 ' &middot; rules version ' + esc(r.rules_version) + '</dd>' +
@@ -397,13 +398,43 @@
         Requests submitted before September 2026 have no certificate at all.
         They say so rather than showing a broken link: the rule did not exist
         when they were made, and the office saw those on paper. */
-    function certificateHtml(r) {
+    /*  The certificate, in the row rather than behind a link.
+
+        This is the thing the decision turns on: the office approves or
+        declines on whether the BMCC cleared this charity and whether the
+        certificate is current. Putting it one click and one new tab away from
+        the Approve button means reviewing it and deciding happen in different
+        places, and the easy path becomes approving without looking.
+
+        Loaded when the request is EXPANDED, not when the list renders. A
+        screen of thirty requests would otherwise mint thirty signed links and
+        pull thirty photos down, for the one the office actually opened. */
+    function certificateBlock(r) {
       if (!r.bmcc_certificate_path) {
-        return '<span class="cc-nocert">Not on file &mdash; submitted before the ' +
-               'certificate was asked for on the form</span>';
+        return '<div class="cc-cert-box cc-nocert">' +
+               'No BMCC certificate on file &mdash; this request predates the rule, ' +
+               'and the office saw the certificate on paper.</div>';
       }
-      return '<a href="#" class="cc-cert" data-cert="' + esc(r.bmcc_certificate_path) +
-             '">View the certificate</a> &middot; dated ' + day(r.bmcc_certificate_date);
+      var stale = certIsStale(r);
+      return '<details class="cc-cert-box" data-cert="' + esc(r.bmcc_certificate_path) + '">' +
+               '<summary>' +
+                 '<b>BMCC certificate</b> &middot; dated ' + day(r.bmcc_certificate_date) +
+                 (stale ? ' <span class="cc-stale">more than three months old</span>' : '') +
+               '</summary>' +
+               '<div class="cc-cert-view">Opening\u2026</div>' +
+             '</details>';
+    }
+
+    /*  It was within three months when it was SUBMITTED — the database would
+        not have taken it otherwise — but the office may be looking weeks
+        later, and an approval today rests on a certificate that is current
+        today. So this is measured against now, and says so rather than
+        quietly going out of date.  */
+    function certIsStale(r) {
+      if (!r.bmcc_certificate_date) return false;
+      var cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() - 3);
+      return new Date(r.bmcc_certificate_date + 'T00:00:00') < cutoff;
     }
 
     function studentsHtml(r) {
@@ -414,27 +445,50 @@
       return bits.join(' &middot; ');
     }
 
-    document.addEventListener("click", function (e) {
-      var a = e.target.closest ? e.target.closest("a.cc-cert") : null;
-      if (!a) return;
-      e.preventDefault();
-      var was = a.textContent;
-      a.textContent = "Opening\u2026";
-      sb.storage.from("bmcc").createSignedUrl(a.dataset.cert, 300)
+    /*  THE CERTIFICATE IS IN A PRIVATE BUCKET, so there is no address that can
+        simply go in a src — a public URL would defeat the point of db/059
+        making the bucket private. A signed link is minted when the office
+        opens the certificate, valid for five minutes: long enough to look at
+        one, not long enough to be worth forwarding.
+
+        `toggle` does not bubble, so it is caught in the capture phase rather
+        than bound per row — the list is re-rendered on every change and
+        per-row listeners would be re-attached each time.  */
+    document.addEventListener("toggle", function (e) {
+      var d = e.target;
+      if (!d || !d.classList || !d.classList.contains("cc-cert-box")) return;
+      if (!d.open || d.dataset.loaded === "1") return;
+      d.dataset.loaded = "1";
+
+      var view = d.querySelector(".cc-cert-view");
+      var path = d.dataset.cert || "";
+      var isPdf = /\.pdf$/i.test(path);
+
+      sb.storage.from("bmcc").createSignedUrl(path, 300)
         .then(function (res) {
-          a.textContent = was;
           if (res.error || !res.data) throw (res.error || new Error("no url"));
-          window.open(res.data.signedUrl, "_blank", "noopener");
+          var url = res.data.signedUrl;
+          if (isPdf) {
+            //  A PDF gets a link rather than an <img> that would never load.
+            view.innerHTML = '<a class="btn btn-gold" target="_blank" rel="noopener" href="' +
+                             esc(url) + '">Open the PDF</a>';
+          } else {
+            view.innerHTML = '<img class="cc-cert-img" alt="The BMCC certificate as submitted" src="' +
+                             esc(url) + '">' +
+                             '<a class="cc-cert-full" target="_blank" rel="noopener" href="' +
+                             esc(url) + '">Open full size</a>';
+          }
         })
         .catch(function () {
-          a.textContent = was;
-          //  Said out loud rather than silently doing nothing: an office that
-          //  cannot see the certificate needs to know that is what happened,
-          //  not assume the charity never sent one.
-          alert("Could not open that certificate. You may need to sign in again, " +
-                "or it may have been removed.");
+          //  Said out loud rather than silently showing nothing: an office
+          //  that cannot see the certificate needs to know THAT is what
+          //  happened, not conclude the charity never sent one.
+          d.dataset.loaded = "";
+          view.innerHTML = '<span class="cc-cert-err">That certificate would not open. ' +
+                           'You may need to sign in again, or it may have been removed. ' +
+                           'Do not approve on the strength of this screen.</span>';
         });
-    });
+    }, true);
 
     function load() {
       return sb.from("charity_collections")
