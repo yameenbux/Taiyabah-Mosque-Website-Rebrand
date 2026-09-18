@@ -8009,8 +8009,18 @@ window.TAIYABAH_PUBLIC = {
 
     //  The certificate window, set from today for the same reason the
     //  collection window is: a hard-coded date goes stale overnight.
+    //  Three months back, CLAMPED TO THE END OF THE MONTH, which is what
+    //  Postgres does and therefore what request_charity_collection() accepts.
+    //  setMonth() alone overflows rather than clamping: on 31 May it is asked
+    //  for 31 February and answers 3 March, so the form refused certificates
+    //  the database would have taken, by up to three days. Month-ends only,
+    //  which is how it got past the first round of testing.
     var certFrom = new Date(today);
+    var certDay  = certFrom.getDate();
+    certFrom.setDate(1);
     certFrom.setMonth(certFrom.getMonth() - CERT_MONTHS);
+    certFrom.setDate(Math.min(certDay,
+      new Date(certFrom.getFullYear(), certFrom.getMonth() + 1, 0).getDate()));
     var certEl = $('ccCertDate');
     certEl.min = iso(certFrom);
     certEl.max = iso(today);
