@@ -418,6 +418,24 @@
   .cc-dl{display:grid;grid-template-columns:1fr;gap:2px 16px;margin:8px 0 0;font-size:.954rem;}
   @media(min-width:640px){ .cc-dl{grid-template-columns:150px 1fr;} }
   .cc-dl dt{color:var(--muted);font-weight:700;}
+  /*  The certificate is the thing the office has to look at before approving,
+      so it is a link and not a line of small print. */
+  /*  The certificate sits in the row, above "the rest of the form", because
+      the approve-or-decline decision turns on it. */
+  .cc-cert-box{margin:10px 0 0;padding:10px 12px;border:1px solid var(--line);
+    border-radius:12px;background:var(--paper);font-size:.954rem;}
+  .cc-cert-box summary{cursor:pointer;list-style:none;}
+  .cc-cert-box summary::-webkit-details-marker{display:none;}
+  .cc-cert-box summary::before{content:"\25B8";display:inline-block;width:1em;
+    color:var(--muted);transition:transform .15s;}
+  .cc-cert-box[open] summary::before{transform:rotate(90deg);}
+  .cc-stale{color:var(--danger-ink);font-weight:700;}
+  .cc-cert-view{margin-top:10px;}
+  .cc-cert-img{display:block;max-width:100%;max-height:70vh;border-radius:10px;
+    border:1px solid var(--line);background:#fff;}
+  .cc-cert-full{display:inline-block;margin-top:7px;font-weight:700;color:var(--brand-700);}
+  .cc-cert-err{color:var(--danger-ink);font-weight:600;}
+  .cc-nocert{color:var(--muted);}
   .cc-dl dd{margin:0 0 6px;color:var(--ink);line-height:1.5;}
   .cc-dl a{color:var(--brand-700);font-weight:600;text-decoration:none;}
   .cc-more{margin-top:10px;}
