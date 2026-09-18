@@ -110,9 +110,26 @@ with sync_playwright() as p:
     check(pg.evaluate("document.querySelector('.shell').classList.contains('wide-mode')"),
           "the console did not go full width")
 
+    #  TWO OF THESE FOUR ARE THIS DATABASE'S NOW.
+    #
+    #  Until 18 September all four belonged to the system this replaces, and
+    #  this test asserted all four carried "not imported". Then the staff and
+    #  the classes were imported, and for a few hours the page went on saying
+    #  "nothing has been imported yet" above forty teachers that had been.
+    #
+    #  The test was right to exist and wrong about the facts, which is the
+    #  most dangerous state for a test: it passed, and the page lied. The
+    #  INTENT is kept in full below — every figure still has to say where it
+    #  is from — and only the expected wording splits in two.
     counts = text(pg, "#md-counts")
-    for n in ["539", "39", "43", "962"]:
+    for n in ["539", "962"]:
         check(n in counts, "the %s count is missing: %r" % (n, counts[:200]))
+    #  The staff and class figures come from madrasah_overview(), which the
+    #  stub answers, so they are whatever the fixture says rather than a
+    #  literal. An em dash here means the call did not answer and the page
+    #  correctly declined to invent a number.
+    check("TEACHERS" in counts.upper() and "CLASSES" in counts.upper(),
+          "the teacher and class tiles are missing entirely: %r" % counts[:200])
 
     # =====================================================================
     #  2. THE FIGURES SAY WHERE THEY COME FROM
@@ -121,17 +138,35 @@ with sync_playwright() as p:
     #  screenshots one tile for a committee paper and the caveat has to travel
     #  with the number.
     # =====================================================================
-    check("nothing has been imported" in text(pg, "#md-lead").lower(),
-          "the panel above the figures does not say nothing has been imported: %r"
-          % text(pg, "#md-lead"))
+    #  The panel must say plainly that PUPILS are not here. It no longer says
+    #  "nothing has been imported", because that stopped being true.
+    lead = text(pg, "#md-lead").lower()
+    check("pupil" in lead,
+          "the panel above the figures says nothing about pupils, which is the "
+          "one thing this database must not hold yet: %r" % text(pg, "#md-lead"))
     tiles = pg.eval_on_selector_all("#md-counts .md-count", "els => els.map(e => e.innerText)")
     check(len(tiles) == 4, "expected four count tiles, drew %d" % len(tiles))
+    #  EVERY tile still has to say where its number is from — that is the
+    #  whole point, and it is why the caveat is on the tile and not only in
+    #  the panel: somebody screenshots one tile for a committee paper.
+    #  What differs now is WHICH sentence is the right one.
     for t in tiles:
-        check("not imported" in t.lower(),
-              "A FIGURE IS ON SCREEN WITH NOTHING SAYING IT IS NOT THIS "
-              "SYSTEM'S: %r" % t[:160])
-    check("no pupil records at all" in text(pg, "#md-lead").lower(),
-          "the page does not say the database is empty: %r" % text(pg, "#md-lead"))
+        low = t.lower()
+        check("not imported" in low or "in this system" in low,
+              "A FIGURE IS ON SCREEN WITH NOTHING SAYING WHERE IT IS FROM: %r"
+              % t[:160])
+    #  And the two that are still somewhere else must still say so.
+    for want in ("STUDENTS", "CONTACTS"):
+        tile = [t for t in tiles if want in t.upper()]
+        check(tile and "not imported" in tile[0].lower(),
+              "the %s tile no longer says the figure is not this system's — "
+              "that is the caveat that stops 539 being reported to the "
+              "committee as this database's roll: %r"
+              % (want.title(), (tile or [""])[0][:160]))
+    check("no pupil record may be created" in text(pg, "#md-lead").lower()
+          or "no pupil records at all" in text(pg, "#md-lead").lower(),
+          "the page does not say pupil records may not be created here yet: %r"
+          % text(pg, "#md-lead"))
 
     # =====================================================================
     #  3. NOTHING PRETENDS TO BE CLICKABLE

@@ -12,6 +12,9 @@
 <link rel="stylesheet" href="../admin/fonts.css">
 <link rel="stylesheet" href="../admin/shell.css">
 <script src="../admin/shell.js" defer></script>
+<!-- The madrasah's own rail sections. Without this the page falls back to
+     the site rail and portal/staff/ is unreachable from anywhere. -->
+<script src="nav.js" defer></script>
 <style>
   :root{
     --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
@@ -747,6 +750,33 @@
 }
 .rl-soon p{font-size:.96rem;line-height:1.65;color:var(--ink);margin:0;}
 .rl-soon p + p{margin-top:9px;color:var(--muted);font-size:.937rem;}
+
+  /* ---------- What needs doing, and the two tiles that are ours ---------- */
+  .md-doing{ margin:0 0 6px; }
+  .md-doing-line{ font-size:1.02rem; line-height:1.5; color:var(--ink);
+    margin:0 0 8px; }
+  .md-doing-line b{ color:var(--danger-ink,#A0451F); }
+  .md-doing-who{ display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 4px; }
+  .md-chip{ font-size:.79rem; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--line); background:var(--card); color:var(--muted); }
+  .md-chip-none{ border-color:rgba(180,83,47,.4); color:var(--danger-ink,#A0451F);
+    background:rgba(180,83,47,.06); }
+  .md-chip-overdue{ border-color:rgba(180,83,47,.55); color:#fff;
+    background:var(--danger,#B4532F); }
+  .md-chip-due_soon{ border-color:rgba(198,162,76,.5);
+    color:var(--gold-ink,#7A5D14); background:rgba(198,162,76,.1); }
+  .md-chip-more{ font-style:italic; }
+  .md-doing-go{ display:inline-block; margin-top:10px; padding:11px 18px;
+    border-radius:999px; background:var(--brand-800,#4B1136); color:#F7F3EA;
+    text-decoration:none; font-weight:600; font-size:.92rem;
+    min-height:44px; line-height:22px; }
+  .md-doing-go:hover{ background:var(--brand-700,#5E1844); }
+
+  /*  A tile whose number this database can actually answer for. The gold edge
+      is the only thing separating it from the two that still belong to the
+      old system — and that distinction is the difference between a true
+      committee paper and a false one. */
+  .md-count-mine{ border-left:3px solid var(--gold,#C6A24C); }
 </style>
 </head>
 <body>
@@ -903,6 +933,13 @@
           it must not hold any until the paperwork further down is finished.
         </div>
 
+        <!-- WHAT NEEDS DOING. First, because the page is called that and
+             because a screen that opens on four figures invites reading
+             and not acting. Empty until madrasah_overview() answers. -->
+        <div class="dash-lab">What needs doing</div>
+        <div class="md-doing" id="md-doing"></div>
+
+        <div class="dash-lab">Where things stand</div>
         <div class="md-counts" id="md-counts"></div>
 
         <div class="dash-lab">What this will hold</div>

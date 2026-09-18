@@ -176,7 +176,27 @@ for d in SCREENS:
     #  Mounted from renderApp, which runs only once identity is known. If it
     #  ever moves somewhere that runs earlier, the rail would be drawn for
     #  somebody who is not signed in.
-    m = re.search(r"function renderApp\(identity\)\s*\{(.{0,900})", js, re.S)
+    #  THE WHOLE FUNCTION BODY, matched by counting braces — not the first 900
+    #  characters of it.
+    #
+    #  The 900-character window was a guess that held for twelve screens and
+    #  then failed on the thirteenth, when portal/app.js gained a paragraph of
+    #  comment above its mount explaining a race condition. The mount was still
+    #  inside renderApp, exactly where it belongs; the test simply could not
+    #  see that far. A test that fails when a comment is added is a test that
+    #  gets "fixed" by deleting the comment.
+    m = re.search(r"function renderApp\(identity\)\s*\{", js)
+    body = ""
+    if m:
+        i, depth = m.end(), 1
+        while i < len(js) and depth:
+            if js[i] == "{":
+                depth += 1
+            elif js[i] == "}":
+                depth -= 1
+            i += 1
+        body = js[m.end():i]
+    m = m and type("M", (), {"group": lambda self, n: body})()
     check(m and "AdminShell.mount" in m.group(1),
           "%s/app.js calls AdminShell.mount from outside renderApp(identity). "
           "It must mount only after sign-in." % d)

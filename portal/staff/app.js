@@ -21,6 +21,22 @@
    "nothing on file" is coloured as the failure it is, and every row says in
    words what needs doing rather than showing a tick.
 
+   TWO LISTS, BECAUSE THE MADRASAH IS TWO THINGS
+   ---------------------------------------------
+   Migration 053 added `side` — sisters or brothers — and the screen shows them
+   as two columns rather than one list with a tag on every row. The madrasah
+   teaches them separately and the lists are read separately: whoever is
+   looking for a sisters' teacher is not scanning past sixteen brothers to find
+   her.
+
+   The import worked the side out from the honorific, so anybody with no
+   honorific has none — one person today. A list split in two is the easiest
+   place in the world to lose somebody: two columns showing 39 of 40 look
+   completely normal, and the fortieth is not missing from anything you can
+   see. So they are collected into their own labelled group ABOVE the columns,
+   with their own count, and that group ignores the search and the pickers on
+   purpose. It is not drawn at all when it is empty.
+
    WHY THERE IS NO GREEN TICK ANYWHERE
    -----------------------------------
    The system this replaces shows a green "DBS Valid" badge on a staff row.
@@ -498,42 +514,25 @@
       });
     }
 
-    function drawList() {
-      var box = el("st-list");
-      if (!box) return;
+    /*  ONE ROW, WRITTEN ONCE, DRAWN IN THREE PLACES — the sisters' column, the
+        brothers' column, and the group of people who have no side yet. They
+        show exactly the same things, because they are the same rows; only
+        which list they land in differs. */
+    function rowHtml(r) {
+      var dbs   = dbsWords(r);
+      var state = trim(r.dbs) || "none";
+      var emp   = trim(r.employment) || "employed";
+      var cls   = classesOf(r);
+      var days  = daysOf(r);
+      var hasDays = Array.isArray(r.work_days) && r.work_days.length > 0;
 
-      if (!rows.length) {
-        box.innerHTML = '<div class="st-empty">Nobody is on the staff list yet. ' +
-          'Press “Add somebody” to put the first person on it.</div>';
-        return;
-      }
+      return '<button type="button" class="st-row d-' + esc(state) +
+               (emp === "left" ? " e-left" : "") + '" data-id="' + esc(r.id) + '">' +
 
-      var list = visible();
-      if (!list.length) {
-        box.innerHTML = '<div class="st-empty">Nobody matches what you have ' +
-          'asked for. Clear the search or set the two pickers back to “Any”.</div>';
-        return;
-      }
-
-      /*  THE ORDER IS THE DATABASE'S ORDER, AND IT IS BY SURNAME.
-
-          madrasah_staff_list() sorts by last_name then first_name, which is
-          the whole reason 052 pulled the honorific out into its own column —
-          in the old system "Apa" was part of the name, so an A to Z list put
-          nineteen people under A and sorted them by their first names.
-          Re-sorting here by display_name would put every one of them back
-          under A and throw that away. So this maps, and does not sort. */
-      box.innerHTML = list.map(function (r) {
-        var dbs   = dbsWords(r);
-        var state = trim(r.dbs) || "none";
-        var emp   = trim(r.employment) || "employed";
-        var cls   = classesOf(r);
-        var days  = daysOf(r);
-        var hasDays = Array.isArray(r.work_days) && r.work_days.length > 0;
-
-        return '<button type="button" class="st-row d-' + esc(state) +
-                 (emp === "left" ? " e-left" : "") + '" data-id="' + esc(r.id) + '">' +
-
+        //  WHO THEY ARE: name, what they are, what they take, when they are in.
+        //  All four are answers to the same question, so they travel together
+        //  and stay together however narrow the row gets.
+        '<span class="st-who">' +
           "<span>" +
             '<span class="st-nm">' + esc(nameOf(r)) + "</span>" +
             //  Employed is the ordinary case and says nothing; the other three
@@ -555,20 +554,111 @@
             (hasDays ? esc(days.join(" · "))
                      : '<span class="st-quiet">Days not set</span>') +
           "</span>" +
+        "</span>" +
 
-          "<span>" +
-            '<span class="st-state s-' + esc(state) + '">' + esc(dbs.word) + "</span>" +
-            (dbs.todo ? '<span class="st-todo">' + esc(dbs.todo) + "</span>" : "") +
-          "</span>" +
+        //  WHERE THEIR DBS STANDS: a different question, so its own half.
+        "<span>" +
+          '<span class="st-state s-' + esc(state) + '">' + esc(dbs.word) + "</span>" +
+          (dbs.todo ? '<span class="st-todo">' + esc(dbs.todo) + "</span>" : "") +
+        "</span>" +
 
-          //  The imported note, quietly. It is the instruction for whoever is
-          //  working through this list — what the old system said about this
-          //  person's DBS, and that the certificate date still has to be
-          //  typed in by hand.
-          (trim(r.note) ? '<span class="st-note">' + esc(r.note) + "</span>" : "") +
+        //  The imported note, quietly. It is the instruction for whoever is
+        //  working through this list — what the old system said about this
+        //  person's DBS, and that the certificate date still has to be
+        //  typed in by hand.
+        (trim(r.note) ? '<span class="st-note">' + esc(r.note) + "</span>" : "") +
 
-        "</button>";
-      }).join("");
+      "</button>";
+    }
+
+    /*  THE ORDER IS THE DATABASE'S ORDER, AND IT IS BY SURNAME.
+
+        madrasah_staff_list() sorts by last_name then first_name, which is the
+        whole reason 052 pulled the honorific out into its own column — in the
+        old system "Apa" was part of the name, so an A to Z list put nineteen
+        people under A and sorted them by their first names. Re-sorting here by
+        display_name would put every one of them back under A and throw that
+        away. Splitting the list in two does not disturb it: filter keeps the
+        order it was given, so each column is still by surname. */
+    function fillList(hostId, list, empty) {
+      var box = el(hostId);
+      if (!box) return;
+      box.innerHTML = list.length
+        ? list.map(rowHtml).join("")
+        : '<div class="st-empty">' + esc(empty) + "</div>";
+    }
+
+    /*  The number beside a column heading. When nothing is being filtered it is
+        simply how many people are on that side. When something IS, it says both
+        — "5 of 23" — because a bare 5 under a heading that said 23 a moment ago
+        reads as eighteen people having gone missing. */
+    function countLabel(showing, total) {
+      return showing === total ? String(total) : showing + " of " + total;
+    }
+
+    function setCount(id, showing, total) {
+      var n = el(id);
+      if (n) n.textContent = countLabel(showing, total);
+    }
+
+    function sideOf(r) {
+      var s = trim(r.side).toLowerCase();
+      return (s === "sisters" || s === "brothers") ? s : "";
+    }
+
+    function drawList() {
+      var shown = visible();
+      var pool  = rows.filter(function (r) {
+        return showLeft || trim(r.employment) !== "left";
+      });
+
+      var nothingAtAll = !rows.length;
+      var nothingShown = !shown.length;
+
+      ["sisters", "brothers"].forEach(function (side) {
+        var mine  = shown.filter(function (r) { return sideOf(r) === side; });
+        var all   = pool.filter(function (r) { return sideOf(r) === side; });
+        var label = side === "sisters" ? "sisters’" : "brothers’";
+        fillList("st-list-" + side, mine,
+          nothingAtAll
+            ? "Nobody is on the staff list yet. Press “Add somebody” to put the " +
+              "first person on it."
+            : nothingShown
+              ? "Nobody matches what you have asked for. Clear the search or set " +
+                "the pickers back to “Any”."
+              : "Nobody on the " + label + " side matches what you have asked for.");
+        setCount("st-n-" + side, mine.length, all.length);
+      });
+
+      /*  NOBODY IS QUIETLY DROPPED BETWEEN THE TWO COLUMNS.
+
+          Everybody with no side is shown here, with their own count, above the
+          two lists. The group is not drawn at all when it is empty — a
+          permanent "Side not set: 0" is a box that teaches people to stop
+          reading it, and this one has to be read on the day it is not nought.
+
+          It ignores the search and the two pickers ON PURPOSE. A person with no
+          side is a job to be done rather than a search result, and filtering
+          them out of view is precisely the disappearing act this group exists
+          to prevent. It does respect the left tick box, because somebody who
+          left two years ago does not need a side choosing. */
+      var unset = pool.filter(function (r) { return sideOf(r) === ""; });
+      var box   = el("st-unset");
+      if (box) box.hidden = unset.length === 0;
+      if (unset.length) {
+        fillList("st-list-unset", unset, "");
+        setCount("st-n-unset", unset.length, unset.length);
+        var why = el("st-unset-why");
+        if (why) {
+          why.textContent = (unset.length === 1
+            ? "One person has no side recorded, so they are in neither list below."
+            : unset.length + " people have no side recorded, so they are in " +
+              "neither list below.") +
+            " They are up here rather than quietly missing from both. Press a row " +
+            "and choose a side. The import worked it out from the title, so these " +
+            "are the ones with no title at all.";
+        }
+      }
     }
 
     // ---- the editor ----------------------------------------------------------
@@ -644,6 +734,10 @@
       set("st-honorific",  r && r.honorific);
       set("st-first",      r && r.first_name);
       set("st-last",       r && r.last_name);
+      //  A side that is neither of the two known words — including null, which
+      //  is what the import left behind for anybody with no title — lands on
+      //  "Not set", which is the truth rather than a guess at one of the two.
+      set("st-side", r ? sideOf(r) : "");
       set("st-employment", (r && trim(r.employment)) || "employed");
       set("st-started",    r && r.started_on);
       set("st-left",       r && r.left_on);
@@ -713,8 +807,12 @@
       if (box) box.hidden = true;
       note("st-complaints", "");
       if (!wasOpen) return;
-      var list = el("st-list");
-      if (list) list.scrollIntoView({ block: "start" });
+      /*  Back to the top of the lists. The "side not set" group when there is
+          one, because that is where the person most likely came from and it
+          sits above the two columns anyway, so landing there shows both. */
+      var unset = el("st-unset");
+      var back  = (unset && !unset.hidden) ? unset : el("st-cols");
+      if (back) back.scrollIntoView({ block: "start" });
     }
 
     /*  WHAT IS IN THE BOXES, as plain values. No trimming decisions and no
@@ -746,6 +844,7 @@
         honorific:  v("st-honorific"),
         first_name: v("st-first"),
         last_name:  v("st-last"),
+        side:       v("st-side"),
         employment: v("st-employment"),
         started_on: v("st-started"),
         left_on:    v("st-left"),
@@ -772,6 +871,12 @@
           madrasah_staff_has_a_name        first name, 1 to 60 characters
           madrasah_staff_employment_known  one of the four
           madrasah_staff_left_makes_sense  (employment = 'left') = (left_on is not null)
+
+        `side` is not checked here and does not need to be: it comes from a
+        dropdown offering exactly the two words the database accepts and an
+        empty one, so there is no third value for a person to produce. Having
+        no side is a real answer and must stay one — the whole point of the
+        "Side not set" group is that guessing is worse than not knowing.
 
         Pure — no DOM, no network, no state — so a test can call it. */
     function check(f) {
@@ -909,6 +1014,10 @@
         honorific:  f.honorific,
         first_name: f.first_name,
         last_name:  f.last_name,
+        //  Empty means "nobody has said", and it is sent as an empty string
+        //  exactly like the dates are: save_madrasah_staff() is what turns an
+        //  empty string into a null, in one place, for every field.
+        side:       f.side,
         employment: f.employment,
         started_on: f.started_on,
         left_on:    f.left_on,
@@ -991,12 +1100,19 @@
         drawList();
       });
 
-      /*  ONE LISTENER ON THE LIST, not one per row. The rows are redrawn every
-          time anything is typed into the search box, so per-row listeners
-          would be re-attached on each keystroke and the old ones left behind. */
-      var list = el("st-list");
-      if (list) list.addEventListener("click", function (ev) {
-        var btn = ev.target.closest ? ev.target.closest("button[data-id]") : null;
+      /*  ONE LISTENER FOR ALL THREE LISTS, not one per list and certainly not
+          one per row. The rows are redrawn every time anything is typed into
+          the search box, so per-row listeners would be re-attached on each
+          keystroke and the old ones left behind; and there are three hosts now
+          rather than one, so listening on the panel above them means a fourth
+          list added later is wired the day it is drawn.
+
+          `button.st-row` and not `button[data-id]`: the panel also holds Add,
+          Save and Back to the list, and a row is the only thing here that
+          should open somebody's record. */
+      var lists = el("st-panel");
+      if (lists) lists.addEventListener("click", function (ev) {
+        var btn = ev.target.closest ? ev.target.closest("button.st-row") : null;
         if (!btn) return;
         var r = byId(btn.getAttribute("data-id"));
         if (!r) return;
@@ -1037,6 +1153,7 @@
         set("st-honorific", was.honorific);
         set("st-first", was.first_name);
         set("st-last", was.last_name);
+        set("st-side", was.side);
         set("st-employment", was.employment);
         set("st-started", was.started_on);
         set("st-left", was.left_on);
@@ -1090,9 +1207,15 @@
       shutEditor();   // the list first; a record is opened by pressing its row
 
       return load().catch(function (e) {
-        var box = el("st-list");
-        if (box) box.innerHTML = '<div class="st-empty">The staff list couldn’t ' +
-                                 'be read — the message above says why.</div>';
+        //  Both columns say so, rather than one saying nothing and reading as
+        //  a side with nobody on it.
+        ["st-list-sisters", "st-list-brothers"].forEach(function (id) {
+          var box = el(id);
+          if (box) box.innerHTML = '<div class="st-empty">The staff list couldn’t ' +
+                                   'be read — the message above says why.</div>';
+        });
+        var unset = el("st-unset");
+        if (unset) unset.hidden = true;
         note("st-error", "Couldn't read the staff: " + ((e && e.message) || e));
       });
     }

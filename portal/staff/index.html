@@ -325,6 +325,73 @@
   }
   .st-toggle input{accent-color:var(--brand-900);width:20px;height:20px;cursor:pointer;}
 
+  /* ---------- as wide as the window ----------
+     admin/shell.css caps the working card at 1180px, which is right for the
+     twelve screens that are one list of one thing. This screen is TWO lists
+     side by side, and at 1180px each of them is about 470px — narrow enough
+     that a DBS sentence runs to four lines and a row is taller than it is
+     wide. So the cap comes off here and only here.
+
+     NOT BY EDITING shell.css. That file is loaded by every staff screen and
+     the cap is correct on all of them; widening it there to suit this one
+     would quietly stretch the Gift Aid rows and the booking table to whatever
+     monitor somebody happens to have. This block is in the page's own
+     stylesheet, which loads after the shared one, so equal specificity is
+     enough and no !important is needed. */
+  body.has-ashell .panel > .card,
+  body.has-ashell .card.is-wide{ max-width:none; }
+  /* The page title and the rule under it come from shell.js and are capped to
+     match. Left at 1180px the rule would stop dead halfway across a desk full
+     of content, which reads as a layout fault rather than a heading. */
+  body.has-ashell .ashell-head{ max-width:none; }
+
+  /* ---------- the two sides ----------
+     THE MADRASAH TEACHES THEM SEPARATELY AND THE LISTS ARE READ SEPARATELY.
+     Whoever is looking for a sisters' teacher is not scanning past sixteen
+     brothers to find her, so the two are columns rather than one list with a
+     tag on each row.
+
+     The two-column shape waits until 1180px because the rail takes 264px of
+     whatever the screen has: at 1024px the two columns would be about 350px
+     each, which is narrower than one column would have been at 768px. Below
+     that they stack, SISTERS FIRST — the bigger of the two lists, and the
+     order the madrasah itself names them in. */
+  .st-cols{display:grid;grid-template-columns:1fr;gap:26px;}
+  @media (min-width:1180px){ .st-cols{grid-template-columns:1fr 1fr;gap:26px;} }
+  .st-col{min-width:0;}
+
+  .st-col-h{
+    display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+    font-size:1.08rem;color:var(--brand-900);
+    padding-bottom:8px;margin-bottom:12px;border-bottom:1px solid var(--line);
+  }
+  .st-col-n{
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    font-size:.84rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--gold-ink);background:rgba(198,162,76,.16);
+    padding:3px 9px;border-radius:999px;font-variant-numeric:tabular-nums;
+  }
+
+  /*  NOBODY FALLS BETWEEN THE TWO COLUMNS.
+
+      Thirty-nine of forty people have a side; one does not, because it was
+      seeded from the honorific and she has none. Two columns showing 39 of 40
+      is the failure this group exists to prevent — the missing person is not
+      missing from anything visible, so nobody would ever notice.
+
+      It sits ABOVE the columns rather than below, because it is a job to be
+      done rather than a footnote, and because a group at the bottom of two
+      lists forty rows long is a group nobody scrolls to. app.js does not draw
+      it at all when it is empty, so it disappears the day the last side is
+      chosen rather than sitting there as a permanent nought. */
+  .st-unset{
+    border:1px solid rgba(198,162,76,.5);border-left:3px solid var(--gold);
+    background:rgba(198,162,76,.07);border-radius:13px;
+    padding:15px 16px;margin-bottom:22px;
+  }
+  .st-unset .st-col-h{border-bottom-color:rgba(198,162,76,.4);}
+  .st-unset-why{font-size:.93rem;line-height:1.6;color:var(--muted);margin-bottom:12px;}
+
   /* ---------- the list ----------
      .st-wrap is the scroller. At 360px the rows stack and nothing is wider
      than the screen, but a long class name in a narrow column is still capable
@@ -344,19 +411,34 @@
   }
   .st-row:hover{border-color:var(--brand-800);}
   .st-row:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
-  @media (min-width:760px){
-    .st-row{
-      /* The DBS column gets the most room of the four. It is the only one
-         carrying a sentence rather than a label, and it is what somebody
-         opened this screen to read. */
-      grid-template-columns:minmax(160px,1.3fr) minmax(116px,1fr)
-                            minmax(98px,.7fr) minmax(228px,1.9fr);
-      align-items:start;gap:14px;
-    }
-    /* The note runs the full width underneath, because it is a sentence and
-       not a column. */
-    .st-row .st-note{grid-column:1 / -1;}
+
+  /*  WHO THEY ARE, AND WHERE THEIR DBS STANDS — the two halves of a row.
+      Name, employment, classes and days belong together because they are all
+      answers to "who is this"; the DBS is the answer to a different question
+      and gets its own half.
+
+      A ROW ONLY SPLITS IN TWO WHEN THERE IS ROOM FOR TWO, and how much room a
+      row has depends on whether the page is showing one column of people or
+      two. Between 620px and 1179px the sides are stacked, so a row is the full
+      width of the desk and splits happily. From 1180px the sides sit beside
+      each other and a row is half a desk — too narrow to split again until the
+      desk itself is large, which is what the second rule is for.
+
+      These are viewport queries and not container queries on purpose: the
+      shape of the whole page is decided by the same two numbers, and a
+      container query here would be a third place that knows about the layout. */
+  @media (min-width:620px) and (max-width:1179px){
+    .st-row{grid-template-columns:1.15fr 1.3fr;align-items:start;gap:16px;}
   }
+  @media (min-width:1560px){
+    .st-row{grid-template-columns:1.1fr 1.25fr;align-items:start;gap:16px;}
+  }
+  /* The note runs the full width underneath, because it is a sentence and not
+     a column. Harmless while the row has only one column. */
+  .st-row .st-note{grid-column:1 / -1;}
+
+  /* The "who" half is a stack whatever the row is doing around it. */
+  .st-who{display:flex;flex-direction:column;gap:7px;min-width:0;}
   .st-row.d-overdue,.st-row.d-none{border-left-color:var(--danger);}
   .st-row.d-due_soon{border-left-color:var(--gold);}
   .st-row.d-valid{border-left-color:var(--success);}
@@ -676,8 +758,40 @@
           <label class="st-toggle"><input type="checkbox" id="st-show-left"> Include people who have left</label>
         </div>
 
-        <div class="st-wrap">
-          <div class="st-list" id="st-list">Looking&hellip;</div>
+        <!-- Anybody the import could not place. Drawn only when there is
+             somebody in it — see the note beside .st-unset in the stylesheet
+             above, and drawUnset() in app.js. -->
+        <section class="st-unset" id="st-unset" aria-labelledby="st-h-unset" hidden>
+          <h3 class="st-col-h" id="st-h-unset">
+            Side not set <span class="st-col-n" id="st-n-unset">0</span>
+          </h3>
+          <p class="st-unset-why" id="st-unset-why">Somebody has to say which side
+             of the madrasah these people are on. Until that is done they are in
+             neither list below, which is why they are up here instead of quietly
+             missing from both. Press a row and pick a side.</p>
+          <div class="st-wrap">
+            <div class="st-list" id="st-list-unset"></div>
+          </div>
+        </section>
+
+        <div class="st-cols" id="st-cols">
+          <section class="st-col" aria-labelledby="st-h-sisters">
+            <h3 class="st-col-h" id="st-h-sisters">
+              Sisters&rsquo; side <span class="st-col-n" id="st-n-sisters">&mdash;</span>
+            </h3>
+            <div class="st-wrap">
+              <div class="st-list" id="st-list-sisters">Looking&hellip;</div>
+            </div>
+          </section>
+
+          <section class="st-col" aria-labelledby="st-h-brothers">
+            <h3 class="st-col-h" id="st-h-brothers">
+              Brothers&rsquo; side <span class="st-col-n" id="st-n-brothers">&mdash;</span>
+            </h3>
+            <div class="st-wrap">
+              <div class="st-list" id="st-list-brothers">Looking&hellip;</div>
+            </div>
+          </section>
         </div>
 
         <div class="st-row-acts">
@@ -717,6 +831,22 @@
                old system &ldquo;Apa&rdquo; was part of the name, so an A to Z list put
                nineteen people under A. Here the list sorts by <strong>surname</strong>,
                which is how anybody actually looks somebody up.</p>
+
+            <label class="fld">
+              <span>Which side of the madrasah</span>
+              <select id="st-side">
+                <option value="">Not set</option>
+                <option value="sisters">Sisters&rsquo; side</option>
+                <option value="brothers">Brothers&rsquo; side</option>
+              </select>
+            </label>
+            <p class="st-hint">This decides which of the two lists they appear in.
+               <strong>Leave it as &ldquo;Not set&rdquo; if you genuinely do not
+               know.</strong> A guess puts somebody in the wrong list and looks
+               exactly like a fact, whereas anybody with no side chosen is shown in
+               their own group at the top of the list until somebody who knows picks
+               one. The import worked it out from the title, so the few it could not
+               place are the ones with no title at all.</p>
 
             <div class="st-grid2">
               <label class="fld">

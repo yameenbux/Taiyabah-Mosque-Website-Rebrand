@@ -139,20 +139,38 @@
        happens this whole object goes and the counts come from the database —
        which is why every figure the page draws goes through here rather than
        being written into the HTML. */
+    /*  TWO OF THESE FOUR ARE NOW THIS DATABASE'S OWN, AND TWO ARE NOT.
+
+        Until 18 September every figure here belonged to the system this
+        replaces, and the page said so on every tile. Then the staff and the
+        classes were imported — and for a few hours this page went on saying
+        "nothing has been imported yet" underneath forty teachers that had
+        been. A page that states the opposite of the truth is worse than one
+        that says nothing, because somebody acts on it.
+
+        So `mine` marks the tiles this database can answer for. Those get
+        their number from madrasah_overview() at load; the other two keep
+        their caveat, because it is still true of them. */
     var CURRENT = {
       as_at: "13 September 2026",
       where: "the madrasah\u2019s current system",
       counts: [
         { n: 539, k: "Students",
           s: "Every child on the roll. The most sensitive thing the masjid holds." },
-        { n: 39,  k: "Teachers",
-          s: "Who teaches, and which classes they are responsible for." },
-        { n: 43,  k: "Classes",
-          s: "Groups, times and which teacher takes each one." },
+        { n: null, key: "staff", mine: true, k: "Teachers",
+          s: "Who teaches, which classes they take, the days they are in and whether their DBS is in date." },
+        { n: null, key: "classes", mine: true, k: "Classes",
+          s: "Every class and who is responsible for it." },
         { n: 962, k: "Contacts",
           s: "Parents and guardians — who to ring, and who may collect." }
       ]
     };
+
+    //  Filled by madrasah_overview() before draw() runs. Null until then, and
+    //  a tile with a null number says so rather than showing a nought — "0
+    //  teachers" and "not loaded yet" are different things and only one of
+    //  them is alarming.
+    var MINE = null;
 
     /* What each area is FOR, in the words somebody in the office would use.
        Written now rather than when it is built: the description is the brief,
@@ -290,18 +308,67 @@
         });
     }
 
+    /*  WHAT NEEDS DOING, which is the whole point of a page called Today.
+
+        Only ever DBS at the moment, because staff are the only thing this
+        database holds — but the shape is the one the rest will use: a
+        sentence naming the problem, the people it is about, and a way
+        straight to the screen that fixes it. A count on its own tells
+        somebody something is wrong and nothing about who to ring. */
+    function drawNeedsDoing() {
+      var box = el("md-doing");
+      if (!box || !MINE) return;
+
+      var people = MINE.dbs_needs_attention || [];
+      if (!people.length) {
+        box.innerHTML = '<p class="md-why">Every member of staff has a check ' +
+          'in date. Nothing is waiting.</p>';
+        return;
+      }
+
+      var none = people.filter(function (p) { return p.state === "none"; }).length;
+      var over = people.filter(function (p) { return p.state === "overdue"; }).length;
+      var soon = people.filter(function (p) { return p.state === "due_soon"; }).length;
+
+      var bits = [];
+      if (none) bits.push(none + (none === 1 ? " has" : " have") + " nothing on file at all");
+      if (over) bits.push(over + (over === 1 ? " is" : " are") + " overdue");
+      if (soon) bits.push(soon + " falls due within 90 days");
+
+      box.innerHTML =
+        '<p class="md-doing-line"><b>' + esc(people.length) +
+          " of " + esc(MINE.staff) + " staff need a DBS check looked at.</b> " +
+          esc(bits.join(", ")) + ".</p>" +
+        '<p class="md-why">These came across with no certificate date, because ' +
+          'the old system shows a badge and not a date. Nothing has been ' +
+          'invented \u2014 each date has to be keyed in from the certificate.</p>' +
+        '<div class="md-doing-who">' +
+          people.slice(0, 12).map(function (p) {
+            return '<span class="md-chip md-chip-' + esc(p.state) + '">' +
+                   esc(p.name) + "</span>";
+          }).join("") +
+          (people.length > 12
+            ? '<span class="md-chip md-chip-more">and ' +
+              esc(people.length - 12) + " more</span>" : "") +
+        "</div>" +
+        '<a class="md-doing-go" href="staff/">Open the staff list</a>';
+    }
+
     function draw() {
       var counts = el("md-counts");
       if (counts) {
         counts.innerHTML = CURRENT.counts.map(function (c) {
-          return '<div class="md-count">' +
-            '<span class="n">' + esc(c.n) + "</span>" +
+          var n = c.mine ? (MINE && MINE[c.key]) : c.n;
+          //  The caveat travels with the number ON EVERY TILE, because
+          //  somebody screenshots one for a committee paper and the number
+          //  goes without the panel above it.
+          var note = c.mine
+            ? "<br><b>In this system, and up to date.</b>"
+            : "<br><b>In " + esc(CURRENT.where) + ", not imported.</b>";
+          return '<div class="md-count' + (c.mine ? " md-count-mine" : "") + '">' +
+            '<span class="n">' + (n === null || n === undefined ? "&mdash;" : esc(n)) + "</span>" +
             '<span class="k">' + esc(c.k) + "</span>" +
-            //  On EVERY tile, not just in the panel above. Somebody screenshots
-            //  one tile for a committee paper, and the caveat has to travel
-            //  with the number.
-            '<span class="s">' + esc(c.s) +
-              "<br><b>In " + esc(CURRENT.where) + ", not imported.</b></span>" +
+            '<span class="s">' + esc(c.s) + note + "</span>" +
           "</div>";
         }).join("");
       }
@@ -332,6 +399,18 @@
       }
 
       var lead = el("md-lead");
+      if (lead && MINE) {
+        //  Rewritten once the real figures are in hand. The markup's own
+        //  wording is the pre-import one and stays in the HTML as the honest
+        //  default for anybody who loads this page with the call failing.
+        lead.innerHTML =
+          "<strong>Staff and classes are in this system now.</strong> " +
+          "The teachers and classes below were brought across on 18 September and " +
+          "are this database\u2019s own. <strong>Pupils and their families are not</strong> " +
+          "— those two figures are still what the masjid\u2019s current system holds, " +
+          "and no pupil record may be created here until the paperwork further down " +
+          "is finished.";
+      }
       if (lead) {
         var when = document.createElement("div");
         when.style.cssText = "margin-top:8px;font-size:.79rem;color:var(--muted);";
@@ -354,6 +433,21 @@
         var shown = null;
         if (canSee(identity)) {
           shown = panel;
+
+          /*  THE REAL FIGURES, AND WHAT NEEDS DOING.
+
+              Asked for once, here, rather than by each tile: six round trips
+              is six ways to half-load a screen, and this page has already had
+              a version that rendered with nothing in it.
+
+              draw() runs whether or not this answers. If it does not, the
+              tiles show an em dash and the page keeps the pre-import wording
+              from the markup — which is out of date but TRUE of pupils, and a
+              stale caveat is safer than a missing one. */
+          sb.rpc("madrasah_overview").then(function (res) {
+            if (!res.error && res.data) { MINE = res.data; }
+          }).catch(function () { /* draw() copes */ })
+            .then(function () { draw(); drawNeedsDoing(); });
         } else if (identity.roles.indexOf("teacher") !== -1) {
           shown = el("tc-panel");
           drawRoleList("tc-list", TEACHER);
@@ -431,10 +525,41 @@
     //  once the page knows who is signed in, so the list of areas can
     //  never be drawn for somebody who is not. It is a convenience, not
     //  a permission — see admin/shell.js.
+
+    /*  WAIT FOR THE TWO DEFERRED SCRIPTS, but only while the page is still
+        being read.
+
+        shell.js and nav.js are `defer`, so they run at DOMContentLoaded. The
+        sign-in check is a promise chain, and against a warm session it can
+        settle FIRST — at which point window.AdminShell is undefined, the
+        `if` below is false, and the page renders with no rail at all. No
+        error, nothing in the console; it simply looks like the rail was
+        never built. It cost an afternoon on the staff screen before it was
+        spotted there, and the same shape was sitting here.
+
+        Only while readyState is "loading", so a genuinely missing file leaves
+        a rail-less page rather than a page that hangs for ever. */
+    if (document.readyState === "loading" &&
+        !(window.AdminShell && window.MadrasahNav)) {
+      document.addEventListener("DOMContentLoaded", function () {
+        renderApp(identity);
+      }, { once: true });
+      return;
+    }
+
     if (window.AdminShell) {
       AdminShell.mount({
-        current: 'madrasah',
-        title:   'Madrasah portal',
+        /*  THE MADRASAH'S OWN RAIL, not the site's.
+
+            This page IS the madrasah's front screen, so while somebody is on
+            it the left-hand column should list the madrasah's sections — not
+            Hall Hire and Gift Aid, which are a different building. Without
+            this, the Staff screen at portal/staff/ was live and completely
+            unreachable: nothing on the site linked to it. */
+        sections: (window.MadrasahNav || {}).SECTIONS,
+        area:    'Madrasah',
+        current: 'md-today',
+        title:   'What needs doing',
         roles:   identity.roles || [],
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""
