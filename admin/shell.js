@@ -78,7 +78,20 @@
     menu:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
     /*  A bell, not a phone. The row is "send a notification"; a phone outline
         would read as "the app", which is a place, and this row is an action. */
-    bell:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 10-12 0c0 5.2-2 6.5-2 6.5h16s-2-1.3-2-6.5"/><path d="M10.4 20.5a1.9 1.9 0 003.2 0"/></svg>'
+    bell:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 10-12 0c0 5.2-2 6.5-2 6.5h16s-2-1.3-2-6.5"/><path d="M10.4 20.5a1.9 1.9 0 003.2 0"/></svg>',
+
+    /*  THE MADRASAH'S OWN SECTIONS. Drawn in the same hand as the ten above —
+        1.8 stroke, round caps, 24-box — so a rail that swaps its contents
+        does not also swap its handwriting. */
+    sun:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>',
+    child:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="6.5" r="3"/><path d="M6.5 21v-4.5a5.5 5.5 0 0111 0V21"/><path d="M9.5 21v-3M14.5 21v-3"/></svg>',
+    home:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 10.5 12 3.5l8.5 7"/><path d="M5.5 9.7V20h13V9.7"/><path d="M10 20v-5h4v5"/></svg>',
+    tick:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="2"/><path d="M8.5 11.5l2.4 2.4 4.6-4.9"/></svg>',
+    shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 4.8 5.6v6c0 4.6 3 8.1 7.2 9.6 4.2-1.5 7.2-5 7.2-9.6v-6z"/><path d="M9.2 12.1l1.9 1.9 3.7-3.9"/></svg>',
+    pound:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.8 6.3a3.4 3.4 0 00-5.9 2.3v4.1c0 1.3-.5 2.4-1.4 3.2"/><path d="M7.5 12.6h5.6"/><path d="M6.8 19h10"/></svg>',
+    star:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.8l5.9-.9z"/></svg>',
+    chat:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.6c0 3.9-3.8 7-8.5 7-1.1 0-2.2-.2-3.2-.5L3.5 21l1.6-4a6.6 6.6 0 01-1.6-4.4c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>',
+    inbox:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5h4l1.6 2.6h5.8l1.6-2.6h4"/><path d="M5.6 4.6h12.8l2.1 8.9v4a2 2 0 01-2 2H5.5a2 2 0 01-2-2v-4z"/></svg>'
   };
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
@@ -202,7 +215,26 @@
   /*  Pages sit one folder below the web root — /venue/, /giftaid/ — so every
       link and image is "../something". Kept in one function so that if a
       screen is ever moved deeper, there is exactly one place to change. */
-  function up(p) { return "../" + p; }
+  /*  HOW FAR UP THE WEB ROOT IS.
+
+      Every staff screen sat one folder below the root — /venue/, /giftaid/ —
+      so this was "../" and nothing else. The Madrasah Portal broke that
+      assumption the day it grew /portal/staff/, which is two deep: every rail
+      link and the logo would have pointed at /portal/portals/, /portal/venue/,
+      /portal/img/masjid-logo.png. All dead, silently, with the rail looking
+      perfect.
+
+      The first fix for that lived in the screen: mount the rail, then walk the
+      DOM rewriting every href. It worked, and it was the beginning of a habit
+      — the second nested screen copies it, the third copies it slightly wrong,
+      and now there are three places that know how deep a page is. That is the
+      shape of every bug this project has spent a fortnight removing.
+
+      So the page says how deep it is, once, and this does the arithmetic. */
+  var depth = 1;
+  function up(p) {
+    return new Array(depth + 1).join("../") + p;
+  }
 
   /*  THE ROWS THIS ACCOUNT MAY SEE, GROUPED, EMPTY GROUPS DROPPED.
 
@@ -231,30 +263,70 @@
 
   function row(a, current) {
     var here = a.key === current;
+    var body = '<span class="ic" aria-hidden="true">' + ICON[a.icon] + "</span>" +
+               '<span class="bd"><span class="n">' + esc(a.name) + "</span></span>";
+
+    /*  A SECTION THAT IS NOT BUILT YET IS NOT A LINK.
+
+        The madrasah rail shows its whole shape from the first day, because a
+        three-row rail tells a volunteer nothing about where this is going.
+        But a row that looks pressable and does nothing teaches people the
+        screen is broken, and then they stop reporting it when it really is —
+        which is written down on /portal/ already, about the tiles there.
+
+        So an unbuilt section is a <span>: muted, not focusable, not clickable,
+        and it says so on hover and to a screen reader. The shape is visible;
+        nothing lies about being ready. */
+    if (a.soon) {
+      return '<span class="area soon" title="Not built yet">' + body +
+             '<span class="soon-tag">soon</span></span>';
+    }
+
     return '<a class="area" href="' + esc(up(a.href)) + '"' +
            (a.what ? ' title="' + esc(a.what) + '"' : "") +
-           (here ? ' aria-current="page"' : "") + ">" +
-           '<span class="ic" aria-hidden="true">' + ICON[a.icon] + "</span>" +
-           '<span class="bd"><span class="n">' + esc(a.name) + "</span></span></a>";
+           (here ? ' aria-current="page"' : "") + ">" + body + "</a>";
   }
 
   function railHtml(opts) {
     var out = [];
 
+    /*  AN AREA CAN BRING ITS OWN SECTIONS.
+
+        The Madrasah Portal is a place inside a place: it has a dozen sections
+        of its own — register, fees, safeguarding — and putting its rail BESIDE
+        this one would mean two left-hand columns, which is unusable. So while
+        somebody is inside it, this rail becomes the madrasah's own list with
+        a way back out at the top.
+
+        It is the SAME rail, not a second one. The drawer, the escape key, the
+        focus handling, the logo in the corner and the sign-out are behaviours
+        this file already gets right, and a second implementation would be a
+        second place for each of them to be wrong. That is the exact bug this
+        project spent a day removing from the Admin Centre. One shell; the
+        caller says what goes in it. */
+    var sections = opts.sections || null;
+    var label = sections ? (opts.area || "Madrasah") : "Admin Centre";
+
     out.push('<div class="ashell-top"><a href="' + esc(up(HOME.href)) +
              '" title="Back to the Admin Centre">' +
              '<img src="' + esc(up("img/masjid-logo.png")) +
              '" alt="Taiyabah Masjid" width="220" height="62">' +
-             "<strong>Admin Centre</strong></a></div>");
+             "<strong>" + esc(label) + "</strong></a></div>");
 
     out.push('<nav aria-label="Everywhere you can go">');
 
-    //  The Admin Centre itself is always first and always present. It is the
-    //  one destination that needs no role, and it is where somebody goes when
-    //  they do not know where to go.
-    out.push('<div class="ashell-group">' + row(HOME, opts.current) + "</div>");
+    //  The way out is the first row, and it says where it goes. Inside a
+    //  sub-area the Admin Centre is not "home" — it is BACK, and somebody who
+    //  has gone two levels in needs to see that before they see anything else.
+    out.push('<div class="ashell-group">' +
+             row(sections
+                   ? { key: "__back", href: HOME.href, icon: "grid",
+                       name: "← Admin Centre",
+                       what: "Out of the madrasah, back to everything else" }
+                   : HOME,
+                 opts.current) + "</div>");
 
-    visible(opts.roles).forEach(function (g) {
+    (sections || visible(opts.roles)).forEach(function (g) {
       out.push('<div class="ashell-lab">' + esc(g.label) + "</div>" +
                '<div class="ashell-group">' +
                g.areas.map(function (a) { return row(a, opts.current); }).join("") +
@@ -288,6 +360,11 @@
   function mount(opts) {
     opts = opts || {};
     if (d.querySelector(".ashell")) return;   // never twice
+
+    /*  Set BEFORE railHtml() runs, because up() is called all the way through
+        it. A page two folders down passes depth:2; everything else says
+        nothing and gets the "../" it has always had. */
+    depth = Math.max(1, parseInt(opts.depth, 10) || 1);
 
     var rail = d.createElement("aside");
     rail.className = "ashell";
@@ -328,7 +405,11 @@
     if (panel && opts.title && !d.querySelector(".ashell-head")) {
       var head = d.createElement("header");
       head.className = "ashell-head";
-      head.innerHTML = '<span class="eyebrow">Admin Centre</span>' +
+      //  The eyebrow names the PLACE, not the product. On a madrasah screen it
+      //  said "Admin Centre" over the word "Staff", which reads as the wrong
+      //  staff list — the masjid's, not the madrasah's.
+      head.innerHTML = '<span class="eyebrow">' +
+                       esc(opts.area || "Admin Centre") + "</span>" +
                        "<h1>" + esc(opts.title) + "</h1>";
       panel.insertBefore(head, panel.firstChild);
     }

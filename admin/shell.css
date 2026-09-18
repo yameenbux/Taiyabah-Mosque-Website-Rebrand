@@ -109,6 +109,30 @@
 }
 .ashell .area[aria-current="page"] svg{ opacity:1; }
 
+/*  A SECTION THAT IS NOT BUILT YET.
+
+    A <span>, so it cannot be clicked or tabbed to — see the comment in
+    shell.js. It is dimmed rather than hidden because the madrasah rail is
+    meant to show its whole shape from the first day, and a three-row rail
+    says nothing about where the work is going.
+
+    grid-template-columns is restated rather than inherited: this row has a
+    third cell for the tag, and leaving it at the two-column rule would have
+    dropped "soon" onto a second line under the name. */
+.ashell .area.soon{
+  grid-template-columns:17px 1fr auto;
+  color:rgba(243,239,227,.40);
+  cursor:default;
+}
+.ashell .area.soon svg{ opacity:.35; }
+.ashell .area.soon:hover{ background:none; border-left-color:transparent; }
+.ashell .soon-tag{
+  font-size:.66rem; letter-spacing:.11em; text-transform:uppercase;
+  font-weight:700; color:rgba(198,162,76,.62);
+  border:1px solid rgba(198,162,76,.3); border-radius:999px;
+  padding:2px 7px; white-space:nowrap;
+}
+
 .ashell-foot{
   margin-top:auto; padding:16px 18px 20px;
   border-top:1px solid rgba(243,239,227,.13);
