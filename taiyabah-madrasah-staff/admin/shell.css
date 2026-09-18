@@ -1,0 +1,325 @@
+/* ===========================================================================
+   THE ADMIN SHELL — one rail, on every staff screen.
+
+   Taiyabah Masjid · Bolton Central Islamic Society · Charity 1041569
+   15 September 2026
+
+   WHY THIS EXISTS
+   ---------------
+   The Admin Centre had a rail listing every area a person could open. The
+   nine screens you reach FROM it had nothing: no logo, no navigation, no way
+   back except the browser's own back button. So the shape of the job was
+   "go to the Admin Centre, read the rail, click through, do the thing, press
+   back, read the rail again" — and every one of those trips is a chance to
+   lose your place.
+
+   That matters more than it sounds, because the people using these screens
+   are about to change. The committee will run this day to day; Yameen is
+   meant to be a last resort. A volunteer treasurer who opens Gift Aid once a
+   month should not have to remember how they got there.
+
+   HOW IT WORKS, AND WHY IT IS DONE THIS WAY
+   -----------------------------------------
+   Each staff screen is a standalone page with its own layout, built at a
+   different time by a different hand. Restructuring twelve of them into one
+   grid would mean touching every screen's working markup — the booking
+   tables, the Gift Aid rows, the access list — for a navigation change.
+
+   So the rail does not join their layout. It is POSITION:FIXED beside it, and
+   the only thing asked of the page is that its body gets some padding on the
+   left. One class, one property, no DOM surgery. A page can be rewritten
+   tomorrow and the rail keeps working.
+
+   The rail is dark and the work area is not, which is the same relationship
+   the Admin Centre already had, so a person moving between screens sees one
+   thing that does not move rather than two designs that nearly match.
+
+   BELOW 940px there is no room for both. The rail becomes a drawer behind a
+   button in a slim top bar, which still keeps the logo in the top-left corner
+   and still puts every destination one tap away.
+
+   COLOURS come from each page's own :root — --brand-900, --gold and the rest
+   are already defined on all twelve. The fallbacks after each var() are the
+   real values, so this sheet still renders correctly if it is ever dropped
+   onto a page that has not defined them.
+   =========================================================================== */
+
+:root{
+  --ashell-w: 264px;
+  --ashell-bar: 56px;
+}
+
+/* ---------------------------------------------------------------- the rail */
+.ashell{
+  position:fixed; inset:0 auto 0 0; width:var(--ashell-w);
+  background:var(--brand-900,#3C0B2A); color:#F3EFE3;
+  display:flex; flex-direction:column;
+  overflow-y:auto; overscroll-behavior:contain;
+  z-index:900;
+  font-family:"Hanken Grotesk","Hanken fallback",system-ui,-apple-system,sans-serif;
+}
+
+/*  THE MASJID'S OWN WORDMARK, top-left, on every screen. It is a link home to
+    the Admin Centre — the one place people already know — because a logo in
+    the corner is the thing everybody tries to click when they are lost. */
+.ashell-top{
+  padding:20px 18px 16px;
+  border-bottom:1px solid rgba(243,239,227,.13);
+  margin-bottom:14px;
+}
+.ashell-top a{ display:block; text-decoration:none; color:inherit; border-radius:8px; }
+.ashell-top a:focus-visible{ outline:2px solid var(--gold-bright,#DCBB63); outline-offset:3px; }
+.ashell-top img{ display:block; height:62px; width:auto; margin:0 0 11px; opacity:.93; }
+.ashell-top strong{
+  display:block; font-family:"Fraunces","Fraunces fallback",Georgia,serif;
+  font-weight:600; font-size:1.08rem; letter-spacing:.01em; color:#F3EFE3;
+}
+
+.ashell-lab{
+  font-size:.829rem; font-weight:800; letter-spacing:.13em; text-transform:uppercase;
+  color:rgba(220,187,99,.75); padding:0 18px; margin:17px 0 7px;
+}
+.ashell-lab:first-child{ margin-top:0; }
+.ashell-group{ display:flex; flex-direction:column; }
+
+/*  ONE LINE, ONE NAME. Deliberately no counts or badges: the Admin Centre
+    already carries every queue and figure in its working column, and a rail
+    that repeats them is a rail you have to READ. This one you learn once and
+    then stop looking at, which is the entire point of a fixed rail. */
+.ashell .area{
+  display:grid; grid-template-columns:17px 1fr; gap:11px; padding:11px 18px;
+  color:rgba(243,239,227,.86); text-decoration:none; line-height:1.35;
+  border-left:3px solid transparent; align-items:center;
+}
+.ashell .area:hover, .ashell .area:focus-visible{
+  background:rgba(243,239,227,.07); color:#fff;
+  border-left-color:var(--gold,#C6A24C); outline:none;
+}
+.ashell .area svg{ width:17px; height:17px; flex-shrink:0;
+  color:var(--gold-bright,#DCBB63); opacity:.85; }
+.ashell .area .n{ display:block; font-size:.994rem; font-weight:400; color:inherit; }
+
+/*  WHERE YOU ARE. aria-current does the announcing; this makes it visible.
+    Without it the rail tells you where you can go and not where you are,
+    which is half a map. */
+.ashell .area[aria-current="page"]{
+  background:rgba(243,239,227,.10);
+  border-left-color:var(--gold-bright,#DCBB63);
+  color:#fff; font-weight:600;
+}
+.ashell .area[aria-current="page"] svg{ opacity:1; }
+
+/*  A SECTION THAT IS NOT BUILT YET.
+
+    A <span>, so it cannot be clicked or tabbed to — see the comment in
+    shell.js. It is dimmed rather than hidden because the madrasah rail is
+    meant to show its whole shape from the first day, and a three-row rail
+    says nothing about where the work is going.
+
+    grid-template-columns is restated rather than inherited: this row has a
+    third cell for the tag, and leaving it at the two-column rule would have
+    dropped "soon" onto a second line under the name. */
+.ashell .area.soon{
+  grid-template-columns:17px 1fr auto;
+  color:rgba(243,239,227,.40);
+  cursor:default;
+}
+.ashell .area.soon svg{ opacity:.35; }
+.ashell .area.soon:hover{ background:none; border-left-color:transparent; }
+.ashell .soon-tag{
+  font-size:.66rem; letter-spacing:.11em; text-transform:uppercase;
+  font-weight:700; color:rgba(198,162,76,.62);
+  border:1px solid rgba(198,162,76,.3); border-radius:999px;
+  padding:2px 7px; white-space:nowrap;
+}
+
+.ashell-foot{
+  margin-top:auto; padding:16px 18px 20px;
+  border-top:1px solid rgba(243,239,227,.13);
+  font-size:.887rem; color:rgba(243,239,227,.72); line-height:1.55;
+}
+.ashell-foot a{ color:rgba(220,187,99,.85); text-decoration:none; font-weight:600; }
+.ashell-foot a:hover{ color:var(--gold-bright,#DCBB63); text-decoration:underline; }
+.ashell-who{
+  display:block; margin-bottom:8px; color:rgba(243,239,227,.55);
+  font-size:.83rem; word-break:break-word;
+}
+
+/* ------------------------------------------------- what the page must give */
+/*  The whole cost to a page of having a rail: some padding. */
+@media (min-width:940px){
+  body.has-ashell{ padding-left:var(--ashell-w); }
+  .ashell-bar{ display:none; }
+}
+
+/* ------------------------------------------- from a sign-in card to a desk */
+/*  Every staff screen was built as a SIGN-IN page that grows a working area
+    once you are through: `.panel` centres its card both ways and `.is-wide`
+    caps it at 880px. That is exactly right for a box asking for a password
+    and wrong for a list of forty bookings — it leaves a narrow column of
+    content floating in the middle of a wide screen with empty space down
+    both sides, and it is why these screens never felt like a dashboard.
+
+    Scoped to body.has-ashell, which is only ever set AFTER sign-in. The
+    sign-in screen itself keeps its centred card, because for that one job
+    the centred card was always the right answer.
+
+    !important is used deliberately and sparingly. Each page defines .panel
+    and .is-wide in its own <style> block, which loads after this file; there
+    is no source order in which a shared sheet can win otherwise, short of
+    editing the same rule in twelve places — which is the duplication this
+    file exists to stop. */
+
+/*  THE BRAND PANEL GOES. This is the half of the job the first version of
+    this file missed, and a screenshot is what found it — the rail was drawn
+    correctly on every screen, every test passed, and /venue/ still looked
+    like a small card marooned in the top-left of a mostly empty page.
+
+    The reason: `.shell` is a two-column grid, `1.03fr 1fr`. Adding
+    padding-left for the rail narrows the grid; it does not stop it splitting
+    what is left between a decorative plum panel and the actual work. On a
+    1440px screen that panel was FORTY-TWO PER CENT of the width, carrying a
+    logo, a page title and a sentence of explanation — all three of which the
+    rail two inches to its left already provides. It is sign-in furniture:
+    right for the one job of asking a stranger who they are, and pure loss
+    once somebody is through and looking at forty bookings.
+
+    So after sign-in the grid collapses and the panel is removed outright.
+    Nothing is lost with it: the logo, the masjid's name, the way back to the
+    Admin Centre and the way back to the website are all in the rail, and the
+    page's own title is drawn by shell.js at the top of the desk instead. */
+body.has-ashell .shell{
+  display:block !important;
+  min-height:auto !important;
+}
+body.has-ashell .brand{ display:none !important; }
+
+body.has-ashell .panel{
+  display:block !important;
+  padding:0 clamp(14px,2.4vw,32px) 64px !important;
+}
+body.has-ashell .panel > .card{
+  margin-left:0 !important;
+  margin-right:0 !important;
+  width:100% !important;
+  max-width:1180px;
+}
+body.has-ashell .card.is-wide{
+  width:100% !important;
+  max-width:1180px;
+}
+
+/*  IDENTITY IN ONE PLACE. Every staff screen opens its working area with an
+    avatar, a name and an email — which was right when that card was the only
+    thing on the page, and is now the same fact twice, because the rail says
+    it in its footer on every screen and does not scroll away. Two copies is
+    not merely untidy: it takes the first inch of the desk, which is where the
+    thing somebody came to do should be.
+
+    The sign-out button goes with it. It was the last row of the card and
+    stretched the full width of a 1180px desk, which reads as a primary
+    action; the rail's footer is where "leave" belongs, next to who you are. */
+body.has-ashell .who,
+body.has-ashell .roles,
+body.has-ashell #app-signout{ display:none !important; }
+
+.ashell-who i{
+  display:block; font-style:normal; margin-top:2px;
+  color:rgba(243,239,227,.42); font-size:.78rem; word-break:break-word;
+}
+/*  display:block, not inline-block. "Back to the website" immediately above
+    is an inline <a>, so an inline-block button sits straight after it on the
+    same line and the two read as one word: "Back to the websiteSign out". */
+.ashell-out{
+  display:block; margin-top:10px; padding:5px 0;
+  background:none; border:0; cursor:pointer;
+  font:inherit; font-size:.83rem; font-weight:700;
+  color:rgba(243,239,227,.62); text-decoration:underline;
+  text-underline-offset:3px;
+}
+.ashell-out:hover{ color:#F3EFE3; }
+
+/*  The page's own name, at the top of the desk. The brand panel used to say
+    it; something has to, or a rail with one row highlighted is the only clue
+    which screen you are on — and that is the row you are least likely to be
+    looking at, because you have just clicked it and moved your eyes right. */
+.ashell-head{
+  max-width:1180px;
+  padding:26px 0 18px;
+  border-bottom:1px solid var(--line,#E4DECF);
+  margin-bottom:22px;
+}
+.ashell-head h1{
+  font-family:"Fraunces","Fraunces fallback",Georgia,serif;
+  font-size:clamp(1.5rem,2.6vw,2rem);
+  line-height:1.12; font-weight:600; letter-spacing:-.015em;
+  color:var(--ink,#261B22); margin:0;
+}
+.ashell-head .eyebrow{
+  display:block; margin-bottom:5px;
+  font-size:.78rem; font-weight:800; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--gold-ink,#7A5D14);
+}
+@media (max-width:939px){
+  .ashell-head{ padding-top:18px; }
+}
+
+/* ------------------------------------------------------ phones and tablets */
+/*  Under 940px the rail is a drawer. It starts closed, off-screen and
+    inert — `visibility:hidden` as well as the transform, so a closed drawer
+    cannot be reached by Tab, which is the classic way an invisible menu
+    swallows the keyboard. */
+@media (max-width:939px){
+  body.has-ashell{ padding-top:var(--ashell-bar); }
+
+  .ashell{
+    width:min(300px,86vw);
+    transform:translateX(-100%); visibility:hidden;
+    transition:transform .22s ease, visibility 0s linear .22s;
+    box-shadow:0 0 40px rgba(0,0,0,.45);
+  }
+  body.ashell-open .ashell{
+    transform:none; visibility:visible;
+    transition:transform .22s ease, visibility 0s;
+  }
+
+  .ashell-bar{
+    position:fixed; top:0; left:0; right:0; height:var(--ashell-bar);
+    display:flex; align-items:center; gap:12px; padding:0 12px;
+    background:var(--brand-900,#3C0B2A); color:#F3EFE3; z-index:901;
+  }
+  .ashell-bar img{ height:30px; width:auto; opacity:.93; }
+  .ashell-bar .t{
+    font-family:"Fraunces","Fraunces fallback",Georgia,serif;
+    font-size:1rem; font-weight:600;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .ashell-burger{
+    appearance:none; background:transparent; border:1px solid rgba(243,239,227,.3);
+    color:#F3EFE3; border-radius:9px; cursor:pointer;
+    /*  44px, not the 24px WCAG floor: this is the control every single
+        journey on a phone begins with. */
+    width:44px; height:44px; flex:0 0 44px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ashell-burger:focus-visible{ outline:2px solid var(--gold-bright,#DCBB63); outline-offset:2px; }
+  .ashell-burger svg{ width:20px; height:20px; }
+
+  .ashell-scrim{
+    position:fixed; inset:0; background:rgba(20,6,16,.5);
+    z-index:899; opacity:0; pointer-events:none; transition:opacity .22s ease;
+  }
+  body.ashell-open .ashell-scrim{ opacity:1; pointer-events:auto; }
+}
+
+/*  Somebody who has asked for less movement gets none. */
+@media (prefers-reduced-motion:reduce){
+  .ashell, .ashell-scrim{ transition:none; }
+}
+
+/*  A rail is navigation. On paper it is nothing but a list of links that
+    cannot be clicked, printed on top of whatever the person actually wanted. */
+@media print{
+  .ashell, .ashell-bar, .ashell-scrim{ display:none !important; }
+  body.has-ashell{ padding-left:0; padding-top:0; }
+}
