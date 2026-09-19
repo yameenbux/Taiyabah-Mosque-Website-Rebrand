@@ -1,4 +1,4 @@
-"""/portal/staff/ — the madrasah's staff list, its editor, and its two sides.
+"""/portal/staff/ — the madrasah's staff list, one person's record, and the editor.
 
 18 September 2026. Written after this screen shipped with three separate
 faults that nobody's tests could see, because nothing tested this screen: it
@@ -15,29 +15,52 @@ WHAT THIS FILE GUARDS:
      never checks `.hidden`. A test that asserted the property would have
      passed on the broken page.
 
-  2  AMENDING SOMEBODY ASKS FIRST, AND NOTHING IS WRITTEN UNTIL IT IS ANSWERED.
+  2  EVERY ROW SAYS WHAT IS ON FILE, AND SAYS IT THE SAME WAY WHETHER OR NOT
+     ANYTHING IS THERE. Five marks, always five, always in the same order. If
+     an absent thing were left out, a person with nothing on file and a person
+     with everything would differ only in how wide the row was, and the eye
+     would have nothing to count. The marks also carry words, because roughly
+     one man in twelve cannot separate the green from the grey.
+
+  3  A ROW OPENS THAT PERSON'S RECORD, AND THE LIST GOES AWAY.
+     The list half is five separate elements and every one of them has an
+     author `display` rule. showStaff() first shipped naming three ids that do
+     not exist in the page at all — el() returned null and the loop skipped
+     them in silence, so the record would have drawn UNDERNEATH the whole
+     staff list. Hence: this checks each piece of the list half is gone, and
+     checks computed `display` as well as visibility.
+
+  4  THE LIST HOLDS FLAGS AND THE RECORD HOLDS VALUES.
+     Forty rows do not carry forty addresses and forty dates of birth. The
+     proof is that the address is nowhere on the page until one record is
+     opened — which is the whole reason the marks are marks.
+
+  5  AMENDING SOMEBODY ASKS FIRST, AND NOTHING IS WRITTEN UNTIL IT IS ANSWERED.
      Forty rows that look alike; opening the wrong one and saving over it is a
      mistake nothing afterwards reveals. The question names the person, and
      the count of writes is what proves it is a question and not a notice.
 
-  3  ADDING SOMEBODY NEW DOES NOT ASK. It overwrites nothing, and a confirm on
+  6  A SAVE MADE FROM INSIDE A RECORD REACHES THE RECORD.
+     Saving used to re-read the list — which at that moment is hidden — and
+     leave the record above the editor showing the number that had just been
+     changed, beside the word "Saved". That reads as a failed save.
+
+  7  REMOVING SOMEBODY ASKS, ARCHIVES, AND DELETES NOTHING.
+     The question has to say the word archive and say the record can come
+     back, or it is answered as though it were a delete.
+
+  8  ADDING SOMEBODY NEW DOES NOT ASK. It overwrites nothing, and a confirm on
      every save is how a confirm stops being read.
 
-  4  A CHANGE MADE WHILE THE QUESTION IS UP WITHDRAWS IT. Otherwise the strip
-     names a save that is no longer the one that would happen.
+  9  THE TWO SIDES LOOK DIFFERENT, MEASURED RATHER THAN ASSUMED.
 
-  5  THE TWO SIDES LOOK DIFFERENT, MEASURED RATHER THAN ASSUMED.
-
-  6  NO RECORD NAMES THE SYSTEM THE MADRASAH USED BEFORE, and what that system
+ 10  NO RECORD NAMES THE SYSTEM THE MADRASAH USED BEFORE, and what that system
      said about DBS still reaches the screen — those are two requirements, not
      one, and deleting the notes would have satisfied only the first.
 
-  7  THE STAFF FUNCTIONS ARE SCOPED TO A MASJID. 053 rebuilt them from 052's
-     text, which predates the tenancy columns, and dropped the masjid_id out
-     of the insert. Every save on this screen failed with a not-null violation
-     — including amendments, because the constraint is checked before ON
-     CONFLICT looks for a conflict. This is a static check on the SQL, and it
-     is the cheapest of the seven.
+ 11  THE STAFF FUNCTIONS ARE SCOPED TO A MASJID, THE LIST RETURNS FLAGS AND NOT
+     VALUES, AND REMOVING ARCHIVES. Static checks on the SQL, and the cheapest
+     in the file.
 
 Nothing here reaches Supabase.
 
@@ -98,12 +121,20 @@ _report.reached_end = False
 #  Three people, one per side plus one with none, because the "side not set"
 #  group only draws when somebody is in it. Two carry a prior_dbs word and no
 #  note, which is the shape every imported record has after 054.
+#
+#  THE FLAGS ARE WHAT madrasah_staff_list() RETURNS AFTER 065, AND THERE IS NO
+#  address, date_of_birth OR work_times ANYWHERE IN THIS FIXTURE. That is not
+#  an oversight — it is the fixture agreeing with the function. If the screen
+#  ever starts reading a value off a list row, it will read undefined here and
+#  the check in section 4 will say so.
 STAFF = [
     {"id": "s1", "honorific": "Apa", "first_name": "Fatima", "last_name": "Adam",
      "side": "sisters", "employment": "employed", "work_days": ["mon", "tue"],
      "dbs_issued": None, "dbs_update_service": False, "dbs_last_checked": None,
      "dbs_not_required": False, "dbs": "none", "prior_dbs": "valid",
      "email": None, "phone": None, "note": None,
+     "has_address": True, "has_phone": True, "has_email": False,
+     "has_dob": True, "has_hours": True, "days_a_week": 2,
      "classes": [{"id": "c1", "name": "Girls OOLA"}],
      "display_name": "Apa Fatima Adam"},
     {"id": "s2", "honorific": "Moulana", "first_name": "Bilal", "last_name": "Bux",
@@ -111,14 +142,43 @@ STAFF = [
      "dbs_issued": None, "dbs_update_service": False, "dbs_last_checked": None,
      "dbs_not_required": False, "dbs": "none", "prior_dbs": "none",
      "email": None, "phone": None, "note": None,
+     "has_address": False, "has_phone": False, "has_email": False,
+     "has_dob": False, "has_hours": False, "days_a_week": 0,
      "classes": [], "display_name": "Moulana Bilal Bux"},
     {"id": "s3", "honorific": None, "first_name": "Aisha", "last_name": "Carr",
      "side": None, "employment": "employed", "work_days": None,
      "dbs_issued": None, "dbs_update_service": False, "dbs_last_checked": None,
      "dbs_not_required": False, "dbs": "none", "prior_dbs": "expired",
      "email": None, "phone": None, "note": None,
+     "has_address": False, "has_phone": True, "has_email": False,
+     "has_dob": False, "has_hours": False, "days_a_week": 0,
      "classes": [], "display_name": "Aisha Carr"},
 ]
+
+#  What madrasah_staff_one() gives back, which is the only place a value ever
+#  comes from. ADDRESS_S1 is deliberately a string that could not appear on the
+#  page by accident.
+ADDRESS_S1 = "14 Sutcliffe Street, Bolton"
+ONE = {
+    "s1": {"id": "s1", "name": "Apa Fatima Adam", "side": "sisters",
+           "employment": "employed", "started_on": "2024-02-08", "left_on": None,
+           "address": ADDRESS_S1, "date_of_birth": "1980-09-10",
+           "phone": "07700 900000", "phone_alt": None, "email": None,
+           "work_times": {"mon": "17:00-19:00", "tue": "17:00-19:00"},
+           "dbs": "none", "dbs_issued": None, "dbs_update_service": False,
+           "dbs_last_checked": None, "dbs_not_required": False,
+           "prior_dbs": "valid", "note": None,
+           "classes": [{"id": "c1", "name": "Girls OOLA"}],
+           "main_teacher_of": [{"id": "c1", "name": "Girls OOLA"}]},
+    "s2": {"id": "s2", "name": "Moulana Bilal Bux", "side": "brothers",
+           "employment": "employed", "started_on": None, "left_on": None,
+           "address": None, "date_of_birth": None, "phone": None,
+           "phone_alt": None, "email": None, "work_times": {},
+           "dbs": "none", "dbs_issued": None, "dbs_update_service": False,
+           "dbs_last_checked": None, "dbs_not_required": False,
+           "prior_dbs": "none", "note": None,
+           "classes": [], "main_teacher_of": []},
+}
 
 CLASSES = [{"id": "c1", "name": "Girls OOLA", "section": "girls",
             "is_active": True, "sort_order": 1}]
@@ -130,11 +190,18 @@ def stub(roles):
     window.__saves is the whole point of half this file: "it did not write"
     cannot be checked by looking at the screen, because a screen that has not
     written yet and a screen that has written and not said so look identical.
+    __archives does the same job for the remove button, and __reads records
+    every time one person's record is fetched — which is how section 6 proves
+    the record was RE-READ after a save rather than left as it was.
+
+    A save on an existing person edits this stub's copy, so a record that is
+    re-read comes back changed. A stub that always answered the same thing
+    would let a screen that never re-reads pass section 6.
     """
     return """
 (function(){
-  var ROLES = %s, STAFF = %s, CLASSES = %s;
-  window.__saves = [];
+  var ROLES = %s, STAFF = %s, ONE = %s, CLASSES = %s;
+  window.__saves = []; window.__archives = []; window.__reads = [];
   var client = {
     auth: {
       getSession: function(){ return Promise.resolve({data:{session:{
@@ -158,9 +225,23 @@ def stub(roles):
     rpc: function(name, args){
       if (name === 'madrasah_staff_list')   return Promise.resolve({data:STAFF, error:null});
       if (name === 'madrasah_classes_list') return Promise.resolve({data:CLASSES, error:null});
+      if (name === 'madrasah_staff_one') {
+        var id = args && args.p_id;
+        window.__reads.push(id);
+        return Promise.resolve({data: ONE[id] || null, error:null});
+      }
+      if (name === 'archive_madrasah_staff') {
+        window.__archives.push(args);
+        return Promise.resolve({data:{ok:true}, error:null});
+      }
       if (name === 'save_madrasah_staff') {
-        window.__saves.push(args && args.p);
-        return Promise.resolve({data:{id:(args&&args.p&&args.p.id)||'new'}, error:null});
+        var p = (args && args.p) || {};
+        window.__saves.push(p);
+        if (p.id && ONE[p.id]) {          // the database kept it; so does the stub
+          if ('phone' in p) ONE[p.id].phone = p.phone;
+          if ('email' in p) ONE[p.id].email = p.email;
+        }
+        return Promise.resolve({data:{id: p.id || 'new'}, error:null});
       }
       return Promise.resolve({data:{}, error:null});
     }
@@ -168,7 +249,7 @@ def stub(roles):
   Object.defineProperty(window, 'supabase',
     {value:{createClient:function(){return client;}}, writable:false, configurable:false});
 })();
-""" % (json.dumps(roles), json.dumps(STAFF), json.dumps(CLASSES))
+""" % (json.dumps(roles), json.dumps(STAFF), json.dumps(ONE), json.dumps(CLASSES))
 
 
 def open_as(b, roles, w=1400, h=1400):
@@ -225,17 +306,17 @@ with sync_playwright() as p:
 
     check(not shown(pg, "#st-confirm"),
           "the save confirmation is on screen before anything has been saved")
+    check(not shown(pg, "#st-record"),
+          "somebody's record is open before any row has been pressed")
 
-    # =====================================================================
-    #  2. ADD SOMEBODY OPENS IT, BACK TO THE LIST CLOSES IT
-    # =====================================================================
+    # ---- "Add somebody" opens it, "Back to the list" closes it -----------
     pg.click("#st-add")
     pg.wait_for_timeout(250)
     check(shown(pg, "#st-editor"), "“Add somebody” did not open the editor")
     check("add somebody" in text(pg, "#st-form-head").lower(),
           "the editor opened on something other than a new person: %r"
           % text(pg, "#st-form-head"))
-    check(text(pg, "#st-first") == "" and pg.input_value("#st-first") == "",
+    check(pg.input_value("#st-first") == "",
           "a new person's form opened with a name already in it")
 
     pg.click("#st-cancel")
@@ -243,13 +324,150 @@ with sync_playwright() as p:
     check(not shown(pg, "#st-editor"), "“Back to the list” did not close the editor")
 
     # =====================================================================
-    #  3. A ROW OPENS THAT PERSON, AND AMENDING THEM ASKS FIRST
+    #  2. EVERY ROW SAYS WHAT IS ON FILE, IN THE SAME FIVE PLACES
+    #
+    #  Asked for: "you can showcase little icons on the teachers each specific
+    #  section to show what the teacher has available of them."
+    # =====================================================================
+    marks = pg.evaluate("""() => {
+      const out = {};
+      for (const row of document.querySelectorAll('#st-panel button.st-row')) {
+        const id = row.getAttribute('data-id');
+        out[id] = [...row.querySelectorAll('.st-mark')].map(m => ({
+          cls: m.className,
+          letter: m.querySelector('[aria-hidden="true"]')?.textContent || '',
+          words: m.querySelector('.sr-only')?.textContent || '',
+          title: m.getAttribute('title') || ''
+        }));
+      }
+      return out;
+    }""")
+
+    check(set(marks) == {"s1", "s2", "s3"},
+          "not every row drew the on-file marks: %r" % sorted(marks))
+    #  THE COUNT IS THE CHECK. Five on the person with nothing exactly as on
+    #  the person with something — drop the absent ones and this fails.
+    for who, ms in marks.items():
+        check(len(ms) == 5,
+              "row %s drew %d marks, not five. A missing thing has to be DRAWN, "
+              "or a thin row and a full row look like the same row with less in "
+              "it and there is nothing to count against." % (who, len(ms)))
+    if all(len(ms) == 5 for ms in marks.values()):
+        #  The order is fixed, so the eye learns the positions.
+        for who, ms in marks.items():
+            check([m["letter"] for m in ms] == ["A", "T", "E", "B", "H"],
+                  "row %s put the marks in a different order: %r"
+                  % (who, [m["letter"] for m in ms]))
+        s1 = marks["s1"]
+        check([("yes" in m["cls"]) for m in s1] == [True, True, False, True, True],
+              "Fatima's marks do not match her flags: %r"
+              % [m["cls"] for m in s1])
+        check(all("no" in m["cls"] for m in marks["s2"]),
+              "Bilal has nothing on file and some of his marks say he has")
+        #  NOT A COLOUR-ONLY SIGNAL. One man in twelve cannot separate these
+        #  two, so each mark says what it means in words a screen reader and a
+        #  hover both reach.
+        check(all("not on file" in m["words"].lower() for m in marks["s2"]),
+              "an absent thing is shown only by its colour: %r"
+              % [m["words"] for m in marks["s2"]])
+        check(any("2 days a week" in m["title"] for m in s1),
+              "the hours mark does not say how many days, which is the one number "
+              "worth reading off it: %r" % [m["title"] for m in s1])
+
+    #  And the two states are told apart by more than hue — the absent one is
+    #  dashed, so it survives a black and white printout.
+    styles = pg.evaluate("""() => {
+      const g = s => { const n = document.querySelector(s); if (!n) return null;
+        const c = getComputedStyle(n);
+        return {bg: c.backgroundColor, style: c.borderTopStyle}; };
+      return {yes: g('#st-list-sisters .st-mark.yes'),
+              no:  g('#st-list-brothers .st-mark.no')};
+    }""")
+    check(styles["yes"] and styles["no"], "the marks did not render on both sides")
+    if styles["yes"] and styles["no"]:
+        check(styles["yes"]["bg"] != styles["no"]["bg"],
+              "on file and not on file are the same colour: %r" % styles)
+        check(styles["yes"]["style"] != styles["no"]["style"],
+              "on file and not on file differ only by colour — the border style is "
+              "the same, so the distinction disappears in black and white: %r"
+              % styles)
+
+    # =====================================================================
+    #  3. A ROW OPENS THAT PERSON'S RECORD, AND THE LIST HALF GOES AWAY
+    #
+    #  The check that catches showStaff() naming ids that are not in the page.
+    #  Every one of these five has an author `display` rule, so both questions
+    #  are asked: is it visible, and is its computed display none.
+    # =====================================================================
+    LIST_HALF = ["#dbs", "#st-controls", "#st-cols", "#st-list-acts", "#st-unset"]
+    for sel in LIST_HALF:
+        check(shown(pg, sel), "%s is not on screen with the list showing" % sel)
+
+    pg.click("#st-list-sisters button.st-row")
+    pg.wait_for_timeout(400)
+
+    check(shown(pg, "#st-record"), "pressing a row did not open that person's record")
+    check(not shown(pg, "#st-editor"),
+          "pressing a row dropped straight into the editor. Most of the time "
+          "somebody is LOOKING a person up, and a form full of live inputs "
+          "invites a change nobody meant to make.")
+    for sel in LIST_HALF:
+        check(not shown(pg, sel),
+              "%s IS STILL ON SCREEN WITH A RECORD OPEN. The record is drawing "
+              "underneath the whole staff list — showStaff() is naming an id that "
+              "is not in the page, and el() returns null and the loop skips it "
+              "without a word." % sel)
+    displays = pg.evaluate("""(sels) => Object.fromEntries(sels.map(s => {
+        const n = document.querySelector(s);
+        return [s, n ? getComputedStyle(n).display : 'MISSING'];
+    }))""", LIST_HALF)
+    for sel, d in displays.items():
+        check(d == "none",
+              "%s computes display:%s while it is `hidden` — either the element "
+              "does not exist (MISSING) or an author `display` rule is outranking "
+              "[hidden]. Both have happened on this page." % (sel, d))
+
+    check(pg.evaluate("window.__reads").count("s1") == 1,
+          "opening a record did not fetch that one person, or fetched them twice: %r"
+          % pg.evaluate("window.__reads"))
+    check("Fatima" in text(pg, "#st-rec-name"),
+          "the record opened on somebody else: %r" % text(pg, "#st-rec-name"))
+
+    # =====================================================================
+    #  4. THE LIST HOLDS FLAGS; THE RECORD HOLDS VALUES
+    # =====================================================================
+    body = pg.inner_text("body")
+    check(ADDRESS_S1 in body,
+          "the record does not show the address, which is the whole point of "
+          "opening one")
+    check("17:00-19:00" in body.replace("–", "-"),
+          "the record does not show the hours the marks say are on file")
+    check("Girls OOLA" in body, "the record does not say which class they take")
+
+    pg.click("#st-rec-back")
+    pg.wait_for_timeout(300)
+    check(shown(pg, "#st-list-sisters"), "“All staff” did not put the list back")
+    check(not shown(pg, "#st-record"), "“All staff” left the record on screen")
+    for sel in LIST_HALF:
+        check(shown(pg, sel), "%s did not come back with the list" % sel)
+
+    back = pg.inner_text("body")
+    check(ADDRESS_S1 not in back,
+          "AN ADDRESS IS ON THE LIST SCREEN. Forty rows are not supposed to carry "
+          "forty addresses and forty dates of birth — the marks exist precisely so "
+          "that the values stay in madrasah_staff_one(). Either the list function "
+          "has started returning values, or the record was left in the page.")
+
+    # =====================================================================
+    #  5. AMENDING FROM THE RECORD ASKS FIRST AND WRITES NOTHING UNTIL ANSWERED
     # =====================================================================
     pg.click("#st-list-sisters button.st-row")
-    pg.wait_for_timeout(250)
-    check(shown(pg, "#st-editor"), "pressing a row did not open the editor")
+    pg.wait_for_timeout(400)
+    pg.click("#st-rec-edit")
+    pg.wait_for_timeout(300)
+    check(shown(pg, "#st-editor"), "“Amend this record” did not open the editor")
     check(pg.input_value("#st-first") == "Fatima",
-          "the row opened somebody else's record: first name is %r"
+          "the editor opened on somebody else: first name is %r"
           % pg.input_value("#st-first"))
 
     before = pg.evaluate("window.__saves.length")
@@ -272,7 +490,6 @@ with sync_playwright() as p:
     #  Playwright timeout on a missing locator — which says nothing about what
     #  is wrong. Proved by removing the confirm and reading the output.
     if asked:
-        # ---- "No" keeps everything and still writes nothing ---------------
         pg.click("#st-confirm-no")
         pg.wait_for_timeout(250)
         check(not shown(pg, "#st-confirm"), "“No” left the question on screen")
@@ -282,9 +499,8 @@ with sync_playwright() as p:
         check(pg.evaluate("window.__saves.length") == before,
               "saying No still wrote the record")
 
-        # =====================================================================
-        #  4. A CHANGE WITHDRAWS THE QUESTION
-        # =====================================================================
+        #  A CHANGE WITHDRAWS THE QUESTION, or the strip names a save that is no
+        #  longer the one that would happen.
         pg.click("#st-save")
         pg.wait_for_timeout(250)
         check(shown(pg, "#st-confirm"), "the question did not come back up")
@@ -295,13 +511,14 @@ with sync_playwright() as p:
               "stayed — it now describes a save that is not the one that would happen")
 
     # =====================================================================
-    #  5. YES WRITES ONCE, CLOSES, AND PUTS THE LIST BACK
+    #  6. YES WRITES ONCE — AND THE RECORD BEHIND THE EDITOR IS RE-READ
     # =====================================================================
+    reads_before = len(pg.evaluate("window.__reads"))
     pg.click("#st-save")
     pg.wait_for_timeout(250)
     if shown(pg, "#st-confirm"):
         pg.click("#st-confirm-yes")
-    pg.wait_for_timeout(600)
+    pg.wait_for_timeout(700)
 
     saves = pg.evaluate("window.__saves")
     check(len(saves) == before + 1,
@@ -314,13 +531,89 @@ with sync_playwright() as p:
         check(wrote.get("phone") == "01204 111111",
               "the write carried the value from before the last edit: %r"
               % wrote.get("phone"))
-    check(not shown(pg, "#st-editor"),
-          "the editor stayed open after saving — it should close and show the list")
+    check(not shown(pg, "#st-editor"), "the editor stayed open after saving")
     check(not shown(pg, "#st-confirm"), "the question stayed up after saving")
-    check(shown(pg, "#st-list-sisters"), "the staff list is not back on screen after saving")
+
+    check(shown(pg, "#st-record"),
+          "saving from inside a record closed the record. It should close the "
+          "editor and leave the person on screen, because that is where they were.")
+    check(len(pg.evaluate("window.__reads")) == reads_before + 1,
+          "THE RECORD WAS NOT RE-READ AFTER THE SAVE. What is on screen is still "
+          "what the record held before the change, sitting under the word “Saved” "
+          "— which is how somebody concludes it did not work and types it again.")
+    check("01204 111111" in pg.inner_text("#st-rec-grid"),
+          "the record still shows the old number after saving a new one: %r"
+          % text(pg, "#st-rec-grid")[:160])
+    #  And the list half stayed away throughout — re-reading the list must not
+    #  bring the "side not set" group back over the top of the record.
+    for sel in LIST_HALF:
+        check(not shown(pg, sel),
+              "%s came back on screen when the list was re-read after a save, "
+              "over the top of the record being read" % sel)
 
     # =====================================================================
-    #  6. ADDING SOMEBODY NEW DOES NOT ASK
+    #  7. REMOVING SOMEBODY ASKS, ARCHIVES, AND DELETES NOTHING
+    #
+    #  Asked for: "when removing any record from the madrasah database it should
+    #  get archived, where someone is able to go into the archive and restore if
+    #  needed, you keep that record for same amount as a pupil."
+    # =====================================================================
+    check(shown(pg, "#st-rec-remove"),
+          "there is no way to remove somebody from their own record")
+    check(not shown(pg, "#st-rec-confirm"),
+          "the remove question is up before anybody pressed remove")
+
+    pg.click("#st-rec-remove")
+    pg.wait_for_timeout(300)
+    asked_rm = shown(pg, "#st-rec-confirm")
+    check(asked_rm, "“Remove this person” did not ask anything")
+    rq = text(pg, "#st-rec-confirm-q").lower()
+    check("fatima" in rq, "the remove question does not name the person: %r" % rq)
+    check("archive" in rq,
+          "the remove question does not say the record goes to the archive, so it "
+          "is answered as though it were a delete: %r" % rq)
+    check("restore" in rq or "put them back" in rq or "can be restored" in rq,
+          "the remove question does not say the record can come back: %r" % rq)
+    check("three years" in rq,
+          "the remove question does not say how long the record is kept, which is "
+          "the same three years a pupil's record is kept: %r" % rq)
+    check(pg.evaluate("window.__archives.length") == 0,
+          "THE RECORD WAS ARCHIVED WHILE THE QUESTION WAS STILL ON SCREEN.")
+
+    if asked_rm:
+        pg.click("#st-rec-no")
+        pg.wait_for_timeout(250)
+        check(not shown(pg, "#st-rec-confirm"), "“No, go back” left the question up")
+        check(shown(pg, "#st-record"), "“No, go back” closed the record as well")
+        check(pg.evaluate("window.__archives.length") == 0, "saying No still archived")
+
+        pg.click("#st-rec-remove")
+        pg.wait_for_timeout(250)
+        pg.fill("#st-rec-reason", "Left in July")
+        pg.click("#st-rec-yes")
+        pg.wait_for_timeout(700)
+
+        arc = pg.evaluate("window.__archives")
+        check(len(arc) == 1, "expected exactly one archive call, got %d" % len(arc))
+        if arc:
+            check(arc[0].get("p_id") == "s1",
+                  "the archive call named the wrong person: %r" % arc[0])
+            check(arc[0].get("p_reason") == "Left in July",
+                  "the reason typed in was not passed on: %r" % arc[0])
+        #  NOT A DELETE. The screen must never call one.
+        check("delete_madrasah_staff" not in open("portal/staff/app.js",
+                                                  encoding="utf-8").read(),
+              "the staff screen still has a path that deletes a person outright")
+
+        check(not shown(pg, "#st-record"),
+              "the record stayed open after the person was archived")
+        check(shown(pg, "#st-list-sisters"), "the list did not come back after archiving")
+        ok = text(pg, "#st-ok").lower()
+        check("archive" in ok,
+              "nothing on screen says where the record went: %r" % ok)
+
+    # =====================================================================
+    #  8. ADDING SOMEBODY NEW DOES NOT ASK
     # =====================================================================
     n_before = pg.evaluate("window.__saves.length")
     pg.click("#st-add")
@@ -337,7 +630,7 @@ with sync_playwright() as p:
           "adding a new person did not write")
 
     # =====================================================================
-    #  7. THE TWO SIDES LOOK DIFFERENT — MEASURED
+    #  9. THE TWO SIDES LOOK DIFFERENT — MEASURED
     # =====================================================================
     bg = pg.evaluate("""() => {
       const g = s => { const n = document.querySelector(s);
@@ -375,7 +668,7 @@ with sync_playwright() as p:
           "state is shown: %r" % row_edge)
 
     # =====================================================================
-    #  8. NO RECORD NAMES THE OLD SYSTEM, AND WHAT IT SAID STILL ARRIVES
+    #  10. NO RECORD NAMES THE OLD SYSTEM, AND WHAT IT SAID STILL ARRIVES
     # =====================================================================
     page_text = pg.inner_text("body")
     check("ibeams" not in page_text.lower(),
@@ -399,7 +692,7 @@ with sync_playwright() as p:
     pg.close()
 
     # =====================================================================
-    #  9. THE STAFF FUNCTIONS ARE SCOPED TO A MASJID  (static, on the SQL)
+    #  11. THE SQL  (static)
     #
     #  This is the check that would have stopped the outage. Every table here
     #  carries `masjid_id not null` with no default; 053 rebuilt these two
@@ -413,18 +706,25 @@ with sync_playwright() as p:
     #  lying about in a folder reports on the folder, not on the code.
     sql = ""
     for name in sorted(os.listdir("db")):
-        if re.match(r"^05[0-9]_.*\.sql$", name):
+        if re.match(r"^0[5-9][0-9]_.*\.sql$", name):
             sql += open(os.path.join("db", name), encoding="utf-8").read()
 
-    for fn in ("madrasah_staff_list", "save_madrasah_staff"):
+    for fn in ("madrasah_staff_list", "save_madrasah_staff",
+               "madrasah_staff_one", "archive_madrasah_staff"):
         m = re.search(r"create or replace function public\.%s\s*\(" % fn, sql)
         check(m, "no migration in db/ contains the text of %s(). 053 wrote "
                  "“see the migration history for the full text” instead of the "
                  "function, which is exactly why a column went missing without "
                  "anybody being able to read the diff." % fn)
 
-    save_fn = sql[sql.rfind("create or replace function public.save_madrasah_staff"):]
-    save_fn = save_fn[:save_fn.find("$fn$;") + 5] if "$fn$;" in save_fn else save_fn
+    def body_of(fn):
+        i = sql.rfind("create or replace function public." + fn)
+        if i < 0:
+            return ""
+        s = sql[i:]
+        return s[:s.find("$fn$;") + 5] if "$fn$;" in s else s
+
+    save_fn = body_of("save_madrasah_staff")
     check("current_masjid()" in save_fn,
           "save_madrasah_staff() never asks which masjid it is writing for. The "
           "insert will fail on masjid_id, for amendments as well as for new "
@@ -436,11 +736,53 @@ with sync_playwright() as p:
           "the ON CONFLICT update in save_madrasah_staff() is not restricted to "
           "this masjid, so a known id could amend another masjid's record")
 
-    list_fn = sql[sql.rfind("create or replace function public.madrasah_staff_list"):]
-    list_fn = list_fn[:list_fn.find("$fn$;") + 5] if "$fn$;" in list_fn else list_fn
+    list_fn = body_of("madrasah_staff_list")
     check("current_masjid()" in list_fn and "s.masjid_id = v_masjid" in list_fn,
           "madrasah_staff_list() is not scoped to a masjid — it returns every "
           "masjid's staff to any administrator")
+
+    #  THE LIST RETURNS FLAGS. The address and the date of birth are the two
+    #  fields that make this list a list of personal data rather than a staff
+    #  rota, and forty rows do not need either to draw a mark.
+    for flag in ("has_address", "has_phone", "has_email", "has_dob",
+                 "has_hours", "days_a_week"):
+        check(flag in list_fn,
+              "madrasah_staff_list() does not return %s, so the marks on the rows "
+              "have nothing to read" % flag)
+    #  AND IT DOES NOT RETURN THE VALUES THEMSELVES.
+    #
+    #  A plain `"s.address" not in list_fn` cannot be used and was tried: the
+    #  flag is BUILT from the column, so `coalesce(btrim(s.address), '') <> ''`
+    #  contains that text and the check would pass on any function, broken or
+    #  not — a check that cannot fail. What distinguishes a returned column from
+    #  a column being read is that the returned one stands alone on its line in
+    #  the select list, so that is what is looked for. Proved by adding
+    #  `s.address,` to a copy of the function and watching this fail.
+    sel = list_fn[:list_fn.find("from public.madrasah_staff s")]
+    bare = [ln.strip() for ln in sel.splitlines()
+            if not ln.strip().startswith("--")
+            and re.match(r"^s\.(address|date_of_birth|work_times)\s*(,|$)", ln.strip())]
+    check(not bare,
+          "madrasah_staff_list() returns %r as a column. Every row of forty would "
+          "carry it to the browser to draw a 24-pixel square — the flags exist so "
+          "that an address leaves the database only when one person is opened."
+          % bare)
+
+    one_fn = body_of("madrasah_staff_one")
+    check("current_masjid()" in one_fn and "masjid_id = v_masjid" in one_fn,
+          "madrasah_staff_one() is not scoped to a masjid — a known id would read "
+          "another masjid's staff record, and this is the call that returns the "
+          "address and the date of birth")
+
+    arc_fn = body_of("archive_madrasah_staff")
+    check("insert into public.madrasah_archive" in arc_fn,
+          "archive_madrasah_staff() does not write to the archive, so 'remove' is "
+          "a delete wearing a different word")
+    check(re.search(r"delete from public\.madrasah_staff", arc_fn),
+          "archive_madrasah_staff() never takes the person off the staff list")
+    check("to_jsonb" in arc_fn,
+          "archive_madrasah_staff() does not keep the record itself, only a "
+          "reference to it — there would be nothing to restore")
 
     b.close()
 

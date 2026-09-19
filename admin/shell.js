@@ -520,10 +520,68 @@
       //  The eyebrow names the PLACE, not the product. On a madrasah screen it
       //  said "Admin Centre" over the word "Staff", which reads as the wrong
       //  staff list — the masjid's, not the madrasah's.
-      head.innerHTML = '<span class="eyebrow">' +
+      head.innerHTML = '<div class="ashell-head-t">' +
+                       '<span class="eyebrow">' +
                        esc(opts.area || "Admin Centre") + "</span>" +
-                       "<h1>" + esc(opts.title) + "</h1>";
+                       "<h1>" + esc(opts.title) + "</h1></div>" +
+                       '<div class="ashell-head-acts" id="ashell-head-acts"></div>';
       panel.insertBefore(head, panel.firstChild);
+    }
+
+    /*  THE TWO WAYS OUT, IN THE HEADING RATHER THAN IN A BANNER OF THEIR OWN.
+
+        Three screens - /portal/, /access/ and /newbuild/ - carried a dark
+        purple strip above the working area holding "← Admin centre" and "Sign
+        out". It was reported as looking messy, and it was: on /portal/ it made
+        a THIRD copy of both controls. The rail already has "← Admin Centre" at
+        the top and Sign out at the bottom, so the strip repeated both, in a
+        colour that pulled the eye to the two things somebody is least likely
+        to want.
+
+        They belong beside the page's name, which is where a person looks when
+        they want to leave a page. So the heading grew a right-hand side and
+        the strip goes.
+
+        NEITHER OF THESE REIMPLEMENTS ANYTHING. Sign out CLICKS the page's own
+        #app-signout, exactly as the rail's row does, so whatever that page
+        does on the way out still happens. Back is an ordinary link. A second
+        implementation of signing out is a second one to keep in step with
+        fourteen first ones.
+
+        Drawn only when there is something to draw: a page with no sign-out
+        button of its own gets no sign-out here, rather than a control that
+        silently does nothing.                                               */
+    var headActs = d.getElementById("ashell-head-acts");
+    if (headActs) {
+      /*  THE WAY BACK IS ONLY OFFERED TO SOMEBODY IT WILL LET IN.
+
+          Caught by _test/portal_test.py the moment this was written, which is
+          the whole reason that assertion exists: /portal/ is the one screen
+          three different kinds of person land on, and the Admin Centre refuses
+          two of them. The strip this replaced was hidden for a teacher and a
+          parent; drawing it unconditionally handed both of them a link to a
+          door that shuts in their face — the small, specific unkindness of a
+          system that offers you something and then says no.
+
+          FAILS CLOSED. No roles passed means no link, not a link shown just in
+          case: this runs on fourteen screens and the cost of the two mistakes
+          is not symmetrical. A missing link is a person clicking the rail
+          instead; a wrongly-shown one is a refusal. */
+      var who = opts.roles || [];
+      if (who.indexOf("admin") !== -1) {
+        var backHref = opts.back || ("../".repeat(opts.depth || 1) + "portals/");
+        headActs.innerHTML =
+          '<a class="ashell-ha" href="' + esc(backHref) + '">&larr; Admin centre</a>';
+      }
+      var headOut = d.getElementById("app-signout");
+      if (headOut) {
+        var b = d.createElement("button");
+        b.type = "button";
+        b.className = "ashell-ha ashell-ha-out";
+        b.textContent = "Sign out";
+        b.addEventListener("click", function () { headOut.click(); });
+        headActs.appendChild(b);
+      }
     }
 
     /*  SIGN OUT, ONCE. The page's own button is hidden by shell.css because

@@ -273,11 +273,29 @@ with sync_playwright() as p:
           "the page did not go full width for the staff list")
     check(not pg.is_visible(".brand"),
           "the brand panel is still taking half the page next to a list of people")
+    #  THE ONLY WAY OUT OF THIS PAGE, AND IT WAS BRIEFLY REMOVED.
+    #
+    #  Hiding .brand takes the "Back to the admin centre" link with it. If
+    #  nothing replaces it, the only way out of this page is closing the tab.
+    #
+    #  On 19 September the dark strip was hidden from admin/shell.css, to make
+    #  room for the same two controls in the page heading on /portal/. The rule
+    #  was global and this page does not always mount the rail, so for about
+    #  ten minutes /access/ had no way back and no way to sign out. These three
+    #  checks are what found it.
+    #
+    #  The middle one used to read:
+    #
+    #      pg.query_selector('#app-top a[href="../portals/"]') is not None
+    #
+    #  and it PASSED throughout, because query_selector finds hidden elements
+    #  perfectly well. It would have gone on passing with the link invisible on
+    #  the page for ever. All three now ask is_visible(), which is the only
+    #  witness that cannot be fooled by a display rule.
     check(pg.is_visible("#app-top"),
           "the page went full width but the bar carrying the way back did not appear")
-    #  Hiding .brand takes the 'Back to the admin centre' link with it. If the
-    #  bar did not replace it, the only way out would be closing the tab.
-    check(pg.query_selector('#app-top a[href="../portals/"]') is not None,
+    back = pg.query_selector('#app-top a[href="../portals/"]')
+    check(back is not None and back.is_visible(),
           "THERE IS NO WAY BACK TO THE ADMIN CENTRE")
     check(pg.is_visible("#app-signout-top"), "there is no way to sign out")
 

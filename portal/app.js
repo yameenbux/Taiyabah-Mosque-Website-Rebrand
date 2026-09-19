@@ -151,11 +151,30 @@
         So `mine` marks the tiles this database can answer for. Those get
         their number from madrasah_overview() at load; the other two keep
         their caveat, because it is still true of them. */
+    /*  THREE OF THESE FOUR ARE NOW THIS DATABASE'S OWN, AND IT WAS WRONG FOR
+        A DAY THAT THEY WERE NOT.
+
+        On 18 September the pupils were imported and this object was not
+        changed, so the page went on showing **539 Students** with the words
+        "In the madrasah's current system, not imported" underneath, beneath a
+        panel reading "it holds no pupil records at all" — while 543 children
+        sat in madrasah_pupils. All three statements were false, and the
+        figure was wrong by four on top of that.
+
+        That is the exact failure the note below warned about when the STAFF
+        were imported a week earlier, repeated one table later. A page an
+        administrator lands on is the page whose numbers reach the committee.
+
+        So the three tiles this database can answer for now take their number
+        from madrasah_overview(), and the fourth — Contacts — keeps its caveat
+        because it is still true of it: there is no families table yet. The
+        day that is imported, its `n` goes and `mine` goes on, and nothing
+        else here changes.                                                   */
     var CURRENT = {
       as_at: "13 September 2026",
       where: "the madrasah\u2019s current system",
       counts: [
-        { n: 539, k: "Students",
+        { n: null, key: "pupils", mine: true, k: "Children",
           s: "Every child on the roll. The most sensitive thing the masjid holds." },
         { n: null, key: "staff", mine: true, k: "Teachers",
           s: "Who teaches, which classes they take, the days they are in and whether their DBS is in date." },
@@ -194,27 +213,73 @@
        DPIA must be finished before the first real pupil record is entered, and
        that the first pupil record IS the next milestone. A list like this kept
        in a document gets read once. */
+    /*  THIS WAS A LIST OF THINGS TO DO BEFORE THE FIRST PUPIL RECORD, AND
+        THE FIRST PUPIL RECORD WAS CREATED ON 18 SEPTEMBER.
+
+        543 of them. So a list headed "Before the first pupil record", with
+        every item un-ticked, was describing a gate that had already been
+        walked through - and sitting directly under a panel that said pupils
+        had not been imported. Three separate statements of the same untruth
+        on one screen.
+
+        A compliance list that is wrong is worse than no compliance list. It
+        gets read once, found to be stale, and thereafter ignored - including
+        on the day one of its items genuinely is outstanding.
+
+        So each item now carries its STATE and how that state is known.
+        `done` is only set where there is something to point at: the masjid
+        confirming it, or the database itself. Two items are left open because
+        nobody has told me they are finished, and guessing on those two is
+        precisely the failure this rewrite is fixing.                        */
     var BEFORE = [
-      { t: "Finish the DPIA",
-        d: "A madrasah roll reveals religious belief. Article 9 data needs a " +
-           "data protection impact assessment before it is processed, not after." },
-      { t: "Register with the ICO",
-        d: "Tier 1, about £52 a year. Processing this data without it is an " +
-           "offence, and it is the cheapest item on this list by a long way." },
-      { t: "Write down the lawful basis and the Article 9 condition",
-        d: "Two separate things. Consent is rarely the right answer for a " +
-           "school roll and is the hardest to withdraw cleanly." },
+      /*  NOT `done`, AND IT WAS MARKED done FOR ABOUT AN HOUR THIS MORNING.
+          The masjid confirmed a DPIA was complete before the import, and that
+          was taken at face value and written on this screen. A written
+          assessment to the standard Article 35(7) requires was then produced
+          on 19 September and is unsigned. Until a trustee signs it, "done" is
+          a claim this system cannot support, and this is the one screen where
+          that claim would be read as evidence. */
+      { t: "Data protection impact assessment", done: false,
+        d: "A full written assessment exists, dated 19 September 2026, and is " +
+           "with the trustees for signature. It is not complete until it is " +
+           "signed. It records six actions that are required for compliance, " +
+           "including the privacy notice below." },
+      { t: "Register with the ICO", done: true,
+        d: "Confirmed by the masjid. Tier 1, about \u00a352 a year. Processing " +
+           "this data without it is an offence." },
       { t: "Confirm the data can actually come out of the current system",
-        d: "Nobody has yet confirmed the full dataset exports as CSV. If it " +
-           "cannot, 539 records means re-keying by hand — and that is the " +
-           "single biggest risk to this project, not the software." },
+        done: true,
+        d: "Answered by doing it. 543 pupil records, 45 classes and 40 staff " +
+           "came across on 18 September, so the export works and nobody has to " +
+           "re-key anything \u2014 which was the single biggest risk to this " +
+           "project, and it is now behind us." },
       { t: "Make two-step a database rule for pupil tables, not a page rule",
-        d: "Today it is enforced in the browser. A determined person could " +
-           "call the API without it. Pupil tables must require aal2 in their " +
-           "own policies before they hold anything." },
+        done: true,
+        d: "Done, and stronger than it was asked for. madrasah_pupils and " +
+           "madrasah_pupil_classes have row-level security FORCED with no " +
+           "policies at all, so the tables cannot be read directly by anyone \u2014 " +
+           "every route in goes through a function that calls verified_admin(), " +
+           "which is is_aal2() and is_admin(). A page rule could be bypassed by " +
+           "calling the API; there is no API call that reaches these tables." },
+      /*  ADDED 19 SEPTEMBER, from the DPIA. Article 13 requires the people
+          whose data is held to be told; 543 children's records were imported
+          on the 18th and no notice has been issued. It is the first thing the
+          Commissioner would ask about, so it goes above the rest. */
+      { t: "Issue a privacy notice to parents and staff", done: false,
+        d: "Article 13 requires the masjid to tell people what is held about " +
+           "them, why, for how long, and how to complain. 543 children\u2019s " +
+           "records are held and no notice has been issued. This is the most " +
+           "significant outstanding gap and it is not technical work." },
+      { t: "Write down the lawful basis and the Article 9 condition",
+        done: false,
+        d: "Decided and written down in the assessment: legitimate interests " +
+           "under Article 6(1)(f), and Article 9(2)(d) for the special " +
+           "category condition. Not ticked until the assessment carrying " +
+           "those decisions is signed." },
       { t: "Agree a breach procedure with a 72-hour route to the ICO",
-        d: "It needs to exist before it is needed, and somebody has to be " +
-           "named in it." }
+        done: false,
+        d: "Still outstanding. It needs to exist before it is needed, and " +
+           "somebody has to be named in it." }
     ];
 
     /* Named so nothing is quietly forgotten at changeover. NOT a plan — some
@@ -325,50 +390,205 @@
         });
     }
 
-    /*  WHAT NEEDS DOING, which is the whole point of a page called Today.
+    /*  WHAT NEEDS DOING — THE WHOLE POINT OF A PAGE CALLED THAT.
 
-        Only ever DBS at the moment, because staff are the only thing this
-        database holds — but the shape is the one the rest will use: a
-        sentence naming the problem, the people it is about, and a way
-        straight to the screen that fixes it. A count on its own tells
-        somebody something is wrong and nothing about who to ring. */
+        REWRITTEN 19 SEPTEMBER, because the old one was reported as messy and
+        was. It drew one job as a paragraph, a second paragraph explaining it,
+        nineteen name chips, and a button — a wall of text for one fact, with
+        no room for the second job even though there was one.
+
+        A JOB IS A NUMBER, A SENTENCE, AND SOMEWHERE TO GO. Nothing else.
+        One tile each, same shape every time, so the eye can count them. The
+        number is large because it is the thing somebody scans for; the
+        sentence says what it means in words, because "10" on its own is not
+        a job; the link goes to the screen that fixes it, because a dashboard
+        that tells you about a problem and leaves you to find the screen is
+        a worse version of a note on the fridge.
+
+        WHAT IS *NOT* HERE IS THE DESIGN.
+
+          - No names. The DBS tile used to list nineteen teachers' names on
+            the landing page. That is the page on the monitor when somebody
+            walks past the office, in every screenshot, on every shared
+            screen in a meeting. The names are one press away on the staff
+            screen, where somebody chose to go and where they belong.
+
+          - No tile for a job that does not exist. A count of nought is not
+            drawn at all rather than drawn as a reassuring green nought: nine
+            tiles of which seven say 0 is a screen people stop reading, and
+            then they stop seeing the two that matter. When everything is
+            clear the page says so in one line.
+
+          - Nothing about fees or attendance. Neither is built. A tile
+            reading "0 unpaid" when nothing collects fees is not neutral,
+            it is false.
+
+        SEVERITY IS THE ORDER, and it is decided here rather than by where a
+        field happens to sit in the JSON. Safeguarding first, always.        */
+    var JOBS = [
+      {
+        key: "dbs",
+        rank: 1,
+        //  Not a plain count: the three states mean different things and the
+        //  worst of them decides the colour.
+        n: function (m) { return (m.dbs_needs_attention || []).length; },
+        of: function (m) { return m.staff; },
+        tone: function (m) {
+          var p = m.dbs_needs_attention || [];
+          return p.some(function (x) { return x.state === "overdue"; }) ? "bad"
+               : p.some(function (x) { return x.state === "none"; })    ? "bad"
+               : "warn";
+        },
+        title: function (n, of) {
+          return n + " of " + of + " staff need their DBS check looked at";
+        },
+        why: function (m) {
+          var p = m.dbs_needs_attention || [];
+          var none = p.filter(function (x) { return x.state === "none"; }).length;
+          var over = p.filter(function (x) { return x.state === "overdue"; }).length;
+          var soon = p.filter(function (x) { return x.state === "due_soon"; }).length;
+          var bits = [];
+          if (none) bits.push(none + " with nothing on file at all");
+          if (over) bits.push(over + (over === 1 ? " overdue" : " overdue"));
+          if (soon) bits.push(soon + " falling due within 90 days");
+          return bits.join(", ") + ". A certificate has no expiry printed on " +
+                 "it, so each date has to be keyed in from the certificate " +
+                 "itself — nothing here has been invented.";
+        },
+        go: "staff/#dbs", goWord: "Open the staff list"
+      },
+      {
+        key: "main_teacher",
+        rank: 2,
+        n: function (m) { return m.classes_no_main_teacher; },
+        of: function (m) { return m.classes; },
+        tone: function () { return "warn"; },
+        title: function (n, of) {
+          return n + " of " + of + " classes have no main teacher";
+        },
+        why: function () {
+          return "The import worked out the main teacher for thirty-five " +
+                 "classes from who was listed against them. These are the ones " +
+                 "it could not, so nobody is recorded as answerable for the " +
+                 "register.";
+        },
+        go: "classes/", goWord: "Open the classes"
+      },
+      {
+        key: "no_class",
+        rank: 3,
+        n: function (m) { return m.pupils_without_class; },
+        of: function (m) { return m.pupils; },
+        tone: function () { return "bad"; },
+        title: function (n, of) {
+          return n + (n === 1 ? " child is" : " children are") +
+                 " on the roll and in no class";
+        },
+        why: function () {
+          return "A child in no class is on no register, so nobody notices " +
+                 "when they stop coming. That is the safeguarding question a " +
+                 "register exists to answer.";
+        },
+        go: "classes/", goWord: "Open the classes"
+      },
+      {
+        key: "side",
+        rank: 4,
+        n: function (m) { return m.staff_without_side; },
+        of: function (m) { return m.staff; },
+        tone: function () { return "warn"; },
+        title: function (n) {
+          return n + (n === 1 ? " member" : " members") + " of staff have no side recorded";
+        },
+        why: function () {
+          return "They appear in neither the sisters’ nor the brothers’ " +
+                 "list. The staff screen keeps them in a group of their own so " +
+                 "they cannot go missing, but somebody has to choose.";
+        },
+        go: "staff/", goWord: "Open the staff list"
+      },
+      {
+        key: "days",
+        rank: 5,
+        n: function (m) { return m.staff_without_days; },
+        of: function (m) { return m.staff; },
+        tone: function () { return "mild"; },
+        title: function (n, of) {
+          return n + " of " + of + " staff have no days recorded";
+        },
+        why: function () {
+          return "Which evenings they are in. Not urgent, and it is what a " +
+                 "cover rota will need the day somebody builds one.";
+        },
+        go: "staff/", goWord: "Open the staff list"
+      },
+      {
+        key: "admissions",
+        rank: 0,
+        n: function (m) { return m.admissions_waiting; },
+        of: function () { return null; },
+        tone: function () { return "bad"; },
+        title: function (n) {
+          return n + (n === 1 ? " admission form is" : " admission forms are") +
+                 " waiting to be read";
+        },
+        why: function () {
+          return "A family filled in the form on the website. Nothing on this " +
+                 "system has been opened it yet, and they are waiting on an answer.";
+        },
+        go: null, goWord: null
+      },
+      {
+        key: "purge",
+        rank: 6,
+        n: function (m) { return m.archive_going_soon; },
+        of: function (m) { return m.archive_total; },
+        tone: function () { return "warn"; },
+        title: function (n) {
+          return n + (n === 1 ? " archived record is" : " archived records are") +
+                 " about to be deleted for good";
+        },
+        why: function () {
+          return "Inside the last thirty days of the three years a removed " +
+                 "record is kept. After that it is destroyed and cannot be " +
+                 "brought back. This is the only clock in the madrasah that " +
+                 "cannot be stopped, so it is worth a look before it runs out.";
+        },
+        go: "archive/", goWord: "Open the archive"
+      }
+    ];
+
+    function jobHtml(j, m) {
+      var n  = Number(j.n(m)) || 0;
+      var of = j.of(m);
+      return '<div class="md-job md-job-' + esc(j.tone(m)) + '" data-job="' + esc(j.key) + '">' +
+        '<div class="md-job-n">' + esc(n) + "</div>" +
+        '<div class="md-job-b">' +
+          '<span class="md-job-t">' + esc(j.title(n, of)) + "</span>" +
+          '<span class="md-job-w">' + esc(j.why(m)) + "</span>" +
+        "</div>" +
+        (j.go
+          ? '<a class="md-job-go" href="' + esc(j.go) + '">' + esc(j.goWord) + "</a>"
+          : '<span class="md-job-soon">No screen for this yet</span>') +
+      "</div>";
+    }
+
     function drawNeedsDoing() {
       var box = el("md-doing");
       if (!box || !MINE) return;
 
-      var people = MINE.dbs_needs_attention || [];
-      if (!people.length) {
-        box.innerHTML = '<p class="md-why">Every member of staff has a check ' +
-          'in date. Nothing is waiting.</p>';
+      //  A job with nothing in it is not drawn. See the note above JOBS.
+      var live = JOBS.filter(function (j) { return (Number(j.n(MINE)) || 0) > 0; })
+                     .sort(function (a, b) { return a.rank - b.rank; });
+
+      if (!live.length) {
+        box.innerHTML = '<div class="md-clear">' +
+          "<b>Nothing is waiting.</b> Every check is in date, every class has a " +
+          "main teacher, and every child on the roll is in a class. " +
+          "</div>";
         return;
       }
-
-      var none = people.filter(function (p) { return p.state === "none"; }).length;
-      var over = people.filter(function (p) { return p.state === "overdue"; }).length;
-      var soon = people.filter(function (p) { return p.state === "due_soon"; }).length;
-
-      var bits = [];
-      if (none) bits.push(none + (none === 1 ? " has" : " have") + " nothing on file at all");
-      if (over) bits.push(over + (over === 1 ? " is" : " are") + " overdue");
-      if (soon) bits.push(soon + " falls due within 90 days");
-
-      box.innerHTML =
-        '<p class="md-doing-line"><b>' + esc(people.length) +
-          " of " + esc(MINE.staff) + " staff need a DBS check looked at.</b> " +
-          esc(bits.join(", ")) + ".</p>" +
-        '<p class="md-why">These came across with no certificate date, because ' +
-          'the old system shows a badge and not a date. Nothing has been ' +
-          'invented \u2014 each date has to be keyed in from the certificate.</p>' +
-        '<div class="md-doing-who">' +
-          people.slice(0, 12).map(function (p) {
-            return '<span class="md-chip md-chip-' + esc(p.state) + '">' +
-                   esc(p.name) + "</span>";
-          }).join("") +
-          (people.length > 12
-            ? '<span class="md-chip md-chip-more">and ' +
-              esc(people.length - 12) + " more</span>" : "") +
-        "</div>" +
-        '<a class="md-doing-go" href="staff/">Open the staff list</a>';
+      box.innerHTML = live.map(function (j) { return jobHtml(j, MINE); }).join("");
     }
 
     function draw() {
@@ -390,22 +610,35 @@
         }).join("");
       }
 
-      var areas = el("md-areas");
-      if (areas) {
-        areas.innerHTML = AREAS.map(function (a) {
-          return '<div class="md-area">' +
-            '<span class="t">' + esc(a.t) + "</span>" +
-            '<span class="d">' + esc(a.d) + "</span>" +
-            '<span class="w">Not open yet</span>' +
-          "</div>";
-        }).join("");
-      }
+      //  The "What this will hold" cards were drawn here. Removed with
+      //  their markup on 19 September - the rail already lists every unbuilt
+      //  screen with a "soon" tag, so these repeated it in four times the
+      //  space on the one page that is about today. AREAS is kept as the
+      //  brief for those screens; nothing draws it.
 
       var before = el("md-before-list");
       if (before) {
+        /*  DONE AND NOT-DONE LOOK DIFFERENT, and the done ones are not hidden.
+            A finished item removed from the list takes the evidence with it,
+            and the next person to ask "did we ever do the DPIA?" has nothing
+            to read. They stay, ticked, with how it is known. */
         before.innerHTML = BEFORE.map(function (b) {
-          return "<li><b>" + esc(b.t) + "</b><span>" + esc(b.d) + "</span></li>";
+          return '<li class="' + (b.done ? "md-done" : "md-todo") + '">' +
+            '<span class="md-tick" aria-hidden="true">' +
+              (b.done ? "\u2713" : "\u25cb") + "</span>" +
+            "<span><b>" + esc(b.t) + "</b>" +
+            '<span class="md-state">' +
+              (b.done ? "Done" : "Still outstanding") + "</span>" +
+            "<span>" + esc(b.d) + "</span></span></li>";
         }).join("");
+        var n = BEFORE.filter(function (b) { return !b.done; }).length;
+        var h = el("md-before-h");
+        if (h) {
+          h.textContent = n
+            ? (n === 1 ? "Data protection \u2014 one thing still outstanding"
+                       : "Data protection \u2014 " + n + " things still outstanding")
+            : "Data protection \u2014 all confirmed";
+        }
       }
 
       var rest = el("md-rest");
@@ -420,13 +653,29 @@
         //  Rewritten once the real figures are in hand. The markup's own
         //  wording is the pre-import one and stays in the HTML as the honest
         //  default for anybody who loads this page with the call failing.
-        lead.innerHTML =
-          "<strong>Staff and classes are in this system now.</strong> " +
-          "The teachers and classes below were brought across on 18 September and " +
-          "are this database\u2019s own. <strong>Pupils and their families are not</strong> " +
-          "— those two figures are still what the masjid\u2019s current system holds, " +
-          "and no pupil record may be created here until the paperwork further down " +
-          "is finished.";
+        /*  THIS SENTENCE HAS BEEN WRONG TWICE, THE SAME WAY, A WEEK APART:
+            once when the staff were imported and it still said nothing was,
+            and again on the 18th when the pupils were. Both times it was
+            written as a fixed sentence describing a state of affairs; both
+            times the state of affairs moved and the sentence did not.
+
+            So it is no longer a sentence about what has been imported. It is
+            BUILT FROM THE FIGURES THE DATABASE JUST RETURNED, which means it
+            cannot disagree with the tiles underneath it - the two are the
+            same numbers read twice. The only thing still named by hand is
+            Contacts, because its absence is the fact.                       */
+        var held = [];
+        if (MINE.pupils)  held.push(MINE.pupils + " children");
+        if (MINE.staff)   held.push(MINE.staff + " teachers");
+        if (MINE.classes) held.push(MINE.classes + " classes");
+        lead.innerHTML = held.length
+          ? "<strong>This system holds " + esc(held.join(", ")) + ".</strong> " +
+            "Everything below is read from it. <strong>Families and contacts are " +
+            "the exception</strong> \u2014 that tile is still what the masjid\u2019s " +
+            "current system holds, because there is nowhere here to put them yet."
+          : "<strong>Nothing has been read back yet.</strong> The figures below are " +
+            "not this system\u2019s. Reload the page; if it says this again, the " +
+            "database is not answering.";
       }
       if (lead) {
         var when = document.createElement("div");

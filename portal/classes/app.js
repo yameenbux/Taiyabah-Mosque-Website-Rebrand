@@ -107,6 +107,9 @@
   var classes = (function () {
 
     var ROWS = [];
+    var STAFF = [];           // names only, for the main-teacher picker
+    var EDIT_ROLL = [];       // who is in the class while the editor is open
+    var findTimer = null;
     var mayAmend = false;
     var open = null;          // the class whose page is showing
     var roll = null;          // its pupils, once fetched
@@ -119,6 +122,19 @@
       { k: "boys",  name: "Boys" },
       { k: "mixed", name: "Mixed" }
     ];
+
+    /*  A LIST, OR AN EMPTY ONE — AND `|| []` IS NOT THAT CHECK.
+
+        This was `STAFF = r2.data || []`, which looks like a guard and is not:
+        `{}` is truthy, so an answer of the wrong SHAPE sails through and the
+        next `.map()` throws. It happened here — the staff-names call returned
+        an object, the picker threw inside the click handler, and the whole
+        "Amend this class" editor silently failed to open. Nothing on screen
+        said why, because the exception was in the listener and the page
+        carried on looking perfectly well.
+
+        Falsiness is not the failure mode worth guarding. Wrong type is.     */
+    function list(v) { return Array.isArray(v) ? v : []; }
 
     function esc(v) {
       return String(v == null ? "" : v)
@@ -136,7 +152,7 @@
     }
 
     function teachersOf(c) {
-      return (c.teachers || []).map(function (t) { return trim(t.name); })
+      return list(c.teachers).map(function (t) { return trim(t.name); })
                .filter(Boolean);
     }
 
@@ -146,8 +162,21 @@
         if (res.error) throw new Error(res.error.message);
         var d = res.data || {};
         mayAmend = !!d.may_amend;
-        ROWS = d.classes || [];
+        ROWS = list(d.classes);
         drawList();
+        /*  The staff names, for the main-teacher picker, and only for an
+            administrator — it is the only account that can amend a class.
+            Its own function rather than madrasah_staff_list(), which carries
+            DBS positions and telephone numbers: choosing a teacher needs a
+            name, and a narrower reason gets a narrower function.
+
+            Deliberately not awaited. A failure here costs the picker, not the
+            page, and the classes are what somebody came for. */
+        if (mayAmend && !STAFF.length) {
+          sb.rpc("madrasah_staff_names").then(function (r2) {
+            if (!r2.error) STAFF = list(r2.data);
+          }).catch(function () { /* the picker degrades to "Not chosen" */ });
+        }
       });
     }
 
@@ -164,14 +193,21 @@
     }
 
     function cardHtml(c) {
-      var t = teachersOf(c);
       var n = c.pupils || 0;
+      var main = trim(c.main_teacher);
       return '<button type="button" class="cl-card' +
                (c.is_active === false ? " off" : "") + '" data-id="' + esc(c.id) + '">' +
-        '<span class="cl-nm">' + esc(c.name) + "</span>" +
-        (t.length
-          ? '<span class="cl-who">' + esc(t.join(" · ")) + "</span>"
-          : '<span class="cl-who none">No teacher recorded</span>') +
+        '<span class="cl-top">' +
+          '<span class="cl-nm">' + esc(c.name) + "</span>" +
+          /*  ONE NAME. The card printed every member of staff assigned to the
+              class, which on Girls OOLA is six Apas — and the masjid was right
+              that it is wrong: a card answers "whose class is this", and six
+              names answer nothing. Everybody who teaches it is still on the
+              class's own page. See migration 060. */
+          (main
+            ? '<span class="cl-who">' + esc(main) + "</span>"
+            : '<span class="cl-who none">Main teacher not chosen</span>') +
+        "</span>" +
         '<span class="cl-count' + (n === 0 ? " empty" : "") + '"><b>' + n + "</b> " +
           (n === 1 ? "child" : "children") + "</span>" +
         (c.is_active === false ? '<span class="cl-tag">no longer running</span>' : "") +
@@ -185,18 +221,34 @@
       var shown = visible();
       var html = "";
 
-      SIDES.forEach(function (s) {
-        var mine = shown.filter(function (c) { return trim(c.section) === s.k; });
-        if (!mine.length) return;
+      /*  GIRLS AND BOYS BESIDE EACH OTHER, mixed spanning underneath.
+
+          Stacked, the boys' classes began below the fold of the girls' and
+          half the madrasah was a scroll away from the other half. The two
+          sides are peers and the layout should say so — the same arrangement
+          the Staff screen uses, for the same reason.
+
+          `span` is set on the group rather than the side, so a fourth kind of
+          section — or the "side not recognised" group below — lands full
+          width without a second rule. */
+      function secHtml(s, mine, span) {
         var kids = mine.reduce(function (a, c) { return a + (c.pupils || 0); }, 0);
-        html += '<section class="cl-sec ' + s.k + '">' +
+        return '<section class="cl-sec ' + s.k + (span ? " cl-span" : "") + '">' +
           '<h3 class="cl-sec-h">' + esc(s.name) +
             ' <span class="cl-sec-n">' + mine.length +
             (mine.length === 1 ? " class" : " classes") + "</span>" +
             ' <span class="cl-sec-n">' + kids + " children</span></h3>" +
           '<div class="cl-grid">' + mine.map(cardHtml).join("") + "</div>" +
         "</section>";
+      }
+
+      var sides = "";
+      SIDES.forEach(function (s) {
+        var mine = shown.filter(function (c) { return trim(c.section) === s.k; });
+        if (!mine.length) return;
+        sides += secHtml(s, mine, s.k === "mixed");
       });
+      if (sides) html += '<div class="cl-sides">' + sides + "</div>";
 
       /*  ANYTHING WITH A SIDE THIS SCREEN DOES NOT KNOW ABOUT STILL APPEARS.
           The database allows girls, boys and mixed today; if a fourth is ever
@@ -206,10 +258,10 @@
       var known = SIDES.map(function (s) { return s.k; });
       var odd = shown.filter(function (c) { return known.indexOf(trim(c.section)) === -1; });
       if (odd.length) {
-        html += '<section class="cl-sec mixed">' +
+        html += '<div class="cl-sides"><section class="cl-sec mixed cl-span">' +
           '<h3 class="cl-sec-h">Side not recognised ' +
           '<span class="cl-sec-n">' + odd.length + "</span></h3>" +
-          '<div class="cl-grid">' + odd.map(cardHtml).join("") + "</div></section>";
+          '<div class="cl-grid">' + odd.map(cardHtml).join("") + "</div></section></div>";
       }
 
       if (!html) {
@@ -253,26 +305,50 @@
       roll = null;
       shutEditor();
       note("cl-error", ""); note("cl-ok", "");
+      refreshFacts();
+      el("cl-d-acts").hidden = !mayAmend;
+      el("cl-d-acts-read").hidden = mayAmend;
+      el("cl-roll").hidden = true;
+      show("one");
+      window.scrollTo({ top: 0 });
+    }
 
+    /*  The headline facts, on their own, so that adding or removing a child
+        can put the new count on screen without closing and reopening the
+        class — which would shut the editor they are standing in. */
+    function refreshFacts() {
+      var c = open;
+      if (!c) return;
       el("cl-d-name").textContent = c.name;
 
       var t = teachersOf(c);
       var n = c.pupils || 0;
+      var main = trim(c.main_teacher);
+
+      /*  THIS LINE PRINTED ITS OWN MARKUP AT THE MASJID.
+
+          It was esc(t.join("</b>, <b>")) — the tags were inside the string
+          being escaped, so the page showed
+
+              Taught by Apa Somayya I Omarji</b>, <b>Apa Aqsa Patel
+
+          Escaping is not a step you do to a finished string; it is what you do
+          to each VALUE as it goes in. Every name is escaped on its own here
+          and the markup is added afterwards, which is the only ordering that
+          is ever right.                                                      */
+      var others = t.filter(function (x) { return x !== main; });
       el("cl-d-facts").innerHTML =
         '<span class="cl-fact"><b>' + n + "</b> " + (n === 1 ? "child" : "children") + "</span>" +
         '<span class="cl-fact">' +
-          (t.length ? "Taught by <b>" + esc(t.join("</b>, <b>")) + "</b>"
-                    : "<b>No teacher recorded</b>") + "</span>" +
+          (main ? "Taught by <b>" + esc(main) + "</b>"
+                : "<b>Main teacher not chosen</b>") + "</span>" +
+        (others.length
+          ? '<span class="cl-fact">Also teaching: ' +
+            others.map(function (x) { return "<b>" + esc(x) + "</b>"; }).join(", ") + "</span>"
+          : "") +
         '<span class="cl-fact">' + esc(sideName(c.section)) + " side</span>" +
         (trim(c.year_label) ? '<span class="cl-fact">' + esc(c.year_label) + "</span>" : "") +
         (c.is_active === false ? '<span class="cl-fact"><b>No longer running</b></span>' : "");
-
-      el("cl-d-acts").hidden = !mayAmend;
-      el("cl-d-acts-read").hidden = mayAmend;
-      el("cl-roll").hidden = true;
-
-      show("one");
-      window.scrollTo({ top: 0 });
     }
 
     function sideName(s) {
@@ -299,7 +375,7 @@
 
       sb.rpc("madrasah_pupils_in_class", { p_class: open.id }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
-        roll = res.data || [];
+        roll = list(res.data);
         el("cl-roll-h").textContent = "Who is in it";
         el("cl-roll-why").textContent = roll.length
           ? roll.length + (roll.length === 1 ? " child" : " children") +
@@ -348,17 +424,114 @@
       want = null;
     }
 
+    function fillTeacherPicker(chosen) {
+      var sel = el("cl-main");
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Not chosen</option>' +
+        STAFF.map(function (p) {
+          return '<option value="' + esc(p.id) + '"' +
+                 (String(p.id) === String(chosen) ? " selected" : "") + ">" +
+                 esc(p.name) + "</option>";
+        }).join("");
+      //  A main teacher who has since left the staff list would otherwise
+      //  vanish from the picker and silently clear itself on the next save.
+      if (chosen && !STAFF.some(function (p) { return String(p.id) === String(chosen); })) {
+        sel.insertAdjacentHTML("beforeend",
+          '<option value="' + esc(chosen) + '" selected>' +
+          esc(trim(open && open.main_teacher) || "Somebody no longer on the staff list") +
+          "</option>");
+      }
+    }
+
     function openEditor() {
       if (!open || !mayAmend) return;
       el("cl-name").value    = open.name || "";
       el("cl-section").value = trim(open.section) || "girls";
       el("cl-year").value    = open.year_label || "";
       el("cl-active").checked = open.is_active !== false;
+      fillTeacherPicker(open.main_teacher_id);
+
+      el("cl-add-find").value = "";
+      el("cl-add-hits").innerHTML = "";
+      drawEditRoll();
+
       note("cl-complaints", "");
       hideConfirm();
       el("cl-editor").hidden = false;
       el("cl-name").focus();
       el("cl-editor").scrollIntoView({ block: "nearest" });
+    }
+
+    // ---- who is in the class, while the editor is open ----------------------
+    function drawEditRoll() {
+      var host = el("cl-roster-list");
+      if (!host || !open) return;
+      host.textContent = "Reading the register\u2026";
+      sb.rpc("madrasah_pupils_in_class", { p_class: open.id }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        EDIT_ROLL = list(res.data);
+        host.innerHTML = EDIT_ROLL.length
+          ? EDIT_ROLL.map(function (p) {
+              return '<span class="cl-chip"><span>' + esc(p.name) + "</span>" +
+                '<button type="button" class="cl-x" data-off="' + esc(p.id) +
+                '" title="Take ' + esc(p.name) + ' out of this class"' +
+                ' aria-label="Take ' + esc(p.name) + ' out of this class">\u00d7</button></span>';
+            }).join("")
+          : '<span class="cl-hit-none">Nobody is in this class yet.</span>';
+      }).catch(function (e) {
+        host.textContent = "The register could not be read \u2014 " +
+                           ((e && e.message) || String(e));
+      });
+    }
+
+    /*  THE SEARCH WAITS FOR THE TYPING TO STOP.
+
+        Not for the network's sake — this is a masjid office and the table has
+        543 rows. It is so that a half-typed name is not sent, matched loosely
+        and shown as a list of other people's children while somebody is still
+        reaching for the next letter. Two characters is the floor and the
+        database enforces it as well; an empty search returns nothing rather
+        than everybody. */
+    function findPupils() {
+      var q = trim(el("cl-add-find").value);
+      var host = el("cl-add-hits");
+      if (findTimer) window.clearTimeout(findTimer);
+      if (q.length < 2) { host.innerHTML = ""; return; }
+      findTimer = window.setTimeout(function () {
+        sb.rpc("madrasah_pupil_search", { p_q: q, p_not_in_class: open.id })
+          .then(function (res) {
+            if (res.error) throw new Error(res.error.message);
+            var hits = list(res.data);
+            host.innerHTML = hits.length
+              ? hits.map(function (p) {
+                  return '<div class="cl-hit"><span><b>' + esc(p.name) + "</b><br>" +
+                    "<i>" + esc(p.classes || "no class") + "</i></span>" +
+                    '<button type="button" class="btn btn-ghost" data-on="' + esc(p.id) +
+                    '">Add to this class</button></div>';
+                }).join("")
+              : '<div class="cl-hit-none">Nobody matching that name who is not ' +
+                "already in this class.</div>";
+          }).catch(function (e) {
+            host.innerHTML = '<div class="cl-hit-none">' +
+              esc("The search failed \u2014 " + ((e && e.message) || String(e))) + "</div>";
+          });
+      }, 260);
+    }
+
+    function movePupil(fn, pupil, after) {
+      note("cl-error", ""); note("cl-ok", "");
+      sb.rpc(fn, { p_pupil: pupil, p_class: open.id }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        after(res.data || {});
+        return load();
+      }).then(function () {
+        var again = byId(open.id);
+        if (again) { open = again; refreshFacts(); }
+        drawEditRoll();
+        if (roll !== null) showRoll();
+      }).catch(function (e) {
+        note("cl-error", ((e && e.message) || String(e)));
+      });
     }
 
     function shutEditor() {
@@ -374,7 +547,12 @@
         name: trim(el("cl-name").value),
         section: el("cl-section").value,
         year_label: trim(el("cl-year").value),
-        is_active: el("cl-active").checked
+        is_active: el("cl-active").checked,
+        //  Always sent, including as "" for Not chosen. save_madrasah_class()
+        //  treats an ABSENT key as "leave it alone" and a present one as an
+        //  instruction, so omitting it would make clearing a main teacher
+        //  impossible from this screen.
+        main_teacher_id: el("cl-main") ? el("cl-main").value : ""
       };
     }
 
@@ -419,12 +597,23 @@
           children in it is not the same act as removing an empty one, and a
           confirm that says the same thing either way is a confirm that teaches
           people to press Yes. */
+      /*  AND IT NO LONGER SAYS "THIS CANNOT BE UNDONE", BECAUSE IT CAN.
+          Removing a class archives it — the class, its register and the staff
+          who took it go into madrasah_archive and can be put back from
+          Administration → Archive for three years. Leaving the old wording in
+          place would have been the worse of the two mistakes a confirm can
+          make: it frightens somebody out of an action that is in fact
+          reversible, and it teaches them that the warnings on this system
+          overstate things. */
       el("cl-confirm-q").textContent = n
         ? "Remove “" + open.name + "”? " + n + " " +
           (n === 1 ? "child is" : "children are") + " in it, and they will be left " +
-          "in no class at all. If the class has simply finished for the year, cancel " +
-          "and untick “still running” instead — that keeps everybody where they are."
-        : "Remove “" + open.name + "”? Nobody is in it. This cannot be undone.";
+          "in no class at all — the children themselves are not removed. If the " +
+          "class has simply finished for the year, cancel and untick “still " +
+          "running” instead, which keeps everybody where they are. Nothing is " +
+          "deleted: the class goes to the archive and can be put back."
+        : "Remove “" + open.name + "”? Nobody is in it. Nothing is deleted — the " +
+          "class goes to the archive and can be put back.";
       b.classList.add("is-danger");
       b.hidden = false;
       el("cl-editor").hidden = false;
@@ -432,16 +621,33 @@
       el("cl-confirm-yes").focus();
     }
 
+    /*  ARCHIVE, NOT DELETE.
+
+        This used to call delete_madrasah_class(), which did what its name
+        says. The masjid asked that "any record removed from the madrasah
+        database should get archived, where someone is able to go into the
+        archive and restore if needed" — and a class is the one of the three
+        kinds where a mistake is least visible afterwards. A teacher removed in
+        error is noticed by the teacher. A class removed in error leaves thirty
+        children in no class at all, and the register that said which thirty is
+        gone with it.
+
+        archive_madrasah_class() in db/063 copies the class row, the list of
+        children who were in it and the staff who took it into
+        madrasah_archive, then removes it. THE CHILDREN THEMSELVES ARE NOT
+        TOUCHED — only their link to this class — which is why the question
+        above now says so. */
     function remove(c) {
       note("cl-error", ""); note("cl-ok", "");
       hideConfirm();
-      sb.rpc("delete_madrasah_class", { p_id: c.id }).then(function (res) {
+      sb.rpc("archive_madrasah_class", { p_id: c.id, p_reason: null }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
         return load();
       }).then(function () {
         shutEditor();
         show("list");
-        note("cl-ok", "“" + c.name + "” has been removed.");
+        note("cl-ok", "“" + c.name + "” is in the archive. Nothing has been " +
+                      "deleted — Administration → Archive can put it back.");
       }).catch(function (e) {
         note("cl-error", "Nothing was removed — " + ((e && e.message) || String(e)));
       });
@@ -505,6 +711,39 @@
       });
       var no = el("cl-confirm-no");
       if (no) no.addEventListener("click", hideConfirm);
+
+      var find = el("cl-add-find");
+      if (find) find.addEventListener("input", findPupils);
+
+      //  One listener over the whole roster block: both the chips and the
+      //  search results are redrawn after every change, so per-button
+      //  listeners would not survive the first one.
+      var roster = el("cl-roster");
+      if (roster) roster.addEventListener("click", function (ev) {
+        var b = ev.target.closest && ev.target.closest("button[data-off], button[data-on]");
+        if (!b) return;
+        if (b.hasAttribute("data-on")) {
+          movePupil("add_pupil_to_class", b.getAttribute("data-on"), function (d) {
+            el("cl-add-find").value = "";
+            el("cl-add-hits").innerHTML = "";
+            note("cl-ok", (d.added || "That child") + " is now in this class.");
+          });
+          return;
+        }
+        movePupil("remove_pupil_from_class", b.getAttribute("data-off"), function (d) {
+          /*  SAY WHICH OF THE TWO THINGS JUST HAPPENED, EVERY TIME.
+              Taking a child out of a class and deleting a child are one press
+              apart in somebody's mind and unrecoverably different in the
+              database. And when it was their LAST class, say that too: a
+              record in no class is reachable from no register, which is how a
+              child goes quietly missing. */
+          note("cl-ok", (d.removed || "That child") + " is out of this class. " +
+            (Number(d.classes_left) === 0
+              ? "That was their only class, so they are now in none at all — their " +
+                "record is still here, but no register will show them."
+              : "Their record and their other classes are untouched."));
+        });
+      });
 
       var ed = el("cl-editor");
       if (ed) {

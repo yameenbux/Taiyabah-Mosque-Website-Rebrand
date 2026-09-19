@@ -226,7 +226,9 @@
      =========================================================================== */
 
   .bk [hidden]{ display:none !important; }
-  body.has-ashell .card.is-wide{ max-width:none; }
+  /*  THE WHOLE DESK — three columns per person. One line; the
+      rules it drives live in admin/shell.css beside the default. */
+  :root{ --desk-max:none; }
 
   .pp-scope{
     font-size:.93rem;line-height:1.6;color:var(--muted);

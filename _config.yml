@@ -56,6 +56,29 @@ exclude:
   - DEPLOY.md
   - DONATIONS.md
 
+  # CONFIDENTIAL DOCUMENTS DO NOT BELONG IN THIS REPOSITORY AT ALL.
+  #
+  # On 19 September the madrasah DPIA - a twenty-page document marked
+  # "Confidential - internal", describing every security control in this
+  # system and every weakness found in it - was committed to the repository
+  # root. Pages serves the root. It would have been downloadable from the
+  # masjid's own website, at a guessable address, within a minute of a push.
+  #
+  # It is risk R1 of that very document: "personal data is committed to the
+  # public code repository... world-readable within seconds of a push, and
+  # irretrievable from forks and caches". Caught before the push, by checking
+  # this file rather than by anybody noticing.
+  #
+  # THE REAL FIX WAS TO TAKE IT OUT, AND IT HAS BEEN. These patterns are the
+  # second line, not the first: an exclusion keeps a file off the website but
+  # leaves it in a public repository, where it is just as readable. A
+  # confidential document goes to the masjid directly and is version-
+  # controlled somewhere private, or not at all.
+  - "*.docx"
+  - "*.doc"
+  - "*DPIA*"
+  - "*-CONFIDENTIAL*"
+
   # Working notes that keep appearing in the repository root. Deleting them is
   # the real fix — these patterns are here so that the next one somebody drops
   # in is not silently a page on the masjid's website.

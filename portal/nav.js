@@ -301,7 +301,27 @@
           name: "Academic year", needs: ADMIN, soon: true },
         { key: "md-calendar", href: "portal/calendar/", icon: "sun",
           name: "Calendar & holidays", needs: BOTH,
-          what: "The whole year on one page, and the dates the website prints" }
+          what: "The whole year on one page, and the dates the website prints" },
+
+        /*  THE ARCHIVE IS IN THE RAIL AND NOT TUCKED INSIDE THE SCREEN THAT
+            FILLS IT.
+
+            Nothing on the madrasah side is deleted by a button: removing a
+            teacher, a child or a class copies the whole record into
+            madrasah_archive and takes it off the list. That is only half a
+            promise unless somebody can find the archive without being told
+            where it is — and the person who needs it is by definition somebody
+            who has just made a mistake and is looking for a way to undo it.
+            Putting it behind "Staff" would mean a class removed in error could
+            only be recovered from a screen about staff.
+
+            ADMIN ONLY. Every function behind it calls verified_admin() and
+            refuses anybody else regardless, but the archive holds children's
+            names next to the one button in the madrasah that destroys a
+            record, and a teacher has no business on it. */
+        { key: "md-archive",  href: "portal/archive/",  icon: "inbox",
+          name: "Archive", needs: ADMIN,
+          what: "Records removed from the madrasah, and how long they are kept" }
       ]},
 
       { label: "Settings", areas: [

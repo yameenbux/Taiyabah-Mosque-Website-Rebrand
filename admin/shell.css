@@ -238,15 +238,33 @@ body.has-ashell .panel{
   display:block !important;
   padding:0 clamp(14px,2.4vw,32px) 64px !important;
 }
+/*  HOW WIDE THE WORKING AREA IS, IN ONE PLACE.
+
+    1180px is right for most of these screens: a Gift Aid table or a list of
+    bookings stretched across a 2560px monitor is a line your eye cannot track
+    back from. But it is wrong for the few that are genuinely wide — a whole
+    madrasah year of twelve months, forty-five class cards, two columns of
+    staff — where the cap leaves a third of the desk empty.
+
+    So the number is a variable with the safe answer as its default, and a page
+    that needs the whole desk says so in ONE line of its own stylesheet:
+
+        :root{ --desk-max:none; }
+
+    This replaced four copies of a three-rule override, one per screen, of
+    which three had been written from memory and were incomplete: they lifted
+    the cap on `.card.is-wide` and left it on `.panel > .card`, so the page
+    stayed at 1180px and looked like it had simply not been done. Found when
+    the masjid asked why the Classes screen was not using the full width.  */
 body.has-ashell .panel > .card{
   margin-left:0 !important;
   margin-right:0 !important;
   width:100% !important;
-  max-width:1180px;
+  max-width:var(--desk-max, 1180px);
 }
 body.has-ashell .card.is-wide{
   width:100% !important;
-  max-width:1180px;
+  max-width:var(--desk-max, 1180px);
 }
 
 /*  IDENTITY IN ONE PLACE. Every staff screen opens its working area with an
@@ -284,11 +302,48 @@ body.has-ashell #app-signout{ display:none !important; }
     which screen you are on — and that is the row you are least likely to be
     looking at, because you have just clicked it and moved your eyes right. */
 .ashell-head{
-  max-width:1180px;
+  /*  The page title and the rule under it follow the working area. Left at a
+      fixed 1180px the rule stops dead halfway across a wide desk, which reads
+      as a layout fault rather than a heading. */
+  max-width:var(--desk-max, 1180px);
   padding:26px 0 18px;
   border-bottom:1px solid var(--line,#E4DECF);
   margin-bottom:22px;
+  /*  Name on the left, the two ways out on the right. `baseline` and not
+      `center`: the buttons line up with the bottom of the title rather than
+      floating in the middle of a two-line heading. */
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; flex-wrap:wrap;
 }
+.ashell-head-t{min-width:0;}
+.ashell-head-acts{display:flex; gap:8px; align-items:center; flex-shrink:0;}
+/*  QUIET ON PURPOSE. These are the two controls somebody wants least often on
+    any given visit — the purple strip they replace shouted both. Ghost
+    buttons, the same height, reading as a pair. */
+.ashell-ha{
+  font:inherit; font-size:.9rem; font-weight:600; line-height:1;
+  color:var(--muted,#6E616A); background:var(--card,#FCFAF3);
+  border:1px solid var(--line,#E4DECF); border-radius:9px;
+  padding:9px 13px; cursor:pointer; text-decoration:none;
+  white-space:nowrap; display:inline-flex; align-items:center;
+}
+.ashell-ha:hover{color:var(--ink,#261B22); border-color:var(--gold,#C6A24C);}
+.ashell-ha:focus-visible{outline:2px solid var(--gold,#C6A24C); outline-offset:1px;}
+.ashell-ha-out{color:var(--danger-ink,#A0451F);}
+.ashell-ha-out:hover{border-color:var(--danger,#B4532F); background:rgba(180,83,47,.06);}
+
+/*  THE STRIP ON /portal/ IS HIDDEN BY /portal/ ITSELF, NOT FROM HERE.
+    A rule here hid it on all three pages that carry it - and on /access/ and
+    /newbuild/ the shell rail is NOT mounted in every state, so that strip is
+    the only way back to the Admin Centre and the only way to sign out. Hiding
+    it globally left those two pages with no way out but closing the tab.
+    Caught by access_test.py, which has asserted exactly that since the strip
+    was introduced: "if the bar did not replace it, the only way out would be
+    closing the tab."
+
+    So the hide lives in portal/index.html, scoped to the page that has the
+    heading controls to replace it. The other two keep their strip until the
+    rail is mounted unconditionally on them, which is a separate change. */
 .ashell-head h1{
   font-family:"Fraunces","Fraunces fallback",Georgia,serif;
   font-size:clamp(1.5rem,2.6vw,2rem);

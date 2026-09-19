@@ -233,7 +233,9 @@
 
   .bk [hidden], .pf-form[hidden], #pf-editor[hidden]{ display:none !important; }
 
-  body.has-ashell .card.is-wide{ max-width:none; }
+  /*  THE WHOLE DESK — two columns of fields and a banner preview. One line; the
+      rules it drives live in admin/shell.css beside the default. */
+  :root{ --desk-max:none; }
 
   .pf-ok{
     background:rgba(63,122,70,.12);border:1px solid rgba(63,122,70,.4);

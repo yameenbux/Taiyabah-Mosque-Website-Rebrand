@@ -518,6 +518,52 @@
         brothers' column, and the group of people who have no side yet. They
         show exactly the same things, because they are the same rows; only
         which list they land in differs. */
+    /*  WHAT THE MADRASAH HOLDS ABOUT THIS PERSON, AS FIVE SMALL MARKS.
+
+        Asked for: "showcase little icons on the teachers to show what the
+        teacher has available of them."
+
+        WHAT ARRIVES HERE IS FIVE BOOLEANS, NOT FIVE VALUES. madrasah_staff_list()
+        returns has_address / has_dob / has_phone / has_email / has_hours and
+        nothing else; the addresses and dates of birth live behind
+        madrasah_staff_one(), which is only called when somebody opens one
+        person. A list that carries what it does not display is a list that
+        leaks what it does not display.
+
+        NOT COLOUR ALONE, AND NOT AN ICON ALONE. Each mark carries a letter as
+        well as a shape, every one has a title and an accessible label saying
+        which of "on file" or "not on file" it means, and the row's own DBS
+        state is still spelled out in words further along. Somebody who cannot
+        separate the two tints reads exactly the same facts.
+
+        A MISSING THING IS DRAWN, not omitted. Five marks in the same order on
+        every row means the eye learns the positions and a gap is visible from
+        across the list; hiding what is absent would make a thin row and a full
+        row look like the same row with less in it.                          */
+    var ON_FILE = [
+      { k: "has_address", letter: "A", word: "Address" },
+      { k: "has_phone",   letter: "T", word: "Telephone" },
+      { k: "has_email",   letter: "E", word: "Email" },
+      { k: "has_dob",     letter: "B", word: "Date of birth" },
+      { k: "has_hours",   letter: "H", word: "Working hours" }
+    ];
+
+    function onFileHtml(r) {
+      var days = Number(r.days_a_week) || 0;
+      return '<span class="st-file" aria-label="What is on file">' +
+        ON_FILE.map(function (f) {
+          var got = !!r[f.k];
+          var what = f.word + (got ? " on file" : " not on file") +
+            (f.k === "has_hours" && got && days
+               ? " \u2014 " + days + (days === 1 ? " day a week" : " days a week") : "");
+          return '<span class="st-mark ' + (got ? "yes" : "no") + '"' +
+                 ' title="' + esc(what) + '">' +
+                 '<span aria-hidden="true">' + f.letter + "</span>" +
+                 '<span class="sr-only">' + esc(what) + "</span></span>";
+        }).join("") +
+      "</span>";
+    }
+
     function rowHtml(r) {
       var dbs   = dbsWords(r);
       var state = trim(r.dbs) || "none";
@@ -554,6 +600,8 @@
             (hasDays ? esc(days.join(" · "))
                      : '<span class="st-quiet">Days not set</span>') +
           "</span>" +
+
+          onFileHtml(r) +
         "</span>" +
 
         //  WHERE THEIR DBS STANDS: a different question, so its own half.
@@ -689,7 +737,21 @@
           left two years ago does not need a side choosing. */
       var unset = pool.filter(function (r) { return sideOf(r) === ""; });
       var box   = el("st-unset");
-      if (box) box.hidden = unset.length === 0;
+      if (box) {
+        //  TWO REASONS TO BE HIDDEN, AND THIS FUNCTION KNOWS ONLY ONE OF THEM.
+        //
+        //  This group is hidden when it is empty, which is what is decided
+        //  here. It is ALSO hidden when somebody has a single record open, and
+        //  that is showStaff()'s business. Saying `box.hidden = !unset.length`
+        //  flat would answer both questions with the answer to one: saving from
+        //  inside a record re-reads the list, and this line would put the "side
+        //  not set" group back on screen above the record that is being read.
+        //  So the emptiness is RECORDED here, where it is known, and the group
+        //  is only un-hidden when the list half is the half on screen.
+        box.setAttribute("data-has", unset.length ? "1" : "0");
+        if (!unset.length) box.hidden = true;
+        else if (!recordOpen()) box.hidden = false;
+      }
       if (unset.length) {
         fillList("st-list-unset", unset, "");
         setCount("st-n-unset", unset.length, unset.length);
@@ -704,6 +766,236 @@
             "are the ones with no title at all.";
         }
       }
+    }
+
+    // ---- one person, read ----------------------------------------------------
+    /*  THE LIST SHOWS FLAGS; THIS SHOWS VALUES, AND ONLY WHEN ASKED.
+
+        madrasah_staff_one() is the only call that returns an address or a date
+        of birth, and it is made when somebody opens ONE person. Forty rows on
+        the list carry five booleans each and nothing more. That split is the
+        whole reason the icons exist as icons.                                */
+    var RECORD = null;
+
+    /*  THESE ARE THE IDS THAT ARE ACTUALLY IN THE PAGE.
+
+        The first version of this list was written from memory and named five
+        things, three of which did not exist: `st-list-wrap` (no such element),
+        `st-sum` (the figures block is id="dbs", because the rail links to
+        /portal/staff/#dbs and the anchor has to land on what it names) and
+        `st-row-acts` (a CLASS, used twice — once under the list and once
+        inside the editor). el() returns null for all three and the loop skips
+        them without a word, so the record would have opened UNDERNEATH the
+        full staff list and nothing would have complained. A loop that silently
+        does nothing when it is wrong is the same shape of mistake as a check
+        that cannot fail. The test below asserts the list half is gone, not
+        merely that the record arrived.                                       */
+    function showStaff(which) {
+      ["dbs", "st-controls", "st-unset", "st-cols", "st-list-acts"].forEach(function (id) {
+        var n = el(id);
+        if (!n) return;
+        if (id === "st-unset") {
+          //  The "side not set" group has its own emptiness rule; only hide it
+          //  here, never un-hide it, or a group with nobody in it comes back.
+          if (which !== "list") n.hidden = true;
+          else if (n.getAttribute("data-has") === "1") n.hidden = false;
+          return;
+        }
+        n.hidden = which !== "list";
+      });
+      if (el("st-record")) el("st-record").hidden = which !== "one";
+      if (which !== "one") { RECORD = null; hideRecConfirm(); }
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "";
+      var p = String(iso).split("-");
+      if (p.length !== 3) return String(iso);
+      var MON = ["January","February","March","April","May","June","July",
+                 "August","September","October","November","December"];
+      return Number(p[2]) + " " + MON[Number(p[1]) - 1] + " " + p[0];
+    }
+
+    function kv(label, value) {
+      var got = trim(value) !== "";
+      return "<div><dt>" + esc(label) + "</dt><dd" + (got ? "" : ' class="none"') +
+             ">" + esc(got ? value : "Not on file") + "</dd></div>";
+    }
+
+    function openRecord(r) {
+      note("st-error", ""); note("st-ok", "");
+      shutEditor();
+      showStaff("one");
+      el("st-rec-name").textContent = nameOf(r);
+      el("st-rec-facts").innerHTML = '<span>Reading the record\u2026</span>';
+      el("st-rec-grid").innerHTML = "";
+      window.scrollTo({ top: 0 });
+
+      sb.rpc("madrasah_staff_one", { p_id: r.id }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        RECORD = res.data || null;
+        drawRecord();
+      }).catch(function (e) {
+        el("st-rec-facts").innerHTML = "";
+        note("st-error", "That record could not be read \u2014 " +
+                         ((e && e.message) || String(e)));
+      });
+    }
+
+    function drawRecord() {
+      var d = RECORD;
+      if (!d) return;
+      var dbs = dbsWords({ dbs: d.dbs, dbs_issued: d.dbs_issued,
+                           dbs_update_service: d.dbs_update_service,
+                           dbs_last_checked: d.dbs_last_checked,
+                           dbs_not_required: d.dbs_not_required });
+
+      el("st-rec-name").textContent = d.name;
+      el("st-rec-facts").innerHTML =
+        "<span>" + esc(EMPLOYMENT[trim(d.employment)] || d.employment || "Employed") + "</span>" +
+        "<span>" + (trim(d.side)
+          ? (d.side === "sisters" ? "Sisters\u2019 side" : "Brothers\u2019 side")
+          : "<b>Side not set</b>") + "</span>" +
+        "<span><b>" + esc(dbs.word) + "</b></span>" +
+        (d.started_on ? "<span>Started " + esc(fmtDate(d.started_on)) + "</span>" : "") +
+        (d.left_on ? "<span>Left " + esc(fmtDate(d.left_on)) + "</span>" : "");
+
+      var times = d.work_times && typeof d.work_times === "object" ? d.work_times : {};
+      var DAY = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday",
+                  fri: "Friday", sat: "Saturday", sun: "Sunday" };
+      var order = ["mon","tue","wed","thu","fri","sat","sun"];
+      var hoursHtml = order.filter(function (k) { return times[k]; })
+        .map(function (k) {
+          return "<span>" + esc(DAY[k]) + " <b>" + esc(times[k]) + "</b></span>";
+        }).join("");
+
+      var cls = Array.isArray(d.classes) ? d.classes : [];
+      var main = Array.isArray(d.main_teacher_of) ? d.main_teacher_of : [];
+
+      el("st-rec-grid").innerHTML =
+        '<section class="st-box"><h4>How to reach them</h4><dl class="st-kv">' +
+          kv("Telephone", d.phone) + kv("Second number", d.phone_alt) +
+          kv("Email", d.email) + kv("Address", d.address) +
+        "</dl></section>" +
+
+        '<section class="st-box"><h4>Who they are</h4><dl class="st-kv">' +
+          kv("Date of birth", fmtDate(d.date_of_birth)) +
+          kv("Started", fmtDate(d.started_on)) +
+          kv("Left", fmtDate(d.left_on)) +
+        "</dl></section>" +
+
+        '<section class="st-box"><h4>DBS</h4><dl class="st-kv">' +
+          "<div><dt>Position</dt><dd><b>" + esc(dbs.word) + "</b></dd></div>" +
+          kv("Date on the certificate", fmtDate(d.dbs_issued)) +
+          kv("Last looked at", fmtDate(d.dbs_last_checked)) +
+          "<div><dt>Update Service</dt><dd>" +
+            (d.dbs_update_service ? "Yes" : "No") + "</dd></div>" +
+          (trim(d.prior_dbs)
+            ? '<div><dt>The madrasah\u2019s previous records</dt><dd class="none">' +
+              esc("recorded " + d.prior_dbs) + "</dd></div>"
+            : "") +
+        "</dl></section>" +
+
+        '<section class="st-box"><h4>When they are in</h4>' +
+          (hoursHtml ? '<div class="st-hours">' + hoursHtml + "</div>"
+                     : '<p class="st-kv"><span class="st-quiet">No hours on file.</span></p>') +
+        "</section>" +
+
+        '<section class="st-box"><h4>Classes they take</h4>' +
+          (cls.length
+            ? '<span class="st-tags">' + cls.map(function (c) {
+                return '<span class="st-tag">' + esc(c.name) + "</span>";
+              }).join("") + "</span>"
+            : '<span class="st-quiet">No class recorded.</span>') +
+        "</section>" +
+
+        '<section class="st-box"><h4>Main teacher of</h4>' +
+          (main.length
+            ? '<span class="st-tags">' + main.map(function (c) {
+                return '<span class="st-tag">' + esc(c.name) + "</span>";
+              }).join("") + "</span>"
+            : '<span class="st-quiet">Not the main teacher of any class.</span>') +
+        "</section>" +
+
+        (trim(d.note)
+          ? '<section class="st-box"><h4>Note</h4><p style="margin:0;font-size:.99rem;' +
+            'line-height:1.6;">' + esc(d.note) + "</p></section>"
+          : "");
+    }
+
+    /*  A SAVE MADE FROM INSIDE A RECORD HAS TO REACH THE RECORD.
+
+        "Amend this record" opens the editor underneath the open record, so the
+        two are on screen together. Saving used to re-read the LIST and stop
+        there — the list, which at that moment is hidden — leaving the record
+        above the editor showing the number that had just been changed, beside
+        the words "Saved." Somebody reading that concludes the save did not
+        work, and types it again.
+
+        It re-reads rather than patching what is on screen from the form,
+        because the form is what was SENT and this is what the database KEPT:
+        save_madrasah_staff() trims, nulls empty strings, and can refuse a
+        field. Drawing the sent version would show a record that does not
+        exist anywhere.                                                      */
+    function refreshRecord() {
+      var box = el("st-record");
+      if (!RECORD || !box || box.hidden) return Promise.resolve();
+      var id = RECORD.id;
+      return sb.rpc("madrasah_staff_one", { p_id: id }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        if (!res.data) return;
+        RECORD = res.data;
+        drawRecord();
+      });
+    }
+
+    function recordOpen() {
+      var box = el("st-record");
+      return !!(box && !box.hidden);
+    }
+
+    function hideRecConfirm() {
+      var b = el("st-rec-confirm");
+      if (b) b.hidden = true;
+      var why = el("st-rec-reason");
+      if (why) why.value = "";
+    }
+
+    function askRemovePerson() {
+      if (!RECORD) return;
+      var n = (Array.isArray(RECORD.classes) ? RECORD.classes.length : 0);
+      el("st-rec-confirm-q").textContent =
+        "Move " + RECORD.name + " to the archive? " +
+        (n ? "They are down as teaching " + n + (n === 1 ? " class" : " classes") +
+             ", and that goes with them. " : "") +
+        "Nothing is deleted \u2014 the record can be restored from the Archive, and is " +
+        "kept for three years.";
+      el("st-rec-confirm").hidden = false;
+      el("st-rec-confirm").scrollIntoView({ block: "nearest" });
+      el("st-rec-yes").focus();
+    }
+
+    function removePerson() {
+      if (!RECORD) return;
+      var btn = el("st-rec-yes");
+      busy(btn, true, "Yes, move to the archive");
+      note("st-error", ""); note("st-ok", "");
+      sb.rpc("archive_madrasah_staff",
+             { p_id: RECORD.id, p_reason: trim(el("st-rec-reason").value) })
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          var who = RECORD.name;
+          hideRecConfirm();
+          showStaff("list");
+          return load().then(function () {
+            note("st-ok", who + " is in the archive. Nothing has been deleted \u2014 " +
+                          "Administration \u2192 Archive can put them back.");
+          });
+        })
+        .catch(function (e) {
+          note("st-error", "Nothing was removed \u2014 " + ((e && e.message) || String(e)));
+        })
+        .finally(function () { busy(btn, false, "Yes, move to the archive"); });
     }
 
     // ---- the editor ----------------------------------------------------------
@@ -857,6 +1149,10 @@
       /*  Back to the top of the lists. The "side not set" group when there is
           one, because that is where the person most likely came from and it
           sits above the two columns anyway, so landing there shows both. */
+      //  If the person is standing on somebody's record, the editor closed
+      //  back onto that record — scrolling to the list behind it would jump
+      //  them somewhere they are not looking.
+      if (el("st-record") && !el("st-record").hidden) return;
       var unset = el("st-unset");
       var back  = (unset && !unset.hidden) ? unset : el("st-cols");
       if (back) back.scrollIntoView({ block: "start" });
@@ -1139,9 +1435,13 @@
         shutEditor();
         return load();
       }).then(function () {
+        return refreshRecord();
+      }).then(function () {
         note("st-ok", wasNew
           ? who + " is on the staff list."
-          : "Saved. The list below shows what the madrasah now holds about " + who + ".");
+          : recordOpen()
+            ? "Saved. The record below is what the madrasah now holds about " + who + "."
+            : "Saved. The list below shows what the madrasah now holds about " + who + ".");
       }).catch(function (e) {
         var msg = (e && e.message) || String(e);
         if (written) {
@@ -1206,12 +1506,37 @@
         var r = byId(btn.getAttribute("data-id"));
         if (!r) return;
         note("st-error", ""); note("st-ok", "");
-        openEditor(r);
+        /*  READ FIRST, AMEND SECOND. Most of the time somebody is looking a
+            person up — a number, which days they are in, whether their DBS is
+            in date — and being dropped straight into a form full of live
+            inputs invites a change nobody meant to make. */
+        openRecord(r);
       });
+
+      var recBack = el("st-rec-back");
+      if (recBack) recBack.addEventListener("click", function () {
+        showStaff("list");
+        window.scrollTo({ top: 0 });
+      });
+
+      var recEdit = el("st-rec-edit");
+      if (recEdit) recEdit.addEventListener("click", function () {
+        if (!RECORD) return;
+        var r = byId(RECORD.id);
+        if (r) openEditor(r);
+      });
+
+      var recRemove = el("st-rec-remove");
+      if (recRemove) recRemove.addEventListener("click", askRemovePerson);
+      var recYes = el("st-rec-yes");
+      if (recYes) recYes.addEventListener("click", removePerson);
+      var recNo = el("st-rec-no");
+      if (recNo) recNo.addEventListener("click", hideRecConfirm);
 
       var add = el("st-add");
       if (add) add.addEventListener("click", function () {
         note("st-error", ""); note("st-ok", "");
+        showStaff("list");
         openEditor(null);
       });
 

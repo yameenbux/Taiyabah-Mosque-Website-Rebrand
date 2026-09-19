@@ -251,7 +251,9 @@
      right for a form and wrong for a year: at 880px the months come out three
      across and 210px each, which is narrower than a phone. The cap comes off
      here and only here, exactly as the staff screen does it. */
-  body.has-ashell .card.is-wide{ max-width:none; }
+  /*  THE WHOLE DESK — twelve months of a year at once. One line; the
+      rules it drives live in admin/shell.css beside the default. */
+  :root{ --desk-max:none; }
 
   .cal-scope{
     font-size:.93rem;line-height:1.6;color:var(--muted);

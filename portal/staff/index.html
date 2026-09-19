@@ -262,7 +262,8 @@
 
       `!important` is deliberate and is not a shortcut. It says: whatever else
       this stylesheet claims, an element the code has hidden is not on screen.  */
-  .bk [hidden], .st-form[hidden], #st-editor[hidden]{display:none !important;}
+  .bk [hidden], .st-form[hidden], #st-editor[hidden],
+  .st-record[hidden], #st-record[hidden], #st-rec-confirm[hidden]{display:none !important;}
 
   .st-scope{
     font-size:.93rem;line-height:1.6;color:var(--muted);
@@ -371,12 +372,9 @@
      monitor somebody happens to have. This block is in the page's own
      stylesheet, which loads after the shared one, so equal specificity is
      enough and no !important is needed. */
-  body.has-ashell .panel > .card,
-  body.has-ashell .card.is-wide{ max-width:none; }
-  /* The page title and the rule under it come from shell.js and are capped to
-     match. Left at 1180px the rule would stop dead halfway across a desk full
-     of content, which reads as a layout fault rather than a heading. */
-  body.has-ashell .ashell-head{ max-width:none; }
+  :root{ --desk-max:none; }
+  /*  The page title follows --desk-max too, so there is nothing more to say
+      here. See the note beside the variable in admin/shell.css. */
 
   /* ---------- the two sides ----------
      THE MADRASAH TEACHES THEM SEPARATELY AND THE LISTS ARE READ SEPARATELY.
@@ -577,6 +575,91 @@
   .st-note{
     font-size:.87rem;line-height:1.55;color:var(--muted);
     border-top:1px dashed var(--line);padding-top:8px;
+  }
+
+  /*  ---------------------------------------------------------------------
+      WHAT IS ON FILE, AS FIVE SMALL MARKS.
+      ---------------------------------------------------------------------
+      Five in the same order on every row, present or absent, so the eye
+      learns the positions and a gap reads as a gap. Each carries a LETTER as
+      well as a tint and a full sentence in its title and to a screen reader,
+      because roughly one man in twelve cannot separate the two colours and
+      because "what does the third circle mean" is not a question a volunteer
+      should have to answer.                                                */
+  /* ---------- one person, read ---------- */
+  .st-record{display:block;}
+  .st-back{
+    display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.96rem;
+    font-weight:700;cursor:pointer;background:none;border:0;color:var(--brand-700);
+    padding:8px 2px;margin-bottom:12px;min-height:44px;
+  }
+  .st-back:hover{color:var(--brand-900);text-decoration:underline;}
+  .st-back:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px;}
+
+  .st-rec-head{
+    border:1px solid var(--line);border-left:3px solid var(--brand-700);
+    background:var(--paper);border-radius:13px;padding:17px 19px;margin-bottom:18px;
+  }
+  .st-rec-head h3{font-size:1.5rem;color:var(--brand-900);margin:0 0 6px;line-height:1.25;}
+  .st-rec-facts{display:flex;flex-wrap:wrap;gap:7px 20px;}
+  .st-rec-facts span{font-size:.96rem;color:var(--muted);line-height:1.5;}
+  .st-rec-facts b{color:var(--ink);font-weight:700;}
+  .st-rec-acts{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px;}
+  .st-rec-acts .btn{width:auto;}
+  .st-rec-acts .st-danger{margin-left:auto;}
+  @media (max-width:640px){ .st-rec-acts .st-danger{margin-left:0;} }
+
+  .st-rec-grid{display:grid;gap:13px;grid-template-columns:1fr;}
+  @media (min-width:760px){  .st-rec-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (min-width:1240px){ .st-rec-grid{grid-template-columns:repeat(3,1fr);} }
+  .st-box{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;min-width:0;
+  }
+  .st-box h4{
+    font-size:.86rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 9px;
+  }
+  .st-kv{display:flex;flex-direction:column;gap:9px;}
+  .st-kv > div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .st-kv dt{font-size:.86rem;color:var(--muted);}
+  .st-kv dd{margin:0;font-size:1rem;color:var(--ink);line-height:1.45;overflow-wrap:anywhere;}
+  /*  NOT HELD is said, never left blank. A blank line reads as a rendering
+      fault; "Not on file" is a fact about the record and often the point. */
+  .st-kv dd.none{color:var(--muted);font-style:italic;}
+  .st-hours{display:flex;flex-direction:column;gap:5px;}
+  .st-hours span{
+    display:flex;justify-content:space-between;gap:12px;font-size:.96rem;
+    padding:5px 0;border-bottom:1px dashed var(--line);
+  }
+  .st-hours span:last-child{border-bottom:0;}
+  .st-hours b{font-variant-numeric:tabular-nums;font-weight:700;}
+  .st-confirm-box{
+    border:1px solid rgba(180,83,47,.5);border-left:3px solid var(--danger);
+    background:rgba(180,83,47,.08);margin-top:16px;padding:15px 17px;border-radius:11px;
+  }
+  .st-confirm-box .cl-confirm-q{
+    font-size:1.02rem;line-height:1.55;color:var(--ink);font-weight:600;margin:0 0 11px;
+  }
+  .st-confirm-box .cl-confirm-acts{display:flex;gap:9px;flex-wrap:wrap;}
+  .st-confirm-box .btn{width:auto;}
+
+  .st-file{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .st-mark{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:7px;flex-shrink:0;
+    font-size:.78rem;font-weight:800;letter-spacing:.02em;
+    border:1px solid var(--line);
+  }
+  .st-mark.yes{
+    background:rgba(63,122,70,.16);border-color:rgba(63,122,70,.45);
+    color:var(--success-ink);
+  }
+  /*  Absent is quiet, not alarming. A missing address is a gap in a record,
+      not a safeguarding failure — that distinction belongs to the DBS column,
+      which is loud on purpose and stays the loudest thing on the row. */
+  .st-mark.no{
+    background:var(--paper);border-style:dashed;color:var(--muted);opacity:.75;
   }
 
   .st-empty{
@@ -843,7 +926,10 @@
           </div>
         </div>
 
-        <div class="st-controls">
+        <!-- id here only so showStaff() can put the whole list half away when a
+             single record opens. Everything in the list half that needs hiding
+             carries an id for that reason and no other. -->
+        <div class="st-controls" id="st-controls">
           <label class="sr-only" for="st-find">Search staff by name</label>
           <input type="search" class="st-find" id="st-find" placeholder="Search by name&hellip;" autocomplete="off">
 
@@ -901,8 +987,46 @@
           </section>
         </div>
 
-        <div class="st-row-acts">
+        <div class="st-row-acts" id="st-list-acts">
           <button type="button" class="btn btn-ghost" id="st-add">Add somebody</button>
+        </div>
+
+        <!-- ================= one person, read =================
+             Asked for: "whoever wants to can click on a teacher record and
+             view their info in more details."
+
+             The list used to open straight into the editor, which is the
+             wrong first move: most of the time somebody is LOOKING somebody
+             up — a number, which days they are in, whether their DBS is in
+             date — and being dropped into a form full of live inputs invites
+             a change nobody meant to make. So the record reads first, and
+             amending is a press away. Same shape as the Classes screen. -->
+        <div class="st-record" id="st-record" hidden>
+          <button type="button" class="st-back" id="st-rec-back">&larr; All staff</button>
+
+          <div class="st-rec-head">
+            <h3 id="st-rec-name">&mdash;</h3>
+            <div class="st-rec-facts" id="st-rec-facts"></div>
+            <div class="st-rec-acts">
+              <button type="button" class="btn btn-gold st-mini" id="st-rec-edit">Amend this record</button>
+              <button type="button" class="btn btn-ghost st-mini st-danger" id="st-rec-remove">Remove this person</button>
+            </div>
+          </div>
+
+          <div class="st-rec-grid" id="st-rec-grid"></div>
+
+          <div class="cl-confirm st-confirm-box" id="st-rec-confirm" hidden>
+            <p class="cl-confirm-q" id="st-rec-confirm-q"></p>
+            <label class="fld" style="margin-bottom:11px;">
+              <span>Why (optional)</span>
+              <input type="text" id="st-rec-reason" maxlength="120" autocomplete="off"
+                     placeholder="Left in July, moved away&hellip;">
+            </label>
+            <div class="cl-confirm-acts">
+              <button type="button" class="btn btn-gold st-mini" id="st-rec-yes">Yes, move to the archive</button>
+              <button type="button" class="btn btn-ghost st-mini" id="st-rec-no">No, go back</button>
+            </div>
+          </div>
         </div>
 
         <!-- ================= one record, open ================= -->
