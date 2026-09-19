@@ -10,6 +10,11 @@
 <title>Taiyabah Masjid, Bolton — Prayer Times, New Build &amp; Community</title>
 <meta name="description" content="Taiyabah Masjid, Bolton — serving the community since 1967. Prayer times, the new build appeal, madrasah, and how to reach us. Get the free prayer times app.">
 <meta name="theme-color" content="#3C0B2A">
+<!-- Google Search Console. Proves to Google that we control this address, which
+     is what the Play Console asks for when verifying an organisation account.
+     A public token, not a secret — it is meant to be read off the page.
+     Leave it in place: removing it un-verifies the property. -->
+<meta name="google-site-verification" content="wNxPSYU7-eElYR1SsyKDetyU9wDUgH3pjFoUqN-_OLI">
 <!-- Canonical address. Set now so that when the domain is pointed here, search
      engines credit the masjid's own domain rather than the staging address. -->
 <link rel="canonical" href="https://www.taiyabahmasjid.com/">
@@ -8009,8 +8014,18 @@ window.TAIYABAH_PUBLIC = {
 
     //  The certificate window, set from today for the same reason the
     //  collection window is: a hard-coded date goes stale overnight.
+    //  Three months back, CLAMPED TO THE END OF THE MONTH, which is what
+    //  Postgres does and therefore what request_charity_collection() accepts.
+    //  setMonth() alone overflows rather than clamping: on 31 May it is asked
+    //  for 31 February and answers 3 March, so the form refused certificates
+    //  the database would have taken, by up to three days. Month-ends only,
+    //  which is how it got past the first round of testing.
     var certFrom = new Date(today);
+    var certDay  = certFrom.getDate();
+    certFrom.setDate(1);
     certFrom.setMonth(certFrom.getMonth() - CERT_MONTHS);
+    certFrom.setDate(Math.min(certDay,
+      new Date(certFrom.getFullYear(), certFrom.getMonth() + 1, 0).getDate()));
     var certEl = $('ccCertDate');
     certEl.min = iso(certFrom);
     certEl.max = iso(today);
