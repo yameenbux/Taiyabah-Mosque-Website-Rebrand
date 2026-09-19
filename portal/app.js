@@ -231,55 +231,101 @@
         confirming it, or the database itself. Two items are left open because
         nobody has told me they are finished, and guessing on those two is
         precisely the failure this rewrite is fixing.                        */
+    /*  THREE STATES, NOT TWO, AND THE MIDDLE ONE IS THE POINT.
+    
+        This list was done / not done. Asked, reasonably: "hasn't this updated?
+        we have created these?" — because the assessment, the privacy notice
+        and the breach procedure were all written on 19 September, and the
+        screen still said STILL OUTSTANDING against all three.
+    
+        The screen was RIGHT and it was USELESS, which is a combination worth
+        naming. Writing a document is not completing the action:
+    
+            Article 13 is discharged by TELLING PARENTS, not by having a file.
+            A breach procedure is not adopted until somebody is named in it.
+            A lawful basis is not recorded until the document carrying it is
+            signed.
+    
+        So none of them could honestly be ticked. But "still outstanding — it
+        needs to exist before it is needed" against a procedure that now exists
+        tells the reader nothing true, and it hides the fact that the work is
+        finished and the decision is somebody else's.
+    
+        Hence a third state: WITH THE TRUSTEES. Written, waiting on a signature
+        or on somebody being named. It is not done and the screen does not
+        pretend it is — but it says where the thing actually is, and `what`
+        says the one action that closes it.
+    
+        A two-state list forces a lie in one direction or the other whenever
+        real work sits between starting and finishing. Most of the work on a
+        list like this sits exactly there.                                   */
     var BEFORE = [
-      /*  NOT `done`, AND IT WAS MARKED done FOR ABOUT AN HOUR THIS MORNING.
-          The masjid confirmed a DPIA was complete before the import, and that
-          was taken at face value and written on this screen. A written
-          assessment to the standard Article 35(7) requires was then produced
-          on 19 September and is unsigned. Until a trustee signs it, "done" is
-          a claim this system cannot support, and this is the one screen where
-          that claim would be read as evidence. */
-      { t: "Data protection impact assessment", done: false,
-        d: "A full written assessment exists, dated 19 September 2026, and is " +
-           "with the trustees for signature. It is not complete until it is " +
-           "signed. It records six actions that are required for compliance, " +
-           "including the privacy notice below." },
+      { t: "Data protection impact assessment", waiting: true,
+        d: "Written and dated 19 September 2026 — twenty pages, twelve risks, " +
+           "nine actions. It is not complete until a trustee signs it, because " +
+           "the decisions it records take effect on signature.",
+        what: "A trustee and a named Data Protection Lead sign the last page." },
+
+      { t: "Issue a privacy notice to parents and staff", waiting: true,
+        d: "Written, nine pages, covering children in Part A and staff in " +
+           "Part B. It is not issued, and Article 13 is discharged by TELLING " +
+           "people — not by having the document. 543 children’s records are " +
+           "held and no notice has reached a parent yet. This is still the " +
+           "most significant gap on this page.",
+        what: "Fill in the Data Protection Lead’s contact details, delete the " +
+              "instruction box, then hand it out and put it on the website." },
+
+      { t: "Agree a breach procedure with a 72-hour route to the ICO",
+        waiting: true,
+        d: "Written, eleven pages, with the seven steps, ten worked examples, " +
+           "a breach record and the register. It is not adopted, and an " +
+           "unadopted procedure names nobody — which is the single most common " +
+           "reason the 72 hours is missed.",
+        what: "Name a Lead, a DEPUTY and technical support with mobile numbers, " +
+              "then sign it. The deputy is not optional: 72 hours does not pause " +
+              "for a weekend." },
+
+      { t: "Write down the lawful basis and the Article 9 condition",
+        waiting: true,
+        d: "Decided and written into the assessment: legitimate interests under " +
+           "Article 6(1)(f), and Article 9(2)(d) — the condition for a " +
+           "not-for-profit religious body keeping records about its own members.",
+        what: "Closes automatically when the assessment above is signed. Nothing " +
+              "separate to do." },
+
       { t: "Register with the ICO", done: true,
-        d: "Confirmed by the masjid. Tier 1, about \u00a352 a year. Processing " +
-           "this data without it is an offence." },
+        d: "Confirmed by the masjid. Charities pay the tier 1 fee of £52 " +
+           "regardless of size. Processing this data without it is an offence." },
+
       { t: "Confirm the data can actually come out of the current system",
         done: true,
         d: "Answered by doing it. 543 pupil records, 45 classes and 40 staff " +
            "came across on 18 September, so the export works and nobody has to " +
-           "re-key anything \u2014 which was the single biggest risk to this " +
+           "re-key anything — which was the single biggest risk to this " +
            "project, and it is now behind us." },
+
       { t: "Make two-step a database rule for pupil tables, not a page rule",
         done: true,
         d: "Done, and stronger than it was asked for. madrasah_pupils and " +
            "madrasah_pupil_classes have row-level security FORCED with no " +
-           "policies at all, so the tables cannot be read directly by anyone \u2014 " +
+           "policies at all, so the tables cannot be read directly by anyone — " +
            "every route in goes through a function that calls verified_admin(), " +
            "which is is_aal2() and is_admin(). A page rule could be bypassed by " +
            "calling the API; there is no API call that reaches these tables." },
-      /*  ADDED 19 SEPTEMBER, from the DPIA. Article 13 requires the people
-          whose data is held to be told; 543 children's records were imported
-          on the 18th and no notice has been issued. It is the first thing the
-          Commissioner would ask about, so it goes above the rest. */
-      { t: "Issue a privacy notice to parents and staff", done: false,
-        d: "Article 13 requires the masjid to tell people what is held about " +
-           "them, why, for how long, and how to complain. 543 children\u2019s " +
-           "records are held and no notice has been issued. This is the most " +
-           "significant outstanding gap and it is not technical work." },
-      { t: "Write down the lawful basis and the Article 9 condition",
+
+      /*  ADDED 19 SEPTEMBER, out of the DPIA's own risk register. The roll was
+          COPIED from the previous system, not moved, so the masjid is running
+          two sets of the same children's records and remains responsible for
+          both. Nothing on this screen said so. */
+      { t: "Delete the children’s records from the previous system",
         done: false,
-        d: "Decided and written down in the assessment: legitimate interests " +
-           "under Article 6(1)(f), and Article 9(2)(d) for the special " +
-           "category condition. Not ticked until the assessment carrying " +
-           "those decisions is signed." },
-      { t: "Agree a breach procedure with a 72-hour route to the ICO",
-        done: false,
-        d: "Still outstanding. It needs to exist before it is needed, and " +
-           "somebody has to be named in it." }
+        d: "The roll was copied across on 18 September, not moved. Until those " +
+           "records are deleted at source the masjid holds two copies of the " +
+           "same 543 children, one of them in a system it has stopped using and " +
+           "is no longer actively governing. Retention, security and subject " +
+           "access all apply to that copy too.",
+        what: "Confirm this system is correct, then delete at source and record " +
+              "the date." }
     ];
 
     /* Named so nothing is quietly forgotten at changeover. NOT a plan — some
@@ -618,25 +664,45 @@
 
       var before = el("md-before-list");
       if (before) {
-        /*  DONE AND NOT-DONE LOOK DIFFERENT, and the done ones are not hidden.
-            A finished item removed from the list takes the evidence with it,
-            and the next person to ask "did we ever do the DPIA?" has nothing
-            to read. They stay, ticked, with how it is known. */
-        before.innerHTML = BEFORE.map(function (b) {
-          return '<li class="' + (b.done ? "md-done" : "md-todo") + '">' +
-            '<span class="md-tick" aria-hidden="true">' +
-              (b.done ? "\u2713" : "\u25cb") + "</span>" +
-            "<span><b>" + esc(b.t) + "</b>" +
-            '<span class="md-state">' +
-              (b.done ? "Done" : "Still outstanding") + "</span>" +
-            "<span>" + esc(b.d) + "</span></span></li>";
+        /*  THREE STATES, TOLD APART BY MORE THAN COLOUR. A tick, a pen and
+            an empty ring, plus the words — because roughly one man in twelve
+            cannot separate the green from the amber, and this is a list
+            somebody will be asked to act on.
+
+            Done items are NOT hidden once ticked. A finished item removed
+            takes its evidence with it, and the next person to ask "did we
+            ever register with the ICO?" has nothing to read. */
+        var MARK = { done: "\u2713", waiting: "\u270e", todo: "\u25cb" };
+        var WORD = { done: "Done", waiting: "With the trustees",
+                     todo: "Still outstanding" };
+        var state = function (x) {
+          return x.done ? "done" : x.waiting ? "waiting" : "todo";
+        };
+
+        before.innerHTML = BEFORE.map(function (bf) {
+          var st = state(bf);
+          return '<li class="md-' + st + '">' +
+            '<span class="md-tick" aria-hidden="true">' + MARK[st] + "</span>" +
+            "<span><b>" + esc(bf.t) + "</b>" +
+            '<span class="md-state">' + WORD[st] + "</span>" +
+            "<span>" + esc(bf.d) + "</span>" +
+            //  WHAT CLOSES IT. A status list that says a thing is outstanding
+            //  and not what would finish it is a list that gets read once.
+            (bf.what
+              ? '<span class="md-next"><b>To close it:</b> ' + esc(bf.what) + "</span>"
+              : "") +
+            "</span></li>";
         }).join("");
-        var n = BEFORE.filter(function (b) { return !b.done; }).length;
+
+        var nWait = BEFORE.filter(function (x) { return state(x) === "waiting"; }).length;
+        var nTodo = BEFORE.filter(function (x) { return state(x) === "todo"; }).length;
         var h = el("md-before-h");
         if (h) {
-          h.textContent = n
-            ? (n === 1 ? "Data protection \u2014 one thing still outstanding"
-                       : "Data protection \u2014 " + n + " things still outstanding")
+          var bits = [];
+          if (nWait) bits.push(nWait + " with the trustees");
+          if (nTodo) bits.push(nTodo + " still to start");
+          h.textContent = bits.length
+            ? "Data protection \u2014 " + bits.join(", ")
             : "Data protection \u2014 all confirmed";
         }
       }

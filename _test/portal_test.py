@@ -353,40 +353,73 @@ with sync_playwright() as p:
     #  on the day one of its items genuinely is outstanding.
     # =====================================================================
     items = pg.eval_on_selector_all("#md-before-list li", """els => els.map(e => ({
-        done: e.classList.contains('md-done'),
+        done:    e.classList.contains('md-done'),
+        waiting: e.classList.contains('md-waiting'),
+        todo:    e.classList.contains('md-todo'),
+        next:    !!e.querySelector('.md-next'),
         t: e.innerText }))""")
-    check(len(items) >= 5, "the data-protection list has only %d items" % len(items))
-    done = [i for i in items if i["done"]]
-    todo = [i for i in items if not i["done"]]
+    check(len(items) >= 6, "the data-protection list has only %d items" % len(items))
+    done    = [i for i in items if i["done"]]
+    waiting = [i for i in items if i["waiting"]]
+    todo    = [i for i in items if i["todo"]]
+
+    #  EXACTLY ONE STATE EACH. Two classes on one row would render a tick and
+    #  a pen together and mean nothing.
+    for i in items:
+        n = sum([i["done"], i["waiting"], i["todo"]])
+        check(n == 1,
+              "an item carries %d states at once, so it shows two marks: %r"
+              % (n, i["t"][:70]))
+
     check(done, "NOTHING is marked done, on a system that has already imported "
-                "543 pupil records — so the list is describing a gate it is "
+                "543 pupil records \u2014 so the list is describing a gate it is "
                 "standing on the far side of")
-    check(todo, "EVERYTHING is marked done. Two items were still open when this "
-                "was written and nobody has said otherwise; marking them done "
-                "because the rest are is the failure this list exists to avoid")
 
-    #  DONE ITEMS ARE NOT DELETED. A finished item removed takes its evidence
-    #  with it, and the next person to ask "did we ever do the DPIA?" has
-    #  nothing to read.
+    #  THE MIDDLE STATE IS THE WHOLE POINT OF THIS SECTION.
+    #
+    #  The list was done / not done, and on 19 September the assessment, the
+    #  privacy notice and the breach procedure were all written \u2014 and all
+    #  three still read STILL OUTSTANDING, next to "it needs to exist before it
+    #  is needed" against a procedure that existed. The screen was RIGHT (a
+    #  document is not an adopted procedure) and USELESS (it hid that the work
+    #  was finished and the decision was somebody else's).
+    #
+    #  A two-state list forces a lie in one direction or the other whenever
+    #  real work sits between starting and finishing, which is where most of
+    #  the work on a list like this sits.
+    check(waiting,
+          "NOTHING is 'with the trustees'. Three documents were written on 19 "
+          "September and none of them can be ticked until it is signed \u2014 if "
+          "the list has no middle state it must be calling them either finished "
+          "or not started, and both are false.")
+
+    #  AND ANYTHING NOT DONE SAYS WHAT WOULD CLOSE IT. A status list that
+    #  reports a thing is outstanding without saying what finishes it is a list
+    #  that gets read once.
+    for i in waiting + todo:
+        check(i["next"],
+              "%r is not done and does not say what would close it"
+              % i["t"].split("\n")[0][:60])
+
     joined = " ".join(i["t"] for i in items).lower()
-    #  "dpia" was in this list until the item was retitled "data protection
-    #  impact assessment" in full - which is better English on a screen a
-    #  trustee reads, and broke a check looking for the acronym. Both spellings
-    #  are accepted so the test is about the SUBJECT being covered, not about
-    #  which of two names for the same thing the screen happens to use.
-    check("dpia" in joined or "impact assessment" in joined,
-          "the data-protection list no longer mentions the impact assessment "
-          "at all: %r" % joined[:300])
-    for want in ["privacy notice", "ico", "article 9", "aal2"]:
+    for want in ["dpia", "impact assessment"]:
+        if want in joined:
+            break
+    else:
+        check(False, "the list no longer mentions the impact assessment: %r" % joined[:200])
+    for want in ["ico", "article 9", "aal2", "privacy notice", "breach"]:
         check(want in joined,
-              "%r is no longer anywhere in the data-protection list: %r"
-              % (want, joined[:300]))
+              "%r is no longer anywhere in the data-protection list" % want)
 
-    #  AND THE HEADING COUNTS WHAT IS LEFT, so somebody reads the number
-    #  rather than the whole list.
+    #  THE HEADING COUNTS WHAT IS LEFT, split by state, so somebody reads the
+    #  number instead of the whole list.
     head = text(pg, "#md-before-h").lower()
-    check(str(len(todo)) in head or "outstanding" in head,
-          "the data-protection heading does not say how much is left: %r" % head)
+    check("trustees" in head or "outstanding" in head or "confirmed" in head,
+          "the data-protection heading does not say where things stand: %r" % head)
+    if waiting:
+        check(str(len(waiting)) in head,
+              "the heading does not say how many are with the trustees (%d): %r"
+              % (len(waiting), head))
 
     check(errs == [], "uncaught exceptions for an administrator: %s" % errs)
     pg.close()

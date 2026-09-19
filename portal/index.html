@@ -825,15 +825,31 @@
   .md-tick{ flex-shrink:0; width:22px; height:22px; border-radius:50%;
     display:inline-flex; align-items:center; justify-content:center;
     font-size:.84rem; font-weight:700; margin-top:2px; }
+  /*  THREE STATES: done, with the trustees, not started. Told apart by the
+      mark, the word AND the colour, never by colour alone — roughly one man
+      in twelve cannot separate the green from the amber, and this is a list
+      somebody is being asked to act on. */
   .md-done .md-tick{ background:rgba(63,122,70,.15); color:var(--success-ink,#2F5E36);
     border:1px solid rgba(63,122,70,.4); }
-  .md-todo .md-tick{ background:var(--paper); color:var(--gold-ink,#7A5D14);
-    border:1px dashed rgba(198,162,76,.6); }
+  /*  Written, waiting on a signature. Solid rather than dashed, because the
+      work IS finished — the dashed ring is for something nobody has started. */
+  .md-waiting .md-tick{ background:rgba(198,162,76,.18); color:var(--gold-ink,#7A5D14);
+    border:1px solid rgba(198,162,76,.65); }
+  .md-todo .md-tick{ background:var(--paper); color:var(--danger-ink,#A0451F);
+    border:1px dashed rgba(180,83,47,.55); }
   .md-state{ display:block; font-size:.76rem; font-weight:800; letter-spacing:.08em;
     text-transform:uppercase; margin:2px 0 3px; }
   .md-done .md-state{ color:var(--success-ink,#2F5E36); }
-  .md-todo .md-state{ color:var(--gold-ink,#7A5D14); }
+  .md-waiting .md-state{ color:var(--gold-ink,#7A5D14); }
+  .md-todo .md-state{ color:var(--danger-ink,#A0451F); }
   .md-done b{ color:var(--muted); }
+  /*  THE ONE ACTION THAT CLOSES IT. A status list that says a thing is
+      outstanding and not what would finish it is a list that gets read once
+      and then ignored. */
+  .md-next{ display:block; margin-top:6px; padding:8px 11px; border-radius:8px;
+    background:var(--card); border:1px solid var(--line);
+    font-size:.92rem; line-height:1.55; color:var(--ink); }
+  .md-next b{ color:var(--gold-ink,#7A5D14); }
 
   @media (max-width:640px){
     .md-job{ gap:12px; }
