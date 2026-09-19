@@ -240,31 +240,46 @@ body.has-ashell .panel{
 }
 /*  HOW WIDE THE WORKING AREA IS, IN ONE PLACE.
 
-    1180px is right for most of these screens: a Gift Aid table or a list of
-    bookings stretched across a 2560px monitor is a line your eye cannot track
-    back from. But it is wrong for the few that are genuinely wide — a whole
-    madrasah year of twelve months, forty-five class cards, two columns of
-    staff — where the cap leaves a third of the desk empty.
+    THE DEFAULT IS NOW THE WHOLE DESK, and it used to be 1180px.
 
-    So the number is a variable with the safe answer as its default, and a page
-    that needs the whole desk says so in ONE line of its own stylesheet:
+    The old default was defensible on its own terms - a Gift Aid table stretched
+    across a 2560px monitor is a line your eye cannot track back from - but it
+    was wrong about what people actually saw, and the masjid said so twice:
 
-        :root{ --desk-max:none; }
+        "i want you to use the full width of the page"
+        "the way you stick to one side or cut things off or leave finishing in
+         the middle of the screen is unclean and not professional"
 
-    This replaced four copies of a three-rule override, one per screen, of
-    which three had been written from memory and were incomplete: they lifted
-    the cap on `.card.is-wide` and left it on `.panel > .card`, so the page
-    stayed at 1180px and looked like it had simply not been done. Found when
-    the masjid asked why the Classes screen was not using the full width.  */
+    The second one names the real fault. It was never mainly about absolute
+    width: it was that five screens lifted the cap and twelve did not, and on
+    /portal/ the tiles ran to the edge of the desk while the paragraph above
+    them stopped at 760px. Two blocks ending at 40% with blocks ending at 100%
+    above and below them reads as unfinished, because it IS unfinished.
+
+    An opt-in default gets opted into by whoever remembers. So the default is
+    now `none` and the whole set is consistent.
+
+    WHAT REPLACES THE CAP, because the readability problem was real: a block of
+    prose that would run to 200 characters a line is set in COLUMNS instead, so
+    it fills the width at a measure somebody can actually read. Width is used;
+    line length is not abandoned. See .md-lead and .md-before in portal/.
+
+    A screen that genuinely wants a narrow measure says so in its own
+    stylesheet, in one line:
+
+        :root{ --desk-max:1180px; }
+
+    and it should say WHY on the same line, because the next person to see a
+    narrow screen beside a wide one will assume it was forgotten.            */
 body.has-ashell .panel > .card{
   margin-left:0 !important;
   margin-right:0 !important;
   width:100% !important;
-  max-width:var(--desk-max, 1180px);
+  max-width:var(--desk-max, none);
 }
 body.has-ashell .card.is-wide{
   width:100% !important;
-  max-width:var(--desk-max, 1180px);
+  max-width:var(--desk-max, none);
 }
 
 /*  IDENTITY IN ONE PLACE. Every staff screen opens its working area with an
@@ -305,7 +320,7 @@ body.has-ashell #app-signout{ display:none !important; }
   /*  The page title and the rule under it follow the working area. Left at a
       fixed 1180px the rule stops dead halfway across a wide desk, which reads
       as a layout fault rather than a heading. */
-  max-width:var(--desk-max, 1180px);
+  max-width:var(--desk-max, none);
   padding:26px 0 18px;
   border-bottom:1px solid var(--line,#E4DECF);
   margin-bottom:22px;

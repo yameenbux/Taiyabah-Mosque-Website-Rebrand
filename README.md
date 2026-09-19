@@ -1015,7 +1015,7 @@ and nothing keeps them in step. **After ever changing it, run
 ```bash
 cd db/harness && ./run-all.sh          # 16 SQL suites
 deno test supabase/functions/notify/messages_test.ts    # 66 assertions
-python3 _test/<name>.py                # 29 suites
+python3 _test/<name>.py                # 30 suites
 python3 tools/build_admin_fonts.py     # after changing the site's fonts
 ```
 

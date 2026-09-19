@@ -643,7 +643,42 @@
 .md-lead{
   border:1px solid rgba(198,162,76,.5);background:rgba(198,162,76,.09);
   border-radius:12px;padding:14px 16px;font-size:.986rem;line-height:1.65;
-  color:var(--ink);margin-bottom:18px;max-width:760px;
+  color:var(--ink);margin-bottom:18px;
+}
+/*  FULL WIDTH, BUT SET IN COLUMNS RATHER THAN ONE ENORMOUS LINE.
+    This carried max-width:760px and stopped at 40% of the desk while the
+    tiles above and below it ran to the edge. Removing the cap alone would
+    give a 200-character line, which is the reason the cap was there. Columns
+    answer both: the block fills the width, and no line is longer than about
+    80 characters. Two columns from 1250px, three from 1750px. */
+/*  A BAND, NOT COLUMNS. Both were tried on this block and both were wrong:
+    three columns put one short sentence in each and made the eye travel back
+    to the top twice to read a single thought; two columns broke the sentence
+    across the rule at "because there is | nowhere here to put them yet".
+
+    Columns earn their place on long prose. This is three sentences and a date
+    stamp, so it is laid out as what it actually is: a statement on the left at
+    a measure somebody can read, and the date on the right-hand end. The block
+    fills the width because its right edge is OCCUPIED, not because the text
+    has been stretched to reach it. */
+.md-lead{ display:flex; align-items:flex-end; gap:30px; flex-wrap:wrap; }
+/*  min-width:0 AND A BASIS THAT FITS A PHONE. The first version was
+    `flex:1 1 560px`, which makes 560px the smallest this paragraph will
+    agree to be — so at 390px the page scrolled sideways. portal_test.py
+    caught it ("the admin view scrolls sideways at 390px"), which is what
+    that check is for: a desk-width change is exactly when a phone gets
+    broken, because nobody is looking at a phone while they do it. */
+.md-lead p{ flex:1 1 280px; min-width:0; margin:0; max-width:105ch; }
+/*  `0 1 auto`, NOT `0 0 auto`. The first version refused to shrink, so on a
+    390px phone it sat at its full 372px content width plus the panel padding
+    and pushed the page 29px sideways. A flex item that may not shrink is a
+    minimum width in disguise, and a minimum width is what breaks a phone. */
+.md-lead .md-when{
+  flex:0 1 auto; min-width:0; margin-left:auto; text-align:right;
+  font-size:.79rem; line-height:1.5; color:var(--muted); max-width:22ch;
+}
+@media (max-width:820px){
+  .md-lead .md-when{ margin-left:0; text-align:left; max-width:100%; }
 }
 
 .md-counts{
@@ -695,10 +730,10 @@
 
 .md-before{
   border:1px solid rgba(180,83,47,.34);background:rgba(180,83,47,.06);
-  border-radius:13px;padding:16px 18px;max-width:760px;
+  border-radius:13px;padding:16px 18px;
 }
 .md-why{font-size:.949rem;color:var(--muted);line-height:1.65;margin:0 0 12px;}
-.md-why-wide{max-width:760px;margin-top:-4px;}
+.md-why-wide{margin-top:-4px;}
 .md-list{list-style:none;display:flex;flex-direction:column;gap:9px;margin:0;}
 .md-list li{
   font-size:.96rem;line-height:1.55;color:var(--ink);
@@ -711,7 +746,7 @@
 .md-list li b{color:var(--brand-900);}
 .md-list li span{display:block;color:var(--muted);font-size:.926rem;margin-top:2px;}
 
-.md-rest{display:flex;flex-wrap:wrap;gap:7px;max-width:860px;}
+.md-rest{display:flex;flex-wrap:wrap;gap:7px;}
 .md-rest span{
   font-size:.9rem;font-weight:600;padding:5px 11px;border-radius:999px;
   background:var(--paper);border:1px dashed var(--line);color:var(--muted);
@@ -850,6 +885,23 @@
     background:var(--card); border:1px solid var(--line);
     font-size:.92rem; line-height:1.55; color:var(--ink); }
   .md-next b{ color:var(--gold-ink,#7A5D14); }
+
+  /*  EIGHT ITEMS IN ONE COLUMN LEAVES A PANEL THAT IS MOSTLY EMPTY ON THE
+      RIGHT. Two columns from 1250px, three from 1800px. The dashed separator
+      between rows becomes a gap instead, because a rule that only spans a
+      third of the panel is the same "stops in the middle" fault one level
+      down. */
+  @media (min-width:1250px){
+    .md-list{ display:grid; grid-template-columns:1fr 1fr; gap:4px 34px; }
+    /*  An item split across a column boundary puts its "to close it" box
+        under a different heading, which is worse than no columns at all. */
+    .md-list li{ break-inside:avoid; }
+    .md-list li{ border-bottom:0; padding:11px 0;
+      border-top:1px dashed var(--line); align-items:flex-start; }
+  }
+  @media (min-width:1800px){
+    .md-list{ grid-template-columns:repeat(3, 1fr); }
+  }
 
   @media (max-width:640px){
     .md-job{ gap:12px; }
@@ -1005,11 +1057,11 @@
              saying where it came from, would have somebody reporting it to
              the committee as this system's roll within a month. -->
         <div class="md-lead" id="md-lead">
-          <strong>Nothing has been imported yet.</strong>
+          <p><strong>Nothing has been imported yet.</strong>
           The figures below are what the masjid&rsquo;s current system holds today.
           They are here so the shape of this page is right &mdash; not because this
           database has them. It holds <strong>no pupil records at all</strong>, and
-          it must not hold any until the paperwork further down is finished.
+          it must not hold any until the paperwork further down is finished.</p>
         </div>
 
         <!-- WHAT NEEDS DOING. First, because the page is called that and

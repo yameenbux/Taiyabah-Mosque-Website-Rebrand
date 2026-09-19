@@ -735,18 +735,28 @@
         if (MINE.staff)   held.push(MINE.staff + " teachers");
         if (MINE.classes) held.push(MINE.classes + " classes");
         lead.innerHTML = held.length
-          ? "<strong>This system holds " + esc(held.join(", ")) + ".</strong> " +
+          ? "<p>" + "<strong>This system holds " + esc(held.join(", ")) + ".</strong> " +
             "Everything below is read from it. <strong>Families and contacts are " +
             "the exception</strong> \u2014 that tile is still what the masjid\u2019s " +
             "current system holds, because there is nowhere here to put them yet."
-          : "<strong>Nothing has been read back yet.</strong> The figures below are " +
+          : "<p><strong>Nothing has been read back yet.</strong> The figures below are " +
             "not this system\u2019s. Reload the page; if it says this again, the " +
-            "database is not answering.";
+            "database is not answering.</p>";
       }
       if (lead) {
+        /*  A SIBLING, NOT A TRAILING LINE, so the band can put it on the
+            right-hand end and the statement can keep a readable measure on
+            the left. The block then fills the width without anything
+            stopping in the middle of the screen.
+
+            And it names WHICH figure it dates. It used to read "Figures as
+            at 13 September" under four tiles, three of which are now read
+            live from the database and one of which is not — so the date
+            was wrong about three quarters of what it sat under. */
         var when = document.createElement("div");
-        when.style.cssText = "margin-top:8px;font-size:.79rem;color:var(--muted);";
-        when.textContent = "Figures as at " + CURRENT.as_at + ".";
+        when.className = "md-when";
+        when.textContent = "Contacts figure as at " + CURRENT.as_at +
+                           ". The other three are live.";
         lead.appendChild(when);
       }
     }
