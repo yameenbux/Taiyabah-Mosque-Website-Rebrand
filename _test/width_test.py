@@ -67,6 +67,9 @@ STUB = """
 
 #  Every staff screen that mounts the rail.
 PAGES = ["/portal/", "/portal/staff/", "/portal/classes/", "/portal/archive/",
+         "/portal/fees/", "/portal/fees/families/", "/portal/fees/transfers/", "/portal/fees/owing/",
+         "/portal/fees/discounts/", "/portal/fees/refunds/",
+         "/portal/fees/structure/", "/portal/fees/annual/",
          "/portal/calendar/", "/portal/people/", "/portal/profile/",
          "/access/", "/newbuild/", "/venue/", "/giftaid/", "/courses/",
          "/collections/", "/notices/", "/times/", "/portals/", "/apply/"]

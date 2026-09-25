@@ -809,6 +809,11 @@ Migrations are pasted into the SQL editor in order.
 | `037_rate_limit_every_public_form` | **Four more forms with no limit at all.** A first pass searching each function for "rate" or "limit" said they were protected; the word that matched was `limit` in unrelated SQL. Searching source for a reassuring word is not a test. Looking for `now() - interval` gave the real answer: nikāḥ, admissions, courses and volunteers had nothing. One generic `rate_limit_by_contact()` trigger, parameterised by column names, applied to all four. It does **not** stop somebody varying both phone and email — nothing in Postgres can, since it cannot see an IP — and if that ever happens the answer is Cloudflare in front of the site, not a lower number here. |
 | `035_notify_the_other_three_forms` | **Three more forms that wrote a row and told nobody**, found by asking of every anon-callable function "and then who is told?" Madrasah admissions, course registrations and foodbank volunteers all collected an email address and never used it. Adds their webhooks the same way `033` does, plus `grant select on courses to service_role` so a course key becomes its real name. The madrasah email deliberately carries **nothing at all about a child** — no name, date of birth, school, SEND, EHCP, allergy or medical detail. |
 | `050_the_app_can_publish_a_notice_again` | **A production outage this project caused, and did not notice.** `040` dropped `publish_notice()` — rightly; it had no admin check at all and was safe only by its grant. What nobody asked was who else was calling it. The phone app's Cloudflare Worker was, and it sends the push *after* writing the row, so from that morning **pressing "Send notification" on the app's trustee screen failed and no notification went out either**. Restores it with the same name, argument and return shape the Worker expects, service_role only, and validating through `check_notice()` — so the app and the website have one definition of a valid notice and two doors to it. |
+| `072_a_reminder_is_sent_or_it_is_not` | **"Sent" meant "put in an envelope and not posted".** 071 queued each reminder with `net.http_post` and wrote `sent` on the next line; that function is fire-and-forget and returns an id for a request that has not been made. Nothing read the answer, and the mail provider reports no bounces either — two layers of not-knowing stacked on each other, with a screen saying "Sent" through both. The consequence is not academic, because `sent` is also what starts the seven-day lock: a family whose message failed at the mail server was recorded as chased, could not be chased again for a week, and had never been written to. **071's own footer admitted the shape of this and left it** — a known defect written down in a comment is still a defect, just one somebody chose. Now: recorded `queued` with the request id, reconciled to `sent` or `failed` with the reason by a function that runs every five minutes *and* on the Outstanding screen's load. A failure releases the lock at once and the screen offers to retry those in one press. pg_net sweeps its own responses within hours, so anything unresolved after six is written off as "no answer was ever read — it may have gone; there is no way to tell": for a system that chases people for money, not knowing has to look like failure, and the cost of being wrong that way is one duplicate email. `madrasah_fee_balances()` had to learn the same vocabulary in the same commit, or the screen would again have offered the office a family the database would refuse. |
+| `071_fee_reminders_and_the_annual_report` | **The first email this system sends to somebody who did not just fill a form in.** Every other message it sends is a receipt; a fee reminder is unsolicited, about money, and goes to a list because somebody pressed a button. So: one per family per seven days, nothing to a family that owes nothing (checked at the moment of sending, not against what the screen showed five minutes ago), at most 120 in one press — an email cannot be unsent — and **it never names a child**. A madrasah roll reveals a child's religion, email is not a secure channel, and a line like "Yusuf — Autumn term" in a message forwarded round a family group is a disclosure the masjid never had to make. A check reads the part of the function that builds the payload and fails if a pupil name, a class or a charge description ever reaches it. The log records the family, the time and the balance — **not the email address**, which is on the guardian record and on the retention clock; copying it into a log that outlives that record would quietly defeat the retention period. Also holds the annual report, which counts charges on the day they were raised and payments on the day the money arrived, says so, and labels outstanding as *today* rather than as at the end of the range, because the data for a point-in-time balance is not kept and a figure labelled as something it is not is worse than an absent one. |
+| `070_charges_payments_and_what_a_family_owes` | **The ledger, with no allocation table — a decision, not an omission.** The textbook design joins payments to charges so the system can say which term a particular £40 paid off. It answers a question nobody at a masjid asks and asks one nobody can answer: a father transfers £100 for three children across two terms with a balance from last year, and there is no true answer about which charge it paid. Force the office to pick and guesses get recorded as facts; then a discount is applied retrospectively, the charge shrinks, and a term shows as paid that isn't. So a family has a **balance** — everything charged minus everything received — and a refund is a payment with a minus sign, so one subtraction covers it and there is no second code path to disagree with the first. `net_p` is a **generated** column, so a screen that forgets to subtract a waiver cannot produce a different total from the report. The cost is stated rather than hidden: this cannot tell you the Autumn term specifically is unpaid. Card payments are **not** auto-posted from the Stripe webhook — a madrasah reference is typed by a parent from memory, monthly, for a year, and crediting the wrong family on a mistyped one is a silent failure that keeps chasing the family who actually paid. |
+| `069_what_the_madrasah_charges` | **The rate card, the terms, and the sibling discount — out of a template and into a screen.** £10 a week lived in three lines of `index_template.html`; changing it meant two Python scripts and a push, which is 045's complaint word for word. It is seeded **unconfirmed**, because the masjid has never confirmed those figures — "Are the fees still £10 / £14 / £20?" has been open since the admissions work — and seeding them as settled would turn an unanswered question into a number that bills five hundred families. Money is **integer pence**, which departs from 045's text prices deliberately: a balance is arithmetic, and 0.1 + 0.2 in floating point is how a family comes to owe a penny forever. A term is a name, two dates and a **number of chargeable weeks a person types in** — no formula can answer it, because madrasah terms break for Ramadan and Eid and the masjid decides each year whether the half-term week is charged. A billed term's dates and week count are then frozen, or every bill would disagree with the term it was worked out from and a parent checking their own arithmetic would find it first. The setting validation lives in its own `IMMUTABLE` function so it can be **tested**: inside the setter, a check that feeds it a look-alike payment link is refused by `verified_admin()` first, the handler swallows it, and the check reports a pass it never earned. |
+| `068_families_and_who_to_email` | **The fees section cannot be built until the madrasah knows what a family is.** Everything the office does with money is done per family: one bill covers three children, one transfer arrives for all of them, the sibling discount is a statement about a family, a refund goes back to whoever paid. Build it on the pupil and you get three bills to one house and three reminders to one father. Adds `madrasah_households` with the `MF-0001` reference the family quotes on every transfer — generated and **not editable**, because a reference somebody can change stops matching the transfers already on the bank statement — and `madrasah_guardians`, exactly one of whom is primary (a partial unique index, so a form listing the mother first and ticking the father cannot hold two and die on "duplicate key"). Deleting a family is `ON DELETE SET NULL` to the pupil and `RESTRICT` from the money tables, with checks that fail if either ever changes: the three-year pupil purge must never take the charity's six-year financial records with it. **This extends what the masjid holds and the DPIA as written does not cover it** — a guardian is a new category of data subject — so the obligation was put on the compliance list on `/portal/` in the same commit, not left in this header. A note in a migration is not a control. |
 | `067_the_madrasah_retention_actually_runs` | **The retention policy for 543 children's records was written and never ran.** `purge_madrasah_pupils()` (058) and `purge_madrasah_archive()` (064) both carried the agreed three-year interval, both were tested, and neither was ever in `cron.job` — `select count(*) from cron.job where jobname like '%madrasah%'` returned **0**. Twelve purges ran nightly and not one touched a child's record. Found while gathering facts for the DPIA, because a DPIA has to state how long records are kept **and by what mechanism**, and the honest answer was “three years, enforced by nothing”. This is `038` repeating itself on the two most sensitive tables: the lesson was written down and then not applied to the tables added afterwards, because writing the purge *feels* like finishing the job and the tests test the function, not the schedule. Both now run weekly. The counts were taken first — 0 pupils and 0 archive rows due — so it is a no-op rather than something that deletes live records on the first Monday. **A check now fails if any deletion function in the schema is not attached to a scheduled job**, which is the general form of the fault rather than the two instances of it. |
 | `066_what_actually_needs_doing` | **The landing page could answer one question and stated the opposite of the truth about the rest.** It showed “539 Students — in the madrasah's current system, not imported” over a panel reading “it holds no pupil records at all”, with 543 children in `madrasah_pupils` since the 18th: three false statements and a figure wrong by four, on the screen whose numbers reach the committee. `madrasah_overview()` now returns twelve counts — pupils, classes with no main teacher, pupils in no class, staff with no side or no days, admissions waiting, and archive rows inside 30 days of being purged. **No child is named by it**: `dbs_needs_attention` returns names because they are staff and an administrator has to know who to ring, and a check fails if anything about a pupil ever returns one. The landing page gets counts; names stay one deliberate press away. |
 | `065_the_list_says_what_is_on_file_without_carrying_it` | **The staff list says what is on file without carrying it.** The masjid asked for “little icons on the teachers to show what the teacher has available of them”. The obvious build returns the address, the date of birth and the working hours on every row and lets the browser decide whether to draw a tick — which means forty home addresses leave the database, cross the network and sit in the browser's memory, the page source, the cache and any screenshot, to draw forty 24-pixel squares that display none of it. So the list returns six computed flags (`has_address`, `has_dob`, `has_phone`, `has_email`, `has_hours`, `days_a_week`) and the values stay in `madrasah_staff_one()`, called when somebody opens **one** person. The check that guards it is worth reading: `'s.address' not in the function` **cannot fail**, because the flag is built out of the column — so it looks for the column standing alone on its own line of the select list instead, and was proved by adding one. The whole function body is printed, which is the 053 lesson. |
@@ -899,6 +904,7 @@ refuses to run while a role-holder has no authenticator.
 
 Two payment flows share one Stripe webhook, which routes on the reference
 prefix — `HH-` to `mark_deposit_paid()`, `NK-` to `mark_nikah_fee_paid()`.
+**Madrasah fees deliberately do not use it** — see below.
 
 ### Hall hire
 
@@ -961,6 +967,125 @@ selling dates the imam may not be free for.
 `_test_nikah_fee.sql` section 03 fails the moment `status` moves. **If a future
 change makes that section fail, the change is wrong, not the assertion.**
 
+### Madrasah fees
+
+Eight screens under `/portal/fees/`, all administrators only. Migrations
+**068–072**; behaviour proved by `db/_test_fees.sql` (62 assertions) and
+`_test/fees_test.py` (202 checks).
+
+**A family is the unit, not a child.** `madrasah_households` + a payment
+reference (`MF-0001`) the family quotes on every transfer, and
+`madrasah_guardians` for the one adult who gets the reminders. Everything the
+office actually does with money — one bill, one transfer, the sibling
+discount, a refund — is done per family. Build it on the pupil and you get
+three bills to one house and three reminders to one father.
+
+**There is no allocation table, and that is a decision.** A family has a
+BALANCE: everything charged minus everything received. A father who transfers
+£100 for three children across two terms has not paid a particular charge — he
+has paid £100 off what he owes, and forcing the office to pick one records a
+guess as a fact. A refund is a payment with a minus sign, so the same
+subtraction covers it. The cost, stated plainly: this system cannot tell you
+that the Autumn term specifically is unpaid.
+
+**A term is a number of chargeable weeks typed in by a person.** Not derived —
+madrasah terms do not match school terms, they break for Ramadan and Eid, and
+the masjid decides each year whether the half-term week is charged. A bill is
+weeks × rate, minus the sibling discount. The same schema bills monthly if the
+masjid ever switches.
+
+**Card payments are recorded by hand, not by the webhook.** `HH-` and `NK-`
+references are generated here and shown to one person for one payment. A
+madrasah reference is typed by a parent from memory, monthly, for a year — it
+*will* be typed wrong, and auto-posting on a wrong reference credits the wrong
+family while the one who actually paid keeps getting chased. Every receipt,
+whichever route it came by, is entered on **Bank transfers** by somebody who
+looked at it.
+
+**"Sent" means sent — migration 072.** 071 queued each message with
+`net.http_post` and wrote `sent` on the next line. That function is
+fire-and-forget: it returns an id for a request that has not been made yet.
+Nothing read the answer, and one.com reports no bounces either, so the masjid
+had two layers of not-knowing stacked on each other and a screen that said
+"Sent" through both. Worse, `sent` is what starts the seven-day lock — a
+family whose message failed was recorded as chased, could not be chased again
+for a week, and had never been written to. Now a reminder is recorded
+**queued** with the request id; `reconcile_madrasah_fee_reminders()` reads
+pg_net's response table and moves it to **sent** or **failed** with the
+reason. It runs every five minutes on pg_cron *and* when the Outstanding
+screen loads. A failed reminder releases the lock immediately and the screen
+offers to try those again in one press; a queued one holds it. pg_net sweeps
+its own responses within hours, so anything unresolved after six is written
+off as *"no answer was ever read — it may have gone; there is no way to
+tell"*, which is the honest reading: for a system that chases people for
+money, not knowing has to look like failure.
+
+**A fee reminder never names a child.** It is the only unsolicited message
+this system sends. A madrasah roll reveals a child's religion — Article 9 data
+— and email is not a secure channel. The message carries the family, the
+reference and the amount. Migration 071 has a check that fails if a pupil
+name, class or charge description ever reaches the payload, and
+`messages_test.ts` asserts the same thing at the template end. One reminder
+per family per seven days, at most 120 at a time, nothing to a family that
+owes nothing — all enforced in Postgres, not in the screen.
+
+**The rate card is seeded unconfirmed.** £10/£14/£20 came off the admissions
+page and the office has never confirmed them — the question has been open
+since September. Every screen that uses them says so until an administrator
+presses the button, which records who did it.
+
+**Bank details are editable, which departs from 045.** That migration put hall
+hire's out of scope because "a sort code and account number on a *public* web
+page are what a fraudster edits if they ever get in". These sit behind sign-in
+and two-step. Hard-coding them means that on the day the masjid changes bank,
+somebody pastes an account number into a template under time pressure with no
+record of who did it. What defeats mandate fraud is not immutability but
+noise: every change is audited, the screen permanently shows who last made
+one, and the account number has to be typed twice.
+
+**Gift Aid cannot be claimed on madrasah fees.** A fee buys a place in a
+class, which makes it payment for a service and not a gift. There is no Gift
+Aid tick box on this side and that is not an oversight — the reason is written
+beside the menu in `nav.js`.
+
+**What an adversarial review of this section found, after it was green.**
+Nine defects survived thirty-plus checks and a full SQL suite. The worst was
+arithmetic: a "£ off" sibling rule was stored in pence and re-rendered into a
+box labelled in pounds, so every save multiplied it by a hundred — two saves
+and the clamp in Postgres would have made every sibling free, silently, at the
+next "Raise charges". A percentage round-tripped unharmed, which is why
+nothing caught it. Also found: an open refund confirmation naming one family
+while a press on another row had already changed which family it would post
+to; a ticked family that a filter hid but the Send button still emailed; a
+billed term that could not be saved at all and therefore never closed; bank
+details written field-by-field so a bad sort code committed the first two and
+reported "Nothing was saved"; a discount function any signed-in account could
+use as an oracle; and every write-off silently wiping the discount's own
+reason. Each now has a test that was watched failing. **Build the review in:
+a suite that passes is evidence the things you thought of are right.**
+
+**A hole that all the tests passed through.** 068 created the household
+tables and the functions to write them; six screens were then built, each with
+a family picker, each searching that table, each correct. Nothing could put a
+row into it — there was no Families screen — so the entire section was
+unusable and every suite was green, because each screen was right about its
+own job and nothing asked whether the sequence a person has to follow existed
+end to end. A missing screen does not throw; it makes a search box that always
+comes back empty, which reads as "no families yet" rather than as a hole.
+Fixed by building it, and `fees_test.py` now walks the whole path: create a
+family from the backlog list, put a child in it, open it, and read it back.
+
+**The assessment covers parents as of v1.1** (20 September), along with the
+privacy notice. Three risks and five measures in the DPIA exist only because
+of the reminder. Both still need signing, and the DPIA's own action A11 says
+reminders must not be switched on until the privacy notice has reached
+parents — writing to somebody about money using details they were never told
+you held is the wrong order. **Sign v1.1, not v1.0.**
+
+**Still open:** the notify edge function must be redeployed. Until it is,
+every reminder will now reconcile to FAILED — which is correct, and is the
+first time this system has been able to say so.
+
 ---
 
 ## Email
@@ -1013,9 +1138,9 @@ and nothing keeps them in step. **After ever changing it, run
 ## Testing
 
 ```bash
-cd db/harness && ./run-all.sh          # 16 SQL suites
-deno test supabase/functions/notify/messages_test.ts    # 66 assertions
-python3 _test/<name>.py                # 30 suites
+cd db/harness && ./run-all.sh          # 17 SQL suites
+deno test supabase/functions/notify/messages_test.ts    # 76 assertions
+python3 _test/<name>.py                # 31 suites
 python3 tools/build_admin_fonts.py     # after changing the site's fonts
 ```
 
@@ -1028,6 +1153,17 @@ with `MADRASAH_DB=/path/to/it`.
 **Every harness reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS` role
 before asserting anything.** Skip that and the tests run as a superuser, which
 ignores RLS entirely — and a broken policy set passes.
+
+**One exception, and it is not laziness: `_test_fees.sql`.** The fee tables use
+`FORCE ROW LEVEL SECURITY` with *no policies at all*, which under FORCE makes
+even the owner subject to RLS — so an owner without `BYPASSRLS` cannot read its
+own table and every `SECURITY DEFINER` function in 068–071 fails. In Supabase
+the `postgres` role that owns these objects *has* `rolbypassrls`, which is
+exactly why the pattern works there; reassigning here would not be a stricter
+test, it would be a different system. What protects those tables is the
+privilege gate in front of RLS — `revoke all … from anon, authenticated`, which
+is checked before RLS is ever consulted, so a wrong policy cannot leak a row.
+Test 12 asserts that, and it is the one that matters.
 
 Three browser-test habits, each bought with a bug:
 

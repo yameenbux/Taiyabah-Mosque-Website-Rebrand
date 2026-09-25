@@ -853,3 +853,117 @@ Deno.test("every new kind produces an office email — none is silently dropped"
     assert(officeMessage(e) !== null, `${kind} tells nobody`);
   }
 });
+
+/* ===========================================================================
+   THE MADRASAH FEE REMINDER
+
+   The only unsolicited message this system sends, and the only one that goes
+   to a list. Two things about it are worth testing and one of them is the
+   whole reason the tests exist:
+
+   A madrasah roll reveals a child's religion, which is Article 9 data. An
+   email is not a secure channel and a fee reminder gets forwarded round a
+   family group. So the message carries the FAMILY, the reference and the
+   amount, and nothing about a child.
+
+   Migration 071 has a CHECK that fails if a pupil name ever reaches the
+   payload. This is the other end of the same guard: even if one were passed
+   in, the template must not print it.
+   =========================================================================== */
+
+const REMINDER: Event = {
+  kind: "madrasah_fee_reminder",
+  reference: "MF-0148",
+  email: "parent@example.test",
+  family: "Khan — 14 Blackburn Road",
+  balance_p: 22750,
+  bank_name: "HSBC",
+  bank_account_name: "Bolton Central Islamic Society",
+  bank_sort: "30-99-50",
+  bank_number: "59286668",
+};
+
+Deno.test("a fee reminder says what is owed and the reference to quote", () => {
+  const m = publicMessage(REMINDER)!;
+  assert(m !== null, "no reminder was produced at all");
+  assertStringIncludes(m.html, "£227.50");
+  assertStringIncludes(m.html, "MF-0148");
+  assertStringIncludes(m.text, "MF-0148");
+});
+
+Deno.test("NO CHILD REACHES A FEE REMINDER, even if one is passed in", () => {
+  // Fields a careless change might start forwarding. None of them is on the
+  // Event interface for this kind; the point is that adding one would not
+  // silently start printing it.
+  const leaky = {
+    ...REMINDER,
+    name: "Yusuf Khan",
+    // deno-lint-ignore no-explicit-any
+  } as any;
+  const m = publicMessage(leaky)!;
+  for (const forbidden of ["Yusuf", "Hifz", "Autumn term"]) {
+    assert(!m.html.includes(forbidden),
+      `a fee reminder printed "${forbidden}" — that is a child's details in an ` +
+      `unsolicited email about money`);
+    assert(!m.text.includes(forbidden), `the plain-text reminder printed "${forbidden}"`);
+  }
+});
+
+Deno.test("CONTROL — that last test can fail", () => {
+  // Without this, "no child's name appears" passes on a template that prints
+  // nothing at all, or on a publicMessage that returns null. Migration 065's
+  // lesson, applied to an email: a check that cannot fail is worse than none.
+  const m = publicMessage(REMINDER)!;
+  assertStringIncludes(m.html, "Khan — 14 Blackburn Road");
+  assert(m.html.length > 400, "the reminder is suspiciously short");
+});
+
+Deno.test("the bank details go in, so a parent can act on it", () => {
+  const m = publicMessage(REMINDER)!;
+  assertStringIncludes(m.html, "30-99-50");
+  assertStringIncludes(m.html, "59286668");
+  assertStringIncludes(m.html, "Bolton Central Islamic Society");
+});
+
+Deno.test("with no bank details it tells them to ring rather than saying nothing", () => {
+  const m = publicMessage({ ...REMINDER, bank_sort: null, bank_number: null })!;
+  assert(!m.html.includes("Sort code"), "an empty sort code row was printed");
+  assertStringIncludes(m.html, "ring the office");
+});
+
+Deno.test("a card link is offered only when there is one", () => {
+  const without = publicMessage(REMINDER)!;
+  assert(!without.html.includes("pay by card"),
+    "a card link was offered when the masjid has not set one up");
+
+  const with_ = publicMessage({
+    ...REMINDER, card_link: "https://buy.stripe.com/5kQ6oHfU02LC0p05p4f3a07" })!;
+  assertStringIncludes(with_.html, "pay by card");
+  assertStringIncludes(with_.html, "buy.stripe.com");
+});
+
+Deno.test("the office is NOT copied on a fee reminder", () => {
+  // Three hundred identical emails is how an inbox learns to ignore this
+  // sender, and then the week a refund is genuinely owed gets skimmed past.
+  assertEquals(officeMessage(REMINDER), null);
+});
+
+Deno.test("a family in hardship is pointed at a person, not a form", () => {
+  const m = publicMessage(REMINDER)!;
+  assertStringIncludes(m.html, "01204");
+  assert(/difficult/i.test(m.html),
+    "the reminder does not tell a family who cannot pay that they can ask");
+});
+
+Deno.test("the office's own wording is used when it has set any", () => {
+  const m = publicMessage({
+    ...REMINDER,
+    subject: "Madrasah fees for the autumn term",
+    body: "Assalamu alaikum, a short note about fees." })!;
+  assertEquals(m.subject, "Madrasah fees for the autumn term");
+  assertStringIncludes(m.html, "a short note about fees");
+});
+
+Deno.test("a reminder with no email address produces nothing", () => {
+  assertEquals(publicMessage({ ...REMINDER, email: null }), null);
+});

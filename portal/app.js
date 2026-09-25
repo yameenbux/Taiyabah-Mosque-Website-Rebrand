@@ -260,6 +260,36 @@
         real work sits between starting and finishing. Most of the work on a
         list like this sits exactly there.                                   */
     var BEFORE = [
+      /*  ADDED 20 SEPTEMBER WHEN THE FEES SECTION WAS BUILT, AND MOVED TO
+          "WITH THE TRUSTEES" THE SAME DAY WHEN THE WORK WAS DONE.
+
+          It was written here as outstanding because migration 068 created
+          two tables holding a parent's name, email address and telephone
+          number, and the v1.0 assessment scoped children and staff — a
+          guardian is neither.
+
+          That is now closed on our side. The assessment is at v1.1 and the
+          privacy notice at v1.1; both cover parents, the reminder, and the
+          two clocks the fee record sits on. What is left is a signature,
+          which is why this reads the same as the three below it.
+
+          It stays on the list rather than disappearing, because writing a
+          document is not completing an action — the same reason the other
+          three are here.                                                  */
+      { t: "Parents' contact details are covered by the assessment", waiting: true,
+        d: "The fees section holds a parent's name, email address and " +
+           "telephone number for each family. That was outside the v1.0 " +
+           "assessment, which scoped children and staff. The assessment is " +
+           "now at v1.1 and covers it — the lawful basis, the retention, " +
+           "three new risks about sending email about money, and five new " +
+           "measures. The privacy notice is at v1.1 with a section written " +
+           "for parents about what is held about them.",
+        what: "Sign v1.1 rather than v1.0. Action A11 in it says fee " +
+              "reminders must not be switched on until the privacy notice " +
+              "has actually reached parents \u2014 writing to somebody about " +
+              "money using details they were never told you held is the " +
+              "wrong order to do this in." },
+
       { t: "Data protection impact assessment", waiting: true,
         d: "Written and dated 19 September 2026 — twenty pages, twelve risks, " +
            "nine actions. It is not complete until a trustee signs it, because " +

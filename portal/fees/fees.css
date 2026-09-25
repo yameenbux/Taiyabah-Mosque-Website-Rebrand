@@ -1,0 +1,389 @@
+/* ===========================================================================
+   fees.css — every Fees screen, one stylesheet.
+
+   The rest of the portal copies its token block and its sign-in shell styles
+   inline into each page, which is why portal/staff/index.html is seventy-two
+   kilobytes. Seven more copies of that would be half a megabyte of identical
+   CSS, and — worse — seven places where the plum could drift apart.
+
+   So the Fees section shares this file. The tokens below are copied verbatim
+   from portal/classes/index.html so that a person moving between Classes and
+   Fees sees no seam; if those ever diverge, the seam is the bug.
+
+   ACCESSIBILITY NOTE CARRIED OVER FROM THE TOKENS: gold is 2.3:1 on a light
+   card, so --gold is for gold on plum and --gold-ink for gold on paper. Same
+   for green. Money that is owed uses --danger-ink, never plain red on cream.
+   =========================================================================== */
+
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
+    --gold:#C6A24C; --gold-bright:#DCBB63;
+    /* Gold is a 2.3:1 text colour on a light card — unreadable. Use
+       --gold for gold on plum, --gold-ink for gold on paper or card.
+       Same rule for green. Matches index_template.html. */
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
+    --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:940px){ .shell{grid-template-columns:1.03fr 1fr;} }
+
+  /* ---- brand panel ----
+     Sign-in furniture. shell.css removes the whole thing the moment somebody
+     is through, because the rail two inches to its left says all of it again. */
+  .brand{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    padding:46px 0 44px;display:flex;flex-direction:column;justify-content:flex-start;
+  }
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
+  .brand::after{
+    content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
+    border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
+  }
+  .brand-inner{position:relative;z-index:2;width:min(470px,86%);margin:auto auto 0;}
+  @media (min-width:940px){ .brand-inner{margin:auto auto 0 max(6vw,32px);} }
+  .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
+  .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
+  .brand p{color:rgba(243,239,227,.82);font-size:1.035rem;line-height:1.65;max-width:44ch;}
+  .brand .back{
+    display:inline-flex;align-items:center;gap:6px;margin-top:26px;min-height:44px;
+    color:rgba(243,239,227,.66);font-size:.943rem;font-weight:600;text-decoration:none;
+  }
+  .brand .back:hover{color:#F3EFE3;}
+  .pcredit{
+    position:relative;z-index:2;margin:auto auto 0;padding-top:28px;
+    width:min(470px,86%);font-size:.88rem;color:rgba(243,239,227,.45);
+  }
+  @media (min-width:940px){ .pcredit{margin:auto auto 0 max(6vw,32px);} }
+  .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
+  .pcredit a:hover{color:var(--gold-bright);}
+
+  /* ---- the working side ---- */
+  .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
+  @media (min-width:940px){ .panel{padding:64px 0;} }
+  .card{
+    width:min(420px,86%);background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
+  }
+  /* The sign-in card is 420px because a login form should be narrow. Forty
+     members of staff and their DBS dates are not a login form, so the shell
+     widens once there is something to show. */
+  .card.is-wide{width:min(880px,94%);}
+  .card h2{font-size:1.408rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.977rem;line-height:1.55;margin-bottom:22px;}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  form{display:flex;flex-direction:column;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  input[type=email],input[type=password],input[type=text]{
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
+  }
+  input::placeholder{color:#A99CA4;}
+  input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .pw{position:relative;display:flex;}
+  .pw input{padding-right:70px;}
+  .pw button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.88rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
+    padding:6px 10px;min-height:44px;border-radius:6px;
+  }
+  .pw button:hover{background:var(--paper);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;min-height:44px;border-radius:999px;
+    font-family:inherit;font-weight:700;font-size:1.003rem;
+    cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
+  .btn-ghost{background:none;border-color:var(--line);color:var(--brand-800);}
+  .btn-ghost:hover:not(:disabled){border-color:var(--brand-800);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .err{
+    background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
+    border-radius:9px;padding:11px 13px;font-size:.949rem;line-height:1.5;
+  }
+  .note{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.931rem;line-height:1.6;color:var(--muted);text-align:center;
+  }
+
+  /* ---- two-step ---- */
+  .code-input{
+    font-size:1.5rem !important;letter-spacing:.42em;text-align:center;
+    font-variant-numeric:tabular-nums;font-weight:700;padding:14px 13px !important;
+  }
+  .qr{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:4px;
+  }
+  .qr img{width:172px;height:172px;display:block;}
+  .secret{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.907rem;
+    letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
+    background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+  }
+  .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .steps li{font-size:.954rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li::before{
+    content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold);
+  }
+
+  /* ---- signed in ----
+     No avatar and no roles strip. shell.css hides both the moment the rail is
+     up, because the rail's own footer says who is signed in and does not
+     scroll away — and the first inch of the desk belongs to the work. */
+  .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .who-t{min-width:0;}
+  .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
+  .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+  .role-chip{
+    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
+  }
+  .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+
+  /* ---- loading ---- */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+  .loading p{font-size:.96rem;color:var(--muted);}
+
+  /* ---- the panel heading, shared with every other staff screen ---- */
+  .bk{margin:22px 0 18px;}
+  .bk-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .bk-head h2{font-size:1.19rem;color:var(--brand-900);}
+  .bk-head .bk-sub{font-size:.931rem;color:var(--muted);}
+
+
+/* ===========================================================================
+   THE FEES SCREENS
+   =========================================================================== */
+
+/*  THE hidden ATTRIBUTE HAS TO WIN.
+
+    Every screen in this portal hides and shows blocks with `node.hidden =
+    true`, which relies on the user agent's own `[hidden] { display: none }`.
+    That rule has the specificity of a bare attribute selector, so ANY class
+    rule with a display in it outranks it — and half the blocks below are
+    flex. The send bar on the reminders screen was on screen before anything
+    had been ticked, because `.fx-acts { display:flex }` quietly beat it.
+
+    It fails in the worst direction: the element is there, wired up and
+    clickable, while the code that owns it believes it is hidden. Caught by
+    fees_test.py, which is why the test asserts what is VISIBLE rather than
+    what carries the attribute. */
+[hidden] { display: none !important; }
+
+/*  Every screen is one panel of blocks. Nothing is capped at a fixed width:
+    commit 9a4a21e removed the last of those and width_test.py fails any block
+    that fills less than three quarters of the room it was given. */
+.fx-head{ display:flex; align-items:flex-end; gap:24px; flex-wrap:wrap;
+          margin:0 0 22px; }
+.fx-head-t{ flex:1 1 300px; min-width:0; }
+.fx-head h2{ margin:0 0 4px; }
+.fx-head p{ margin:0; color:var(--muted); font-size:.92rem; max-width:80ch; }
+.fx-head-a{ display:flex; gap:10px; flex-wrap:wrap; margin-left:auto; }
+
+/*  A BUTTON ON A WORKING SCREEN IS AS WIDE AS ITS WORDS.
+    `.btn` carries width:100% because it was written for the sign-in form,
+    where one button fills the card. Inherited up here it turned "Record money
+    in" and "Chase what is owed" into two stacked full-width slabs taking a
+    quarter of the page — the shape of a call to action on a marketing site,
+    not of a control on a screen somebody uses forty times a day. */
+.fx-head-a .btn, .fx-acts .btn{ width:auto; flex:0 0 auto; }
+
+/*  FIGURES. A number and what it is. The number is never smaller than the
+    label, because somebody scanning this screen is looking for the number. */
+.fx-figs{ display:grid; gap:14px; margin:0 0 22px;
+          grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+.fx-fig{ border:1px solid var(--line); border-radius:var(--radius);
+         background:var(--card); padding:16px 18px; min-width:0; }
+.fx-fig .n{ font-family:"Fraunces", Georgia, serif; font-size:1.7rem;
+            line-height:1.1; display:block; word-break:break-word; }
+.fx-fig .k{ display:block; margin-top:6px; font-size:.72rem; letter-spacing:.09em;
+            text-transform:uppercase; color:var(--muted); }
+.fx-fig .s{ display:block; margin-top:8px; font-size:.82rem; color:var(--muted); }
+.fx-fig.owe   .n{ color:var(--danger-ink); }
+.fx-fig.good  .n{ color:var(--success-ink); }
+.fx-fig.quiet .n{ color:var(--muted); }
+
+/*  A BLOCK. The screens are built from these and nothing else. */
+.fx-bk{ border:1px solid var(--line); border-radius:var(--radius);
+        background:var(--card); padding:20px 22px; margin:0 0 20px; }
+.fx-bk > h3{ margin:0 0 4px; font-size:1.05rem; }
+.fx-bk > .fx-sub{ margin:0 0 16px; color:var(--muted); font-size:.88rem;
+                  max-width:78ch; }
+
+/*  SET-UP BANNER. Shown until the section can actually take money. It is a
+    list of what is missing, not a warning triangle — a person can act on the
+    first and only feel told off by the second. */
+.fx-setup{ border:1px solid var(--gold); border-left:4px solid var(--gold);
+           background:#FBF6E8; border-radius:var(--radius);
+           padding:18px 20px; margin:0 0 22px; }
+.fx-setup h3{ margin:0 0 6px; font-size:1rem; color:var(--gold-ink); }
+.fx-setup ol{ margin:10px 0 0; padding-left:20px; }
+.fx-setup li{ margin:6px 0; font-size:.9rem; }
+.fx-setup li.done{ color:var(--muted); text-decoration:line-through; }
+.fx-setup a{ color:var(--brand-700); }
+
+/*  TABLES. Money right-aligned and tabular-figured, so a column of amounts
+    lines up at the decimal point and can be read down. */
+.fx-tw{ overflow-x:auto; margin:0 -6px; padding:0 6px; }
+.fx-t{ width:100%; border-collapse:collapse; font-size:.9rem; }
+.fx-t th{ text-align:left; font-weight:600; font-size:.72rem;
+          letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+          border-bottom:1px solid var(--line); padding:8px 10px;
+          white-space:nowrap; }
+.fx-t td{ border-bottom:1px solid var(--line); padding:10px; vertical-align:top; }
+.fx-t tr:last-child td{ border-bottom:0; }
+.fx-t .num{ text-align:right; white-space:nowrap;
+            font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; }
+.fx-t .owe{ color:var(--danger-ink); font-weight:600; }
+.fx-t .cr{ color:var(--success-ink); }
+.fx-t tbody tr:hover{ background:rgba(94,24,68,.03); }
+.fx-t .ref{ font-size:.82rem; color:var(--muted); white-space:nowrap; }
+.fx-t tfoot td{ border-top:2px solid var(--line); font-weight:600;
+                padding:10px; }
+
+/*  A flag on a row, for things the office should notice without reading.  */
+.fx-flag{ display:inline-block; font-size:.7rem; letter-spacing:.06em;
+          text-transform:uppercase; padding:2px 7px; border-radius:99px;
+          border:1px solid var(--line); color:var(--muted); white-space:nowrap; }
+.fx-flag.warn{ border-color:var(--danger); color:var(--danger-ink);
+               background:rgba(180,83,47,.06); }
+.fx-flag.ok{ border-color:var(--success); color:var(--success-ink);
+             background:rgba(63,122,70,.06); }
+
+/*  FORMS. */
+.fx-form{ display:grid; gap:14px;
+          grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+.fx-form .wide{ grid-column:1 / -1; }
+.fx-fld{ display:flex; flex-direction:column; gap:5px; min-width:0; }
+.fx-fld > span{ font-size:.78rem; letter-spacing:.06em; text-transform:uppercase;
+                color:var(--muted); }
+.fx-fld input, .fx-fld select, .fx-fld textarea{
+  font:inherit; padding:10px 12px; border:1px solid var(--line);
+  border-radius:10px; background:#fff; color:var(--ink); min-width:0;
+  width:100%; box-sizing:border-box; }
+.fx-fld input:focus, .fx-fld select:focus, .fx-fld textarea:focus{
+  outline:2px solid var(--brand-700); outline-offset:1px; }
+.fx-fld textarea{ min-height:76px; resize:vertical; }
+.fx-fld .hint{ font-size:.78rem; color:var(--muted); text-transform:none;
+               letter-spacing:0; }
+.fx-acts{ display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;
+          align-items:center; }
+
+/*  THE FAMILY PICKER. Reference beside every name, always — twelve children
+    at this masjid share a name with another child, and their families will. */
+.fx-picker{ position:relative; }
+.fx-results{ position:absolute; z-index:20; left:0; right:0; top:100%;
+             margin-top:4px; background:#fff; border:1px solid var(--line);
+             border-radius:10px; box-shadow:var(--shadow); max-height:280px;
+             overflow-y:auto; }
+.fx-pick{ display:flex; width:100%; gap:12px; align-items:baseline;
+          text-align:left; background:none; border:0; border-bottom:1px solid var(--line);
+          padding:10px 12px; font:inherit; cursor:pointer; color:var(--ink); }
+.fx-pick:last-child{ border-bottom:0; }
+.fx-pick:hover, .fx-pick:focus{ background:rgba(94,24,68,.06); outline:none; }
+.fx-pick-n{ flex:1 1 auto; min-width:0; }
+.fx-pick-r{ flex:0 0 auto; font-size:.8rem; color:var(--muted);
+            font-variant-numeric:tabular-nums; }
+.fx-none{ margin:0; padding:12px; font-size:.86rem; color:var(--muted); }
+
+/*  CONFIRM STRIP. Nothing that spends or removes money happens on one press. */
+.fx-confirm{ border:1px solid var(--danger); background:rgba(180,83,47,.05);
+             border-radius:var(--radius); padding:14px 16px; margin:14px 0; }
+.fx-confirm p{ margin:0 0 10px; font-size:.9rem; }
+.fx-confirm .fx-acts{ margin-top:0; }
+
+.fx-ok{ border:1px solid var(--success); background:rgba(63,122,70,.07);
+        color:var(--success-ink); border-radius:var(--radius);
+        padding:12px 14px; margin:0 0 16px; font-size:.9rem; }
+
+.fx-empty{ border:1px dashed var(--line); border-radius:var(--radius);
+           padding:28px 20px; text-align:center; color:var(--muted);
+           font-size:.9rem; }
+
+.fx-note{ font-size:.84rem; color:var(--muted); margin:10px 0 0; max-width:80ch; }
+/*  "Last changed 1 Sept by A Trustee" sat flush against the BANK label under
+    it, so the two read as one run-on line. A note that introduces a form
+    needs air between it and the form. */
+.fx-note + .fx-form{ margin-top:16px; }
+
+/*  Money that is about to leave the masjid, or be written off, is stated in
+    words as well as figures before it is confirmed. */
+.fx-big{ font-family:"Fraunces", Georgia, serif; font-size:1.25rem; }
+
+.fx-rowacts{ display:flex; gap:8px; flex-wrap:wrap; }
+.fx-mini{ font:inherit; font-size:.8rem; padding:5px 10px; border-radius:8px;
+          border:1px solid var(--line); background:#fff; cursor:pointer;
+          color:var(--brand-700); white-space:nowrap; }
+.fx-mini:hover{ border-color:var(--brand-700); }
+.fx-mini.danger{ color:var(--danger-ink); }
+.fx-mini.danger:hover{ border-color:var(--danger); }
+
+.fx-tickcell{ width:34px; }
+.fx-tickcell input{ width:18px; height:18px; }
+
+.fx-bar{ display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+         margin:0 0 16px; }
+.fx-bar input[type="search"], .fx-bar input[type="date"], .fx-bar select{
+  font:inherit; padding:9px 12px; border:1px solid var(--line);
+  border-radius:10px; background:#fff; min-width:0; }
+.fx-bar input[type="search"]{ flex:1 1 220px; }
+.fx-count{ font-size:.85rem; color:var(--muted); margin-left:auto; }
+
+/*  A masjid prints things. The register already has a print path; a fee
+    report will be taken to a trustees' meeting on paper. */
+@media print{
+  .ashell, .fx-head-a, .fx-bar, .fx-rowacts, .fx-acts,
+  #app-signout, .fx-confirm, .pcredit{ display:none !important; }
+  .fx-bk{ border:0; padding:0; }
+  body{ background:#fff; }
+}
+
+@media (max-width:640px){
+  .fx-head-a{ margin-left:0; width:100%; }
+  /*  On a phone they go back to filling the width — there is no room for
+      anything else, and a thumb wants the target. */
+  .fx-head-a .btn, .fx-acts .btn{ flex:1 1 auto; width:auto; }
+  .fx-t{ font-size:.85rem; }
+}

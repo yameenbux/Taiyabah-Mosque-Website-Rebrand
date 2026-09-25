@@ -28,6 +28,7 @@ export type Kind =
   | "admission_requested"
   | "course_registered"
   | "volunteer_registered"
+  | "madrasah_fee_reminder"
   | "digest";
 
 export interface Event {
@@ -52,6 +53,29 @@ export interface Event {
   org_name?: string | null;
   collector_paid?: boolean | null;
   charity_number?: string | null;
+
+  // A MADRASAH FEE REMINDER.
+  //
+  // THERE IS NO FIELD HERE FOR A CHILD, AND THAT IS THE POINT — the same
+  // rule as the admission application below, for the same reason. A madrasah
+  // roll reveals a child's religion, which is Article 9 data, and this is the
+  // one message in this system that is UNSOLICITED: the family did not just
+  // fill a form in, somebody in the office pressed a button. A line like
+  // "Yusuf — Autumn term" in an email forwarded round a family group is a
+  // disclosure the masjid never had to make.
+  //
+  // The family name, the reference and the amount are enough for a parent to
+  // act, and migration 071 has a CHECK that fails if a pupil name, a class or
+  // a charge description is ever added to what it posts here.
+  family?: string | null;        // the family, not the child
+  balance_p?: number | null;     // what is owed, in pence
+  subject?: string | null;       // the office's own wording, if it set any
+  body?: string | null;
+  card_link?: string | null;     // a Stripe payment link, or nothing
+  bank_name?: string | null;
+  bank_sort?: string | null;
+  bank_number?: string | null;
+  bank_account_name?: string | null;
 
   // A madrasah admission application.
   //
@@ -259,6 +283,15 @@ function plain(heading: string, lead: string, rows: [string, string][],
 
 export function officeMessage(e: Event): Message | null {
   if (e.kind === "digest") return digestMessage(e);
+
+  //  THE OFFICE IS NOT COPIED ON FEE REMINDERS. Every other message here is
+  //  news — somebody booked something, somebody applied. A reminder is not:
+  //  the office sent it, from a screen that already shows exactly who it went
+  //  to and what happened to each one. Copying them would put three hundred
+  //  identical emails in an inbox that people would then start ignoring, and
+  //  the week a refund is genuinely owed it would be skimmed past with the
+  //  rest. Returning null here is what stops that.
+  if (e.kind === "madrasah_fee_reminder") return null;
 
   const ref = e.reference ?? "(no reference)";
   const tel = String(e.phone ?? "").replace(/\s/g, "");
@@ -621,6 +654,71 @@ function digestMessage(e: Event): Message {
 export function publicMessage(e: Event): Message | null {
   const ref = e.reference ?? "";
   if (!e.email || !ref) return null;
+
+  /* A FEE REMINDER.
+
+     The only unsolicited message this system sends. It says what the family
+     owes, the reference to quote, and how to pay — and nothing else. No
+     child, no class, no breakdown of which term.
+
+     No unsubscribe link, deliberately, and 019's argument is not quite the
+     one that applies here. This is not marketing and it is not a newsletter;
+     it is a bill. Offering a parent the chance to opt out of being told what
+     they owe would be a promise the masjid cannot keep. What it does offer is
+     a telephone number, because somebody who cannot pay needs a person and
+     not a link — and the madrasah waives fees in hardship, which is a
+     conversation, not a form. */
+  if (e.kind === "madrasah_fee_reminder") {
+    const owed = money(e.balance_p) || "the amount on your account";
+    const rows: [string, string][] = [
+      ["Amount outstanding", `<strong>${esc(owed)}</strong>`],
+      ["Your reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    if (e.bank_sort && e.bank_number) {
+      rows.push(["Bank", esc(e.bank_name ?? "")]);
+      rows.push(["Account name", esc(e.bank_account_name ?? e.bank_name ?? "")]);
+      rows.push(["Sort code", esc(e.bank_sort)]);
+      rows.push(["Account number", esc(e.bank_number)]);
+    }
+
+    const lead = e.body
+      ? esc(e.body)
+      : "Assalamu alaikum. This is a reminder about the madrasah fees for " +
+        `<strong>${esc(e.family ?? "your family")}</strong>.`;
+
+    const pay = e.bank_sort && e.bank_number
+      ? "Please quote the reference above on the transfer — it is how the " +
+        "office knows the money is yours. "
+      : "Please ring the office to arrange payment. ";
+
+    const card = e.card_link
+      ? `You can also <a href="${esc(e.card_link)}">pay by card</a>, quoting ` +
+        "the same reference. "
+      : "";
+
+    return {
+      subject: ascii(e.subject || `Madrasah fees - ${ref}`),
+      html: shell(
+        "Madrasah fees",
+        lead,
+        rows,
+        pay + card +
+        "Fees can also be paid at the office. If this has crossed with a " +
+        "payment you have already made, please ignore it. " +
+        "<strong>If money is difficult at the moment, ring the office on " +
+        "01204&nbsp;535&nbsp;997 and ask</strong> — the madrasah would rather " +
+        "talk to you than have a child stop coming."),
+      text: plain(
+        "Madrasah fees",
+        e.body || `This is a reminder about the madrasah fees for ${e.family ?? "your family"}.`,
+        rows,
+        "Please quote your reference. Fees can also be paid at the office. " +
+        "If this has crossed with a payment you have already made, please " +
+        "ignore it. If money is difficult at the moment, ring 01204 535 997 " +
+        "and ask - the madrasah would rather talk to you than have a child " +
+        "stop coming."),
+    };
+  }
 
   if (e.kind === "deposit_paid") {
     const rows: [string, string][] = [

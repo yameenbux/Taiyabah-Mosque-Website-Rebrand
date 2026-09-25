@@ -183,21 +183,53 @@
           two. Whoever builds the fees screens: there is no Gift Aid tick box
           on this side, and that is not an oversight.
           ==================================================================== */
+      /*  `soon` came off all seven on 20 September, when the screens were
+          built. nav.js line 66 says what that means: "Take `soon` off a row
+          on the day its screen exists. Nothing else changes."
+
+          Every row is ADMIN and there is no teacher branch to get wrong.
+          Money is an office matter: a teacher may see the children in their
+          own class — 058 settled that — but not what a family pays, owes, or
+          has been let off. The database refuses all of it to anybody who is
+          not a verified administrator, and _test_fees.sql test 10 proves it
+          against all eight functions rather than trusting this list. */
       { label: "Fees", areas: [
         { key: "md-fees",        href: "portal/fees/",        icon: "pound", name: "Fees",
-          needs: ADMIN, soon: true },
+          needs: ADMIN,
+          what: "What has been charged, what has come in, what is still owed" },
+        /*  FAMILIES SITS SECOND, AHEAD OF THE MONEY.
+
+            It was nearly not built at all: 068 created the households and
+            the functions to write them, and for an afternoon there was no
+            screen that could make one — so the family picker on every other
+            fees screen searched a table nothing could put a row into. The
+            whole section was unusable and every test passed, because each
+            screen was correct about its own job.
+
+            It is second and not last because it is the first thing anybody
+            has to do. 543 children were imported from a class list with no
+            family column in it. */
+        { key: "md-families",    href: "portal/fees/families/", icon: "people",
+          name: "Families", needs: ADMIN,
+          what: "Who pays, who to write to, and which children are theirs" },
         { key: "md-transfers",   href: "portal/fees/transfers/", icon: "pound",
-          name: "Bank transfers", needs: ADMIN, soon: true },
+          name: "Bank transfers", needs: ADMIN,
+          what: "Where money is recorded, whichever way it arrived" },
         { key: "md-outstanding", href: "portal/fees/owing/",  icon: "inbox",
-          name: "Outstanding & reminders", needs: ADMIN, soon: true },
+          name: "Outstanding & reminders", needs: ADMIN,
+          what: "Who owes what, and the button that emails them" },
         { key: "md-discounts",   href: "portal/fees/discounts/", icon: "pound",
-          name: "Discounts & waivers", needs: ADMIN, soon: true },
+          name: "Discounts & waivers", needs: ADMIN,
+          what: "The sibling rule, and fees the masjid has written off" },
         { key: "md-refunds",     href: "portal/fees/refunds/", icon: "pound",
-          name: "Refunds", needs: ADMIN, soon: true },
+          name: "Refunds", needs: ADMIN,
+          what: "Money going back to a family who left having paid" },
         { key: "md-structure",   href: "portal/fees/structure/", icon: "book",
-          name: "What things cost", needs: ADMIN, soon: true },
+          name: "What things cost", needs: ADMIN,
+          what: "The rate card, the terms, and where parents send the money" },
         { key: "md-fees-year",   href: "portal/fees/annual/", icon: "star",
-          name: "Annual report", needs: ADMIN, soon: true }
+          name: "Annual report", needs: ADMIN,
+          what: "Charged, collected and given away — for the trustees" }
       ]},
 
       /*  ====================================================================
