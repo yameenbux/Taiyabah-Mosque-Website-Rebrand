@@ -221,6 +221,35 @@ def image(slug):
             f"{path} is missing. Run: python3 optimise-images.py")
     return path
 
+
+#  A PHONE SHOULD NOT DOWNLOAD THE DESKTOP'S MASTHEAD.
+#
+#  Measured on the built page in a real browser, 25 September 2026. At 1366px
+#  the mastheads are already right - natural 1400 shown at 1366, 0.8x to 1.0x.
+#  At 390px the same files are 3.1x to 3.6x too wide, and because pixels go up
+#  with the square that is about thirteen times what the screen can use. Three
+#  of them load on the home view for 364 KB, which after gzip is nearly the
+#  whole remaining weight of the site: gzip does nothing for a JPEG.
+#
+#  optimise-images.py now writes a 760px copy beside each full-bleed master.
+#  This returns the srcset that offers the browser both and lets it choose.
+#
+#  Returns "" when there is no narrow copy, and the template leaves the
+#  attribute off entirely rather than emitting srcset="" - an empty srcset is
+#  not ignored by every browser, and a masthead that fails to load is a far
+#  worse outcome than one that is larger than it needs to be.
+def srcset(placeholder):
+    entry = _manifest.get(placeholder, {})
+    small = entry.get("narrow")
+    if not small or not os.path.exists(small["file"]):
+        return ""
+    return (f' srcset="{small["file"]} {small["w"]}w, '
+            f'{entry["file"]} {entry["w"]}w" sizes="100vw"')
+
+
+with open("build-inputs/image-manifest.json") as _f:
+    _manifest = json.load(_f)
+
 _font_css, _font_preload = fonts()
 
 #  The 404 needs only the two families that set its handful of words, and only
@@ -233,6 +262,21 @@ _font_css_404 = "".join(
 )
 
 subs = {
+    '{{ARTICLES_HERO_SRCSET}}': srcset('ARTICLES_HERO_B64'),
+    '{{ARTICLE_HAJJ_HERO_SRCSET}}': srcset('ARTICLE_HAJJ_HERO_B64'),
+    '{{ARTICLE_ISLAM_HERO_SRCSET}}': srcset('ARTICLE_ISLAM_HERO_B64'),
+    '{{ARTICLE_PILLARS_HERO_SRCSET}}': srcset('ARTICLE_PILLARS_HERO_B64'),
+    '{{ARTICLE_RAMADAN_HERO_SRCSET}}': srcset('ARTICLE_RAMADAN_HERO_B64'),
+    '{{BANNER_ACCENT_SRCSET}}': srcset('BANNER_ACCENT_B64'),
+    '{{BANNER_PHOTO_SRCSET}}': srcset('BANNER_PHOTO_B64'),
+    '{{CONTACT_HERO_SRCSET}}': srcset('CONTACT_HERO_B64'),
+    '{{HALLHIRE_BAND_SRCSET}}': srcset('HALLHIRE_BAND_B64'),
+    '{{HOME_BUILDING_SRCSET}}': srcset('HOME_BUILDING_B64'),
+    '{{MADRASAH_HERO_SRCSET}}': srcset('MADRASAH_HERO_B64'),
+    '{{MEDIA_HERO_SRCSET}}': srcset('MEDIA_HERO_B64'),
+    '{{PRAYER_HERO_SRCSET}}': srcset('PRAYER_HERO_B64'),
+    '{{SERVICES_HERO_SRCSET}}': srcset('SERVICES_HERO_B64'),
+    '{{SHOP_HERO_SRCSET}}': srcset('SHOP_HERO_B64'),
     '{{FONT_FACES}}': _font_css,
     '{{FONT_PRELOAD}}': _font_preload,
     '{{PRIVACY_DATE}}': load('build-inputs/privacy_date.txt'),

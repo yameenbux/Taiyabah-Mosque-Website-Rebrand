@@ -1,0 +1,290 @@
+{
+  "APP_SHOT_DONATE_B64": {
+    "bytes": 34489,
+    "file": "img/app-shot-donate.jpg",
+    "h": 700,
+    "w": 324
+  },
+  "APP_SHOT_LIVE_B64": {
+    "bytes": 18924,
+    "file": "img/app-shot-live.jpg",
+    "h": 700,
+    "w": 324
+  },
+  "APP_SHOT_TIMES_B64": {
+    "bytes": 28516,
+    "file": "img/app-shot-times.jpg",
+    "h": 700,
+    "w": 324
+  },
+  "ARTICLES_HERO_B64": {
+    "bytes": 360495,
+    "file": "img/articles-hero.jpg",
+    "h": 1050,
+    "narrow": {
+      "bytes": 136244,
+      "file": "img/articles-hero-800.jpg",
+      "h": 600,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "ARTICLE_HAJJ_HERO_B64": {
+    "bytes": 323296,
+    "file": "img/article-hajj-hero.jpg",
+    "h": 933,
+    "narrow": {
+      "bytes": 122770,
+      "file": "img/article-hajj-hero-800.jpg",
+      "h": 533,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "ARTICLE_HAJJ_THUMB_B64": {
+    "bytes": 69550,
+    "file": "img/article-hajj-thumb.jpg",
+    "h": 413,
+    "w": 620
+  },
+  "ARTICLE_ISLAM_HERO_B64": {
+    "bytes": 139856,
+    "file": "img/article-islam-hero.jpg",
+    "h": 933,
+    "narrow": {
+      "bytes": 55381,
+      "file": "img/article-islam-hero-800.jpg",
+      "h": 533,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "ARTICLE_PILLARS_HERO_B64": {
+    "bytes": 70816,
+    "file": "img/article-pillars-hero.jpg",
+    "h": 933,
+    "narrow": {
+      "bytes": 30517,
+      "file": "img/article-pillars-hero-800.jpg",
+      "h": 533,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "ARTICLE_PILLARS_THUMB_B64": {
+    "bytes": 22686,
+    "file": "img/article-pillars-thumb.jpg",
+    "h": 426,
+    "w": 640
+  },
+  "ARTICLE_RAMADAN_HERO_B64": {
+    "bytes": 144029,
+    "file": "img/article-ramadan-hero.jpg",
+    "h": 933,
+    "narrow": {
+      "bytes": 59346,
+      "file": "img/article-ramadan-hero-800.jpg",
+      "h": 533,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "ARTICLE_RAMADAN_THUMB_B64": {
+    "bytes": 44310,
+    "file": "img/article-ramadan-thumb.jpg",
+    "h": 426,
+    "w": 640
+  },
+  "BANNER_ACCENT_B64": {
+    "bytes": 82202,
+    "file": "img/banner-accent.jpg",
+    "h": 715,
+    "narrow": {
+      "bytes": 44545,
+      "file": "img/banner-accent-800.jpg",
+      "h": 520,
+      "w": 800
+    },
+    "w": 1100
+  },
+  "BANNER_PHOTO_B64": {
+    "bytes": 159741,
+    "file": "img/banner-photo.jpg",
+    "h": 924,
+    "narrow": {
+      "bytes": 53040,
+      "file": "img/banner-photo-800.jpg",
+      "h": 528,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "CONTACT_BUILDING_B64": {
+    "bytes": 81410,
+    "file": "img/contact-building.jpg",
+    "h": 629,
+    "w": 760
+  },
+  "CONTACT_HERO_B64": {
+    "bytes": 69530,
+    "file": "img/contact-hero.jpg",
+    "h": 1050,
+    "narrow": {
+      "bytes": 28707,
+      "file": "img/contact-hero-800.jpg",
+      "h": 600,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "EDU_ARABIC_B64": {
+    "bytes": 59376,
+    "file": "img/edu-arabic.jpg",
+    "h": 450,
+    "w": 800
+  },
+  "EDU_GHUSL_B64": {
+    "bytes": 46051,
+    "file": "img/edu-ghusl.jpg",
+    "h": 450,
+    "w": 800
+  },
+  "HALLHIRE_BAND_B64": {
+    "bytes": 107079,
+    "file": "img/hallhire-band.jpg",
+    "h": 700,
+    "narrow": {
+      "bytes": 46184,
+      "file": "img/hallhire-band-800.jpg",
+      "h": 400,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "HOME_BUILDING_B64": {
+    "bytes": 130148,
+    "file": "img/home-building.jpg",
+    "h": 993,
+    "narrow": {
+      "bytes": 67175,
+      "file": "img/home-building-800.jpg",
+      "h": 662,
+      "w": 800
+    },
+    "w": 1200
+  },
+  "MADRASAH_HERO_B64": {
+    "bytes": 101232,
+    "file": "img/madrasah-hero.jpg",
+    "h": 786,
+    "narrow": {
+      "bytes": 44844,
+      "file": "img/madrasah-hero-800.jpg",
+      "h": 449,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "MEDIA_HERO_B64": {
+    "bytes": 122327,
+    "file": "img/media-hero.jpg",
+    "h": 1400,
+    "narrow": {
+      "bytes": 47525,
+      "file": "img/media-hero-800.jpg",
+      "h": 800,
+      "w": 600
+    },
+    "w": 1050
+  },
+  "PRAYER_HERO_B64": {
+    "bytes": 249429,
+    "file": "img/prayer-hero.jpg",
+    "h": 1050,
+    "narrow": {
+      "bytes": 85587,
+      "file": "img/prayer-hero-800.jpg",
+      "h": 600,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "SERVICES_HERO_B64": {
+    "bytes": 60503,
+    "file": "img/services-hero.jpg",
+    "h": 933,
+    "narrow": {
+      "bytes": 24317,
+      "file": "img/services-hero-800.jpg",
+      "h": 533,
+      "w": 800
+    },
+    "w": 1400
+  },
+  "SHOP_BOOKS_B64": {
+    "bytes": 20869,
+    "file": "img/shop-books.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_DATES_B64": {
+    "bytes": 34590,
+    "file": "img/shop-dates.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_HAJJ_B64": {
+    "bytes": 30572,
+    "file": "img/shop-hajj.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_HERBAL_B64": {
+    "bytes": 14522,
+    "file": "img/shop-herbal.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_HERO_B64": {
+    "bytes": 349223,
+    "file": "img/shop-hero.jpg",
+    "h": 1400,
+    "narrow": {
+      "bytes": 118982,
+      "file": "img/shop-hero-800.jpg",
+      "h": 800,
+      "w": 533
+    },
+    "w": 933
+  },
+  "SHOP_HONEY_B64": {
+    "bytes": 18857,
+    "file": "img/shop-honey.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_OILS_B64": {
+    "bytes": 79347,
+    "file": "img/shop-oils.jpg",
+    "h": 781,
+    "w": 800
+  },
+  "SHOP_PERFUME_B64": {
+    "bytes": 40411,
+    "file": "img/shop-perfume.jpg",
+    "h": 628,
+    "w": 800
+  },
+  "SHOP_PRAYER_B64": {
+    "bytes": 35457,
+    "file": "img/shop-prayer.jpg",
+    "h": 285,
+    "w": 380
+  },
+  "SHOP_ZAMZAM_B64": {
+    "bytes": 88743,
+    "file": "img/shop-zamzam.jpg",
+    "h": 800,
+    "w": 800
+  }
+}
