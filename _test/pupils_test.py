@@ -530,11 +530,18 @@ def run():
 
         # --- what a phone shows on its first screen ----------------------------
         pg = open_page(b, width=390, height=900)
-        top = pg.evaluate("""() => {
+        #  NOT MERELY "top < 900". The first version of this check passed
+        #  with the row starting at 883px of a 900px screen - a sliver of one
+        #  row, which is not a pupil on screen in any sense a teacher in a
+        #  corridor would recognise. A WHOLE row must fit.
+        box = pg.evaluate("""() => {
             var r = document.querySelector('tr.pu-row');
-            return r ? r.getBoundingClientRect().top : null; }""")
-        check("a pupil is on the phone's FIRST screen, not three screens down",
-              top is not None and top < 900, top)
+            if (!r) return null;
+            var b = r.getBoundingClientRect();
+            return {top: Math.round(b.top), bottom: Math.round(b.bottom),
+                    win: window.innerHeight}; }""")
+        check("a WHOLE pupil row fits on the phone's first screen",
+              box is not None and box["bottom"] <= box["win"], box)
         pg.close()
         pg = open_page(b)
 

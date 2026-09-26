@@ -398,11 +398,11 @@
           + '<td class="pu-cls">' + (r.family ? esc(r.family)
               : '<span class="pu-q">no family</span>') + "</td>"
           + '<td><div class="pu-flags">' + flags + "</div></td>"
-          + '<td class="pu-acts">'
+          + '<td class="pu-acts"><div class="pu-acts-wrap">'
           + '<button type="button" class="pu-act" aria-haspopup="true"'
           + ' aria-expanded="' + (MENU === r.id ? "true" : "false") + '"'
           + ' aria-label="Actions for ' + esc(r.name) + '">Actions</button>'
-          + (MENU === r.id ? menuFor(r) : "") + "</td></tr>");
+          + (MENU === r.id ? menuFor(r) : "") + "</div></td></tr>");
       }
       body.innerHTML = out.join("");
       var empty = el("pu-empty");

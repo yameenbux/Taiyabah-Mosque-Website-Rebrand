@@ -240,7 +240,13 @@
     Incidents, Class History and Portal Login are left out rather than greyed
     out, because four dead entries on each of 552 rows teaches people not to
     open the menu at all.                                                    */
-.pu-acts      { position:relative; white-space:nowrap; }
+.pu-acts      { white-space:nowrap; text-align:right; padding-right:0; }
+/*  THE WRAPPER CARRIES position:relative, NOT THE CELL.
+    A <td> with position:relative inside a border-collapse:collapse table
+    drops out of the collapsed border model, and the row's separator line
+    stops dead before it. Nothing fails; the table just quietly grows a
+    ragged right edge that only a screenshot shows.                        */
+.pu-acts-wrap { position:relative; display:inline-block; }
 .pu-act       { min-height:34px; padding:5px 10px; font:inherit; font-size:13px;
                 border:1px solid var(--line); border-radius:8px;
                 background:var(--card); color:var(--ink); cursor:pointer; }
@@ -277,4 +283,12 @@
                  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
   .pu-fig      { flex:0 0 auto; min-width:136px; scroll-snap-align:start; }
   .pu-head-t p { display:none; }
+
+  /*  THE TOP PAGER GOES ON A PHONE.
+      Measured: it costs 96px in two rows, and with it the first pupil sat
+      at 883px of a 900px screen - a sliver of one row, which passed a
+      "is a pupil on the first screen" check on a technicality. Controls
+      for paging through a list you have not read yet earn less than the
+      ones underneath it, so the bottom pager stays and this one goes.    */
+  #pu-pager-top { display:none; }
 }
