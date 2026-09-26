@@ -1,0 +1,185 @@
+/* ===========================================================================
+   Pupils — the roll
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields, the sign-in panel). Everything here is specific to
+   this screen and prefixed `pu-` so it cannot collide with `ad-`, `fx-` or
+   the shell's own.
+   =========================================================================== */
+
+/*  FIRST RULE IN THE FILE, AND NOT DECORATION. [hidden] is an attribute
+    selector, so any class rule that sets `display` outranks it. This screen
+    hides a record, an edit form, an error strip and the sibling card that
+    way, and one of them is a child's medical note. */
+[hidden] { display: none !important; }
+
+.pu-head      { display:flex; gap:20px; align-items:flex-start;
+                justify-content:space-between; flex-wrap:wrap; margin-bottom:22px; }
+.pu-head-t    { flex:1 1 320px; min-width:0; }
+.pu-head-t h2 { margin:0 0 6px; }
+.pu-head-t p  { margin:0; color:var(--muted); max-width:62ch; }
+.pu-head-a    { display:flex; gap:10px; flex-wrap:wrap; }
+.pu-head-a .btn { width:auto; flex:0 0 auto; }
+
+.pu-sub       { margin:0 0 14px; color:var(--muted); font-size:14px; }
+.pu-q         { color:var(--muted); font-size:13px; }
+.pu-warn      { color:var(--danger-ink); font-size:14px; margin:6px 0 0; }
+
+/*  AN AGE THAT CANNOT BE RIGHT.
+    The register holds a 51 year old in Boys Year 6 and three 3 year olds in
+    Ladies Naazirah. The mark is a question, not a warning: nobody has done
+    anything wrong and only a parent can settle it. The colour is the warning
+    ink rather than the danger ink for that reason, and the question mark is
+    drawn small and after the number so the column still reads as ages.       */
+.pu-age-q     { display:inline-flex; align-items:baseline; gap:3px;
+                color:var(--gold-ink); font-weight:600;
+                cursor:help; }
+.pu-age-q b   { font-size:12px; line-height:1;
+                border:1px solid currentColor; border-radius:50%;
+                width:14px; height:14px; display:inline-flex;
+                align-items:center; justify-content:center; font-weight:700; }
+
+/* --------------------------------------------------------------------------
+   THE FIGURES ARE BUTTONS.
+   Each one counts a gap in the register and filters the list to exactly those
+   children. A figure that only reports leaves somebody to find the nine
+   children with no telephone number one at a time.
+   -------------------------------------------------------------------------- */
+.pu-figs      { display:grid; gap:14px; margin:0 0 24px;
+                grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); }
+.pu-fig       { border:1px solid var(--line); border-radius:var(--radius);
+                background:var(--card); padding:14px 16px; text-align:left;
+                font-family:inherit; cursor:pointer; min-width:0;
+                transition:border-color .15s ease, background .15s ease; }
+.pu-fig:hover:not(:disabled) { border-color:var(--brand-700); }
+.pu-fig:disabled { cursor:default; opacity:.65; }
+.pu-fig.is-on { border-color:var(--brand-700); background:#FBF3E4; }
+.pu-fig b     { display:block; font-family:var(--serif); font-size:26px;
+                line-height:1.1; color:var(--ink); font-weight:400; }
+.pu-fig span  { display:block; font-size:11px; letter-spacing:.09em;
+                text-transform:uppercase; color:var(--muted); margin-top:6px; }
+.pu-fig small { display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+.pu-fig.bad  b { color:var(--danger-ink); }
+.pu-fig.warn b { color:var(--gold-ink); }
+
+/* --------------------------------------------------------------------------
+   The sibling pairs waiting to be settled
+   -------------------------------------------------------------------------- */
+.pu-sugg      { border:1px solid #E4CF9C; background:#FBF3E4; border-radius:var(--radius);
+                padding:18px 20px; margin:0 0 22px; }
+.pu-sugg h3   { margin:0 0 4px; font-size:18px; color:var(--plum); }
+.pu-sugg-rows { display:grid; gap:10px; margin-top:14px; }
+.pu-sugg-row  { display:grid; gap:10px; align-items:center; background:#fff;
+                border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+                grid-template-columns:1fr auto 1fr auto; }
+.pu-amp       { color:var(--muted); font-size:13px; }
+.pu-sugg-acts { display:flex; gap:8px; flex-wrap:wrap; }
+.pu-sugg-acts .btn { width:auto; flex:0 0 auto; padding:8px 14px; font-size:14px; }
+
+/* --------------------------------------------------------------------------
+   Blocks, filters, the table
+   -------------------------------------------------------------------------- */
+.pu-bk        { border:1px solid var(--line); border-radius:var(--radius);
+                padding:20px 22px; margin:0 0 20px; background:var(--card); }
+.pu-bk h3     { margin:0 0 4px; }
+.pu-filters   { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 16px; }
+.pu-filters input[type="search"] { flex:1 1 240px; min-width:0; }
+.pu-filters select { flex:0 0 auto; }
+.pu-count     { margin-left:auto; color:var(--muted); font-size:13px; white-space:nowrap; }
+
+/*  The table scrolls sideways inside its own box rather than pushing the page
+    wide, which is what width_test exists to catch. */
+.pu-scroll    { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.pu-table     { width:100%; border-collapse:collapse; font-size:14px; }
+.pu-table th  { text-align:left; font-size:11px; letter-spacing:.08em;
+                text-transform:uppercase; color:var(--muted); font-weight:600;
+                padding:0 12px 8px 0; white-space:nowrap; }
+.pu-table td  { padding:10px 12px 10px 0; border-top:1px solid var(--line);
+                vertical-align:top; }
+.pu-table tr.pu-row { cursor:pointer; }
+.pu-table tr.pu-row:hover td { background:var(--paper); }
+.pu-table tr.pu-row:focus-within td { background:var(--paper); }
+.pu-ref       { font-variant-numeric:tabular-nums; color:var(--muted);
+                font-size:13px; white-space:nowrap; }
+.pu-who       { font-weight:600; }
+.pu-g         { display:block; font-weight:400; font-size:12px; color:var(--muted); }
+.pu-cls       { color:var(--muted); font-size:13px; }
+
+.pu-flags     { display:flex; gap:5px; flex-wrap:wrap; }
+/*  A MARK SAYS THERE IS SOMETHING TO READ. IT NEVER SAYS WHAT. The detail is
+    in the record, which is opened one at a time and writes down who opened
+    it. Enforced in Postgres by madrasah_roll's own check, not here. */
+.pu-flag      { display:inline-block; padding:2px 7px; border-radius:6px;
+                font-size:11px; font-weight:600; letter-spacing:.04em;
+                border:1px solid #E2B6A6; background:#FBEDE9; color:var(--danger); }
+.pu-flag.is-soft { border-color:#C3CFDE; background:#EEF2F7; color:#3C5473; }
+.pu-empty     { padding:28px 4px; color:var(--muted); text-align:center; }
+
+/* --------------------------------------------------------------------------
+   One pupil
+   -------------------------------------------------------------------------- */
+.pu-rec-head  { display:flex; gap:16px; align-items:flex-start;
+                justify-content:space-between; flex-wrap:wrap; margin-bottom:10px; }
+.pu-rec-head h3 { margin:0; }
+.pu-rec-acts  { display:flex; gap:8px; flex-wrap:wrap; }
+.pu-rec-acts .btn { width:auto; flex:0 0 auto; }
+
+.pu-two       { display:grid; gap:24px; grid-template-columns:1fr 1fr; margin-top:6px; }
+.pu-two h4    { margin:16px 0 6px; font-size:15px; }
+.pu-two h5    { margin:14px 0 6px; font-size:12px; letter-spacing:.08em;
+                text-transform:uppercase; color:var(--muted); }
+.pu-grid      { display:grid; gap:2px 18px; margin:0;
+                grid-template-columns:max-content 1fr; font-size:14px; }
+.pu-grid dt   { color:var(--muted); padding:5px 0; }
+.pu-grid dd   { margin:0; padding:5px 0; }
+.pu-list      { margin:0; padding-left:20px; font-size:14px; }
+
+.pu-guardian  { border:1px solid var(--line); border-radius:10px; background:var(--paper);
+                padding:10px 12px; margin:0 0 8px; font-size:14px; }
+.pu-pill      { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px;
+                letter-spacing:.05em; text-transform:uppercase; border:1px solid #E4CF9C;
+                background:#FBF3E4; color:var(--gold-ink); }
+.pu-mini      { font:inherit; font-size:13px; padding:5px 10px; border-radius:8px;
+                border:1px solid var(--line); background:#fff; cursor:pointer;
+                color:var(--brand-700); text-decoration:none; }
+.pu-mini:hover { border-color:var(--brand-700); }
+
+/*  Bordered and labelled rather than another row in the grid: somebody
+    scanning for an allergy should find it without reading everything above
+    it, and somebody who does not need it should see what they are about to
+    read. */
+.pu-med       { border:1px solid #E2B6A6; background:#FBEDE9; border-radius:10px;
+                padding:12px 14px; margin:10px 0 4px; }
+.pu-med h5    { margin:0 0 6px; font-size:12px; letter-spacing:.08em;
+                text-transform:uppercase; color:var(--danger); }
+.pu-med p     { margin:0 0 6px; font-size:14px; }
+.pu-med p:last-child { margin-bottom:0; }
+.pu-med b     { font-weight:600; }
+
+/* --------------------------------------------------------------------------
+   Amending
+   -------------------------------------------------------------------------- */
+.pu-form      { border-top:1px solid var(--line); margin-top:20px; padding-top:18px; }
+.pu-form h4   { margin:0 0 4px; }
+.pu-fld       { margin:0 0 12px; }
+.pu-fld label { display:block; font-size:13px; color:var(--muted); margin-bottom:5px; }
+.pu-fld input, .pu-fld textarea, .pu-fld select { width:100%; }
+.pu-fld textarea { min-height:64px; }
+.pu-acts      { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.pu-acts .btn { width:auto; flex:0 0 auto; }
+
+@media (max-width: 860px) {
+  .pu-two      { grid-template-columns:1fr; gap:6px; }
+  .pu-sugg-row { grid-template-columns:1fr; }
+  .pu-amp      { display:none; }
+}
+@media (max-width: 640px) {
+  .pu-grid     { grid-template-columns:1fr; gap:0; }
+  .pu-grid dt  { padding-bottom:0; font-size:12px; }
+  .pu-grid dd  { padding-top:2px; }
+  .pu-figs     { grid-template-columns:1fr 1fr; gap:10px; }
+  .pu-fig      { padding:12px 13px; }
+  .pu-fig b    { font-size:23px; }
+  .pu-count    { margin-left:0; width:100%; }
+}

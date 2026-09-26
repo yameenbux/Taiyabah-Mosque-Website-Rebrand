@@ -721,7 +721,13 @@ def build():
         h = h.replace("../../fonts/", r + "fonts/")
         h = h.replace("../../admin/", r + "admin/")
         h = h.replace('src="../nav.js"', 'src="%s"' % nav)
-        h = h.rstrip() + '\n<link rel="stylesheet" href="%s">\n</head>\n' % css
+        #  Furniture first, section second. admin/screen.css carries the
+        #  tokens, the sign-in panel, the buttons and the fields; fees.css
+        #  carries what is about money. A section sheet may override
+        #  furniture, so it has to come after it.
+        h = h.rstrip() + ('\n<link rel="stylesheet" href="%sadmin/screen.css">'
+                          '\n<link rel="stylesheet" href="%s">\n</head>\n'
+                          % (r, css))
         h = h.replace("</head>\n<link", "<link")          # keep one </head>
 
         top = shell_top

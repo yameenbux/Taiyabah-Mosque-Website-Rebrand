@@ -109,7 +109,8 @@
           same mother appears three times under three children. */
       { label: "Who is here", areas: [
         { key: "md-pupils",   href: "portal/pupils/",   icon: "child",  name: "Pupils",
-          needs: BOTH, soon: true },
+          needs: BOTH,
+          what: "Every child on the roll, their class, their family and who to ring" },
         { key: "md-families", href: "portal/families/", icon: "home",   name: "Families",
           needs: BOTH, soon: true },
         { key: "md-classes",  href: "portal/classes/",  icon: "book",   name: "Classes",
@@ -280,8 +281,12 @@
       ]},
 
       { label: "Admissions", areas: [
+        /*  `soon` came off on 25 September, when db/076 gave the masjid a
+            way to READ an application. It had been marked SOON since the
+            form went live, which meant a parent could apply and nobody
+            could open it - see nav.js line 66 for what the flag means. */
         { key: "md-admissions", href: "portal/admissions/", icon: "inbox",
-          name: "Applications", needs: ADMIN, soon: true }
+          name: "Applications", needs: ADMIN }
       ]},
 
       /*  ====================================================================

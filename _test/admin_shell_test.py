@@ -563,6 +563,79 @@ with sync_playwright() as p:
     pg.close()
     b.close()
 
+#  ---------------------------------------------------------------------------
+#  EVERY CLASS A STAFF SCREEN USES HAS TO BE DEFINED BY A SHEET IT LINKS.
+#
+#  WHY THIS EXISTS. The generators that write these screens cut the shared
+#  shell out of portal/classes/index.html and deliberately drop its inline
+#  <style> block, because seven copies of the same tokens is seven chances
+#  for the plum to drift. What they have to do instead is link a sheet that
+#  carries that furniture. The Applications screen did not: it linked
+#  admin/shell.css, which is only the rail, and its own sheet, and used
+#  twenty-three classes that nothing defined.
+#
+#  The part that mattered was invisible to every other test. The two buttons
+#  anybody could see in a screenshot were the least of it - the unstyled
+#  classes were the two-step sign-in panel, the QR block, the code box, the
+#  spinner and the error strip, none of which a signed-in fixture ever
+#  renders. Forty-eight browser checks and sixteen screenshots all passed
+#  while an administrator would have met an unstyled sign-in page every
+#  morning. A check that looks at the sheets rather than at the page catches
+#  it in a second, on every screen at once, including the next one somebody
+#  writes.
+def defined_classes(css):
+    return set(re.findall(r"\.(-?[A-Za-z_][\w-]*)", css))
+
+
+def sheets_for(path, html):
+    """The CSS a screen actually gets: every linked sheet, plus any inline."""
+    css = "".join(re.findall(r"<style>(.*?)</style>", html, re.S))
+    here = os.path.dirname(path)
+    for href in re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', html):
+        f = os.path.normpath(os.path.join(here, href))
+        if os.path.exists(f):
+            css += open(f, encoding="utf-8").read()
+        else:
+            check(False, "%s links %s, which is not there"
+                         % (os.path.relpath(path, ROOT), href))
+    return css
+
+
+#  A class may legitimately carry no styling if it is only ever a hook for
+#  JavaScript or a test. Each one is named here with its reason, so that the
+#  list stays short and an unexplained addition is visible in a diff.
+HOOKS_ONLY = {
+    #  access/index.html. Checkboxes the invite and permission forms read
+    #  back with querySelectorAll. They mark WHICH boxes to read, never how
+    #  anything looks - the label around each one carries the styling.
+    "inv-r", "pp-r",
+}
+
+staff = []
+for base, _, files in os.walk(ROOT):
+    if any(x in base for x in (".git", "node_modules", "_test", "build-inputs")):
+        continue
+    for f in files:
+        if f != "index.html":
+            continue
+        full = os.path.join(base, f)
+        src = open(full, encoding="utf-8").read()
+        if "admin/shell.css" in src:
+            staff.append((full, src))
+
+check(len(staff) >= 12, "found only %d staff screens to check" % len(staff))
+for full, src in staff:
+    rel_ = os.path.relpath(full, ROOT)
+    have = defined_classes(sheets_for(full, src)) | HOOKS_ONLY
+    used = set()
+    for attr in re.findall(r'\sclass="([^"]*)"', src):
+        used.update(t for t in attr.split() if t)
+    orphans = sorted(c for c in used if c not in have)
+    check(not orphans,
+          "%s uses %d class(es) no sheet it links defines: %s"
+          % (rel_, len(orphans), ", ".join(orphans[:8])))
+
+
 print("\n" + ("ALL PASS — %d staff screens x 2 widths, %d role sets, drawer"
               % (len(SCREENS), len(EXPECTED))
               if not fails

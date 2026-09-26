@@ -1,0 +1,201 @@
+/* ===========================================================================
+   Applications — the admissions screen
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css, which carries the rail, the header, the
+   buttons and the tokens. Everything here is specific to this one screen and
+   is prefixed `ad-` so it cannot collide with the `fx-` fees classes or the
+   shell's own.
+
+   IT DELIBERATELY DOES NOT IMPORT fees.css. The two screens look related
+   because they share the shell, not because they share a stylesheet, and a
+   fees rule changed for a fees reason should never move a child's medical
+   record half a centimetre.
+   =========================================================================== */
+
+/* THE FIRST RULE IN THE FILE, AND IT IS NOT DECORATION.
+   [hidden] is an attribute selector, so ANY class rule that sets `display`
+   outranks it. In the fees section that cost a send bar which the code
+   believed hidden and which was on screen and clickable. Three checks caught
+   it there. This screen hides a whole record, a decline box and an error
+   panel the same way, so the rule goes in before anything that could beat it. */
+[hidden] { display: none !important; }
+
+/* --------------------------------------------------------------------------
+   Head of the screen
+   -------------------------------------------------------------------------- */
+.ad-head        { display:flex; gap:20px; align-items:flex-start;
+                  justify-content:space-between; flex-wrap:wrap; margin-bottom:22px; }
+.ad-head-t      { flex:1 1 320px; min-width:0; }
+.ad-head-t h2   { margin:0 0 6px; }
+.ad-head-t p    { margin:0; color:var(--muted); max-width:62ch; }
+.ad-head-a      { display:flex; gap:10px; flex-wrap:wrap; }
+/* The shell's .btn is full width on narrow screens, which turned the fees
+   header buttons into two stacked slabs. Here they sit beside each other. */
+.ad-head-a .btn { width:auto; flex:0 0 auto; }
+
+.ad-sub         { margin:0 0 14px; color:var(--muted); font-size:14px; }
+
+/* --------------------------------------------------------------------------
+   THE NOTICE. The reason this screen is opened at all.
+
+   Loud when something is waiting, quiet when nothing is. A band that looks
+   the same either way is a band people stop reading, and then the week an
+   application sits for a fortnight it is skimmed past with the rest.
+   -------------------------------------------------------------------------- */
+.ad-notice      { border:1px solid var(--line); border-radius:12px;
+                  padding:18px 20px; margin:0 0 22px;
+                  display:flex; gap:18px; align-items:flex-start;
+                  flex-wrap:wrap; justify-content:space-between; }
+.ad-notice-t    { flex:1 1 320px; min-width:0; }
+.ad-notice h3   { margin:0 0 4px; font-size:19px; }
+.ad-notice p    { margin:0; color:var(--muted); font-size:14px; max-width:60ch; }
+.ad-notice .btn { width:auto; flex:0 0 auto; }
+
+/* Something is waiting. */
+.ad-notice.is-waiting   { background:#FBF3E4; border-color:#E4CF9C; }
+.ad-notice.is-waiting h3{ color:var(--plum); }
+/* Waiting, and for long enough that it is now a different sentence. */
+.ad-notice.is-late      { background:#FBEDE9; border-color:#E2B6A6; }
+.ad-notice.is-late h3   { color:var(--danger); }
+/* Nothing to do. */
+.ad-notice.is-clear     { background:var(--paper); }
+
+.ad-count       { font-family:var(--serif); font-size:34px; line-height:1;
+                  color:var(--plum); display:block; margin-bottom:6px; }
+.ad-notice.is-late .ad-count { color:var(--danger); }
+
+/* --------------------------------------------------------------------------
+   Figures
+   -------------------------------------------------------------------------- */
+.ad-figs        { display:grid; gap:14px; margin:0 0 24px;
+                  grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); }
+.ad-fig         { border:1px solid var(--line); border-radius:12px;
+                  padding:14px 16px; background:var(--paper); }
+.ad-fig b       { display:block; font-family:var(--serif); font-size:26px;
+                  line-height:1.1; color:var(--ink); font-weight:400; }
+.ad-fig span    { display:block; font-size:11px; letter-spacing:.09em;
+                  text-transform:uppercase; color:var(--muted); margin-top:6px; }
+.ad-fig small   { display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+
+/* --------------------------------------------------------------------------
+   Blocks, filters, table
+   -------------------------------------------------------------------------- */
+/*  --card and --radius, not #fff and 14px. The block was the one bright
+    white thing inside a cream panel, which made the list look like it had
+    been pasted in from somewhere else. .fx-bk on the fees screens is the
+    same shape; a person moving between the two should see no seam. */
+.ad-bk          { border:1px solid var(--line); border-radius:var(--radius);
+                  padding:20px 22px; margin:0 0 20px; background:var(--card); }
+.ad-bk h3       { margin:0 0 4px; }
+
+.ad-filters     { display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+                  margin:0 0 16px; }
+.ad-filters input[type="search"] { flex:1 1 240px; min-width:0; }
+.ad-filters select { flex:0 0 auto; }
+
+/* The table scrolls sideways inside its own box rather than pushing the page
+   wide. A page that scrolls sideways on a phone is the thing width_test
+   exists to catch; a table that does, inside a box, is how a table with eight
+   columns is read on a phone at all. */
+.ad-scroll      { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.ad-table       { width:100%; border-collapse:collapse; font-size:14px; }
+.ad-table th    { text-align:left; font-size:11px; letter-spacing:.08em;
+                  text-transform:uppercase; color:var(--muted);
+                  font-weight:600; padding:0 12px 8px 0; white-space:nowrap; }
+.ad-table td    { padding:11px 12px 11px 0; border-top:1px solid var(--line);
+                  vertical-align:top; }
+.ad-table tr.ad-row { cursor:pointer; }
+.ad-table tr.ad-row:hover td   { background:var(--paper); }
+.ad-table tr.ad-row:focus-within td { background:var(--paper); }
+.ad-ref         { font-variant-numeric:tabular-nums; color:var(--muted);
+                  font-size:13px; white-space:nowrap; }
+.ad-who         { font-weight:600; }
+.ad-kids        { color:var(--muted); font-size:13px; }
+
+/* --------------------------------------------------------------------------
+   Status and flags
+   -------------------------------------------------------------------------- */
+.ad-pill        { display:inline-block; padding:3px 9px; border-radius:999px;
+                  font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+                  border:1px solid var(--line); white-space:nowrap; }
+.ad-pill.s-new        { background:#FBF3E4; border-color:#E4CF9C; color:#7A5D14; }
+.ad-pill.s-reviewing  { background:#EEF2F7; border-color:#C3CFDE; color:#3C5473; }
+.ad-pill.s-offered    { background:#EAF3EC; border-color:#AFCFB8; color:#2C6438; }
+.ad-pill.s-waitlisted { background:var(--paper); }
+.ad-pill.s-declined   { background:#FBEDE9; border-color:#E2B6A6; color:var(--danger); }
+.ad-pill.s-withdrawn  { background:var(--paper); color:var(--muted); }
+
+/*  A FLAG SAYS THERE IS SOMETHING TO READ. IT NEVER SAYS WHAT.
+    The detail behind these is in the record, which is opened one at a time
+    and writes down who opened it. See db/076. */
+.ad-flags       { display:flex; gap:5px; flex-wrap:wrap; }
+.ad-flag        { display:inline-block; padding:2px 7px; border-radius:6px;
+                  font-size:11px; font-weight:600; letter-spacing:.04em;
+                  border:1px solid #E2B6A6; background:#FBEDE9; color:var(--danger); }
+.ad-flag.is-soft{ border-color:#C3CFDE; background:#EEF2F7; color:#3C5473; }
+
+/* --------------------------------------------------------------------------
+   One application
+   -------------------------------------------------------------------------- */
+.ad-rec-head    { display:flex; gap:16px; align-items:flex-start;
+                  justify-content:space-between; flex-wrap:wrap; margin-bottom:6px; }
+.ad-rec-head h3 { margin:0; }
+.ad-rec-head .btn { width:auto; flex:0 0 auto; }
+
+.ad-grid        { display:grid; gap:2px 22px; margin:14px 0 0;
+                  grid-template-columns:max-content 1fr; font-size:14px; }
+.ad-grid dt     { color:var(--muted); padding:5px 0; }
+.ad-grid dd     { margin:0; padding:5px 0; }
+
+.ad-child       { border:1px solid var(--line); border-radius:12px;
+                  padding:16px 18px; margin:14px 0 0; background:var(--paper); }
+.ad-child h4    { margin:0 0 2px; font-size:17px; }
+.ad-child .ad-sub { margin:0 0 8px; }
+
+/*  The medical block is bordered and labelled rather than being another row
+    in the grid. Somebody scanning a record for an allergy should find it
+    without reading everything above it, and somebody who does not need it
+    should be able to see that they are about to read it. */
+.ad-med         { border:1px solid #E2B6A6; background:#FBEDE9; border-radius:10px;
+                  padding:12px 14px; margin:12px 0 0; }
+.ad-med h5      { margin:0 0 6px; font-size:12px; letter-spacing:.08em;
+                  text-transform:uppercase; color:var(--danger); }
+.ad-med p       { margin:0 0 6px; font-size:14px; }
+.ad-med p:last-child { margin-bottom:0; }
+.ad-med b       { font-weight:600; }
+
+.ad-choices     { margin:10px 0 0; font-size:14px; }
+.ad-choices ol  { margin:4px 0 0; padding-left:20px; }
+
+/* --------------------------------------------------------------------------
+   The decision
+   -------------------------------------------------------------------------- */
+.ad-decide      { border-top:1px solid var(--line); margin-top:20px; padding-top:18px; }
+.ad-acts        { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+.ad-acts .btn   { width:auto; flex:0 0 auto; }
+.ad-why         { margin-top:14px; }
+.ad-why label   { display:block; font-size:13px; color:var(--muted); margin-bottom:5px; }
+.ad-why textarea{ width:100%; min-height:76px; }
+/*  The reassurance used to be part of the label, which the shell renders in
+    small caps — a whole sentence in small caps is a sentence people skip,
+    and this is the one that says the note is private. */
+.ad-hint        { margin:-2px 0 7px; font-size:12.5px; color:var(--muted);
+                  max-width:60ch; }
+/* A note sitting flush against the form above it reads as part of it. */
+.ad-note + .ad-form { margin-top:16px; }
+
+.ad-empty       { padding:28px 4px; color:var(--muted); text-align:center; }
+
+@media (max-width: 640px) {
+  .ad-grid      { grid-template-columns:1fr; gap:0; }
+  .ad-grid dt   { padding-bottom:0; font-size:12px; }
+  .ad-grid dd   { padding-top:2px; }
+  .ad-count     { font-size:30px; }
+  /*  Two across rather than five stacked slabs. Fees has three figures and
+      stacks them; five of them stacked pushed the list itself a whole
+      screen and a half down, and four of the five are usually 0. */
+  .ad-figs      { grid-template-columns:1fr 1fr; gap:10px; }
+  .ad-fig       { padding:12px 13px; }
+  .ad-fig b     { font-size:23px; }
+}

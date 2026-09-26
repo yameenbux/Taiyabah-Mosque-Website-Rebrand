@@ -509,6 +509,15 @@
   .cl-hit .btn{width:auto;padding:8px 15px;font-size:.9rem;margin-left:auto;}
   .cl-hit-none{font-size:.94rem;color:var(--muted);padding:4px 2px;}
 
+  /*  THE HINT UNDER A FIELD. It had no rule at all, so all three of them
+      rendered at full body size in full ink and argued with the thing they
+      were explaining. Found by admin_shell_test, which checks that every
+      class a staff screen uses is defined by a sheet that screen links -
+      a check written after the Applications screen shipped without any of
+      its furniture. .88rem and --muted is what the rest of the portal uses
+      for text that is there to be read once. */
+  .cl-hint{font-size:.88rem;line-height:1.55;color:var(--muted);margin-top:4px;}
+
   .cl-confirm{
     margin-top:12px;padding:14px 16px;border-radius:11px;
     border:1px solid rgba(198,162,76,.5);border-left:3px solid var(--gold);

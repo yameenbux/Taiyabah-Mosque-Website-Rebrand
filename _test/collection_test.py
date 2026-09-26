@@ -38,7 +38,7 @@ before the page's own scripts run.
 Run:  python3 _test/collection_test.py
 """
 from playwright.sync_api import sync_playwright
-import sys, os, json, datetime, http.server, socketserver, threading, functools
+import sys, os, base64, json, datetime, http.server, socketserver, threading, functools
 
 ROOT = os.environ.get("SITE_ROOT") or os.path.abspath(
     os.path.join(os.path.dirname(__file__), ".."))
@@ -54,6 +54,17 @@ class Q(http.server.SimpleHTTPRequestHandler):
 httpd = socketserver.TCPServer(("127.0.0.1", 0), functools.partial(Q, directory=ROOT))
 threading.Thread(target=httpd.serve_forever, daemon=True).start()
 BASE = "http://127.0.0.1:%d" % httpd.server_address[1]
+
+#  A one-pixel PNG. The form only cares that the type is one it takes and
+#  that the file is under 5 MB; the bytes are never looked at.
+PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmM"
+    "IQAAAABJRU5ErkJggg==")
+
+#  The certificate has to be dated inside the window the form allows, which
+#  is the last CERT_MONTHS months up to today. A month back is safely inside
+#  it whatever today happens to be.
+CERT_ON = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
 
 fails = []
 
@@ -150,6 +161,21 @@ with sync_playwright() as p:
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:220]))
     pg.route("**/rest/v1/rpc/**", handler)
+
+    #  THE CERTIFICATE UPLOAD. The form stores the BMCC certificate in a
+    #  private bucket BEFORE it writes the request, so that a request can
+    #  never name a file that is not there. Nothing here is routed by the
+    #  rpc handler above - it is a storage call, not an RPC - so without
+    #  this it leaves for the real internet and the chain never resolves.
+    uploaded = {}
+
+    def storage(route, request):
+        uploaded["url"] = request.url
+        uploaded["hdr"] = {k.lower(): v for k, v in request.headers.items()}
+        uploaded["bytes"] = len(request.post_data_buffer or b"")
+        route.fulfill(status=200, content_type="application/json", body="{}")
+
+    pg.route("**/storage/v1/object/**", storage)
     pg.goto(BASE + "/index.html", wait_until="load")
     pg.wait_for_timeout(1400)
     pg.evaluate("() => { if (window.showPage) showPage('collection'); }")
@@ -202,6 +228,15 @@ with sync_playwright() as p:
     pg.check(D + "#ccRules")
     pg.check(D + "#ccPriv")
     pg.fill(D + "#ccSign", "Test Collector")
+
+    #  THE BMCC CERTIFICATE. Required since the form was rewritten, and the
+    #  reason this suite was red: it filled every field the certificate
+    #  replaced and none of the ones that replaced them, so the page refused
+    #  the form, the request was never sent, and the "which endpoint did it
+    #  post to" check read the page-load call to courses_public instead.
+    pg.set_input_files(D + "#ccFile", files=[{
+        "name": "bmcc.png", "mimeType": "image/png", "buffer": PNG}])
+    pg.fill(D + "#ccCertDate", CERT_ON)
     pg.click(D + "#ccSubmit")
     try:
         pg.wait_for_selector(D + "#ccDone:not([hidden])", timeout=12000)
@@ -229,7 +264,15 @@ with sync_playwright() as p:
                   "org_email", "charity_number", "collector_name",
                   "collector_role", "collector_paid", "trustee_name",
                   "trustee_phone", "trustee_email", "rules_version",
-                  "rules_accepted", "signed_name", "privacy_accepted"]
+                  "rules_accepted", "signed_name", "privacy_accepted",
+                  #  The BMCC certificate and the two madrasah figures.
+                  #  Checked against the live function before being added
+                  #  here rather than assumed: public.request_charity_
+                  #  collection(payload jsonb) reads all four. A list that
+                  #  is merely kept in step with the page proves only that
+                  #  the page agrees with itself.
+                  "bmcc_certificate_path", "bmcc_certificate_date",
+                  "students_total", "students_boarding"]
         missing = [k for k in EXPECT if k not in pl]
         extra = [k for k in pl if k not in EXPECT]
         check(not missing, "the page never sends these, so they arrive null: %s" % missing)
