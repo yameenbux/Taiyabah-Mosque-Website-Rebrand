@@ -121,6 +121,7 @@
     var EDIT = false;         // is the record in edit mode
     var HEALTH = null;        // the counts behind the figures
     var SUGG = [];            // sibling pairs waiting to be settled
+    var SUGGOPEN = false;     // is the sibling list expanded
     var DOBQ = {};            // pupil id -> why the date of birth looks wrong
     var DOBN = 0;             // how many there are
     var NEED = "";            // which "needs attention" filter is on
@@ -198,15 +199,35 @@
     }
 
     // --- the sibling pairs --------------------------------------------------
+    //  ONE LINE, NOT FIFTY-SIX ROWS.
+    //
+    //  The test fixture holds one pair and the madrasah holds 56. Drawn as
+    //  rows, that is roughly three screens of review work wedged between the
+    //  figures and the roll — and no test could see it, because one pair is
+    //  not three screens.
+    //
+    //  DELETING IT WAS ASKED FOR AND REFUSED, on the reasoning that admins
+    //  can manage families from the Families screen. That screen does not
+    //  exist: portal/families/ is not there and md-families is still
+    //  `soon: true`. Removing the panel outright would leave 56 findings in
+    //  the database with nothing in the interface showing them — and
+    //  families drive sibling discounts, so wrong families are wrong money.
+    //  One line keeps the finding and gets it off the roll, which was the
+    //  legitimate half of the complaint. It points at Families when Families
+    //  exists.
     function drawSuggestions() {
       var host = el("pu-sugg");
       if (!host) return;
       if (!SUGG.length) { host.hidden = true; host.innerHTML = ""; return; }
       host.hidden = false;
-      var h = '<h3>' + (SUGG.length === 1
-              ? "One pair of children might be siblings"
-              : SUGG.length + " pairs of children might be siblings") + "</h3>"
-        + '<p class="pu-sub">They share a surname and an address, but no parent’s '
+      var h = '<p class="pu-sugg-line">'
+        + (SUGG.length === 1
+            ? "One pair of children might be siblings. "
+            : SUGG.length + " pairs of children might be siblings. ")
+        + '<button type="button" class="pu-linkish">'
+        + (SUGGOPEN ? "Hide" : "Review them") + "</button></p>";
+      if (!SUGGOPEN) { host.innerHTML = h; return; }
+      h += '<p class="pu-sub">They share a surname and an address, but no parent’s '
         + "telephone number or email address is on both records, so they have not "
         + "been put in one family. Somebody who knows them should say.</p>"
         + '<div class="pu-sugg-rows">';
@@ -806,6 +827,8 @@
 
       var sg = el("pu-sugg");
       if (sg) sg.addEventListener("click", function (e) {
+        var lk = e.target.closest ? e.target.closest(".pu-linkish") : null;
+        if (lk) { SUGGOPEN = !SUGGOPEN; drawSuggestions(); return; }
         var b = e.target.closest ? e.target.closest("[data-join]") : null;
         if (!b || busy) return;
         var rowEl = b.closest("[data-sugg]");

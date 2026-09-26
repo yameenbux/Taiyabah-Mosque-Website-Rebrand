@@ -501,6 +501,43 @@ def run():
         pg.close()
         pg = open_page(b)
 
+        # --- the sibling pairs, as one line ------------------------------------
+        #  THE FIXTURE HOLDS ONE PAIR. THE MADRASAH HOLDS 56.
+        #  Rendered as rows, that is three screens of review work sitting
+        #  between the figures and the roll — and nothing in this suite could
+        #  see it, because one pair is not three screens.
+        pairs = {"allowed": True, "rows": [
+            dict(SUGG["rows"][0], id="sg%d" % i) for i in range(56)]}
+        pg.close()
+        pg = open_page(b, sugg=pairs)
+        check("56 pairs draw ONE line, not 56 rows",
+              pg.locator(".pu-sugg-row").count() == 0,
+              pg.locator(".pu-sugg-row").count())
+        check("and the line says how many there are",
+              "56" in pg.inner_text(".pu-sugg-line"), pg.inner_text(".pu-sugg-line"))
+        check("the roll is still on the first screen behind it",
+              pg.evaluate("""() => document.querySelector('tr.pu-row')
+                  .getBoundingClientRect().top""") < 1100)
+        pg.locator(".pu-sugg-line button").first.click()
+        pg.wait_for_timeout(350)
+        check("asking to review them shows all 56",
+              pg.locator(".pu-sugg-row").count() == 56,
+              pg.locator(".pu-sugg-row").count())
+        pg.locator(".pu-sugg-line button").first.click()
+        pg.wait_for_timeout(300)
+        check("and they fold away again", pg.locator(".pu-sugg-row").count() == 0)
+        pg.close()
+
+        # --- what a phone shows on its first screen ----------------------------
+        pg = open_page(b, width=390, height=900)
+        top = pg.evaluate("""() => {
+            var r = document.querySelector('tr.pu-row');
+            return r ? r.getBoundingClientRect().top : null; }""")
+        check("a pupil is on the phone's FIRST screen, not three screens down",
+              top is not None and top < 900, top)
+        pg.close()
+        pg = open_page(b)
+
         # --- opening a record ------------------------------------------------
         pg.locator("tr.pu-row").first.click()
         pg.wait_for_timeout(500)
@@ -571,6 +608,12 @@ def run():
         pg = open_page(b)
         check("the sibling card is on screen when a pair is waiting",
               pg.locator("#pu-sugg").is_visible())
+        #  It opens as one line now — 56 pairs as rows put three screens of
+        #  review work above the roll. The detail is one click away.
+        check("but it is one line until somebody asks",
+              pg.locator("#pu-sugg [data-join]").count() == 0)
+        pg.locator(".pu-sugg-line button").first.click()
+        pg.wait_for_timeout(350)
         check("it says why they are not already one family",
               "telephone number or email address is on both"
               in pg.inner_text("#pu-sugg").lower())

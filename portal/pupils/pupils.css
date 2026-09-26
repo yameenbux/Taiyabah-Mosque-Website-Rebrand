@@ -254,3 +254,27 @@
                 background:none; color:var(--ink); cursor:pointer;
                 text-decoration:none; white-space:nowrap; }
 .pu-mi:hover  { background:var(--line); }
+
+/*  THE SIBLING PAIRS, AS ONE LINE.
+    56 pairs rendered as rows put roughly three screens of review work
+    between the figures and the roll. The finding is not thrown away —
+    deleting it would leave 56 rows in the database with nothing showing
+    them, and families drive sibling discounts — it is one line until
+    somebody asks for it.                                                   */
+.pu-sugg-line { margin:0; }
+.pu-linkish   { background:none; border:0; padding:0; font:inherit;
+                color:var(--gold-ink); text-decoration:underline;
+                cursor:pointer; }
+.pu-linkish:hover { color:var(--ink); }
+
+/*  THE PHONE'S FIRST SCREEN HELD NO PUPIL.
+    Measured: the heading, seven figure tiles stacked two across, then the
+    sibling panel — a teacher in a corridor scrolled past all of it before
+    reaching a single child. On a phone the figures become one swipeable
+    row, which costs about 100px instead of 600.                            */
+@media (max-width: 720px) {
+  .pu-figs     { display:flex; overflow-x:auto; gap:10px; padding-bottom:6px;
+                 scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
+  .pu-fig      { flex:0 0 auto; min-width:136px; scroll-snap-align:start; }
+  .pu-head-t p { display:none; }
+}
