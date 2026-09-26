@@ -293,6 +293,64 @@ def run():
         check("pressing it again clears that filter too",
               pg.locator("tr.pu-row").count() == 2)
 
+        # --- pagination --------------------------------------------------------
+        #  The suite's fixture holds two pupils. Everything wrong with this
+        #  screen was invisible at two: 28.6 screens of scrolling on the desk,
+        #  37.9 on a phone. These run against 120.
+        many = [dict(ROLL[0], id="x%d" % i, name="Pupil %d" % i,
+                     legacy_ref=str(2000 + i)) for i in range(120)]
+        pg.close()
+        pg = open_page(b, roll=many, health=dict(HEALTH, on_roll=120))
+        check("only one page of pupils is drawn",
+              pg.locator("tr.pu-row").count() == 50,
+              pg.locator("tr.pu-row").count())
+        check("the count line says what is shown and out of how many",
+              "120" in pg.inner_text("#pu-count"), pg.inner_text("#pu-count"))
+        check("there is a pager", pg.locator(".pu-pager").count() >= 1)
+        pg.locator('.pu-page[data-page="2"]').first.click()
+        pg.wait_for_timeout(300)
+        check("page two draws the next fifty",
+              pg.locator("tr.pu-row").count() == 50)
+        check("and starts at the fifty-first pupil",
+              "2050" in pg.inner_text("#pu-rows"))
+        pg.locator('.pu-per[data-per="100"]').first.click()
+        pg.wait_for_timeout(300)
+        check("asking for a hundred per page draws a hundred",
+              pg.locator("tr.pu-row").count() == 100,
+              pg.locator("tr.pu-row").count())
+
+        #  A NARROWING WHILE ON A LATER PAGE.
+        #  Filter to twelve results while on page 4 and the slice is past the
+        #  end: the screen says "No pupil matches that" while twelve do.
+        pg.locator('.pu-per[data-per="25"]').first.click()
+        pg.wait_for_timeout(200)
+        #  The LAST page, which the pager always renders however far it is
+        #  from the current one. Page 4 is not clickable from page 1, and
+        #  that is correct: the middle elides.
+        pg.locator('.pu-page[data-page="5"]').first.click()
+        pg.wait_for_timeout(250)
+        check("we are on the last page", pg.locator("tr.pu-row").count() == 20,
+              pg.locator("tr.pu-row").count())
+        pg.fill("#pu-q", "Pupil 1")
+        pg.wait_for_timeout(400)
+        check("searching from the last page still shows the matches",
+              pg.locator("tr.pu-row").count() > 0,
+              pg.locator("tr.pu-row").count())
+        check("and does not claim there are none",
+              pg.locator("#pu-empty").is_hidden())
+        #  NOT MERELY NON-EMPTY. drawRows clamps an over-run page to the LAST
+        #  page, so a broken reset still shows rows — just the wrong ones. The
+        #  search matches 31 children; landing on page 1 means 25 rows, and
+        #  landing on the clamped last page means 6. Only the first is right,
+        #  and only this check can tell them apart.
+        check("and puts you on page ONE of the new result, not its last page",
+              pg.locator("tr.pu-row").count() == 25,
+              pg.locator("tr.pu-row").count())
+        check("with page one marked as current",
+              pg.get_attribute('.pu-page[data-page="1"]', "aria-current") == "page")
+        pg.close()
+        pg = open_page(b)
+
         # --- opening a record ------------------------------------------------
         pg.locator("tr.pu-row").first.click()
         pg.wait_for_timeout(500)

@@ -23,6 +23,41 @@
 .pu-head-a .btn { width:auto; flex:0 0 auto; }
 
 .pu-sub       { margin:0 0 14px; color:var(--muted); font-size:14px; }
+
+/* --------------------------------------------------------------------------
+   THE PAGER.
+
+   Measured before this existed: 552 pupils drew 28.6 screens of continuous
+   scrolling on the desk and 37.9 on a phone. Not a failing assertion
+   anywhere — the suite's fixture holds two children, and two never scroll.
+
+   It sits above AND below the table, because somebody who has read to the
+   bottom of fifty rows should not scroll back to the top to ask for the
+   next fifty.
+   -------------------------------------------------------------------------- */
+[hidden] { display:none !important; }
+
+.pu-pager     { display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+                justify-content:space-between; margin:12px 0; }
+.pu-pager:empty { display:none; }
+.pu-pages     { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.pu-page      { min-width:38px; min-height:38px; padding:6px 10px;
+                border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:14px; }
+.pu-page:hover:not([disabled]) { border-color:var(--gold-ink); }
+.pu-page.is-on { background:var(--ink); color:var(--card);
+                 border-color:var(--ink); font-weight:700; }
+.pu-page[disabled] { opacity:.38; cursor:default; }
+.pu-gap       { padding:0 2px; color:var(--muted); }
+.pu-pers      { display:flex; gap:4px; align-items:center;
+                color:var(--muted); font-size:13px; }
+.pu-per       { min-width:36px; min-height:34px; padding:4px 8px;
+                border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:13px; }
+.pu-per:hover { border-color:var(--gold-ink); }
+.pu-per.is-on { background:var(--ink); color:var(--card); border-color:var(--ink); }
 .pu-q         { color:var(--muted); font-size:13px; }
 .pu-warn      { color:var(--danger-ink); font-size:14px; margin:6px 0 0; }
 

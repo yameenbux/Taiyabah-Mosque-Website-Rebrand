@@ -29,6 +29,8 @@
     var DOBQ = {};            // pupil id -> why the date of birth looks wrong
     var DOBN = 0;             // how many there are
     var NEED = "";            // which "needs attention" filter is on
+    var PAGE = 1;             // which page of the filtered roll is shown
+    var PER  = 50;            // how many rows a page holds
     var busy = false;
 
     function el(id) { return document.getElementById(id); }
@@ -143,14 +145,42 @@
              .toLowerCase().indexOf(q) !== -1;
     }
 
+    //  THE FILTERED ROLL.
+    //
+    //  Pagination applies to what the filters LEAVE, not to the data. One
+    //  call to madrasah_roll() brings all 552 children as marks, and the
+    //  search and every filter see all of them; only the drawing is paged.
+    //
+    //  The system this replaces paginates server-side, so finding a child on
+    //  page 4 costs a round trip. Here it costs nothing, and the count line
+    //  can honestly say "Showing 1-50 of 137" because both numbers are known
+    //  at the same moment.
+    function filtered() {
+      var out = [];
+      for (var i = 0; i < ROWS.length; i++) {
+        if (matches(ROWS[i])) out.push(ROWS[i]);
+      }
+      return out;
+    }
+
+    //  ANY NARROWING GOES BACK TO PAGE ONE.
+    //  Filter to twelve results while sitting on page 4 and the slice starts
+    //  past the end of the result: the table draws nothing and the screen
+    //  says "No pupil matches that" while twelve of them do.
+    function resetPage() { PAGE = 1; }
+
     function drawRows() {
       var body = el("pu-rows");
       if (!body) return;
-      var out = [], n = 0;
-      for (var i = 0; i < ROWS.length; i++) {
-        var r = ROWS[i];
-        if (!matches(r)) continue;
-        n++;
+      var rows = filtered();
+      var pages = Math.max(1, Math.ceil(rows.length / PER));
+      if (PAGE > pages) PAGE = pages;
+      if (PAGE < 1) PAGE = 1;
+      var from = (PAGE - 1) * PER;
+      var page = rows.slice(from, from + PER);
+      var out = [];
+      for (var i = 0; i < page.length; i++) {
+        var r = page[i];
         var a = age(r.date_of_birth);
         var flags = "";
         //  MARKS, NEVER DETAIL. What the note says is in the record, which
@@ -185,15 +215,67 @@
       body.innerHTML = out.join("");
       var empty = el("pu-empty");
       if (empty) {
-        empty.hidden = n > 0;
+        //  The emptiness of the RESULT, not of the page. A page can be empty
+        //  while the result is not, and saying so would be a lie.
+        empty.hidden = rows.length > 0;
         empty.textContent = ROWS.length
           ? "No pupil matches that."
           : "There are no pupils on the roll yet.";
       }
       var c = el("pu-count");
-      if (c) c.textContent = n === ROWS.length
-        ? (n === 1 ? "1 pupil" : n + " pupils")
-        : n + " of " + ROWS.length;
+      if (c) {
+        //  SAY WHICH OF HOW MANY. "137 pupils" while fifty are on screen is
+        //  a sum somebody has to do in their head to trust the page.
+        c.textContent = rows.length === 0 ? "no pupils"
+          : rows.length <= PER
+            ? (rows.length === 1 ? "1 pupil" : rows.length + " pupils"
+               + (rows.length === ROWS.length ? "" : " of " + ROWS.length))
+            : "Showing " + (from + 1) + "–" + Math.min(from + PER, rows.length)
+              + " of " + rows.length
+              + (rows.length === ROWS.length ? "" : " matching");
+      }
+      drawPager(pages);
+    }
+
+    //  THE PAGER, ABOVE AND BELOW THE TABLE.
+    //  Somebody who has read to the bottom of fifty rows should not scroll
+    //  back to the top to ask for the next fifty. First and last are always
+    //  reachable and the middle elides, so 552 pupils is never twelve
+    //  buttons.
+    function drawPager(pages) {
+      var hosts = document.querySelectorAll(".pu-pager");
+      if (!hosts.length) return;
+      var h = "", p, i;
+      if (pages > 1) {
+        h += '<div class="pu-pages">'
+           + '<button type="button" class="pu-page" data-page="' + (PAGE - 1)
+           + '"' + (PAGE === 1 ? " disabled" : "") + ">Back</button>";
+        var shown = [];
+        for (p = 1; p <= pages; p++) {
+          if (p === 1 || p === pages || Math.abs(p - PAGE) <= 1) shown.push(p);
+        }
+        var last = 0;
+        for (i = 0; i < shown.length; i++) {
+          p = shown[i];
+          if (last && p - last > 1) h += '<span class="pu-gap">…</span>';
+          h += '<button type="button" class="pu-page'
+             + (p === PAGE ? " is-on" : "") + '" data-page="' + p + '"'
+             + (p === PAGE ? ' aria-current="page"' : "")
+             + ' aria-label="Page ' + p + '">' + p + "</button>";
+          last = p;
+        }
+        h += '<button type="button" class="pu-page" data-page="' + (PAGE + 1)
+           + '"' + (PAGE === pages ? " disabled" : "") + ">Next</button></div>";
+      }
+      h += '<div class="pu-pers"><span>Per page</span>';
+      var opts = [25, 50, 100];
+      for (i = 0; i < opts.length; i++) {
+        h += '<button type="button" class="pu-per'
+           + (PER === opts[i] ? " is-on" : "") + '" data-per="' + opts[i]
+           + '">' + opts[i] + "</button>";
+      }
+      hosts[0].innerHTML = h + "</div>";
+      for (i = 1; i < hosts.length; i++) hosts[i].innerHTML = hosts[0].innerHTML;
     }
 
     // --- one pupil ----------------------------------------------------------
@@ -418,7 +500,8 @@
       //  A filter change closes an open record. Leaving one open under a list
       //  it is no longer part of is how somebody reads the wrong child's
       //  medical note.
-      function refilter() { closeRecord(); drawRows(); }
+      //  Every narrowing goes back to page one. See resetPage().
+      function refilter() { closeRecord(); resetPage(); drawRows(); }
       if (q) q.addEventListener("input", refilter);
       if (c) c.addEventListener("change", refilter);
 
@@ -427,8 +510,28 @@
         var b = e.target.closest ? e.target.closest("[data-need]") : null;
         if (!b) return;
         NEED = (NEED === b.getAttribute("data-need")) ? "" : b.getAttribute("data-need");
-        closeRecord(); drawHealth(); drawRows();
+        closeRecord(); resetPage(); drawHealth(); drawRows();
       });
+
+      //  One delegate for both pagers, since they carry identical markup.
+      var pagers = document.querySelectorAll(".pu-pager");
+      for (var pi = 0; pi < pagers.length; pi++) {
+        pagers[pi].addEventListener("click", function (e) {
+          var pb = e.target.closest ? e.target.closest(".pu-page") : null;
+          var pr = e.target.closest ? e.target.closest(".pu-per") : null;
+          if (pb && !pb.disabled) {
+            PAGE = parseInt(pb.getAttribute("data-page"), 10) || 1;
+            closeRecord(); drawRows();
+            //  Going to page 2 from the bottom pager should not leave you
+            //  looking at the bottom of page 2.
+            var top = el("pu-roll");
+            if (top && top.scrollIntoView) top.scrollIntoView(true);
+          } else if (pr) {
+            PER = parseInt(pr.getAttribute("data-per"), 10) || 50;
+            resetPage(); closeRecord(); drawRows();
+          }
+        });
+      }
 
       var body = el("pu-rows");
       if (body) {

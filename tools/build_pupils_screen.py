@@ -59,8 +59,8 @@ BODY = """
         <section class="pu-sugg" id="pu-sugg" hidden></section>
 
         <section class="pu-bk" id="pu-list-bk">
-          <h3>The roll</h3>
-          <p class="pu-sub">Surname order. Choose a child to see their record.</p>
+          <h3 id="pu-roll">The roll</h3>
+          <p class="pu-sub">Choose a child to see their record.</p>
 
           <div class="pu-filters">
             <input type="search" id="pu-q" placeholder="Name, reference, postcode, family or class">
@@ -69,6 +69,8 @@ BODY = """
             </select>
             <span class="pu-count" id="pu-count"></span>
           </div>
+
+          <div class="pu-pager" id="pu-pager-top"></div>
 
           <div class="pu-scroll">
             <table class="pu-table" id="pu-table">
@@ -82,6 +84,7 @@ BODY = """
             </table>
           </div>
           <div class="pu-empty" id="pu-empty" hidden></div>
+          <div class="pu-pager" id="pu-pager-bottom"></div>
         </section>
 
         <!-- One pupil. Hidden until a row is opened. -->
