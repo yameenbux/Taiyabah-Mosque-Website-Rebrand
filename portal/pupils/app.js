@@ -236,6 +236,16 @@
       if (NEED === "no_dob"     && r.date_of_birth) return false;
       if (NEED === "dob_to_check" && !DOBQ[r.id])   return false;
       if (NEED === "no_fee_rate" && r.has_fee_rate) return false;
+      //  THE CHILD'S OWN RECORD, not the class's side.
+      //  One pupil on the real roll has no gender recorded, and 13 more sit
+      //  in the mixed Play and Pray classes. Filtering on the class's side
+      //  would put those 13 under both Boys and Girls and would still lose
+      //  the one — so it filters on the child, "Everyone" is the default,
+      //  and the count always says how many of how many.
+      var side = el("pu-side") ? el("pu-side").value : "";
+      if (side && r.gender !== side) return false;
+      var tchr = el("pu-teacher") ? el("pu-teacher").value : "";
+      if (tchr && r.teacher !== tchr) return false;
       if (!q) return true;
       return (r.name + " " + (r.legacy_ref || "") + " " + (r.postcode || "")
             + " " + (r.family || "") + " " + (r.classes || []).join(" "))
@@ -357,13 +367,19 @@
       if (c) {
         //  SAY WHICH OF HOW MANY. "137 pupils" while fifty are on screen is
         //  a sum somebody has to do in their head to trust the page.
+        //  ALWAYS "OF HOW MANY" WHEN SOMETHING IS FILTERED OUT — including
+        //  when exactly one child matches. The first version attached the
+        //  suffix only to the plural branch, so filtering 552 children down
+        //  to one read "1 pupil", which is true of the page and false of the
+        //  roll. That is precisely the shape of loss this screen is supposed
+        //  to make visible.
+        var all = (rows.length === ROWS.length);
         c.textContent = rows.length === 0 ? "no pupils"
           : rows.length <= PER
-            ? (rows.length === 1 ? "1 pupil" : rows.length + " pupils"
-               + (rows.length === ROWS.length ? "" : " of " + ROWS.length))
+            ? (rows.length === 1 ? "1 pupil" : rows.length + " pupils")
+              + (all ? "" : " of " + ROWS.length)
             : "Showing " + (from + 1) + "–" + Math.min(from + PER, rows.length)
-              + " of " + rows.length
-              + (rows.length === ROWS.length ? "" : " matching");
+              + " of " + rows.length + (all ? "" : " matching");
       }
       drawPager(pages);
     }
@@ -611,6 +627,25 @@
         for (var d = 0; d < dq.length; d++) {
           DOBQ[dq[d].id] = dq[d].why; DOBN++;
         }
+        //  THE TEACHERS ARE WHOEVER IS ACTUALLY TEACHING SOMEBODY HERE.
+        //  A hard-coded list goes stale the day a teacher leaves, and a list
+        //  fetched separately can disagree with the roll it filters. Built
+        //  from the roll, it cannot.
+        var seen = {}, names = [], t;
+        for (t = 0; t < ROWS.length; t++) {
+          var nm = ROWS[t].teacher;
+          if (nm && !seen[nm]) { seen[nm] = 1; names.push(nm); }
+        }
+        names.sort();
+        var tsel = el("pu-teacher");
+        if (tsel && tsel.options.length <= 1) {
+          for (t = 0; t < names.length; t++) {
+            var to = document.createElement("option");
+            to.value = names[t]; to.textContent = names[t];
+            tsel.appendChild(to);
+          }
+        }
+
         var classes = (res[3].data && (res[3].data.rows || res[3].data)) || [];
         var sel = el("pu-class");
         if (sel && classes instanceof Array && sel.options.length <= 1) {
@@ -635,6 +670,9 @@
       function refilter() { closeRecord(); resetPage(); drawRows(); }
       if (q) q.addEventListener("input", refilter);
       if (c) c.addEventListener("change", refilter);
+      var sd = el("pu-side"), tc = el("pu-teacher");
+      if (sd) sd.addEventListener("change", refilter);
+      if (tc) tc.addEventListener("change", refilter);
 
       var figs = el("pu-figs");
       if (figs) figs.addEventListener("click", function (e) {

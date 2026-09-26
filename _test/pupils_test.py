@@ -398,6 +398,58 @@ def run():
         pg.close()
         pg = open_page(b)
 
+        # --- boys, girls, and the child who is neither -------------------------
+        #  ONE REAL PUPIL HAS NO GENDER RECORDED. 236 boys plus 315 girls is
+        #  551, not 552. Two tabs would swallow that child; a filter with
+        #  "Everyone" as its default cannot.
+        sides = [
+            dict(ROLL[0], id="g1", name="Boy One",   gender="male",
+                 teacher="Apa Alpha", classes=["Boys Year 1"], class_ids=["c1"]),
+            dict(ROLL[0], id="g2", name="Girl One",  gender="female",
+                 teacher="Apa Beta",  classes=["Girls Class 1"], class_ids=["c1"]),
+            dict(ROLL[0], id="g3", name="Neither One", gender=None,
+                 teacher="Apa Beta",  classes=["Play and Pray 1"], class_ids=["c1"]),
+        ]
+        pg.close()
+        pg = open_page(b, roll=sides, health=dict(HEALTH, on_roll=3))
+        check("everyone is shown to begin with",
+              pg.locator("tr.pu-row").count() == 3)
+        pg.select_option("#pu-side", "male")
+        pg.wait_for_timeout(300)
+        check("boys shows only the boy", pg.locator("tr.pu-row").count() == 1)
+        pg.select_option("#pu-side", "female")
+        pg.wait_for_timeout(300)
+        check("girls shows only the girl", pg.locator("tr.pu-row").count() == 1)
+        check("and the count says OF HOW MANY, so the missing child is visible "
+              "arithmetic rather than a silent loss",
+              "of 3" in pg.inner_text("#pu-count"), pg.inner_text("#pu-count"))
+        pg.select_option("#pu-side", "")
+        pg.wait_for_timeout(300)
+        check("everyone brings back all three, including the one with no gender",
+              pg.locator("tr.pu-row").count() == 3)
+        check("and the child with no gender is reachable by name",
+              "Neither One" in pg.inner_text("#pu-rows"))
+
+        # --- teacher -----------------------------------------------------------
+        pg.select_option("#pu-teacher", "Apa Beta")
+        pg.wait_for_timeout(300)
+        check("the teacher filter narrows to that teacher's pupils",
+              pg.locator("tr.pu-row").count() == 2,
+              pg.locator("tr.pu-row").count())
+        check("the teacher list is built from the roll, not hard-coded",
+              pg.locator("#pu-teacher option").count() == 3,
+              pg.locator("#pu-teacher option").count())
+        pg.select_option("#pu-teacher", "")
+        pg.wait_for_timeout(250)
+        pg.select_option("#pu-side", "female")
+        pg.select_option("#pu-teacher", "Apa Beta")
+        pg.wait_for_timeout(300)
+        check("the filters combine rather than replacing each other",
+              pg.locator("tr.pu-row").count() == 1,
+              pg.locator("tr.pu-row").count())
+        pg.close()
+        pg = open_page(b)
+
         # --- opening a record ------------------------------------------------
         pg.locator("tr.pu-row").first.click()
         pg.wait_for_timeout(500)
