@@ -16,10 +16,10 @@ This proves the half SQL cannot see:
     telephone are a job of work rather than a number;
   * that changing a filter closes an open record, instead of leaving one
     child's medical note on screen beside a list they are no longer in;
-  * that a child with no guardian is called out in words, not left as an
-    empty space somebody has to notice;
-  * that amending sends what the form holds and then re-reads the record;
-  * that a row opens from the keyboard;
+  * that a child's detail NEVER reaches this screen - the roll shows marks
+    and navigates to portal/pupil/ for anything more, so madrasah_pupil_one
+    is never called from here;
+  * that clicking, the keyboard and the actions menu all reach that page;
   * that the screen does not scroll sideways on a phone.
 
 Every check in here was watched failing before it was kept.
@@ -545,71 +545,49 @@ def run():
         pg.close()
         pg = open_page(b)
 
-        # --- opening a record ------------------------------------------------
+        # --- opening a child leaves the roll -----------------------------------
+        #  The record used to open in a drawer under the list. The masjid
+        #  asked for what their old system does, so a child is now a page of
+        #  its own and the roll navigates to it. The audit row is written
+        #  there by the same function; only the place changes.
+        #  Sampled BEFORE the click. After it, window.__calls belongs to the
+        #  page navigated TO, which does read the pupil — so asking afterwards
+        #  would be interrogating the wrong page's log.
+        before = pg.evaluate("() => window.__calls.map(function(c){return c.name;})")
+        check("the roll itself never reads a pupil's detail",
+              "madrasah_pupil_one" not in before, before)
         pg.locator("tr.pu-row").first.click()
-        pg.wait_for_timeout(500)
-        check("the record opens", pg.locator("#pu-record").is_visible())
-        rec = pg.inner_text("#pu-record")
-        check("the record DOES show the allergy", SECRET_ALLERGY in rec)
-        check("the record DOES show the medical note", SECRET_MEDICAL in rec)
-        check("the sensitive block is set apart from the rest",
-              pg.locator("#pu-record .pu-med").count() == 1)
-        check("the record names who to ring", "07000000000" in rec)
-        check("and marks the first call", "first call" in rec.lower())
-        check("it shows the school", "Clarendon" in rec)
-        check("it shows the class", "Girls Class 3" in rec)
-        check("it names the teacher", "Khadija" in rec)
-        check("it offers the brother or sister", pg.locator("#pu-record [data-go]").count() == 1)
-        check("it says there is no fee rate, rather than leaving it blank",
-              "cannot be charged" in rec.lower())
-
-        calls = pg.evaluate("() => window.__calls.map(c => c.name)")
-        check("opening a record went through madrasah_pupil_one",
-              "madrasah_pupil_one" in calls, calls)
-
-        # --- a filter change closes the record -------------------------------
-        pg.fill("#pu-q", "Bilal")
-        pg.wait_for_timeout(300)
-        check("changing the search closes the open record",
-              pg.locator("#pu-record").is_hidden())
-        pg.fill("#pu-q", "")
-        pg.wait_for_timeout(300)
-
-        # --- a child with nobody to ring is called out ------------------------
-        pg.locator("tr.pu-row").nth(1).click()
-        pg.wait_for_timeout(500)
-        rec2 = pg.inner_text("#pu-record")
-        check("a child with no guardian is called out in words",
-              "no one to ring" in rec2.lower() or "nobody is recorded" in rec2.lower(), rec2[:160])
-        check("a child in no class is called out too",
-              "no class" in rec2.lower())
+        pg.wait_for_url("**/portal/pupil/**", timeout=7000)
+        check("clicking a child goes to that child's own page",
+              "/portal/pupil/" in pg.url, pg.url)
+        check("and names the child in the address",
+              "id=p1" in pg.url, pg.url)
         pg.close()
 
-        # --- amending ---------------------------------------------------------
         pg = open_page(b)
-        pg.locator("tr.pu-row").first.click()
-        pg.wait_for_timeout(500)
-        check("there is no edit form until it is asked for",
-              pg.locator("#pu-editor").is_hidden())
-        pg.click("#pu-edit")
-        pg.wait_for_timeout(300)
-        check("amending opens a form", pg.locator("#pu-editor").is_visible())
-        check("the form is filled with what is already there",
-              pg.input_value("#pf-first_name") == "Aaliyah")
-        check("including the school", pg.input_value("#pf-school") == "Clarendon Primary")
-        pg.fill("#pf-school", "Sunning Hill Primary")
-        pg.click("#pu-save")
-        pg.wait_for_timeout(600)
-        saved = pg.evaluate("""() => (window.__calls.filter(
-            c => c.name === 'save_madrasah_pupil_details').slice(-1)[0] || {}).args""")
-        check("saving went to save_madrasah_pupil_details", bool(saved), saved)
-        check("and carried the pupil's id", (saved or {}).get("p", {}).get("id") == "p1", saved)
-        check("and the changed school",
-              (saved or {}).get("p", {}).get("school") == "Sunning Hill Primary", saved)
-        after = pg.evaluate("() => window.__calls.map(c => c.name)")
-        check("the roll is re-read after a save, so the list is not stale",
-              after.count("madrasah_roll") >= 2, after)
+        pg.locator("tr.pu-row").first.focus()
+        pg.keyboard.press("Enter")
+        pg.wait_for_url("**/portal/pupil/**", timeout=7000)
+        check("and so does the keyboard", "id=p1" in pg.url, pg.url)
         pg.close()
+
+        pg = open_page(b)
+        pg.locator(".pu-act").first.click()
+        pg.wait_for_timeout(250)
+        pg.click('.pu-mi[data-do="open"]')
+        pg.wait_for_url("**/portal/pupil/**", timeout=7000)
+        check("the actions menu opens the same page", "id=p1" in pg.url, pg.url)
+        pg.close()
+
+        pg = open_page(b)
+        pg.locator(".pu-act").first.click()
+        pg.wait_for_timeout(250)
+        pg.click('.pu-mi[data-do="edit"]')
+        pg.wait_for_url("**/portal/pupil/**", timeout=7000)
+        check("amend goes to the same page, asking for the form",
+              "amend=1" in pg.url, pg.url)
+        pg.close()
+        pg = open_page(b)
 
         # --- the sibling pairs -------------------------------------------------
         pg = open_page(b)
@@ -640,12 +618,6 @@ def run():
         pg.close()
 
         # --- keyboard ----------------------------------------------------------
-        pg = open_page(b)
-        pg.locator("tr.pu-row").first.focus()
-        pg.keyboard.press("Enter")
-        pg.wait_for_timeout(500)
-        check("a row opens from the keyboard", pg.locator("#pu-record").is_visible())
-        pg.close()
 
         # --- the phone ----------------------------------------------------------
         pg = open_page(b, width=390, height=900)

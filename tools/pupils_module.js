@@ -22,8 +22,6 @@
   var pupils = (function () {
 
     var ROWS = [];            // the roll, as last loaded
-    var OPEN = null;          // the pupil on screen, or null
-    var EDIT = false;         // is the record in edit mode
     var HEALTH = null;        // the counts behind the figures
     var SUGG = [];            // sibling pairs waiting to be settled
     var SUGGOPEN = false;     // is the sibling list expanded
@@ -381,186 +379,33 @@
       for (i = 1; i < hosts.length; i++) hosts[i].innerHTML = hosts[0].innerHTML;
     }
 
-    // --- one pupil ----------------------------------------------------------
-    function row(label, value, quiet) {
-      if (value === null || value === undefined || value === "") {
-        if (!quiet) return "";
-        value = "—";
-      }
-      return "<dt>" + esc(label) + "</dt><dd>" + esc(value) + "</dd>";
+    //  OPENING A CHILD LEAVES THIS PAGE.
+    //
+    //  The masjid asked for what their old system does: clicking a pupil
+    //  opens that pupil's page. So the roll no longer draws a record in a
+    //  drawer underneath itself — it navigates to portal/pupil/?id=, where
+    //  the back button works, a refresh keeps you on the child, and the
+    //  address can be handed to a colleague who is also signed in.
+    //
+    //  The audit row is written there, by madrasah_pupil_one(), exactly as
+    //  it was written here. Nothing about who-read-what changes; only where
+    //  the reading happens — and this screen now never calls it at all,
+    //  which its suite asserts.
+    function goTo(id, amend) {
+      if (!id) return;
+      window.location.href = "../pupil/?id=" + encodeURIComponent(id)
+                           + (amend ? "&amend=1" : "");
     }
 
-    function drawRecord(p) {
-      var host = el("pu-record");
-      if (!host) return;
-      OPEN = p;
-      host.hidden = false;
-
-      var sensitive = "";
-      if (p.allergies || p.medical || p.send_detail || p.ehcp_detail) {
-        sensitive = '<div class="pu-med"><h5>Read before this child is left with anybody</h5>'
-          + (p.allergies   ? "<p><b>Allergies.</b> " + esc(p.allergies) + "</p>" : "")
-          + (p.medical     ? "<p><b>Medical.</b> " + esc(p.medical) + "</p>" : "")
-          + (p.send_detail ? "<p><b>SEND.</b> " + esc(p.send_detail) + "</p>" : "")
-          + (p.ehcp_detail ? "<p><b>EHA or EHCP.</b> " + esc(p.ehcp_detail) + "</p>" : "")
-          + "</div>";
-      }
-
-      var cls = (p.classes || []).map(function (c) {
-        return "<li>" + esc(c.name) + (c.teacher ? " · " + esc(c.teacher) : "") + "</li>";
-      }).join("");
-
-      var hh = p.household;
-      var guardians = hh && hh.guardians && hh.guardians.length
-        ? hh.guardians.map(function (g) {
-            return '<div class="pu-guardian"><strong>' + esc(g.name) + "</strong>"
-              + (g.is_primary ? ' <span class="pu-pill">first call</span>' : "")
-              + '<div class="pu-q">'
-              + (g.phone ? '<a href="tel:' + esc(g.phone) + '">' + esc(g.phone) + "</a>" : "")
-              + (g.phone && g.email ? " · " : "")
-              + (g.email ? '<a href="mailto:' + esc(g.email) + '">' + esc(g.email) + "</a>" : "")
-              + (!g.phone && !g.email ? "no telephone and no email address" : "")
-              + "</div></div>";
-          }).join("")
-        : '<p class="pu-warn">Nobody is recorded for this child. If something '
-          + "happened this afternoon there is no one to ring.</p>";
-
-      var sibs = hh && hh.siblings && hh.siblings.length
-        ? hh.siblings.map(function (s) {
-            return '<button type="button" class="pu-mini" data-go="' + esc(s.id) + '">'
-                 + esc(s.name) + "</button>";
-          }).join(" ")
-        : "";
-
-      host.innerHTML =
-        '<div class="pu-rec-head"><div>'
-        + "<h3>" + esc(p.name) + "</h3>"
-        + '<p class="pu-sub">' + esc(p.legacy_ref || "no reference")
-        + (p.age !== null && p.age !== undefined ? " · " + esc(p.age) + " years old" : "")
-        + (p.gender ? " · " + esc(p.gender === "male" ? "boy" : "girl") : "")
-        + "</p></div>"
-        + '<div class="pu-rec-acts">'
-        + '<button class="btn btn-ghost" id="pu-edit" type="button">Amend these details</button>'
-        + '<button class="btn btn-ghost" id="pu-close" type="button">Close</button>'
-        + "</div></div>"
-        + sensitive
-        + '<div class="pu-two">'
-        +   "<div><h4>The child</h4><dl class=\"pu-grid\">"
-        +     row("Date of birth", longDate(p.date_of_birth), true)
-        +     row("School", p.school)
-        +     row("School year", p.school_year)
-        +     row("Previous madrasah", p.prev_madrasah)
-        +     row("Address", [p.address, p.postcode].filter(Boolean).join(", "))
-        +     row("Joined", longDate(p.joined_on))
-        +     row("Left", longDate(p.left_on))
-        +     row("Walks home alone", p.walk_home_consent === true ? "Yes, consented"
-                  : p.walk_home_consent === false ? "No" : "")
-        +     row("Fee rate", p.fee_rate ? p.fee_rate.name : "None set — cannot be charged")
-        +   "</dl>"
-        +   (p.notes ? "<h4>Office note</h4><p>" + esc(p.notes) + "</p>" : "")
-        +   "</div>"
-        +   "<div><h4>Classes</h4>"
-        +     (cls ? "<ul class=\"pu-list\">" + cls + "</ul>"
-                  : '<p class="pu-warn">This child is in no class.</p>')
-        +     "<h4>" + (hh ? esc(hh.name) : "Family") + "</h4>"
-        +     guardians
-        +     (sibs ? "<h5>Brothers and sisters</h5><div>" + sibs + "</div>" : "")
-        +   "</div>"
-        + "</div>"
-        + '<div class="pu-form" id="pu-editor" hidden></div>';
-
-      host.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    //  THE AMEND FORM. Every field the record shows, and nothing it does not.
-    var FIELDS = [
-      ["first_name", "First name", "text"], ["last_name", "Last name", "text"],
-      ["date_of_birth", "Date of birth", "date"], ["gender", "Boy or girl", "gender"],
-      ["school", "School", "text"], ["school_year", "School year", "text"],
-      ["prev_madrasah", "Previous madrasah", "text"],
-      ["address", "Address", "text"], ["postcode", "Postcode", "text"],
-      ["email", "Email address", "email"],
-      ["joined_on", "Joined on", "date"], ["left_on", "Left on", "date"],
-      ["allergies", "Allergies", "area"], ["medical", "Medical", "area"],
-      ["send_detail", "SEND", "area"], ["ehcp_detail", "EHA or EHCP", "area"],
-      ["notes", "Office note", "area"]
-    ];
-
-    function openEditor() {
-      var host = el("pu-editor");
-      if (!host || !OPEN) return;
-      var h = "<h4>Amend these details</h4>"
-        + '<p class="pu-sub">Everything you change is written down against your '
-        + "name. Clearing a box removes what was there.</p>";
-      for (var i = 0; i < FIELDS.length; i++) {
-        var f = FIELDS[i], v = OPEN[f[0]];
-        v = (v === null || v === undefined) ? "" : String(v);
-        h += '<div class="pu-fld"><label for="pf-' + f[0] + '">' + esc(f[1]) + "</label>";
-        if (f[2] === "area") {
-          h += '<textarea id="pf-' + f[0] + '" maxlength="600">' + esc(v) + "</textarea>";
-        } else if (f[2] === "gender") {
-          h += '<select id="pf-' + f[0] + '">'
-            + '<option value="">Not recorded</option>'
-            + '<option value="male"' + (v === "male" ? " selected" : "") + ">Boy</option>"
-            + '<option value="female"' + (v === "female" ? " selected" : "") + ">Girl</option>"
-            + "</select>";
-        } else {
-          h += '<input id="pf-' + f[0] + '" type="' + f[2] + '" value="' + esc(v) + '">';
-        }
-        h += "</div>";
-      }
-      h += '<div class="pu-acts">'
-        + '<button class="btn btn-gold" id="pu-save" type="button">Save these changes</button>'
-        + '<button class="btn btn-ghost" id="pu-cancel" type="button">Cancel</button></div>';
-      host.innerHTML = h;
-      host.hidden = false;
-      EDIT = true;
-      var first = host.querySelector("input, textarea, select");
-      if (first) first.focus();
-    }
-
-    function save() {
-      if (busy || !OPEN) return;
-      busy = true;
-      clearFail();
-      var payload = { id: OPEN.id };
-      for (var i = 0; i < FIELDS.length; i++) {
-        var n = el("pf-" + FIELDS[i][0]);
-        if (n) payload[FIELDS[i][0]] = n.value;
-      }
-      var btn = el("pu-save");
-      if (btn) { btn.disabled = true; btn.textContent = "Saving…"; }
-      sb.rpc("save_madrasah_pupil_details", { p: payload }).then(function (res) {
-        if (res.error) throw new Error(res.error.message);
-        EDIT = false;
-        drawRecord(res.data);
-        return load();
-      })["catch"](function (e) {
-        fail("That did not save. " + (e && e.message ? e.message : ""));
-      })["finally"](function () {
-        busy = false;
-        var b = el("pu-save");
-        if (b) { b.disabled = false; b.textContent = "Save these changes"; }
-      });
-    }
-
-    function open(id) {
-      clearFail();
-      return sb.rpc("madrasah_pupil_one", { p_id: id }).then(function (res) {
-        if (res.error) throw new Error(res.error.message);
-        EDIT = false;
-        drawRecord(res.data);
-      })["catch"](function (e) {
-        fail("That pupil would not open. " + (e && e.message ? e.message : ""));
-      });
-    }
-
-    function closeRecord() {
-      OPEN = null; EDIT = false;
-      var n = el("pu-record");
-      if (n) { n.hidden = true; n.innerHTML = ""; }
-    }
-
+    //  THE RECORD USED TO LIVE HERE.
+    //
+    //  drawRecord(), the amend form, save() and their helpers were roughly
+    //  270 lines of this file. They moved to portal/pupil/ when the masjid
+    //  asked for a page per child, and they are deleted rather than left
+    //  behind commented out or merely unreachable: two copies of a form that
+    //  writes a child's medical note is one copy too many, and the one
+    //  nobody runs is the one that quietly rots.
+    //
     // --- loading ------------------------------------------------------------
     function load() {
       return Promise.all([
@@ -623,7 +468,7 @@
       //  it is no longer part of is how somebody reads the wrong child's
       //  medical note.
       //  Every narrowing goes back to page one. See resetPage().
-      function refilter() { closeRecord(); closeMenu(); resetPage(); drawRows(); }
+      function refilter() { closeMenu(); resetPage(); drawRows(); }
       if (q) q.addEventListener("input", refilter);
       if (c) c.addEventListener("change", refilter);
       var sd = el("pu-side"), tc = el("pu-teacher");
@@ -635,7 +480,7 @@
         var b = e.target.closest ? e.target.closest("[data-need]") : null;
         if (!b) return;
         NEED = (NEED === b.getAttribute("data-need")) ? "" : b.getAttribute("data-need");
-        closeRecord(); closeMenu(); resetPage(); drawHealth(); drawRows();
+        closeMenu(); resetPage(); drawHealth(); drawRows();
       });
 
       var head = document.querySelector("#pu-table thead");
@@ -646,7 +491,7 @@
         if (SORT === k) { SORTDIR = -SORTDIR; } else { SORT = k; SORTDIR = 1; }
         //  Sorting reorders the whole result, so whichever page you were on
         //  no longer refers to the same children.
-        resetPage(); closeRecord(); closeMenu(); drawRows(); markSort();
+        resetPage(); closeMenu(); drawRows(); markSort();
       });
 
       //  One delegate for both pagers, since they carry identical markup.
@@ -657,14 +502,14 @@
           var pr = e.target.closest ? e.target.closest(".pu-per") : null;
           if (pb && !pb.disabled) {
             PAGE = parseInt(pb.getAttribute("data-page"), 10) || 1;
-            closeRecord(); closeMenu(); drawRows();
+            closeMenu(); drawRows();
             //  Going to page 2 from the bottom pager should not leave you
             //  looking at the bottom of page 2.
             var top = el("pu-roll");
             if (top && top.scrollIntoView) top.scrollIntoView(true);
           } else if (pr) {
             PER = parseInt(pr.getAttribute("data-per"), 10) || 50;
-            resetPage(); closeRecord(); closeMenu(); drawRows();
+            resetPage(); closeMenu(); drawRows();
           }
         });
       }
@@ -705,30 +550,20 @@
             if (!what) { MENU = null; return; }   // a real link; let it go
             e.preventDefault();
             MENU = null;
-            if (what === "open") { open(rid); }
-            else if (what === "edit") { open(rid, true); }
+            if (what === "open") { goTo(rid); }
+            else if (what === "edit") { goTo(rid, true); }
             return;
           }
           var tr = e.target.closest ? e.target.closest("tr.pu-row") : null;
-          if (tr) { closeMenu(); open(tr.getAttribute("data-id")); }
+          if (tr) { goTo(tr.getAttribute("data-id")); }
         });
         body.addEventListener("keydown", function (e) {
           if (e.key !== "Enter" && e.key !== " ") return;
           var tr = e.target.closest ? e.target.closest("tr.pu-row") : null;
-          if (tr) { e.preventDefault(); open(tr.getAttribute("data-id")); }
+          if (tr) { e.preventDefault(); goTo(tr.getAttribute("data-id")); }
         });
       }
 
-      var rec = el("pu-record");
-      if (rec) rec.addEventListener("click", function (e) {
-        var t = e.target;
-        if (t.id === "pu-close")  { closeRecord(); return; }
-        if (t.id === "pu-edit")   { openEditor(); return; }
-        if (t.id === "pu-save")   { save(); return; }
-        if (t.id === "pu-cancel") { EDIT = false; show("pu-editor", false); return; }
-        var go = t.getAttribute && t.getAttribute("data-go");
-        if (go) open(go);
-      });
 
       var sg = el("pu-sugg");
       if (sg) sg.addEventListener("click", function (e) {

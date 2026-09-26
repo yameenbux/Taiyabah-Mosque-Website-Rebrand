@@ -1,0 +1,95 @@
+/* ===========================================================================
+   ONE PUPIL
+
+   The furniture — tokens, buttons, fields, the sign-in panel — is in
+   admin/screen.css, linked before this. This sheet is only the record.
+
+   [hidden] FIRST, ALWAYS. An attribute selector beats a plain class, so a
+   rule like `.pp-med { display:block }` would defeat `hidden` and put a
+   child's medical note on screen for a pupil who has none. Every stylesheet
+   in this portal opens with this line for that reason.
+   =========================================================================== */
+[hidden] { display:none !important; }
+
+.pp-top       { display:flex; justify-content:space-between; align-items:center;
+                gap:12px; flex-wrap:wrap; margin:0 0 18px; }
+.pp-back      { color:var(--muted); text-decoration:none; font-size:14px; }
+.pp-back:hover{ color:var(--ink); text-decoration:underline; }
+.pp-acts      { display:flex; gap:10px; flex-wrap:wrap; }
+.pp-acts .btn { width:auto; flex:0 0 auto; }
+
+.pp-head h2   { margin:0 0 4px; }
+.pp-sub       { margin:0 0 18px; color:var(--muted); font-size:14px; }
+.pp-q         { color:var(--muted); font-size:13px; }
+.pp-warn      { color:var(--danger-ink); font-size:14px; margin:6px 0; }
+
+/*  READ BEFORE THIS CHILD IS LEFT WITH ANYBODY.
+    Outside the tabs and above them, so it is on screen whichever tab is
+    open. A teacher needs an allergy the moment the page loads, not two
+    clicks in — which is why this is the one thing on the page that is not
+    behind a tab.                                                            */
+.pp-med       { border:2px solid var(--danger); border-radius:12px;
+                padding:14px 16px; margin:0 0 20px;
+                background:color-mix(in srgb, var(--danger) 6%, var(--card)); }
+.pp-med h5    { margin:0 0 8px; font-size:13px; letter-spacing:.06em;
+                text-transform:uppercase; color:var(--danger-ink); }
+.pp-med p     { margin:4px 0; font-size:15px; }
+
+/*  THE TABS. */
+.pp-tabs      { display:flex; gap:4px; flex-wrap:wrap; margin:0 0 -1px;
+                border-bottom:1px solid var(--line); }
+.pp-tab       { font:inherit; font-size:14px; padding:10px 14px; border:0;
+                border-bottom:2px solid transparent; background:none;
+                color:var(--muted); cursor:pointer; }
+.pp-tab:hover { color:var(--ink); }
+.pp-tab.is-on { color:var(--ink); font-weight:700;
+                border-bottom-color:var(--gold-ink); }
+.pp-tab:focus-visible { outline:2px solid var(--gold-ink); outline-offset:-2px; }
+
+.pp-panel     { padding:20px 0 4px; }
+.pp-panel h4  { margin:18px 0 8px; font-size:15px; }
+.pp-panel h4:first-child { margin-top:0; }
+
+.pp-grid      { display:grid; grid-template-columns:minmax(150px,auto) 1fr;
+                gap:8px 20px; margin:0; font-size:15px; }
+.pp-grid dt   { color:var(--muted); font-size:13px; }
+.pp-grid dd   { margin:0; }
+
+.pp-list      { margin:0; padding-left:18px; }
+.pp-list li   { margin:4px 0; }
+
+.pp-guardian  { border:1px solid var(--line); border-radius:10px;
+                padding:10px 12px; margin:0 0 8px; }
+.pp-guardian a{ color:var(--gold-ink); }
+.pp-pill      { display:inline-block; font-size:11px; letter-spacing:.05em;
+                text-transform:uppercase; padding:2px 7px; border-radius:99px;
+                background:var(--line); color:var(--ink); }
+
+/*  A brother or sister is a LINK, not a button — a middle-click should open
+    them in a tab like anything else on the internet.                        */
+.pp-mini      { display:inline-block; padding:5px 10px; margin:0 6px 6px 0;
+                border:1px solid var(--line); border-radius:99px;
+                font-size:14px; color:var(--ink); text-decoration:none; }
+.pp-mini:hover{ border-color:var(--gold-ink); color:var(--gold-ink); }
+
+/*  THE AMEND FORM. */
+.pp-form      { margin:24px 0 0; padding:20px 0 0; border-top:1px solid var(--line); }
+.pp-form h4   { margin:0 0 4px; }
+.pp-fld       { margin:0 0 12px; }
+.pp-fld label { display:block; font-size:13px; color:var(--muted); margin:0 0 4px; }
+.pp-fld input, .pp-fld textarea, .pp-fld select { width:100%; }
+.pp-fld textarea { min-height:70px; }
+.pp-form-acts { display:flex; gap:10px; flex-wrap:wrap; margin:16px 0 0; }
+.pp-form-acts .btn { width:auto; flex:0 0 auto; }
+
+@media (min-width: 760px) {
+  .pp-form    { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; }
+  .pp-form h4, .pp-form .pp-sub, .pp-form-acts { grid-column:1 / -1; }
+}
+
+@media (max-width: 720px) {
+  .pp-tabs    { overflow-x:auto; flex-wrap:nowrap; scroll-snap-type:x mandatory; }
+  .pp-tab     { flex:0 0 auto; scroll-snap-align:start; }
+  .pp-grid    { grid-template-columns:1fr; gap:2px 0; }
+  .pp-grid dd { margin:0 0 10px; }
+}

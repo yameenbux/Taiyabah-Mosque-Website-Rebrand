@@ -98,8 +98,6 @@ BODY = """
           <div class="pu-pager" id="pu-pager-bottom"></div>
         </section>
 
-        <!-- One pupil. Hidden until a row is opened. -->
-        <section class="pu-bk" id="pu-record" hidden></section>
 """ % LEAD
 
 
@@ -164,6 +162,40 @@ def build_js():
     return out
 
 
+
+def js_parses(source):
+    """Refuse to write JavaScript that does not parse.
+
+    A SCREEN THAT LOADS IS NOT A SCREEN THAT WORKS. One mismatched quote in
+    the module - a string opened with ' and closed with " - produced a page
+    that fetched its shell, drew the masthead and the rail, and then did
+    nothing at all, because the whole script died on a SyntaxError before the
+    module was ever defined. It looked like a slow network. Thirteen checks
+    passed against it before one finally did not.
+
+    CHECKED BEFORE ANYTHING IS WRITTEN, not after. The first version of this
+    wrote the file, checked it, and deleted it if it was bad - which left the
+    screen with no app.js at all, so a typo turned a working page into a 404
+    instead of leaving yesterday's good build in place. A failed build should
+    change nothing.
+
+    Node is in this container and `node --check` costs milliseconds.
+    """
+    import subprocess, tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False,
+                                     encoding="utf-8") as fh:
+        fh.write(source)
+        tmp = fh.name
+    try:
+        r = subprocess.run(["node", "--check", tmp],
+                           capture_output=True, text=True, timeout=30)
+        return r.returncode == 0, (r.stderr or "").replace(tmp, "the module")\
+                                                  .strip().splitlines()
+    except (OSError, subprocess.SubprocessError):
+        return True, ["node is not available; the parse check was skipped"]
+    finally:
+        os.unlink(tmp)
+
 def build():
     head, top, tail = read_shell()
 
@@ -195,7 +227,13 @@ def build():
 
     os.makedirs(OUT, exist_ok=True)
     open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(html)
-    open(os.path.join(OUT, "app.js"), "w", encoding="utf-8").write(build_js())
+    js = build_js()
+    ok, why = js_parses(js)
+    if not ok:
+        sys.exit("The JavaScript this would have written does not parse, so "
+                 "NOTHING was written and the last good build is untouched:"
+                 "\n  " + "\n  ".join(why[:4]))
+    open(os.path.join(OUT, "app.js"), "w", encoding="utf-8").write(js)
     open(os.path.join(OUT, "config.js"), "w", encoding="utf-8").write(
         open(os.path.join(ROOT, "portal", "classes", "config.js"), encoding="utf-8").read())
 
