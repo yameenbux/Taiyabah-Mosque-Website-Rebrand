@@ -75,7 +75,19 @@ BODY = """
             <select id="pu-teacher" aria-label="Teacher">
               <option value="">Any teacher</option>
             </select>
+            <select id="pu-status" aria-label="Status">
+              <option value="on_roll" selected>On roll</option>
+              <option value="on_hold">On hold</option>
+              <option value="suspended">Suspended</option>
+              <option value="left">Left</option>
+              <option value="">Everyone, including those who have left</option>
+            </select>
             <span class="pu-count" id="pu-count"></span>
+          </div>
+
+          <div class="pu-export-bk" id="pu-export-bk">
+            <div class="pu-export" id="pu-export"></div>
+            <div class="pu-ask" id="pu-ask" hidden></div>
           </div>
 
           <div class="pu-pager" id="pu-pager-top"></div>

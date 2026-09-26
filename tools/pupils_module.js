@@ -33,6 +33,8 @@
     var SORT = "";            // "" keeps the surname order the roll arrives in
     var SORTDIR = 1;          // 1 ascending, -1 descending
     var MENU = null;          // the row whose actions menu is open, or null
+    var ROLES = [];           // what this person is allowed to do
+    var ASKING = false;       // is the detailed export waiting to be confirmed
     var busy = false;
 
     function el(id) { return document.getElementById(id); }
@@ -171,6 +173,13 @@
       if (side && r.gender !== side) return false;
       var tchr = el("pu-teacher") ? el("pu-teacher").value : "";
       if (tchr && r.teacher !== tchr) return false;
+      //  DEFAULTS TO ON ROLL, and says so on the control. The roll now
+      //  carries every pupil including those who have left, because a list
+      //  that silently drops a suspended child is how somebody is forgotten
+      //  rather than dealt with — but "who is here" is the question this
+      //  screen answers, so that is what it opens on.
+      var st = el("pu-status") ? el("pu-status").value : "on_roll";
+      if (st && (r.status || "on_roll") !== st) return false;
       if (!q) return true;
       return (r.name + " " + (r.legacy_ref || "") + " " + (r.postcode || "")
             + " " + (r.family || "") + " " + (r.classes || []).join(" "))
@@ -336,6 +345,7 @@
               + " of " + rows.length + (all ? "" : " matching");
       }
       drawPager(pages);
+      drawExport();
     }
 
     //  THE PAGER, ABOVE AND BELOW THE TABLE.
@@ -391,6 +401,107 @@
     //  it was written here. Nothing about who-read-what changes; only where
     //  the reading happens — and this screen now never calls it at all,
     //  which its suite asserts.
+    //  TAKING A FILE OF CHILDREN OUT OF THE SYSTEM.
+    //
+    //  The database writes an audit row for every export, naming who, when,
+    //  which columns and how many rows — see madrasah_roll_export. This end
+    //  only has to be honest about what is about to happen, which is why the
+    //  detailed one asks first and says the number out loud.
+    //
+    //  The filter sent is the STRUCTURED one, never the search box. A file
+    //  whose contents depend on a string nobody recorded cannot be
+    //  reproduced from its own audit row.
+    function exportFilter() {
+      var f = {};
+      var c = el("pu-class"), sd = el("pu-side"),
+          tc = el("pu-teacher"), st = el("pu-status");
+      if (c && c.value)  f.class_id = c.value;
+      if (sd && sd.value) f.gender = sd.value;
+      if (tc && tc.value) f.teacher = tc.value;
+      if (st && st.value) f.status = st.value;
+      return f;
+    }
+
+    function csv(rows) {
+      if (!rows.length) return "";
+      var cols = [], k;
+      for (k in rows[0]) { if (rows[0].hasOwnProperty(k)) cols.push(k); }
+      function cell(v) {
+        if (v === null || v === undefined) return "";
+        v = String(v);
+        //  A NAME WITH A COMMA IN IT IS NOT TWO COLUMNS. Quote anything that
+        //  could be read as a separator, and double the quotes inside.
+        return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      }
+      var out = [cols.join(",")];
+      for (var i = 0; i < rows.length; i++) {
+        var line = [];
+        for (var j = 0; j < cols.length; j++) line.push(cell(rows[i][cols[j]]));
+        out.push(line.join(","));
+      }
+      //  A BOM, so Excel opens names with accents in them correctly rather
+      //  than as mojibake. Every one of these files goes into Excel.
+      return "\ufeff" + out.join("\r\n");
+    }
+
+    function takeFile(detail) {
+      if (busy) return;
+      busy = true;
+      clearFail();
+      sb.rpc("madrasah_roll_export", { p_detail: !!detail, p_filter: exportFilter() })
+        .then(function (res) {
+          if (res.error) throw new Error(res.error.message);
+          var rows = (res.data && res.data.rows) || [];
+          var blob = new Blob([csv(rows)], { type: "text/csv;charset=utf-8" });
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = (detail ? "madrasah-pupils-full-" : "madrasah-register-")
+                     + new Date().toISOString().slice(0, 10) + ".csv";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+          ASKING = false;
+          drawExport();
+        })["catch"](function (e) {
+          fail("That file could not be made. " + (e && e.message ? e.message : ""));
+        })["finally"](function () { busy = false; });
+    }
+
+    function drawExport() {
+      var host = el("pu-export");
+      if (!host) return;
+      var isAdmin = ROLES.indexOf("admin") !== -1;
+      var n = filtered().length;
+      var h = '<button type="button" class="btn btn-ghost" data-take="register">'
+            + "Register list</button>";
+      if (isAdmin) {
+        h += '<button type="button" class="btn btn-ghost" data-take="ask">'
+           + "Full list\u2026</button>";
+      }
+      host.innerHTML = h;
+
+      var ask = el("pu-ask");
+      if (!ask) return;
+      if (!ASKING) { ask.hidden = true; ask.innerHTML = ""; return; }
+      //  SAY THE NUMBER AND THE COLUMNS BEFORE IT HAPPENS. An inline step
+      //  rather than a browser dialog: a dialog blocks the page, cannot be
+      //  read by a screen reader in the same flow, and cannot be tested.
+      ask.hidden = false;
+      ask.innerHTML = "<p><strong>This makes a file of "
+        + esc(n) + " " + (n === 1 ? "child" : "children")
+        + "\u2019s details</strong> \u2014 name, reference, class, teacher, date "
+        + "of birth, address and a parent\u2019s telephone number \u2014 and it "
+        + "leaves the system when you save it. Medical notes, allergies and "
+        + "SEND are never included. Your name and the time are recorded "
+        + "against it.</p>"
+        + '<div class="pu-ask-acts">'
+        + '<button type="button" class="btn btn-gold" data-take="full">'
+        + "Yes, download it</button>"
+        + '<button type="button" class="btn btn-ghost" data-take="no">Cancel</button>'
+        + "</div>";
+    }
+
     function goTo(id, amend) {
       if (!id) return;
       window.location.href = "../pupil/?id=" + encodeURIComponent(id)
@@ -471,9 +582,21 @@
       function refilter() { closeMenu(); resetPage(); drawRows(); }
       if (q) q.addEventListener("input", refilter);
       if (c) c.addEventListener("change", refilter);
-      var sd = el("pu-side"), tc = el("pu-teacher");
+      var sd = el("pu-side"), tc = el("pu-teacher"), st = el("pu-status");
       if (sd) sd.addEventListener("change", refilter);
       if (tc) tc.addEventListener("change", refilter);
+      if (st) st.addEventListener("change", refilter);
+
+      var ex = el("pu-export-bk");
+      if (ex) ex.addEventListener("click", function (e) {
+        var b = e.target.closest ? e.target.closest("[data-take]") : null;
+        if (!b) return;
+        var what = b.getAttribute("data-take");
+        if (what === "register")   { takeFile(false); }
+        else if (what === "ask")   { ASKING = true;  drawExport(); }
+        else if (what === "no")    { ASKING = false; drawExport(); }
+        else if (what === "full")  { takeFile(true); }
+      });
 
       var figs = el("pu-figs");
       if (figs) figs.addEventListener("click", function (e) {
@@ -605,6 +728,7 @@
         }
         return;
       }
+      ROLES = roles;
       show("pu-panel", true);
       wire();
       return load();

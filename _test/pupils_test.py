@@ -164,6 +164,17 @@ def stub(roles, roll=None, health=None, sugg=None, dobq=None):
       if (name==='madrasah_roll_health') return Promise.resolve({data:HEALTH,error:null});
       if (name==='madrasah_sibling_suggestions_list') return Promise.resolve({data:SUGG,error:null});
       if (name==='madrasah_dob_to_check') return Promise.resolve({data:DOBQ,error:null});
+      if (name==='madrasah_roll_export') {
+        if (!args.p_detail) return Promise.resolve({data:{allowed:true,detail:false,count:2,
+          rows:[{name:'Aaliyah Test',reference:'1001',class:'Girls Class 3',
+                 teacher:'Apa Khadija',status:'on_roll'}]},error:null});
+        return Promise.resolve({data:{allowed:true,detail:true,count:2,
+          rows:[{name:'Aaliyah, Test',reference:'1001',class:'Girls Class 3',
+                 teacher:'Apa Khadija',status:'on_roll',date_of_birth:'02/04/2017',
+                 gender:'female',address:'1 Test Street',postcode:'BL1 8DP',
+                 family:'Test family',guardian:'Test Parent',
+                 telephone:'07000000000',email:'t@example.test'}]},error:null});
+      }
       if (name==='madrasah_classes_list') return Promise.resolve({data:{allowed:true,
           rows:[{id:'c1',name:'Girls Class 3'}]},error:null});
       if (name==='madrasah_pupil_one')
@@ -498,6 +509,133 @@ def run():
         pg.fill("#pu-q", "Pupil 7")
         pg.wait_for_timeout(350)
         check("and so does searching", pg.locator(".pu-menu").count() == 0)
+        pg.close()
+        pg = open_page(b)
+
+        # --- status ------------------------------------------------------------
+        withstatus = [
+            dict(ROLL[0], id="q1", name="Here One",  status="on_roll"),
+            dict(ROLL[0], id="q2", name="Hold One",  status="on_hold"),
+            dict(ROLL[0], id="q3", name="Gone One",  status="left"),
+        ]
+        pg.close()
+        pg = open_page(b, roll=withstatus, health=dict(HEALTH, on_roll=3))
+        check("the roll opens on who is HERE, not on everybody ever",
+              pg.locator("tr.pu-row").count() == 1,
+              pg.locator("tr.pu-row").count())
+        pg.select_option("#pu-status", "left")
+        pg.wait_for_timeout(300)
+        check("asking for those who left shows them",
+              "Gone One" in pg.inner_text("#pu-rows"))
+        pg.select_option("#pu-status", "")
+        pg.wait_for_timeout(300)
+        check("and everyone means everyone", pg.locator("tr.pu-row").count() == 3)
+        pg.close()
+
+        # --- taking a file out of the system -----------------------------------
+        #  THE HIGHEST-RISK FEATURE ON THIS SCREEN. These check who may do it,
+        #  that it says what it is about to do, and that a comma in a child's
+        #  name does not silently become an extra column in somebody's
+        #  spreadsheet.
+        pg = open_page(b, roles=("madrasah",))
+        check("a teacher is offered the register list",
+              pg.locator('[data-take="register"]').count() == 1)
+        check("but NOT the list with addresses and telephone numbers on it",
+              pg.locator('[data-take="ask"]').count() == 0)
+        pg.close()
+
+        pg = open_page(b, roles=("admin",))
+        check("an administrator is offered both",
+              pg.locator('[data-take="register"]').count() == 1
+              and pg.locator('[data-take="ask"]').count() == 1)
+        check("and nothing is asked until it is asked for",
+              pg.locator("#pu-ask").is_hidden())
+        pg.click('[data-take="ask"]')
+        pg.wait_for_timeout(250)
+        ask = pg.inner_text("#pu-ask")
+        check("asking first says how many children are in the file",
+              "2 children" in ask, ask[:120])
+        check("and names what is in it", "telephone" in ask.lower())
+        check("and says what is NOT in it",
+              "medical" in ask.lower() and "never included" in ask.lower())
+        check("and warns that it is recorded against them",
+              "recorded against" in ask.lower())
+        check("cancelling is offered", pg.locator('[data-take="no"]').count() == 1)
+        pg.click('[data-take="no"]')
+        pg.wait_for_timeout(250)
+        check("and cancelling asks for nothing", pg.locator("#pu-ask").is_hidden())
+        calls = pg.evaluate("() => window.__calls.map(function(c){return c.name;})")
+        check("NOTHING was exported by asking and cancelling",
+              "madrasah_roll_export" not in calls, calls)
+
+        #  The file itself. Downloads are intercepted rather than saved.
+        with pg.expect_download() as dl:
+            pg.click('[data-take="register"]')
+        f = dl.value
+        check("the register list downloads", f.suggested_filename.endswith(".csv"),
+              f.suggested_filename)
+        check("and is named so somebody can find it later",
+              "register" in f.suggested_filename)
+        sent = pg.evaluate("""() => (window.__calls.filter(
+            c => c.name === 'madrasah_roll_export').slice(-1)[0] || {}).args""")
+        check("the register list asks for the undetailed one",
+              (sent or {}).get("p_detail") is False, sent)
+
+        pg.select_option("#pu-status", "on_hold")
+        pg.wait_for_timeout(250)
+        with pg.expect_download():
+            pg.click('[data-take="register"]')
+        sent = pg.evaluate("""() => (window.__calls.filter(
+            c => c.name === 'madrasah_roll_export').slice(-1)[0] || {}).args""")
+        check("the filter on screen is sent with the export, so the file "
+              "matches the list",
+              (sent or {}).get("p_filter", {}).get("status") == "on_hold", sent)
+        #  THE SEARCH BOX IS NOT PART OF IT. A file whose contents depend on a
+        #  string nobody recorded cannot be reproduced from its own audit row.
+        pg.fill("#pu-q", "Aaliyah")
+        pg.wait_for_timeout(250)
+        with pg.expect_download():
+            pg.click('[data-take="register"]')
+        sent = pg.evaluate("""() => (window.__calls.filter(
+            c => c.name === 'madrasah_roll_export').slice(-1)[0] || {}).args""")
+        check("but the free-text search is NOT sent, because it is not "
+              "recorded in the audit row",
+              "q" not in (sent or {}).get("p_filter", {})
+              and "search" not in (sent or {}).get("p_filter", {}), sent)
+        pg.close()
+
+        #  A COMMA IN A CHILD'S NAME. The detailed fixture is called
+        #  "Aaliyah, Test" on purpose: unquoted, that is two columns, and
+        #  every row after it in the spreadsheet is shifted — which is
+        #  precisely the damage the register we imported arrived with.
+        pg = open_page(b, roles=("admin",))
+        pg.click('[data-take="ask"]')
+        pg.wait_for_timeout(200)
+        with pg.expect_download() as dl2:
+            pg.click('[data-take="full"]')
+        path = dl2.value.path()
+        #  newline="" so Python does NOT quietly turn the file's CRLF into
+        #  \n. Reading in the default text mode makes a check for CRLF pass
+        #  or fail for reasons that have nothing to do with the file.
+        body = open(path, encoding="utf-8-sig", newline="").read()
+        lines = body.split("\r\n")
+        check("a name containing a comma is quoted, not left to split the row",
+              '"Aaliyah, Test"' in body, body[:160])
+        check("the file is separated with CRLF, which is what Excel expects",
+              len(lines) >= 2, len(lines))
+        check("the file has a header row", lines[0].startswith("name,"), lines[0][:60])
+        check("the header names thirteen columns",
+              len(lines[0].split(",")) == 13, lines[0])
+        #  The quoted name is ONE field, so a naive comma split sees 14 while
+        #  a correct CSV reader sees 13. That difference is the whole check.
+        import csv as _csv, io as _io
+        parsed = list(_csv.reader(_io.StringIO(body)))
+        check("and a correct reader sees thirteen in the data row too, "
+              "despite the comma in the name",
+              len(parsed[1]) == 13, parsed[1])
+        check("and NO medical, allergy or SEND column is in it",
+              "medical" not in body.lower() and "allerg" not in body.lower()
+              and "send" not in body.lower().replace("sender", ""), body[:200])
         pg.close()
         pg = open_page(b)
 

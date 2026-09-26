@@ -292,3 +292,33 @@
       ones underneath it, so the bottom pager stays and this one goes.    */
   #pu-pager-top { display:none; }
 }
+
+/*  TAKING A FILE OUT OF THE SYSTEM.
+    The register list is four columns anybody on the staff may print. The
+    full list carries dates of birth, addresses and a parent's telephone
+    number, so it is administrators only, it asks first, and it says the
+    number of children out loud before it happens. Both are recorded in the
+    audit with who, when, which columns and how many rows.                  */
+.pu-export-bk { margin:14px 0 0; }
+.pu-export    { display:flex; gap:10px; flex-wrap:wrap; }
+.pu-export .btn { width:auto; flex:0 0 auto; }
+.pu-ask       { margin:12px 0 0; padding:14px 16px; border-radius:12px;
+                border:2px solid var(--gold-ink);
+                background:color-mix(in srgb, var(--gold-ink) 7%, var(--card)); }
+.pu-ask p     { margin:0 0 10px; font-size:14px; }
+.pu-ask-acts  { display:flex; gap:10px; flex-wrap:wrap; }
+.pu-ask-acts .btn { width:auto; flex:0 0 auto; }
+
+/*  ON A PHONE THE EXPORT GOES TO THE BOTTOM.
+    Adding it above the table pushed the first pupil to 928px of a 900px
+    screen — the phone check caught that within a minute of the controls
+    being added, which is exactly what it is for. Hiding the export on
+    phones would have been the easy fix and the wrong one: it would remove
+    a feature to make a layout work. The roll card becomes a flex column
+    and the export is ordered last, so it is still there, after the list
+    rather than in front of it.                                            */
+@media (max-width: 720px) {
+  #pu-list-bk    { display:flex; flex-direction:column; }
+  .pu-export-bk  { order:99; margin-top:20px; }
+  #pu-pager-bottom { order:98; }
+}
