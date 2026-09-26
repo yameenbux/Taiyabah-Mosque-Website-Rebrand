@@ -62,33 +62,64 @@ BODY = """
           <h3 id="pu-roll">The roll</h3>
           <p class="pu-sub">Choose a child to see their record.</p>
 
+          <!-- THE SEARCH GETS ITS OWN LINE.
+               Four selects and a search box on one row made the box narrow
+               and squeezed "Everyone" down to nothing, and none of the
+               selects said what they filtered - "On roll" and "Any teacher"
+               were bare values sitting next to each other. -->
+          <div class="pu-search">
+            <label class="sr-only" for="pu-q">Search the roll</label>
+            <input type="search" id="pu-q"
+                   placeholder="Search by name, reference, postcode, family or class">
+            <button type="button" class="pu-clearq" id="pu-clearq" hidden
+                    aria-label="Clear the search">&times;</button>
+          </div>
+
+          <!-- EVERY FILTER SAYS WHAT IT FILTERS. -->
           <div class="pu-filters">
-            <input type="search" id="pu-q" placeholder="Name, reference, postcode, family or class">
-            <select id="pu-class" aria-label="Class">
-              <option value="">Any class</option>
-            </select>
-            <select id="pu-side" aria-label="Boys or girls">
-              <option value="">Everyone</option>
-              <option value="male">Boys</option>
-              <option value="female">Girls</option>
-            </select>
-            <select id="pu-teacher" aria-label="Teacher">
-              <option value="">Any teacher</option>
-            </select>
-            <select id="pu-status" aria-label="Status">
-              <option value="on_roll" selected>On roll</option>
-              <option value="on_hold">On hold</option>
-              <option value="suspended">Suspended</option>
-              <option value="left">Left</option>
-              <option value="">Everyone, including those who have left</option>
-            </select>
+            <div class="pu-f">
+              <label for="pu-class">Class</label>
+              <select id="pu-class"><option value="">Any class</option></select>
+            </div>
+            <div class="pu-f">
+              <label for="pu-side">Boys or girls</label>
+              <select id="pu-side">
+                <option value="">Everyone</option>
+                <option value="male">Boys</option>
+                <option value="female">Girls</option>
+              </select>
+            </div>
+            <div class="pu-f">
+              <label for="pu-teacher">Teacher</label>
+              <select id="pu-teacher"><option value="">Any teacher</option></select>
+            </div>
+            <div class="pu-f">
+              <label for="pu-status">Status</label>
+              <select id="pu-status">
+                <option value="on_roll" selected>On roll</option>
+                <option value="on_hold">On hold</option>
+                <option value="suspended">Suspended</option>
+                <option value="left">Left</option>
+                <option value="">Everyone, including those who have left</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pu-summary">
             <span class="pu-count" id="pu-count"></span>
+            <button type="button" class="pu-clearall" id="pu-clearall" hidden></button>
           </div>
 
           <div class="pu-export-bk" id="pu-export-bk">
             <div class="pu-export" id="pu-export"></div>
+            <div class="pu-expanel" id="pu-expanel" hidden></div>
             <div class="pu-ask" id="pu-ask" hidden></div>
           </div>
+
+          <!-- THE PRINTABLE REGISTER. Empty and invisible on screen; only
+               the print stylesheet shows it, and only after the button has
+               filled it. -->
+          <div class="pu-print" id="pu-print" aria-hidden="true"></div>
 
           <div class="pu-pager" id="pu-pager-top"></div>
 

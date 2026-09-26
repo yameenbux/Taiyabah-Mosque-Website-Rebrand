@@ -165,10 +165,19 @@ def stub(roles, roll=None, health=None, sugg=None, dobq=None):
       if (name==='madrasah_sibling_suggestions_list') return Promise.resolve({data:SUGG,error:null});
       if (name==='madrasah_dob_to_check') return Promise.resolve({data:DOBQ,error:null});
       if (name==='madrasah_roll_export') {
-        if (!args.p_detail) return Promise.resolve({data:{allowed:true,detail:false,count:2,
+        //  The heading mirrors what the database returns. It is built THERE,
+        //  from the same values that go into the audit row - see the note in
+        //  the migration. The stub carries it so the file's shape is tested.
+        var HEAD={masjid:'Taiyabah Masjid \u2014 Madrasah',
+                  what: args.p_detail ? 'Pupil details' : 'Register list',
+                  taken:'Taken 26 September 2026 at 21:56 by A Person',
+                  filter:'Showing: everyone on the register',
+                  count:'2 pupils',
+                  note:'Medical notes, allergies and SEND are never included in this file.'};
+        if (!args.p_detail) return Promise.resolve({data:{allowed:true,detail:false,count:2,heading:HEAD,
           rows:[{name:'Aaliyah Test',reference:'1001',class:'Girls Class 3',
                  teacher:'Apa Khadija',status:'on_roll'}]},error:null});
-        return Promise.resolve({data:{allowed:true,detail:true,count:2,
+        return Promise.resolve({data:{allowed:true,detail:true,count:2,heading:HEAD,
           rows:[{name:'Aaliyah, Test',reference:'1001',class:'Girls Class 3',
                  teacher:'Apa Khadija',status:'on_roll',date_of_birth:'02/04/2017',
                  gender:'female',address:'1 Test Street',postcode:'BL1 8DP',
@@ -538,16 +547,39 @@ def run():
         #  name does not silently become an extra column in somebody's
         #  spreadsheet.
         pg = open_page(b, roles=("madrasah",))
+        check("there is ONE export button, not two bare ones",
+              pg.locator('[data-take="open"]').count() == 1
+              and pg.locator('[data-take="register"]').count() == 0,
+              pg.locator("[data-take]").count())
+        check("and it says what it is", "Export" in pg.inner_text("#pu-export"))
+        check("nothing is offered until it is opened",
+              pg.locator("#pu-expanel").is_hidden())
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(250)
+        panel = pg.inner_text("#pu-expanel")
+        check("opening it explains each choice rather than naming it",
+              len(panel) > 200, len(panel))
         check("a teacher is offered the register list",
               pg.locator('[data-take="register"]').count() == 1)
+        check("and the printable register",
+              pg.locator('[data-take="print"]').count() == 1)
         check("but NOT the list with addresses and telephone numbers on it",
               pg.locator('[data-take="ask"]').count() == 0)
+        check("and is told why rather than just not seeing it",
+              "administrators only" in panel.lower(), panel[-160:])
+        check("the panel says what is never in any of them",
+              "medical" in panel.lower() and "never included" in panel.lower())
         pg.close()
 
         pg = open_page(b, roles=("admin",))
-        check("an administrator is offered both",
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(250)
+        check("an administrator is offered all three",
               pg.locator('[data-take="register"]').count() == 1
+              and pg.locator('[data-take="print"]').count() == 1
               and pg.locator('[data-take="ask"]').count() == 1)
+        check("the detailed one is marked as restricted",
+              pg.locator('[data-take="ask"].is-guarded').count() == 1)
         check("and nothing is asked until it is asked for",
               pg.locator("#pu-ask").is_hidden())
         pg.click('[data-take="ask"]')
@@ -565,24 +597,31 @@ def run():
         pg.wait_for_timeout(250)
         check("and cancelling asks for nothing", pg.locator("#pu-ask").is_hidden())
         calls = pg.evaluate("() => window.__calls.map(function(c){return c.name;})")
-        check("NOTHING was exported by asking and cancelling",
+        check("NOTHING was exported by opening, asking and cancelling",
               "madrasah_roll_export" not in calls, calls)
 
-        #  The file itself. Downloads are intercepted rather than saved.
         with pg.expect_download() as dl:
             pg.click('[data-take="register"]')
         f = dl.value
         check("the register list downloads", f.suggested_filename.endswith(".csv"),
               f.suggested_filename)
-        check("and is named so somebody can find it later",
-              "register" in f.suggested_filename)
+        check("and the file is named for the masjid, so it is identifiable "
+              "in a Downloads folder full of exports",
+              f.suggested_filename.startswith("Taiyabah-Masjid-"),
+              f.suggested_filename)
         sent = pg.evaluate("""() => (window.__calls.filter(
             c => c.name === 'madrasah_roll_export').slice(-1)[0] || {}).args""")
         check("the register list asks for the undetailed one",
               (sent or {}).get("p_detail") is False, sent)
 
+        #  The panel survives a filter change, so it is opened once here and
+        #  not again — a second click would toggle it shut.
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(200)
         pg.select_option("#pu-status", "on_hold")
         pg.wait_for_timeout(250)
+        check("the export panel stays open while filters change",
+              pg.locator('[data-take="register"]').count() == 1)
         with pg.expect_download():
             pg.click('[data-take="register"]')
         sent = pg.evaluate("""() => (window.__calls.filter(
@@ -590,8 +629,8 @@ def run():
         check("the filter on screen is sent with the export, so the file "
               "matches the list",
               (sent or {}).get("p_filter", {}).get("status") == "on_hold", sent)
-        #  THE SEARCH BOX IS NOT PART OF IT. A file whose contents depend on a
-        #  string nobody recorded cannot be reproduced from its own audit row.
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(200)
         pg.fill("#pu-q", "Aaliyah")
         pg.wait_for_timeout(250)
         with pg.expect_download():
@@ -609,6 +648,8 @@ def run():
         #  every row after it in the spreadsheet is shifted — which is
         #  precisely the damage the register we imported arrived with.
         pg = open_page(b, roles=("admin",))
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(200)
         pg.click('[data-take="ask"]')
         pg.wait_for_timeout(200)
         with pg.expect_download() as dl2:
@@ -623,19 +664,217 @@ def run():
               '"Aaliyah, Test"' in body, body[:160])
         check("the file is separated with CRLF, which is what Excel expects",
               len(lines) >= 2, len(lines))
-        check("the file has a header row", lines[0].startswith("name,"), lines[0][:60])
+        #  THE TITLE BLOCK. The file opens looking like a Taiyabah document
+        #  rather than an anonymous grid — and every line of it comes from the
+        #  database, from the same values that went into the audit row.
+        head = "\r\n".join(lines[:6])
+        check("the file names the masjid before anything else",
+              "Taiyabah" in lines[0], lines[0])
+        check("and says what kind of list it is", "details" in head.lower(), head)
+        check("and when it was taken and by whom",
+              "Taken" in head and "by " in head, head)
+        check("and which filter produced it", "Showing:" in head, head)
+        check("and that medical notes are never in it",
+              "medical" in head.lower() and "never included" in head.lower(), head)
+        check("a blank line separates the title block from the data",
+              lines[6] == "", repr(lines[6]))
+        hdr = lines[7]
+        check("the header row follows it", hdr.startswith("name,"), hdr[:60])
         check("the header names thirteen columns",
-              len(lines[0].split(",")) == 13, lines[0])
+              len(hdr.split(",")) == 13, hdr)
         #  The quoted name is ONE field, so a naive comma split sees 14 while
         #  a correct CSV reader sees 13. That difference is the whole check.
         import csv as _csv, io as _io
         parsed = list(_csv.reader(_io.StringIO(body)))
         check("and a correct reader sees thirteen in the data row too, "
               "despite the comma in the name",
-              len(parsed[1]) == 13, parsed[1])
-        check("and NO medical, allergy or SEND column is in it",
-              "medical" not in body.lower() and "allerg" not in body.lower()
-              and "send" not in body.lower().replace("sender", ""), body[:200])
+              len(parsed[8]) == 13, parsed[8])
+        #  ABOUT THE COLUMNS, NOT THE PROSE.
+        #  The first version of this scanned the whole file for the word
+        #  "medical" — and then the title block gained the sentence "Medical
+        #  notes, allergies and SEND are never included in this file", so the
+        #  check failed on the very line that promises the thing it checks.
+        #  Exactly the mistake the database guard made: it could not tell a
+        #  mention from a value. So: read the HEADER, and read the DATA.
+        cols = [c.strip().lower() for c in hdr.split(",")]
+        check("no column in the file is a special-category one",
+              not any(k in c for c in cols
+                      for k in ("medical", "allerg", "send", "ehcp")), cols)
+        data = "\r\n".join(lines[8:]).lower()
+        check("and no data row carries one either",
+              "epipen" not in data and "inhaler" not in data
+              and "zz" not in data, data[:160])
+        pg.close()
+        pg = open_page(b)
+
+        # --- clearing the filters ----------------------------------------------
+        #  Written after a deliberate break showed this feature had NO test:
+        #  making clearAll() a no-op left all 138 checks green. A button that
+        #  is never asserted to do anything is a button that quietly stops
+        #  doing it.
+        pg.close()
+        pg = open_page(b)
+        check("nothing offers to clear filters when none are set",
+              pg.locator("#pu-clearall").is_hidden())
+        pg.fill("#pu-q", "Aaliyah")
+        pg.wait_for_timeout(300)
+        check("the search shows a way to empty it",
+              pg.locator("#pu-clearq").is_visible())
+        check("and a clear-all appears, counting what is set",
+              "1" in pg.inner_text("#pu-clearall"), pg.inner_text("#pu-clearall"))
+        pg.select_option("#pu-side", "female")
+        pg.wait_for_timeout(300)
+        check("two filters are counted as two",
+              "2" in pg.inner_text("#pu-clearall"), pg.inner_text("#pu-clearall"))
+        #  The status control opens on "on roll". Counting that as a filter
+        #  would put the clear-all link on screen permanently.
+        check("the status default is NOT counted as a filter",
+              "2" in pg.inner_text("#pu-clearall"), pg.inner_text("#pu-clearall"))
+        pg.select_option("#pu-status", "left")
+        pg.wait_for_timeout(300)
+        check("but changing it away from the default is",
+              "3" in pg.inner_text("#pu-clearall"), pg.inner_text("#pu-clearall"))
+
+        pg.click("#pu-clearall")
+        pg.wait_for_timeout(350)
+        state = pg.evaluate("""() => ({q: document.getElementById('pu-q').value,
+            side: document.getElementById('pu-side').value,
+            teacher: document.getElementById('pu-teacher').value,
+            cls: document.getElementById('pu-class').value,
+            status: document.getElementById('pu-status').value})""")
+        check("clearing empties the search", state["q"] == "", state)
+        check("and every select", state["side"] == "" and state["teacher"] == ""
+              and state["cls"] == "", state)
+        check("and puts status back to ON ROLL, not to blank — blank would "
+              "show children who have left",
+              state["status"] == "on_roll", state)
+        check("and the list comes back", pg.locator("tr.pu-row").count() == 2,
+              pg.locator("tr.pu-row").count())
+        check("and the offer to clear goes away",
+              pg.locator("#pu-clearall").is_hidden())
+        pg.close()
+        pg = open_page(b, roles=("admin",))
+
+        # --- the printable register --------------------------------------------
+        #  A spreadsheet printout is a poor register: you cannot tick a CSV,
+        #  and it arrives with no indication of which madrasah, class or week
+        #  it belongs to. window.print is stubbed so the suite does not open a
+        #  printer; what is checked is what would have been printed.
+        pg.close()
+        pg = open_page(b, roles=("admin",))
+        #  The print stub captures the page AT THE MOMENT printing happens.
+        #  Afterwards the block is moved back and the class removed, so
+        #  looking later would be looking at the wrong document entirely.
+        pg.evaluate("""() => {
+            window.__printed = 0; window.__atPrint = null;
+            window.print = function () {
+              window.__printed++;
+              function shown(sel) {
+                var n = document.querySelector(sel);
+                if (!n) return false;
+                while (n && n !== document) {
+                  if (getComputedStyle(n).display === 'none') return false;
+                  n = n.parentElement; }
+                return true; }
+              window.__atPrint = {
+                bodyClass: document.body.className,
+                atBodyLevel: document.getElementById('pu-print').parentElement === document.body,
+                rail: shown('#admin-rail'), figures: shown('#pu-figs'),
+                filters: shown('.pu-filters'), table: shown('#pu-table'),
+                exporter: shown('#pu-export'), register: shown('#pu-print')};
+            }; }""")
+        pg.click('[data-take="open"]')
+        pg.wait_for_timeout(200)
+        #  PRINT MEDIA BEFORE THE CLICK. getComputedStyle inside the print
+        #  stub reports whatever media is active at that moment, so reading
+        #  it under screen media answers a question nobody asked.
+        pg.emulate_media(media="print")
+        pg.wait_for_timeout(150)
+        pg.click('[data-take="print"]')
+        pg.wait_for_timeout(300)
+        check("it asks the browser to print", pg.evaluate("() => window.__printed") == 1)
+        sheet = pg.inner_text("#pu-print")
+        check("the sheet names the masjid", "Taiyabah" in sheet, sheet[:80])
+        check("and says it is a register", "Register" in sheet)
+        check("and carries the date", str(__import__("datetime").date.today().year) in sheet)
+        check("and lists the pupils", "Aaliyah" in sheet and "Bilal" in sheet)
+        check("there is a logo on it",
+              pg.locator("#pu-print img.pr-logo").count() == 1)
+        blanks = pg.evaluate("""() => {
+            var r = document.querySelector('#pu-print tbody tr');
+            if (!r) return 0;
+            var n = 0;
+            for (var i = 0; i < r.children.length; i++) {
+              if (!r.children[i].textContent.trim()) n++; }
+            return n; }""")
+        check("every row has blank columns to tick, which is the whole point "
+              "of a paper register", blanks >= 6, blanks)
+        #  IT MUST NOT CARRY WHAT A LIST MUST NOT CARRY. This sheet is walked
+        #  between rooms and left on desks.
+        check("the printed sheet carries no medical note",
+              SECRET_MEDICAL not in sheet and SECRET_ALLERGY not in sheet)
+        check("nor a telephone number or address",
+              "07000" not in sheet and "BL1" not in sheet, sheet[:200])
+        check("and it says so on the sheet, so nobody adds them by hand later",
+              "no medical or contact" in sheet.lower(), sheet[-160:])
+        #  WHAT ACTUALLY PRINTS, not whether a print rule exists.
+        #
+        #  The first version of this check asked only "is there a @media
+        #  print block anywhere" — and passed while the ENTIRE SCREEN
+        #  printed: masthead, figures, filters, Export button, with the
+        #  register underneath. The rule was there and losing, because
+        #  admin/shell.css carries `body.has-ashell .shell{display:block
+        #  !important}` and specificity decides between two !importants.
+        #
+        #  A check that asserts something exists is not a check that it
+        #  works. This one emulates print media and reads what is left.
+        vis = pg.evaluate("() => window.__atPrint") or {}
+        check("the sheet is moved out to body, away from the cascade fight",
+              vis.get("atBodyLevel") is True, vis)
+        check("and the print rules are switched on for this action only",
+              "printing-register" in (vis.get("bodyClass") or ""), vis)
+        check("the register itself prints", vis.get("register"), vis)
+        check("nor the figure tiles", not vis["figures"], vis)
+        check("nor the filters", not vis["filters"], vis)
+        check("nor the Export button", not vis["exporter"], vis)
+        check("nor the on-screen roll, which would print 50 rows twice",
+              not vis["table"], vis)
+        #  AND ORDINARY PRINTING STILL WORKS. Unscoped, these rules made
+        #  Ctrl+P produce a blank sheet. Still under print media, but the
+        #  class is off again now.
+        pg.wait_for_timeout(150)
+        plain = pg.evaluate("""() => {
+            var n = document.querySelector('#pu-table');
+            while (n && n !== document) {
+              if (getComputedStyle(n).display === 'none') return false;
+              n = n.parentElement; }
+            return true; }""")
+        check("pressing Ctrl+P without using the button still prints "
+              "something rather than a blank sheet", plain, plain)
+
+        #  THE LOGO IS NOT BLANK PAPER.
+        #  The masjid wordmark is cream, made for the dark rail — average ink
+        #  rgb(243,239,227) — so it first printed as nothing at all, and the
+        #  check "there is an <img>" passed the entire time. The sheet is put
+        #  back into its printing state and the logo photographed as the
+        #  printer sees it, then the dark pixels are counted. That is the only
+        #  version of this check that could ever have failed.
+        pg.evaluate("""() => { var n = document.getElementById('pu-print');
+            document.body.appendChild(n);
+            document.body.className += ' printing-register'; }""")
+        pg.wait_for_timeout(200)
+        _logo = pg.locator("#pu-print img.pr-logo").screenshot()
+        import io as _io2
+        from PIL import Image as _Img
+        _im2 = _Img.open(_io2.BytesIO(_logo)).convert("RGB")
+        _px = list(_im2.getdata()) if not hasattr(_im2, "get_flattened_data") \
+              else list(_im2.get_flattened_data())
+        _dark = len([q for q in _px if sum(q) / 3 < 120])
+        check("the logo prints with ink in it, not white on white",
+              _dark > len(_px) * 0.04, "%d of %d pixels dark" % (_dark, len(_px)))
+        pg.evaluate("""() => { document.body.className =
+            document.body.className.replace(/\s*printing-register/, ''); }""")
+        pg.emulate_media(media="screen")
         pg.close()
         pg = open_page(b)
 

@@ -133,10 +133,57 @@
 .pu-bk        { border:1px solid var(--line); border-radius:var(--radius);
                 padding:20px 22px; margin:0 0 20px; background:var(--card); }
 .pu-bk h3     { margin:0 0 4px; }
-.pu-filters   { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:0 0 16px; }
-.pu-filters input[type="search"] { flex:1 1 240px; min-width:0; }
-.pu-filters select { flex:0 0 auto; }
-.pu-count     { margin-left:auto; color:var(--muted); font-size:13px; white-space:nowrap; }
+/* --------------------------------------------------------------------------
+   FINDING A CHILD.
+
+   The first version put the search box and four selects on one flex row. At
+   552 pupils that reads badly: the box is squeezed, "Everyone" collapses to
+   the width of the word, and the selects sit next to each other as bare
+   values - "Any teacher", "On roll" - with nothing saying what they filter.
+   Somebody who has not used the screen before cannot tell that "On roll" is
+   a status rather than a class.
+
+   So: the search on its own line, the filters in a labelled grid below it,
+   and the count on a line of its own where it has room to be a sentence.
+   -------------------------------------------------------------------------- */
+.pu-search    { position:relative; margin:0 0 14px; }
+.pu-search input[type="search"] {
+                width:100%; padding:13px 44px 13px 16px; font-size:16px;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--card); color:var(--ink); }
+.pu-search input[type="search"]:focus {
+                outline:none; border-color:var(--gold-ink);
+                box-shadow:0 0 0 3px color-mix(in srgb, var(--gold-ink) 18%, transparent); }
+.pu-search input::-webkit-search-cancel-button { display:none; }
+.pu-clearq    { position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                width:30px; height:30px; border:0; border-radius:50%;
+                background:var(--line); color:var(--ink); font-size:17px;
+                line-height:1; cursor:pointer; }
+.pu-clearq:hover { background:var(--gold-ink); color:var(--card); }
+
+.pu-filters   { display:grid; gap:12px; margin:0 0 12px;
+                grid-template-columns:repeat(4, minmax(0, 1fr)); }
+.pu-f         { display:flex; flex-direction:column; gap:4px; min-width:0; }
+.pu-f label   { font-size:11px; letter-spacing:.07em; text-transform:uppercase;
+                color:var(--muted); font-weight:600; }
+.pu-f select  { width:100%; min-width:0; }
+
+.pu-summary   { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+                margin:0 0 4px; }
+.pu-count     { color:var(--muted); font-size:14px; }
+.pu-clearall  { font:inherit; font-size:13px; padding:5px 12px; cursor:pointer;
+                border:1px solid var(--line); border-radius:99px;
+                background:var(--card); color:var(--ink); }
+.pu-clearall:hover { border-color:var(--gold-ink); color:var(--gold-ink); }
+
+/*  TWO COLUMNS ALL THE WAY DOWN, not one.
+    Stacking the four labelled filters single-file on a phone pushed the
+    first pupil to 945px of a 900px screen - the phone check caught it
+    immediately. Two columns halves that, and a select about 165px wide is
+    still comfortably tappable. Only below 360px, where two columns really
+    would be too tight, do they stack.                                     */
+@media (max-width: 900px) { .pu-filters { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width: 360px) { .pu-filters { grid-template-columns:1fr; } }
 
 /*  The table scrolls sideways inside its own box rather than pushing the page
     wide, which is what width_test exists to catch. */
@@ -283,6 +330,12 @@
                  scroll-snap-type:x mandatory; -webkit-overflow-scrolling:touch; }
   .pu-fig      { flex:0 0 auto; min-width:136px; scroll-snap-align:start; }
   .pu-head-t p { display:none; }
+  /*  "Choose a child to see their record" states the obvious on a touch
+      screen, and it cost the 20px that kept a whole pupil row off the
+      first screen. The heading above it still says what the list is.   */
+  #pu-list-bk > .pu-sub { display:none; }
+  .pu-search   { margin-bottom:10px; }
+  .pu-filters  { gap:9px; margin-bottom:9px; }
 
   /*  THE TOP PAGER GOES ON A PHONE.
       Measured: it costs 96px in two rows, and with it the first pupil sat
@@ -302,6 +355,30 @@
 .pu-export-bk { margin:14px 0 0; }
 .pu-export    { display:flex; gap:10px; flex-wrap:wrap; }
 .pu-export .btn { width:auto; flex:0 0 auto; }
+
+/*  THE CHOICE, EXPLAINED.
+    Two bare buttons saying "Register list" and "Full list..." told nobody
+    what they were, what was in them, or who was allowed to press them. Each
+    option now carries a sentence, and the one that takes addresses out of
+    the building is marked and still asks afterwards.                       */
+.pu-expanel   { margin:12px 0 0; padding:16px 18px; border-radius:12px;
+                border:1px solid var(--line); background:var(--card); }
+.pu-ex-lead   { margin:0 0 12px; font-size:14px; color:var(--muted); }
+.pu-ex-opts   { display:grid; gap:10px; grid-template-columns:repeat(3, minmax(0,1fr)); }
+.pu-ex-opt    { display:flex; flex-direction:column; gap:5px; text-align:left;
+                padding:13px 15px; font:inherit; cursor:pointer;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--paper); color:var(--ink); }
+.pu-ex-opt:hover { border-color:var(--gold-ink); }
+.pu-ex-opt strong { font-size:15px; }
+.pu-ex-opt span   { font-size:13px; color:var(--muted); line-height:1.45; }
+.pu-ex-opt.is-guarded { border-color:color-mix(in srgb, var(--gold-ink) 45%, var(--line)); }
+.pu-ex-opt.is-guarded strong::after {
+                content:"Administrators"; float:right; font-size:10px;
+                letter-spacing:.06em; text-transform:uppercase; font-weight:600;
+                color:var(--gold-ink); padding-top:3px; }
+.pu-ex-note   { margin:12px 0 0; font-size:13px; color:var(--muted); }
+@media (max-width: 860px) { .pu-ex-opts { grid-template-columns:1fr; } }
 .pu-ask       { margin:12px 0 0; padding:14px 16px; border-radius:12px;
                 border:2px solid var(--gold-ink);
                 background:color-mix(in srgb, var(--gold-ink) 7%, var(--card)); }
@@ -321,4 +398,66 @@
   #pu-list-bk    { display:flex; flex-direction:column; }
   .pu-export-bk  { order:99; margin-top:20px; }
   #pu-pager-bottom { order:98; }
+}
+
+/* --------------------------------------------------------------------------
+   THE PRINTABLE REGISTER.
+
+   Invisible on screen and the only thing visible on paper. A spreadsheet
+   printout is a poor register: you cannot tick a CSV, and it arrives with no
+   indication of which madrasah, which class, or which week it belongs to.
+   -------------------------------------------------------------------------- */
+.pu-print     { display:none; }
+
+@media print {
+  /*  Everything that is screen furniture goes. The rail, the figures, the
+      filters, the pager, the export panel - none of it belongs on paper,
+      and a register that prints the navigation wastes the first page.     */
+  /*  admin/shell.css carries `body.has-ashell .shell{display:block
+      !important}`, and when two !important declarations collide it is
+      SPECIFICITY that decides - (0,2,0) beats (0,0,1). So `body > *` alone
+      lost, the whole screen printed, and the register arrived underneath
+      it. The block is moved to be a direct child of body before printing
+      (see printRegister), which takes it out of that argument entirely.   */
+  /*  SCOPED TO THE ACTUAL PRINT ACTION, not to print media generally.
+      Unscoped, these rules hid everything whenever anything was printed -
+      so somebody pressing Ctrl+P on the roll got a blank sheet of paper,
+      which is worse than getting an untidy one. The class goes on while the
+      register is being printed and comes off afterwards, so an ordinary
+      Ctrl+P prints the screen as it always did.                          */
+  body.printing-register > *              { display:none !important; }
+  body.printing-register.has-ashell .shell { display:none !important; }
+  body.printing-register                  { background:#fff; }
+  body.printing-register > .pu-print      { display:block !important;
+                          position:static; padding:0; margin:0;
+                          color:#000; font-size:11pt; }
+
+  .pr-head      { display:flex; align-items:center; gap:14px;
+                  border-bottom:2px solid #000; padding:0 0 10px; margin:0 0 14px; }
+  /*  THE LOGO IS CREAM, FOR THE DARK RAIL.
+      Its average ink is rgb(243,239,227), so on white paper it printed as
+      nothing at all - a branded sheet whose brand is invisible. brightness(0)
+      takes every non-transparent pixel to black and leaves the alpha alone,
+      which is exactly right for a one-colour wordmark. Measured, not
+      assumed: the suite photographs this element and fails if what comes
+      back is blank paper.                                                 */
+  .pr-logo      { width:52px; height:auto; filter:brightness(0); }
+  .pr-head h1   { margin:0; font-size:15pt; }
+  .pr-head p    { margin:2px 0 0; font-size:11pt; }
+  .pr-meta      { margin-left:auto; text-align:right; }
+  .pr-meta p    { margin:0; font-size:10pt; }
+
+  .pr-table     { width:100%; border-collapse:collapse; }
+  .pr-table th,
+  .pr-table td  { border:1px solid #777; padding:5px 6px; font-size:10pt;
+                  text-align:left; }
+  .pr-table th  { background:#eee; }
+  /*  The blank columns are for ticking, so they need a usable width and a
+      consistent one - not whatever is left over after the names.          */
+  .pr-table th:empty { width:34px; }
+  .pr-table tr  { page-break-inside:avoid; }
+  .pr-table thead { display:table-header-group; }   /* repeat on every page */
+
+  .pr-foot      { margin:12px 0 0; font-size:9pt; color:#333; }
+  @page         { margin:14mm; }
 }

@@ -345,7 +345,8 @@
               + " of " + rows.length + (all ? "" : " matching");
       }
       drawPager(pages);
-      drawExport();
+      drawExport(); drawAsk();
+      drawSummary();
     }
 
     //  THE PAGER, ABOVE AND BELOW THE TABLE.
@@ -422,7 +423,7 @@
       return f;
     }
 
-    function csv(rows) {
+    function csv(rows, head) {
       if (!rows.length) return "";
       var cols = [], k;
       for (k in rows[0]) { if (rows[0].hasOwnProperty(k)) cols.push(k); }
@@ -433,7 +434,27 @@
         //  could be read as a separator, and double the quotes inside.
         return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
       }
-      var out = [cols.join(",")];
+      var out = [];
+      //  THE TITLE BLOCK, FROM THE DATABASE.
+      //  Built there, not here, and from the same values that went into the
+      //  audit row - so the file cannot claim "the whole roll" while the
+      //  audit says "one class of twelve". The file is the more convincing
+      //  of the two, because it is the one somebody is holding.
+      //
+      //  It does mean this is no longer a CSV a script can read back. That
+      //  is deliberate and was agreed: nothing here re-imports these files,
+      //  and the people opening them are a committee in Excel, for whom an
+      //  unlabelled grid of 552 children is worse than useless.
+      if (head) {
+        out.push(cell(head.masjid));
+        out.push(cell(head.what));
+        out.push(cell(head.taken));
+        out.push(cell(head.filter));
+        out.push(cell(head.count));
+        out.push(cell(head.note));
+        out.push("");
+      }
+      out.push(cols.join(","));
       for (var i = 0; i < rows.length; i++) {
         var line = [];
         for (var j = 0; j < cols.length; j++) line.push(cell(rows[i][cols[j]]));
@@ -452,41 +473,91 @@
         .then(function (res) {
           if (res.error) throw new Error(res.error.message);
           var rows = (res.data && res.data.rows) || [];
-          var blob = new Blob([csv(rows)], { type: "text/csv;charset=utf-8" });
+          var blob = new Blob([csv(rows, res.data && res.data.heading)], { type: "text/csv;charset=utf-8" });
           var a = document.createElement("a");
           a.href = URL.createObjectURL(blob);
-          a.download = (detail ? "madrasah-pupils-full-" : "madrasah-register-")
+          a.download = "Taiyabah-Masjid-"
+                     + (detail ? "pupil-details-" : "register-")
                      + new Date().toISOString().slice(0, 10) + ".csv";
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
           setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-          ASKING = false;
-          drawExport();
+          ASKING = false; OPENEX = false;
+          drawExport(); drawAsk();
         })["catch"](function (e) {
           fail("That file could not be made. " + (e && e.message ? e.message : ""));
         })["finally"](function () { busy = false; });
     }
+
+    //  ONE BUTTON, THEN AN EXPLAINED CHOICE.
+    //
+    //  Two bare buttons reading "Register list" and "Full list..." sat under
+    //  the filters saying nothing about what they were, what was in them or
+    //  who was allowed to press them. Somebody who had not been told would
+    //  not know they produced files at all.
+    //
+    //  So: one "Export" button, and a panel that says in a sentence what each
+    //  one contains and who may take it. The detailed one still asks its own
+    //  confirming question afterwards, so 552 children's addresses take two
+    //  deliberate steps to leave the building.
+    var OPENEX = false;
 
     function drawExport() {
       var host = el("pu-export");
       if (!host) return;
       var isAdmin = ROLES.indexOf("admin") !== -1;
       var n = filtered().length;
-      var h = '<button type="button" class="btn btn-ghost" data-take="register">'
-            + "Register list</button>";
-      if (isAdmin) {
-        h += '<button type="button" class="btn btn-ghost" data-take="ask">'
-           + "Full list\u2026</button>";
-      }
-      host.innerHTML = h;
 
+      host.innerHTML = '<button type="button" class="btn btn-ghost pu-exbtn"'
+        + ' data-take="open" aria-expanded="' + (OPENEX ? "true" : "false")
+        + '">Export\u2026</button>';
+
+      var panel = el("pu-expanel");
+      if (!panel) return;
+      if (!OPENEX) { panel.hidden = true; panel.innerHTML = ""; return; }
+      panel.hidden = false;
+
+      var who = n === 1 ? "1 pupil" : n + " pupils";
+      var h = '<p class="pu-ex-lead">Three ways to take the '
+            + esc(who) + " currently listed out of the system.</p>"
+        + '<div class="pu-ex-opts">'
+
+        + '<button type="button" class="pu-ex-opt" data-take="register">'
+        + "<strong>Register list</strong>"
+        + "<span>Reference, name, class and teacher. A spreadsheet, for a "
+        + "class list or a mail merge. Anyone on the madrasah staff may "
+        + "take this.</span></button>"
+
+        + '<button type="button" class="pu-ex-opt" data-take="print">'
+        + "<strong>Printable register</strong>"
+        + "<span>The same names on headed paper with the date and blank "
+        + "columns to tick \u2014 the thing you carry to a classroom. Opens "
+        + "your printer; choose \u201cSave as PDF\u201d to keep it.</span></button>";
+
+      if (isAdmin) {
+        h += '<button type="button" class="pu-ex-opt is-guarded" data-take="ask">'
+          + "<strong>Full details</strong>"
+          + "<span>Adds each child\u2019s date of birth, address and a "
+          + "parent\u2019s telephone number. Administrators only, and your "
+          + "name is recorded against the file.</span></button>";
+      } else {
+        h += '<p class="pu-ex-note">A list including addresses and telephone '
+          + "numbers is available to administrators only.</p>";
+      }
+      panel.innerHTML = h + "</div>"
+        + '<p class="pu-ex-note">Medical notes, allergies and SEND are never '
+        + "included in any of these.</p>";
+    }
+
+    function drawAsk() {
       var ask = el("pu-ask");
       if (!ask) return;
       if (!ASKING) { ask.hidden = true; ask.innerHTML = ""; return; }
+      var n = filtered().length;
       //  SAY THE NUMBER AND THE COLUMNS BEFORE IT HAPPENS. An inline step
-      //  rather than a browser dialog: a dialog blocks the page, cannot be
-      //  read by a screen reader in the same flow, and cannot be tested.
+      //  rather than a browser dialog: a dialog blocks the page, is read out
+      //  of order by a screen reader, and cannot be tested.
       ask.hidden = false;
       ask.innerHTML = "<p><strong>This makes a file of "
         + esc(n) + " " + (n === 1 ? "child" : "children")
@@ -500,6 +571,138 @@
         + "Yes, download it</button>"
         + '<button type="button" class="btn btn-ghost" data-take="no">Cancel</button>'
         + "</div>";
+    }
+
+    //  THE PRINTABLE REGISTER.
+    //
+    //  A spreadsheet printout is a poor register: you cannot mark attendance
+    //  on a CSV, and it arrives with no indication of which madrasah, which
+    //  class or which week it is. This builds the thing that is actually
+    //  carried to a classroom - headed, dated, with ruled columns to tick -
+    //  and hands it to the browser's own printer, so "Save as PDF" works
+    //  without this system learning how to make a PDF.
+    //
+    //  No new page and no new route: a block on this screen that only the
+    //  print stylesheet shows.
+    function printRegister() {
+      var host = el("pu-print");
+      if (!host) return;
+      var rows = filtered();
+      var cls = el("pu-class");
+      var clsName = cls && cls.selectedIndex > 0
+        ? cls.options[cls.selectedIndex].text : "All classes";
+      var teacher = rows.length && rows[0].teacher ? rows[0].teacher : "";
+      //  Only claim one teacher when the list really is one class.
+      var sameTeacher = true;
+      for (var t = 1; t < rows.length; t++) {
+        if (rows[t].teacher !== rows[0].teacher) { sameTeacher = false; break; }
+      }
+      var when = new Date();
+      var MM = ["January","February","March","April","May","June","July",
+                "August","September","October","November","December"];
+      var dateSaid = when.getDate() + " " + MM[when.getMonth()] + " " + when.getFullYear();
+
+      var h = '<div class="pr-head">'
+        + '<img class="pr-logo" src="../../img/masjid-logo.png" alt="">'
+        + "<div><h1>Taiyabah Masjid \u2014 Madrasah</h1>"
+        + "<p>Register \u2014 " + esc(clsName) + "</p></div>"
+        + '<div class="pr-meta">'
+        + (sameTeacher && teacher ? "<p>" + esc(teacher) + "</p>" : "")
+        + "<p>" + esc(dateSaid) + "</p>"
+        + "<p>" + esc(rows.length) + (rows.length === 1 ? " pupil" : " pupils")
+        + "</p></div></div>"
+        + '<table class="pr-table"><thead><tr>'
+        + "<th>#</th><th>Reference</th><th>Name</th>"
+        + (clsName === "All classes" ? "<th>Class</th>" : "")
+        //  SIX BLANK COLUMNS. A madrasah week is five or six evenings, and a
+        //  register with nowhere to write is a list.
+        + "<th></th><th></th><th></th><th></th><th></th><th></th>"
+        + "</tr></thead><tbody>";
+      for (var i = 0; i < rows.length; i++) {
+        h += "<tr><td>" + (i + 1) + "</td><td>" + esc(rows[i].legacy_ref || "")
+          + "</td><td>" + esc(rows[i].name) + "</td>"
+          + (clsName === "All classes"
+              ? "<td>" + esc((rows[i].classes || []).join(", ")) + "</td>" : "")
+          + "<td></td><td></td><td></td><td></td><td></td><td></td></tr>";
+      }
+      host.innerHTML = h + "</tbody></table>"
+        + '<p class="pr-foot">Printed ' + esc(dateSaid)
+        + ". This sheet carries names only \u2014 no medical or contact "
+        + "details \u2014 so it may be carried between rooms.</p>";
+      //  MOVE IT OUT TO body BEFORE PRINTING.
+      //
+      //  The print stylesheet's first version said `body > * { display:none
+      //  !important }` and the whole screen printed anyway - masthead,
+      //  figures, filters, Export button - with the register underneath it.
+      //  The media query was applying; the rule was simply losing. admin/
+      //  shell.css carries
+      //
+      //      body.has-ashell .shell { display:block !important; }
+      //
+      //  and when two !important declarations collide, specificity decides:
+      //  (0,2,0) beats (0,0,1). Out-specifying it from here would be a race
+      //  with a file this screen does not own.
+      //
+      //  So the block is moved to be a direct child of body, where nothing
+      //  is fighting over it, and put back afterwards so the DOM the rest of
+      //  the screen expects is unchanged.
+      var host2 = el("pu-print");
+      var home = host2.parentNode, mark = document.createComment("pu-print");
+      home.insertBefore(mark, host2);
+      document.body.appendChild(host2);
+      //  The class scopes the print rules to THIS action. Without it they
+      //  applied to any printing at all, so Ctrl+P on the roll produced a
+      //  blank sheet - worse than an untidy one.
+      document.body.className += " printing-register";
+      OPENEX = false;
+      drawExport(); drawAsk();
+      try { window.print(); }
+      finally {
+        document.body.className =
+          document.body.className.replace(/\s*printing-register/, "");
+        home.insertBefore(host2, mark);
+        mark.parentNode.removeChild(mark);
+      }
+    }
+
+    //  HOW MANY THINGS ARE NARROWING THE LIST.
+    //  Status is only counted when it is NOT the default: the screen opens
+    //  on "on roll", and calling that a filter would mean the clear-all link
+    //  is on screen permanently, saying "clear 1" before anybody has touched
+    //  anything.
+    function activeFilters() {
+      var n = 0;
+      var q = el("pu-q"), c = el("pu-class"), sd = el("pu-side"),
+          tc = el("pu-teacher"), st = el("pu-status");
+      if (q && q.value.trim()) n++;
+      if (c && c.value) n++;
+      if (sd && sd.value) n++;
+      if (tc && tc.value) n++;
+      if (st && st.value !== "on_roll") n++;
+      return n;
+    }
+
+    function clearAll() {
+      var ids = ["pu-q", "pu-class", "pu-side", "pu-teacher"];
+      for (var i = 0; i < ids.length; i++) {
+        var n = el(ids[i]);
+        if (n) n.value = "";
+      }
+      var st = el("pu-status");
+      if (st) st.value = "on_roll";   // back to the default, not to blank
+      SORT = ""; SORTDIR = 1;
+      resetPage(); closeMenu(); drawRows(); markSort();
+    }
+
+    function drawSummary() {
+      var n = activeFilters();
+      var b = el("pu-clearall");
+      if (b) {
+        b.hidden = (n === 0);
+        b.textContent = n === 1 ? "Clear 1 filter" : "Clear " + n + " filters";
+      }
+      var x = el("pu-clearq"), q = el("pu-q");
+      if (x && q) x.hidden = !q.value;
     }
 
     function goTo(id, amend) {
@@ -587,14 +790,26 @@
       if (tc) tc.addEventListener("change", refilter);
       if (st) st.addEventListener("change", refilter);
 
+      var cq = el("pu-clearq");
+      if (cq) cq.addEventListener("click", function () {
+        var q = el("pu-q");
+        if (q) { q.value = ""; q.focus(); }
+        refilter();
+      });
+      var ca = el("pu-clearall");
+      if (ca) ca.addEventListener("click", clearAll);
+
       var ex = el("pu-export-bk");
       if (ex) ex.addEventListener("click", function (e) {
         var b = e.target.closest ? e.target.closest("[data-take]") : null;
         if (!b) return;
         var what = b.getAttribute("data-take");
-        if (what === "register")   { takeFile(false); }
-        else if (what === "ask")   { ASKING = true;  drawExport(); }
-        else if (what === "no")    { ASKING = false; drawExport(); }
+        if (what === "open")       { OPENEX = !OPENEX; ASKING = false;
+                                     drawExport(); drawAsk(); }
+        else if (what === "register") { takeFile(false); }
+        else if (what === "print")    { printRegister(); }
+        else if (what === "ask")   { ASKING = true;  drawAsk(); }
+        else if (what === "no")    { ASKING = false; drawAsk(); }
         else if (what === "full")  { takeFile(true); }
       });
 
