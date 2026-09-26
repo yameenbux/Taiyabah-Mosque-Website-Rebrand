@@ -233,3 +233,24 @@
   .pu-fig b    { font-size:23px; }
   .pu-count    { margin-left:0; width:100%; }
 }
+
+/*  THE ACTIONS MENU.
+    Anchored to its own cell, and above the sticky heading's z-index so it is
+    not clipped by it. The menu holds only actions that exist: Register,
+    Incidents, Class History and Portal Login are left out rather than greyed
+    out, because four dead entries on each of 552 rows teaches people not to
+    open the menu at all.                                                    */
+.pu-acts      { position:relative; white-space:nowrap; }
+.pu-act       { min-height:34px; padding:5px 10px; font:inherit; font-size:13px;
+                border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer; }
+.pu-act:hover { border-color:var(--gold-ink); }
+.pu-menu      { position:absolute; right:0; top:100%; z-index:5; min-width:172px;
+                display:flex; flex-direction:column; padding:4px;
+                background:var(--card); border:1px solid var(--line);
+                border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,.14); }
+.pu-mi        { display:block; width:100%; text-align:left; font:inherit;
+                font-size:14px; padding:8px 10px; border:0; border-radius:6px;
+                background:none; color:var(--ink); cursor:pointer;
+                text-decoration:none; white-space:nowrap; }
+.pu-mi:hover  { background:var(--line); }

@@ -33,6 +33,7 @@
     var PER  = 50;            // how many rows a page holds
     var SORT = "";            // "" keeps the surname order the roll arrives in
     var SORTDIR = 1;          // 1 ascending, -1 descending
+    var MENU = null;          // the row whose actions menu is open, or null
     var busy = false;
 
     function el(id) { return document.getElementById(id); }
@@ -199,6 +200,30 @@
       return (x < y ? -1 : x > y ? 1 : 0) * SORTDIR;
     }
 
+    //  ONLY WHAT EXISTS.
+    //
+    //  The system this replaces offers nine actions per row. Four of them —
+    //  Register, Incidents, Class History and Portal Login — are `soon: true`
+    //  in the rail or do not exist at all. Greying them out would put four
+    //  dead entries on every one of 552 rows, and a menu that is half dead
+    //  teaches people not to open it. They arrive when their screens do,
+    //  which is the rule nav.js already states for the rail itself.
+    function menuFor(r) {
+      return '<div class="pu-menu" role="menu">'
+        + '<button type="button" class="pu-mi" role="menuitem" data-do="open">'
+        + "Open record</button>"
+        + '<button type="button" class="pu-mi" role="menuitem" data-do="edit">'
+        + "Amend details</button>"
+        + '<a class="pu-mi" role="menuitem" href="../fees/">Fees</a>'
+        + (r.family
+            ? '<a class="pu-mi" role="menuitem" href="../fees/families/">'
+              + "Family &amp; fees</a>"
+            : "")
+        + "</div>";
+    }
+
+    function closeMenu() { MENU = null; }
+
     function markSort() {
       var bs = document.querySelectorAll(".pu-sortable");
       for (var i = 0; i < bs.length; i++) {
@@ -256,7 +281,12 @@
               : '<span class="pu-q">none</span>') + "</td>"
           + '<td class="pu-cls">' + (r.family ? esc(r.family)
               : '<span class="pu-q">no family</span>') + "</td>"
-          + '<td><div class="pu-flags">' + flags + "</div></td></tr>");
+          + '<td><div class="pu-flags">' + flags + "</div></td>"
+          + '<td class="pu-acts">'
+          + '<button type="button" class="pu-act" aria-haspopup="true"'
+          + ' aria-expanded="' + (MENU === r.id ? "true" : "false") + '"'
+          + ' aria-label="Actions for ' + esc(r.name) + '">Actions</button>'
+          + (MENU === r.id ? menuFor(r) : "") + "</td></tr>");
       }
       body.innerHTML = out.join("");
       var empty = el("pu-empty");
@@ -572,7 +602,7 @@
       //  it is no longer part of is how somebody reads the wrong child's
       //  medical note.
       //  Every narrowing goes back to page one. See resetPage().
-      function refilter() { closeRecord(); resetPage(); drawRows(); }
+      function refilter() { closeRecord(); closeMenu(); resetPage(); drawRows(); }
       if (q) q.addEventListener("input", refilter);
       if (c) c.addEventListener("change", refilter);
       var sd = el("pu-side"), tc = el("pu-teacher");
@@ -584,7 +614,7 @@
         var b = e.target.closest ? e.target.closest("[data-need]") : null;
         if (!b) return;
         NEED = (NEED === b.getAttribute("data-need")) ? "" : b.getAttribute("data-need");
-        closeRecord(); resetPage(); drawHealth(); drawRows();
+        closeRecord(); closeMenu(); resetPage(); drawHealth(); drawRows();
       });
 
       var head = document.querySelector("#pu-table thead");
@@ -595,7 +625,7 @@
         if (SORT === k) { SORTDIR = -SORTDIR; } else { SORT = k; SORTDIR = 1; }
         //  Sorting reorders the whole result, so whichever page you were on
         //  no longer refers to the same children.
-        resetPage(); closeRecord(); drawRows(); markSort();
+        resetPage(); closeRecord(); closeMenu(); drawRows(); markSort();
       });
 
       //  One delegate for both pagers, since they carry identical markup.
@@ -606,14 +636,14 @@
           var pr = e.target.closest ? e.target.closest(".pu-per") : null;
           if (pb && !pb.disabled) {
             PAGE = parseInt(pb.getAttribute("data-page"), 10) || 1;
-            closeRecord(); drawRows();
+            closeRecord(); closeMenu(); drawRows();
             //  Going to page 2 from the bottom pager should not leave you
             //  looking at the bottom of page 2.
             var top = el("pu-roll");
             if (top && top.scrollIntoView) top.scrollIntoView(true);
           } else if (pr) {
             PER = parseInt(pr.getAttribute("data-per"), 10) || 50;
-            resetPage(); closeRecord(); drawRows();
+            resetPage(); closeRecord(); closeMenu(); drawRows();
           }
         });
       }
@@ -621,8 +651,45 @@
       var body = el("pu-rows");
       if (body) {
         body.addEventListener("click", function (e) {
+          //  THE BUTTON IS INSIDE THE ROW, AND THE ROW OPENS A CHILD.
+          //
+          //  Fall through and every menu click also opens a record — and
+          //  opening a record calls madrasah_pupil_one(), which writes an
+          //  audit row. An audit trail full of opens nobody performed is
+          //  worse than useless the day somebody asks who read what.
+          //
+          //  IT IS THE `return` THAT PREVENTS THAT, NOT THE stopPropagation.
+          //  The row's open handler is further down this same delegated
+          //  listener, so there is nothing for a click to bubble TO and
+          //  stopping propagation changes nothing — removing it leaves every
+          //  check green, while removing the return fails two of them and
+          //  puts madrasah_pupil_one in the call log. The stopPropagation
+          //  stays as cheap insurance against a future listener on an
+          //  ancestor, but it is not what is holding this up, and a comment
+          //  that credited it would read exactly like a guard that runs.
+          var act = e.target.closest ? e.target.closest(".pu-act") : null;
+          if (act) {
+            e.stopPropagation(); e.preventDefault();
+            var atr = act.closest("tr.pu-row");
+            var aid = atr ? atr.getAttribute("data-id") : null;
+            MENU = (MENU === aid) ? null : aid;
+            drawRows();
+            return;
+          }
+          var mi = e.target.closest ? e.target.closest(".pu-mi") : null;
+          if (mi) {
+            e.stopPropagation();
+            var what = mi.getAttribute("data-do");
+            var rid = MENU;
+            if (!what) { MENU = null; return; }   // a real link; let it go
+            e.preventDefault();
+            MENU = null;
+            if (what === "open") { open(rid); }
+            else if (what === "edit") { open(rid, true); }
+            return;
+          }
           var tr = e.target.closest ? e.target.closest("tr.pu-row") : null;
-          if (tr) open(tr.getAttribute("data-id"));
+          if (tr) { closeMenu(); open(tr.getAttribute("data-id")); }
         });
         body.addEventListener("keydown", function (e) {
           if (e.key !== "Enter" && e.key !== " ") return;

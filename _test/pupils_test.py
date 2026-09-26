@@ -450,6 +450,57 @@ def run():
         pg.close()
         pg = open_page(b)
 
+        # --- the actions menu --------------------------------------------------
+        check("every row has an actions button",
+              pg.locator(".pu-act").count() == pg.locator("tr.pu-row").count(),
+              pg.locator(".pu-act").count())
+        pg.locator(".pu-act").first.click()
+        pg.wait_for_timeout(300)
+        check("the menu opens", pg.locator(".pu-menu").count() == 1)
+
+        #  THE BUTTON LIVES INSIDE A ROW THAT OPENS A CHILD.
+        #  Without stopPropagation every menu click ALSO opens the record —
+        #  and opening a record calls madrasah_pupil_one(), which writes an
+        #  audit row. So the wrong thing would be written down as well as
+        #  shown, 552 rows over.
+        check("opening the menu does NOT open the record",
+              pg.locator("#pu-record").is_hidden())
+        calls = pg.evaluate("() => window.__calls.map(function(c){return c.name;})")
+        check("and does not call madrasah_pupil_one",
+              "madrasah_pupil_one" not in calls, calls)
+
+        items = pg.evaluate("""() => Array.prototype.map.call(
+            document.querySelectorAll('.pu-menu .pu-mi'),
+            function (n) { return {t: n.innerText.trim(),
+                                   dead: n.hasAttribute('disabled')
+                                      || n.getAttribute('href') === '#'
+                                      || n.className.indexOf('soon') !== -1}; })""")
+        check("the menu has entries", len(items) >= 4, items)
+        check("and NOT ONE of them is dead", all(not i["dead"] for i in items), items)
+        check("the four unbuilt screens are absent rather than greyed out",
+              not any(i["t"] in ("Register", "Incidents", "Class History",
+                                 "Portal Login") for i in items), items)
+
+        #  A MENU LEFT OPEN ACROSS A PAGE CHANGE points at a pupil who is no
+        #  longer on screen.
+        pg.close()
+        many2 = [dict(ROLL[0], id="y%d" % i, name="Pupil %d" % i,
+                      legacy_ref=str(3000 + i)) for i in range(80)]
+        pg = open_page(b, roll=many2, health=dict(HEALTH, on_roll=80))
+        pg.locator(".pu-act").first.click()
+        pg.wait_for_timeout(250)
+        check("a menu is open", pg.locator(".pu-menu").count() == 1)
+        pg.locator('.pu-page[data-page="2"]').first.click()
+        pg.wait_for_timeout(300)
+        check("changing page closes it", pg.locator(".pu-menu").count() == 0)
+        pg.locator(".pu-act").first.click()
+        pg.wait_for_timeout(250)
+        pg.fill("#pu-q", "Pupil 7")
+        pg.wait_for_timeout(350)
+        check("and so does searching", pg.locator(".pu-menu").count() == 0)
+        pg.close()
+        pg = open_page(b)
+
         # --- opening a record ------------------------------------------------
         pg.locator("tr.pu-row").first.click()
         pg.wait_for_timeout(500)
