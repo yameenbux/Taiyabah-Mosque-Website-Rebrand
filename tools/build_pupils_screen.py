@@ -76,8 +76,11 @@ BODY = """
             <table class="pu-table" id="pu-table">
               <thead>
                 <tr>
-                  <th>Reference</th><th>Name</th><th>Age</th>
-                  <th>Class</th><th>Teacher</th><th>Family</th><th>To read</th>
+                  <th><button type="button" class="pu-sortable" data-sort="ref" aria-sort="none">Reference</button></th>
+                  <th><button type="button" class="pu-sortable" data-sort="name" aria-sort="none">Name</button></th>
+                  <th><button type="button" class="pu-sortable" data-sort="age" aria-sort="none">Age</button></th>
+                  <th><button type="button" class="pu-sortable" data-sort="class" aria-sort="none">Class</button></th>
+                  <th>Teacher</th><th>Family</th><th>To read</th>
                 </tr>
               </thead>
               <tbody id="pu-rows"></tbody>

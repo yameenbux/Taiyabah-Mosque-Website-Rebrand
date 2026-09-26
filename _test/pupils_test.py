@@ -351,6 +351,53 @@ def run():
         pg.close()
         pg = open_page(b)
 
+        # --- sticky headers, and sorting ---------------------------------------
+        mixed = [
+            dict(ROLL[0], id="s1", name="Zahra Test", legacy_ref="9001",
+                 date_of_birth="2010-01-01", classes=["Girls Class 1"]),
+            dict(ROLL[0], id="s2", name="Adam Test", legacy_ref="9002",
+                 date_of_birth="2018-01-01", classes=["Boys Year 1"]),
+            #  NO DATE OF BIRTH. A null age must not sort as though the child
+            #  were newborn — missing is not small.
+            dict(ROLL[0], id="s3", name="Musa Test", legacy_ref="9003",
+                 date_of_birth=None, classes=["Boys Year 2A"]),
+        ]
+        pg.close()
+        pg = open_page(b, roll=mixed, health=dict(HEALTH, on_roll=3))
+
+        def col(i):
+            return pg.evaluate("""(i) => Array.prototype.map.call(
+                document.querySelectorAll('tr.pu-row'),
+                function (tr) { return tr.children[i].innerText.trim(); })""", i)
+
+        pg.click('.pu-sortable[data-sort="name"]')
+        pg.wait_for_timeout(300)
+        check("sorting by name puts Adam first",
+              col(1)[0].startswith("Adam"), col(1))
+        pg.click('.pu-sortable[data-sort="name"]')
+        pg.wait_for_timeout(300)
+        check("clicking the same heading again reverses it",
+              col(1)[0].startswith("Zahra"), col(1))
+
+        pg.click('.pu-sortable[data-sort="age"]')
+        pg.wait_for_timeout(300)
+        check("sorting by age puts the unknown one LAST, not first",
+              "not known" in col(2)[-1], col(2))
+        pg.click('.pu-sortable[data-sort="age"]')
+        pg.wait_for_timeout(300)
+        check("and it is still last when the order is reversed",
+              "not known" in col(2)[-1], col(2))
+
+        check("the heading row is sticky, so it survives 552 rows of scrolling",
+              pg.evaluate("""() => getComputedStyle(
+                  document.querySelector('#pu-table thead th')).position""")
+              == "sticky")
+        check("the sorted heading says so for a screen reader",
+              pg.get_attribute('.pu-sortable[data-sort="age"]', "aria-sort")
+              in ("ascending", "descending"))
+        pg.close()
+        pg = open_page(b)
+
         # --- opening a record ------------------------------------------------
         pg.locator("tr.pu-row").first.click()
         pg.wait_for_timeout(500)

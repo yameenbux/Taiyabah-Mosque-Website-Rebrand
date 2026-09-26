@@ -31,6 +31,8 @@
     var NEED = "";            // which "needs attention" filter is on
     var PAGE = 1;             // which page of the filtered roll is shown
     var PER  = 50;            // how many rows a page holds
+    var SORT = "";            // "" keeps the surname order the roll arrives in
+    var SORTDIR = 1;          // 1 ascending, -1 descending
     var busy = false;
 
     function el(id) { return document.getElementById(id); }
@@ -160,7 +162,41 @@
       for (var i = 0; i < ROWS.length; i++) {
         if (matches(ROWS[i])) out.push(ROWS[i]);
       }
+      if (SORT) out.sort(cmp);
       return out;
+    }
+
+    //  UNKNOWN SORTS LAST, IN BOTH DIRECTIONS.
+    //
+    //  A child with no date of birth has no age, and null compares as less
+    //  than every number. Sort ascending and they rise to the top looking
+    //  like newborns; sort descending and they vanish off the bottom. Either
+    //  way the children the office most needs to chase are the ones the
+    //  ordering lies about. Missing is not small, and it is not large — it
+    //  is missing, and it goes at the end whichever way the arrow points.
+    function cmp(a, b) {
+      var x, y;
+      if (SORT === "age")        { x = age(a.date_of_birth); y = age(b.date_of_birth); }
+      else if (SORT === "ref")   { x = a.legacy_ref;         y = b.legacy_ref; }
+      else if (SORT === "class") { x = (a.classes || [])[0]; y = (b.classes || [])[0]; }
+      else                       { x = a.name;               y = b.name; }
+      var xm = (x === null || x === undefined || x === "");
+      var ym = (y === null || y === undefined || y === "");
+      if (xm && ym) return 0;
+      if (xm) return 1;
+      if (ym) return -1;
+      if (typeof x === "string") return x.localeCompare(y) * SORTDIR;
+      return (x < y ? -1 : x > y ? 1 : 0) * SORTDIR;
+    }
+
+    function markSort() {
+      var bs = document.querySelectorAll(".pu-sortable");
+      for (var i = 0; i < bs.length; i++) {
+        var on = bs[i].getAttribute("data-sort") === SORT;
+        bs[i].setAttribute("aria-sort",
+          on ? (SORTDIR === 1 ? "ascending" : "descending") : "none");
+        bs[i].className = "pu-sortable" + (on ? " is-on" : "");
+      }
     }
 
     //  ANY NARROWING GOES BACK TO PAGE ONE.
@@ -511,6 +547,17 @@
         if (!b) return;
         NEED = (NEED === b.getAttribute("data-need")) ? "" : b.getAttribute("data-need");
         closeRecord(); resetPage(); drawHealth(); drawRows();
+      });
+
+      var head = document.querySelector("#pu-table thead");
+      if (head) head.addEventListener("click", function (e) {
+        var sb2 = e.target.closest ? e.target.closest(".pu-sortable") : null;
+        if (!sb2) return;
+        var k = sb2.getAttribute("data-sort");
+        if (SORT === k) { SORTDIR = -SORTDIR; } else { SORT = k; SORTDIR = 1; }
+        //  Sorting reorders the whole result, so whichever page you were on
+        //  no longer refers to the same children.
+        resetPage(); closeRecord(); drawRows(); markSort();
       });
 
       //  One delegate for both pagers, since they carry identical markup.

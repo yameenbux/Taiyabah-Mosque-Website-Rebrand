@@ -58,6 +58,21 @@
                 font:inherit; font-size:13px; }
 .pu-per:hover { border-color:var(--gold-ink); }
 .pu-per.is-on { background:var(--ink); color:var(--card); border-color:var(--ink); }
+
+/*  THE HEADING ROW STAYS PUT.
+    Measured at 552 rows: by row 300 the headings had scrolled away entirely
+    and nothing on screen said which column held the class and which the
+    teacher. Two properties fix the worst thing about the old roll.         */
+.pu-table thead th { position:sticky; top:0; z-index:2;
+                     background:var(--card); box-shadow:0 1px 0 var(--line); }
+.pu-sortable  { background:none; border:0; padding:0; margin:0; font:inherit;
+                color:inherit; cursor:pointer; display:inline-flex;
+                align-items:center; gap:4px; }
+.pu-sortable::after { content:"\2195"; opacity:.3; font-size:11px; }
+.pu-sortable.is-on::after { content:"\2191"; opacity:1; }
+.pu-sortable.is-on[aria-sort="descending"]::after { content:"\2193"; }
+.pu-sortable:hover { color:var(--gold-ink); }
+.pu-sortable:focus-visible { outline:2px solid var(--gold-ink); outline-offset:2px; }
 .pu-q         { color:var(--muted); font-size:13px; }
 .pu-warn      { color:var(--danger-ink); font-size:14px; margin:6px 0 0; }
 
