@@ -328,9 +328,11 @@
       /*  THIS LINE PRINTED ITS OWN MARKUP AT THE MASJID.
 
           It was esc(t.join("</b>, <b>")) — the tags were inside the string
-          being escaped, so the page showed
+          being escaped, so the page showed this, with the real teachers'
+          names in place of the placeholders (their names belong in the
+          database, not in a file the website serves):
 
-              Taught by Apa Somayya I Omarji</b>, <b>Apa Aqsa Patel
+              Taught by Apa Firstname Surname</b>, <b>Apa Other Surname
 
           Escaping is not a step you do to a finished string; it is what you do
           to each VALUE as it goes in. Every name is escaped on its own here
