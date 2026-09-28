@@ -472,18 +472,83 @@
       an email address, which is why the initial password was on paper in the
       first place - so the screen says who to ask rather than offering a link
       that goes nowhere.                                                     */
+  /*  THE PASSWORD GATE IS AN OVERLAY, AND IT CARRIES ITS OWN STYLES.
+   *
+   *  The first version of this appended a styled <section> into the page and
+   *  set `hidden` on everything else. On the generated screens that looked
+   *  right, and on the one page a teacher actually lands on after signing in
+   *  - portal/index.html - it produced a mess: the card spread the full width
+   *  of the window with its left third underneath the rail, the portal drew
+   *  itself underneath, and the rail sat there offering Admin Centre.
+   *
+   *  Three separate reasons, all the same shape:
+   *
+   *    1. .pw-gate's layout rules live in admin/screen.css. The portal landing
+   *       page loads fonts.css and shell.css only, so the card had no width,
+   *       no padding and no max-width.
+   *    2. Hiding things with the `hidden` attribute depends on
+   *       [hidden]{display:none !important}, which is declared in each
+   *       SCREEN stylesheet. The landing page loads none of them.
+   *    3. It hid .bk, .ashell and .ashell-bar. It never hid the rail on a
+   *       page whose rail is .shell, and it never stopped a request already
+   *       in flight from un-hiding a panel when it came back.
+   *
+   *  So this version assumes nothing about the page it is on. It injects the
+   *  handful of rules it needs, and it covers the viewport rather than asking
+   *  the rest of the document to please get out of the way. A gate that works
+   *  only where the right stylesheet happens to be loaded is not a gate.
+   */
   function mustChangeGate(identity) {
-    var host = document.getElementById("app-panel")
-            || document.querySelector(".wrap") || document.body;
+    //  OWN STYLES, INJECTED ONCE. Everything the overlay needs, so that it
+    //  does not matter which stylesheets this particular page loaded.
+    if (!document.getElementById("pw-gate-css")) {
+      var st = document.createElement("style");
+      st.id = "pw-gate-css";
+      st.textContent =
+        "#pw-shade{position:fixed;top:0;right:0;bottom:0;left:0;z-index:2147483000;"
+        + "background:#f7f3ec;overflow:auto;-webkit-overflow-scrolling:touch;"
+        + "display:block;padding:24px 16px 64px;}"
+        + "#pw-shade *{box-sizing:border-box;}"
+        + "#pw-gate{max-width:520px;margin:6vh auto 0;background:#fffdf8;"
+        + "border:1px solid #e7ddcc;border-radius:14px;padding:28px 30px;"
+        + "box-shadow:0 10px 30px rgba(60,35,20,.10);"
+        + "font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;"
+        + "color:#2b2118;}"
+        + "#pw-gate h2{margin:0 0 10px;font-size:1.5rem;line-height:1.25;"
+        + "font-family:Georgia,'Times New Roman',serif;color:#5b1226;}"
+        + "#pw-gate p{margin:0 0 16px;line-height:1.6;font-size:1rem;}"
+        + "#pw-gate .pw-fld{display:block;margin:0 0 14px;}"
+        + "#pw-gate .pw-fld span{display:block;margin-bottom:6px;font-size:.9rem;"
+        + "font-weight:600;letter-spacing:.01em;}"
+        + "#pw-gate .pw-fld input{display:block;width:100%;padding:11px 12px;"
+        + "font-size:1rem;border:1px solid #cdbfa8;border-radius:8px;"
+        + "background:#fff;color:inherit;}"
+        + "#pw-gate .pw-fld input:focus{outline:3px solid #b9903f;outline-offset:1px;}"
+        + "#pw-gate .pw-hint{font-size:.9rem;color:#6d6155;}"
+        + "#pw-gate .pw-err{margin:0 0 14px;padding:10px 12px;border-radius:8px;"
+        + "background:#fdecec;border:1px solid #e4b4b4;color:#8a1c1c;font-size:.95rem;}"
+        + "#pw-gate button{display:block;width:100%;margin:4px 0 16px;padding:13px 16px;"
+        + "font-size:1.02rem;font-weight:700;cursor:pointer;border:0;border-radius:9px;"
+        + "background:#c8a34a;color:#2b2118;font-family:inherit;}"
+        + "#pw-gate button:disabled{opacity:.6;cursor:default;}"
+        //  Declared here too, because the page underneath may not declare it.
+        + "#pw-shade [hidden]{display:none !important;}";
+      document.head.appendChild(st);
+    }
+
     var who = (identity.profile && identity.profile.full_name) || "";
-    var box = document.createElement("section");
-    box.className = "bk pw-gate";
-    box.id = "pw-gate";
-    box.innerHTML =
-      "<h2>Choose your own password</h2>"
-      + "<p class=\"pw-lead\">Assalamu alaikum" + (who ? ", " + esc(who) : "")
+    var shade = document.createElement("div");
+    shade.id = "pw-shade";
+    shade.setAttribute("role", "dialog");
+    shade.setAttribute("aria-modal", "true");
+    shade.setAttribute("aria-labelledby", "pw-gate-h");
+    shade.innerHTML =
+      '<section id="pw-gate">'
+      + '<h2 id="pw-gate-h">Choose your own password</h2>'
+      + "<p>Assalamu alaikum" + (who ? ", " + esc(who) : "")
       + ". The password you were given was written on a slip of paper, so it "
       + "is not private. Choose one only you know before going any further.</p>"
+      + '<div class="pw-err" id="pw-err" hidden></div>'
       + '<label class="pw-fld"><span>Your new password</span>'
       + '<input type="password" id="pw-one" autocomplete="new-password"></label>'
       + '<label class="pw-fld"><span>Type it again</span>'
@@ -491,23 +556,51 @@
       + '<p class="pw-hint">At least ten characters. Something you can '
       + "remember and nobody could guess &mdash; three unrelated words is "
       + "better than one word with numbers after it.</p>"
-      + '<div class="pw-err" id="pw-err" hidden></div>'
-      + '<button type="button" class="btn btn-gold" id="pw-go">'
-      + "Save it and carry on</button>"
+      + '<button type="button" id="pw-go">Save it and carry on</button>'
       + '<p class="pw-hint">There is no email reset on a madrasah login, '
       + "because the madrasah does not hold your email address. If you forget "
-      + "this one, the office has to set you a new one.</p>";
+      + "this one, the office has to set you a new one.</p>"
+      + "</section>";
 
-    //  EVERYTHING ELSE GOES. Not hidden behind it - removed, so that nothing
-    //  is sitting underneath waiting to be reached.
-    var panels = document.querySelectorAll(".bk, .ashell, .ashell-bar");
-    Array.prototype.forEach.call(panels, function (n) { n.hidden = true; });
-    host.parentNode.insertBefore(box, host);
-    box.hidden = false;
+    //  LAST CHILD OF BODY, so it paints above anything that mounts later -
+    //  the rail mounts itself into the document and would otherwise arrive
+    //  after us.
+    document.body.appendChild(shade);
+
+    //  Belt and braces, not the mechanism. The overlay is what stops the page
+    //  being READ; this stops it being TABBED INTO behind the overlay, which
+    //  a sighted person never notices and a keyboard or screen-reader user
+    //  hits immediately.
+    //
+    //  EVERY SIBLING, not a list of class names. The first version named
+    //  ".bk, .ashell, .ashell-bar" and missed .md-lead and .tc-classes on the
+    //  one page this actually runs on, because a list of selectors is a guess
+    //  about a page you are not looking at. "Everything except me" needs no
+    //  such guess and cannot go stale when a screen adds a container.
+    var sib = document.body.children;
+    for (var i = sib.length - 1; i >= 0; i--) {
+      var n = sib[i];
+      if (n === shade || n.tagName === "SCRIPT" || n.tagName === "STYLE") continue;
+      n.setAttribute("hidden", "hidden");
+      n.setAttribute("aria-hidden", "true");
+      //  setProperty WITH "important", not style.display = "none".
+      //  admin/shell.css carries  body.has-ashell .shell{display:block
+      //  !important}  and an inline declaration without !important loses to
+      //  an !important one in a stylesheet. The rail stayed on screen behind
+      //  the gate until this line said important too. Same collision this
+      //  project hit with the print stylesheets.
+      n.style.setProperty("display", "none", "important");
+    }
+    //  And stop the document scrolling underneath on a phone.
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    var one = document.getElementById("pw-one");
+    if (one && one.focus) { try { one.focus(); } catch (e) {} }
 
     function fail(m) {
       var e = document.getElementById("pw-err");
-      if (e) { e.textContent = m; e.hidden = false; }
+      if (e) { e.textContent = m; e.removeAttribute("hidden"); }
     }
 
     document.getElementById("pw-go").addEventListener("click", function () {
@@ -516,13 +609,15 @@
       if (a.length < 10) { fail("That is too short. Ten characters or more."); return; }
       if (a !== b) { fail("The two do not match."); return; }
       var go = document.getElementById("pw-go");
-      go.disabled = true; go.textContent = "Saving\u2026";
+      go.disabled = true; go.textContent = "Saving…";
       sb.auth.updateUser({ password: a }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
         return sb.rpc("clear_must_change_password");
       }).then(function () {
         //  Straight back in, rather than asking them to sign in again with
         //  the password they have just this second chosen.
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
         window.location.reload();
       })["catch"](function (e) {
         go.disabled = false; go.textContent = "Save it and carry on";

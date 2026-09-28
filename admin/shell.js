@@ -361,8 +361,26 @@
     var sections = opts.sections || null;
     var label = sections ? (opts.area || "Madrasah") : "Admin Centre";
 
-    out.push('<div class="ashell-top"><a href="' + esc(up(HOME.href)) +
-             '" title="Back to the Admin Centre">' +
+    /*  IS THERE AN ADMIN CENTRE FOR THIS PERSON AT ALL?
+        ------------------------------------------------------------------
+        A teacher has one role and it opens one thing. The Admin Centre
+        refuses them, so every route this rail offers to it is a door that
+        shuts in their face.
+
+        The header link below already gets this right and says why: "the
+        small, specific unkindness of a system that offers you something and
+        then says no." The lesson was applied there and not here, so the
+        first teacher to sign in got a rail headed "← Admin Centre" above a
+        single row. Same rule, now in both places.
+
+        FAILS CLOSED, for the same reason as the header: no roles passed
+        means no link. A missing link costs somebody a click; a wrongly-shown
+        one costs them a refusal. */
+    var canAdmin = (opts.roles || []).indexOf("admin") !== -1;
+
+    out.push('<div class="ashell-top"><a href="' +
+             esc(canAdmin ? up(HOME.href) : up("index.html")) + '" title="' +
+             (canAdmin ? "Back to the Admin Centre" : "Back to the website") + '">' +
              '<img src="' + esc(up("img/masjid-logo.png")) +
              '" alt="Taiyabah Masjid" width="220" height="62">' +
              "<strong>" + esc(label) + "</strong></a></div>");
@@ -372,13 +390,15 @@
     //  The way out is the first row, and it says where it goes. Inside a
     //  sub-area the Admin Centre is not "home" — it is BACK, and somebody who
     //  has gone two levels in needs to see that before they see anything else.
-    out.push('<div class="ashell-group">' +
-             row(sections
-                   ? { key: "__back", href: HOME.href, icon: "grid",
-                       name: "← Admin Centre",
-                       what: "Out of the madrasah, back to everything else" }
-                   : HOME,
-                 opts.current) + "</div>");
+    if (canAdmin) {
+      out.push('<div class="ashell-group">' +
+               row(sections
+                     ? { key: "__back", href: HOME.href, icon: "grid",
+                         name: "← Admin Centre",
+                         what: "Out of the madrasah, back to everything else" }
+                     : HOME,
+                   opts.current) + "</div>");
+    }
 
     /*  ------------------------------------------------------------------
         GROUPS OPEN AND CLOSE, AND THE RULE IS THE LENGTH OF THE RAIL.
@@ -460,8 +480,18 @@
     out.push('<div class="ashell-foot">' +
              (who ? '<span class="ashell-who">Signed in as ' + esc(who) +
                     (alsoEmail ? '<i>' + esc(alsoEmail) + "</i>" : "") + "</span>" : "") +
-             "Every area asks for your authenticator code when you open it, " +
-             "whatever this list says.<br>" +
+             /*  SAY THE TRUE ONE. This sentence was written when everybody
+                 who could reach this rail was an administrator, and it is
+                 false for a teacher: teacher accounts are password-only by
+                 decision, tightly scoped instead of two-stepped. Telling a
+                 teacher that "every area asks for your authenticator code"
+                 sends somebody who has no authenticator app, and never will
+                 have, to ring the office about a code that does not exist. */
+             (canAdmin
+               ? "Every area asks for your authenticator code when you open " +
+                 "it, whatever this list says.<br>"
+               : "This is everything your login opens. If you need something " +
+                 "that is not here, the madrasah office can get it for you.<br>") +
              '<a href="' + esc(up("index.html")) + '">Back to the website</a>' +
              '<button type="button" class="ashell-out" hidden>Sign out</button>' +
              "</div>");

@@ -136,10 +136,10 @@ JOBS_LIVE = ["dbs", "main_teacher", "days"]
 JOBS_QUIET = ["no_class", "side", "admissions", "purge"]
 
 
-def stub(roles, today=True):
+def stub(roles, today=True, must_change=False):
     return """
 (function(){
-  var ROLES = %s, OV = %s, TODAY = %s;
+  var ROLES = %s, OV = %s, TODAY = %s, MUSTCHANGE = %s;
   var client = {
     auth: {
       getSession: function(){ return Promise.resolve({data:{session:{
@@ -153,7 +153,8 @@ def stub(roles, today=True):
              listFactors: function(){ return Promise.resolve({data:{totp:[{id:'f1'}]}}); } }
     },
     from: function(t){
-      var rows = t === 'profiles' ? {full_name:'A Person', email:'someone@example.test'}
+      var rows = t === 'profiles' ? {full_name:'A Person', email:'someone@example.test',
+                                     must_change_password: MUSTCHANGE}
                : ROLES.map(function(r){ return {role:r}; });
       var q = { select:function(){return q;}, eq:function(){return q;},
         maybeSingle:function(){ return Promise.resolve({data:rows, error:null}); },
@@ -177,15 +178,15 @@ def stub(roles, today=True):
     {value:{createClient:function(){return client;}}, writable:false, configurable:false});
 })();
 """ % (json.dumps(roles), json.dumps(OVERVIEW),
-       json.dumps(TODAY) if today else "null")
+       json.dumps(TODAY) if today else "null", json.dumps(bool(must_change)))
 
 
-def open_as(b, roles, w=1400, h=1200, today=True):
+def open_as(b, roles, w=1400, h=1200, today=True, must_change=False):
     pg = b.new_page(viewport={"width": w, "height": h})
     pg.set_default_timeout(4000)
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.add_init_script(stub(roles, today))
+    pg.add_init_script(stub(roles, today, must_change))
     pg.goto(PAGE, wait_until="load")
     pg.wait_for_timeout(1200)
     return pg, errs
@@ -543,7 +544,127 @@ with sync_playwright() as p:
           "%r" % head_acts)
     check("sign out" in head_acts,
           "a teacher has no way to sign out from the heading: %r" % head_acts)
+
+    #  AND THE SAME QUESTION ASKED OF THE RAIL, WHICH IS WHERE IT WAS WRONG.
+    #
+    #  The assertion above passed on 28 September while the first teacher to
+    #  sign in was looking at a rail headed "← Admin Centre". It was true and
+    #  it was narrow: the heading was gated on the admin role, the rail's own
+    #  back row was not, and this file only ever looked at the heading.
+    #
+    #  The comment above records that this check once moved because it was
+    #  looking in the wrong place. It moved to the right place and stopped
+    #  covering the old one. So ask the whole rail, not one element of it.
+    rail = text(pg, ".ashell").lower()
+    check("admin centre" not in rail,
+          "A TEACHER'S RAIL OFFERS THE ADMIN CENTRE, which refuses them: %r"
+          % rail[:200])
+
+    #  AND IT MUST NOT BE TOLD TO USE AN AUTHENTICATOR IT HAS NOT GOT.
+    #  Teacher logins are password-only by decision - scoped tightly instead
+    #  of two-stepped. "Every area asks for your authenticator code" sends a
+    #  teacher to ring the office about a code that does not exist.
+    check("authenticator" not in rail,
+          "a teacher is told every area asks for an authenticator code, which "
+          "is false for a password-only login: %r" % rail[-260:])
     check(errs == [], "uncaught exceptions for a teacher: %s" % errs)
+    pg.close()
+
+    # ------------------------------------------------------------------
+    #  THE PASSWORD GATE COVERS THE PAGE, ON THIS PAGE.
+    #
+    #  Every teacher login is created with a password somebody else chose and
+    #  wrote on a slip, so the first thing a teacher meets is this gate. On
+    #  28 September the first one to sign in met it spread across the whole
+    #  window with its left third underneath the rail, the portal drawn
+    #  underneath it, and the rail still offering Admin Centre.
+    #
+    #  It looked right on the generated screens, because THEY load
+    #  admin/screen.css, which is where .pw-gate's width lives, and a screen
+    #  stylesheet, which is where [hidden]{display:none!important} lives.
+    #  This page loads neither. The gate was styled by files it could not
+    #  count on and hid things with an attribute nothing was honouring.
+    #
+    #  So these assertions are about GEOMETRY, not markup. "The overlay
+    #  exists" would have passed on the broken version.
+    pg, errs = open_as(b, ["teacher"], must_change=True)
+    box = pg.evaluate("""() => {
+      var s = document.getElementById('pw-shade');
+      if (!s) return null;
+      var r = s.getBoundingClientRect();
+      var c = document.getElementById('pw-gate');
+      var cr = c ? c.getBoundingClientRect() : null;
+      var rail = document.querySelector('.ashell, .shell');
+      return {
+        shade: {x:r.left, y:r.top, w:r.width, h:r.height},
+        card:  cr ? {x:cr.left, w:cr.width} : null,
+        vw: window.innerWidth, vh: window.innerHeight,
+        railVisible: !!(rail && rail.getBoundingClientRect().width > 0
+                        && getComputedStyle(rail).display !== 'none'),
+        topAtCentre: (function(){
+          var e = document.elementFromPoint(window.innerWidth/2, window.innerHeight/2);
+          while (e) { if (e.id === 'pw-shade') return 'gate'; e = e.parentElement; }
+          return 'NOT THE GATE';
+        })(),
+        topAtRail: (function(){
+          var e = document.elementFromPoint(60, window.innerHeight/2);
+          while (e) { if (e.id === 'pw-shade') return 'gate'; e = e.parentElement; }
+          return 'NOT THE GATE';
+        })()
+      };
+    }""")
+    check(box is not None, "a teacher with must_change_password sees no password gate")
+    if box:
+        check(box["shade"]["w"] >= box["vw"] - 2 and box["shade"]["h"] >= box["vh"] - 2,
+              "THE GATE DOES NOT COVER THE WINDOW: %sx%s over a %sx%s viewport"
+              % (round(box["shade"]["w"]), round(box["shade"]["h"]),
+                 box["vw"], box["vh"]))
+        check(box["shade"]["x"] <= 0 and box["shade"]["y"] <= 0,
+              "the gate does not start at the top left: %r" % box["shade"])
+        #  The bug in one assertion: the card must be a card, not the width
+        #  of the window with its left edge behind the rail.
+        check(box["card"] and box["card"]["w"] <= 600,
+              "THE GATE CARD IS NOT A CARD - it is %s px wide, which means "
+              "admin/screen.css is not loaded and it has no max-width"
+              % (round(box["card"]["w"]) if box["card"] else "missing"))
+        check(box["card"] and box["card"]["x"] > 0,
+              "the gate card starts at or left of x=0, so it is cut off")
+        #  What is actually on top where the rail used to be.
+        check(box["topAtRail"] == "gate",
+              "SOMETHING ELSE IS ON TOP WHERE THE RAIL IS: %s" % box["topAtRail"])
+        check(box["topAtCentre"] == "gate",
+              "something else is on top in the middle of the page: %s"
+              % box["topAtCentre"])
+        check(not box["railVisible"],
+              "the rail is still visible behind the password gate")
+    #  AND NOTHING BEHIND IT IS STILL RENDERED.
+    #
+    #  Asked as computed display, not as text. The first version of this
+    #  assertion read inner_text("#md-panel") and failed against a panel that
+    #  was correctly display:none - because innerText falls back to
+    #  textContent on an element that is not rendered. The check was wrong,
+    #  not the page, which is the fourth time that happened in one evening.
+    #
+    #  Asking "is anything beside the gate still displayed" also catches the
+    #  containers a list of class names would miss, which is how .md-lead and
+    #  .tc-classes stayed visible behind the first fix.
+    left = pg.evaluate("""() => {
+      var out = [];
+      var sib = document.body.children;
+      for (var i = 0; i < sib.length; i++) {
+        var n = sib[i];
+        if (n.id === 'pw-shade') continue;
+        if (n.tagName === 'SCRIPT' || n.tagName === 'STYLE') continue;
+        if (getComputedStyle(n).display !== 'none') {
+          out.push(n.tagName.toLowerCase() + (n.id ? '#' + n.id : '') +
+                   (n.className ? '.' + String(n.className).split(' ')[0] : ''));
+        }
+      }
+      return out;
+    }""")
+    check(left == [],
+          "STILL RENDERED BEHIND THE PASSWORD GATE: %s" % left)
+    check(errs == [], "uncaught exceptions at the password gate: %s" % errs)
     pg.close()
 
     # =====================================================================
