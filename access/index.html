@@ -801,9 +801,19 @@
                   has been told they were given one.
 
                   Migration 055 added the role this box always meant. Nobody
-                  held `teacher`, so nothing was lost changing the value. -->
+                  held `teacher`, so nothing was lost changing the value.
+
+                  AND THEN 090 GAVE `teacher` A MEANING OF ITS OWN, so both
+                  boxes exist now and they are NOT the same thing. `madrasah`
+                  is the office and sees every child; `teacher` sees only the
+                  classes that person teaches. Getting these two the wrong way
+                  round hands somebody 552 children's records, so the wording
+                  under each one says what it actually reaches rather than
+                  what it sounds like. -->
+            <label class="inv-role"><input type="checkbox" value="teacher" class="inv-r">
+              <span><b>Teacher</b><i>The classes this person teaches, and nothing else. Their register, the children in those classes, and the medical and allergy information for <b>those children only</b> &mdash; which is why the madrasah holds it. They cannot see another class, the roll as a whole, families, fees or admissions, and the database refuses them rather than the screen hiding a button. No second step is needed to sign in.</i></span></label>
             <label class="inv-role"><input type="checkbox" value="madrasah" class="inv-r">
-              <span><b>Madrasah</b><i>The teaching side of the madrasah portal &mdash; classes, the register, homework and the children they teach. <b>Not</b> staff records, DBS, fees or admissions, which stay with &ldquo;Everything&rdquo;.</i></span></label>
+              <span><b>Madrasah office</b><i><b>Every child on the roll</b>, every family and their contact details, the register for all classes, and the notices. Not staff records, DBS, fees or admissions, which stay with &ldquo;Everything&rdquo;. This is the office&rsquo;s role, not a teacher&rsquo;s &mdash; tick <b>Teacher</b> above for somebody who only teaches.</i></span></label>
             <label class="inv-role"><input type="checkbox" value="admin" class="inv-r">
               <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do. <b>This includes the whole madrasah portal</b>, so it does not need the box above ticked as well.</i></span></label>
           </div>
@@ -922,6 +932,8 @@
             <div id="pp-roles-edit">
               <label class="inv-role"><input type="checkbox" value="hall_office" class="pp-r">
                 <span><b>Hall bookings and nik&#257;&#7717;</b><i>Hall hire requests and nik&#257;&#7717; dates, deposits, and the food bank volunteers.</i></span></label>
+              <label class="inv-role"><input type="checkbox" value="teacher" class="pp-r">
+                <span><b>Teacher</b><i>The classes this person teaches, and nothing else.</i></span></label>
               <label class="inv-role"><input type="checkbox" value="madrasah" class="pp-r">
                 <span><b>Madrasah</b><i>The teaching side of the madrasah portal. <b>Not</b> staff records, DBS, fees or admissions.</i></span></label>
               <label class="inv-role"><input type="checkbox" value="admin" class="pp-r">
