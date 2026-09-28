@@ -698,9 +698,21 @@ with sync_playwright() as p:
     if sent:
         check(sent.get("password") == "three unrelated words",
               "the new password did not reach updateUser: %r" % sent)
-        check(sent.get("currentPassword") == "TheSlipPassword1",
-              "CURRENTPASSWORD WAS NOT SENT, so Supabase will refuse the "
-              "change with 'Current password required': %r" % sent)
+        #  SNAKE CASE, and the case is the whole assertion.
+        #
+        #  The first version of this checked for "currentPassword" and passed,
+        #  because the page did send that - and the change still failed live.
+        #  The API is Go and its field is
+        #      CurrentPassword *string `json:"current_password,omitempty"`
+        #  so current_password is the only spelling it reads. The vendored
+        #  client does no camelCase mapping; it forwards the attributes object
+        #  verbatim. A green test and a broken screen, over one underscore.
+        check(sent.get("current_password") == "TheSlipPassword1",
+              "current_password (SNAKE CASE) was not sent, so the API will "
+              "refuse the change: %r" % sent)
+        check("currentPassword" not in sent,
+              "camelCase currentPassword is being sent; the API does not read "
+              "it and the vendored client does not convert it: %r" % sent)
 
     check(errs == [], "uncaught exceptions at the password gate: %s" % errs)
     pg.close()

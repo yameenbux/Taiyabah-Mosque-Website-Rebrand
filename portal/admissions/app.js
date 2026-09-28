@@ -265,12 +265,23 @@
       if (a === now) { fail("That is the same password. Choose a different one."); return; }
       var go = document.getElementById("pw-go");
       go.disabled = true; go.textContent = "Saving…";
-      //  currentPassword goes straight through to the API as the request
-      //  body - updateUser does Object.assign({}, attributes) with no
-      //  whitelist - so the vendored client sends it even though the
-      //  minified bundle never names it. Harmless if the setting is ever
-      //  turned off.
-      sb.auth.updateUser({ password: a, currentPassword: now }).then(function (res) {
+      //  current_password, IN SNAKE CASE, AND THE CASE IS THE WHOLE POINT.
+      //
+      //  The API is Go, and its struct field is
+      //      CurrentPassword *string `json:"current_password,omitempty"`
+      //  so current_password is the only spelling it reads.
+      //
+      //  One Supabase docs page shows updateUser({ currentPassword }) in
+      //  JavaScript, and a newer client maps that to the snake_case field
+      //  before sending. THE VENDORED CLIENT DOES NO SUCH MAPPING - its
+      //  updateUser builds the body as Object.assign({}, attributes) with no
+      //  whitelist and no transform. So camelCase went out as camelCase, the
+      //  server saw no current_password at all, and said so.
+      //
+      //  Sending the snake_case name works either way: a client that maps
+      //  camelCase still passes an unrecognised key straight through, and Go
+      //  ignores JSON fields it does not know.
+      sb.auth.updateUser({ password: a, current_password: now }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
         return sb.rpc("clear_must_change_password");
       }).then(function () {
@@ -285,8 +296,15 @@
         //  SAY THE USEFUL THING. The API's own wording for a wrong current
         //  password is about fields and parameters, which tells a teacher
         //  nothing about what to do next.
+        //  DO NOT CLAIM TO KNOW WHICH. The API returns the SAME words when
+        //  the current password is missing as when it is wrong, so "that is
+        //  not the password on your slip" was a guess dressed as a fact - and
+        //  it was the wrong guess: the password was right and the field name
+        //  was not. Say what to check, not what went wrong.
         if (/current password|invalid.*credential|not correct/i.test(m)) {
-          fail("That is not the password on your slip. Check it and try again.");
+          fail("That was not accepted. Check the password from your slip is "
+               + "exactly as printed, capital letters and dashes included. If "
+               + "it still will not take it, the office can set you a new one.");
         } else if (/weak|pwned|compromis|breach/i.test(m)) {
           fail("That password has appeared in a known data breach. Please "
                + "choose a different one.");
