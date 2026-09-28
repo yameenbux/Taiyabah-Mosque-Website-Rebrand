@@ -11,7 +11,7 @@
 --  ---------------------------------------------------------------------------
 --
 --  From the honorific? "Apa" is reliably a woman, and "Moulana", "Mufti",
---  "Hafiz" reliably men. But Aisha Omarji carries no honorific at all — she
+--  "Hafiz" reliably men. But one teacher carries no honorific at all — she
 --  is the one person in the imported forty with none — and a new member of
 --  staff need not have one either. A rule that works for thirty-nine people
 --  and silently mis-files the fortieth is not a rule.
@@ -113,7 +113,8 @@ commit;
 --    select coalesce(side,'NOT SET'), count(*) from public.madrasah_staff
 --     group by 1;
 --
---  One person is expected to be NOT SET on the day this runs: Aisha Omarji,
+--  One person is expected to be NOT SET on the day this runs: the teacher
+--  with no honorific described above,
 --  the only imported name with no honorific. She teaches five girls' classes,
 --  so she is almost certainly on the sisters' side — which is exactly why it
 --  is left for somebody at the masjid to confirm rather than inferred here.
