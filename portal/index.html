@@ -769,6 +769,29 @@
 .role-land .rl-lead{
   font-size:1.02rem;line-height:1.7;color:var(--ink);margin-bottom:20px;max-width:62ch;
 }
+/*  A TEACHER'S OWN CLASSES, at the top of their landing page.
+    Cards rather than a table: most teach one or two, and a teacher opens this
+    standing up at ten past five. 96px minimum so it is a thumb target and not
+    a link. */
+.tc-classes{display:grid;gap:12px;margin:0 0 26px;
+  grid-template-columns:repeat(auto-fill,minmax(236px,1fr));}
+.tc-class{display:flex;flex-direction:column;gap:3px;min-height:96px;
+  padding:15px 17px;border:1px solid var(--line);border-left:4px solid var(--gold-ink);
+  border-radius:var(--radius);background:var(--card);color:var(--ink);
+  text-decoration:none;transition:border-color .15s ease,transform .12s ease;}
+.tc-class:hover{border-color:var(--gold-ink);transform:translateY(-1px);}
+.tc-class strong{font-size:15.5px;}
+.tc-q{color:var(--muted);font-size:12.5px;}
+.tc-state{margin-top:auto;padding-top:8px;font-size:13px;font-weight:700;
+  color:var(--brand-700);}
+/*  A class whose register is taken looks finished, so an evening reads at a
+    glance as "these two left". */
+.tc-class.is-done{border-left-color:var(--success-ink);}
+.tc-class.is-done .tc-state{color:var(--success-ink);font-weight:600;}
+.tc-none{padding:18px 20px;border:1px dashed var(--line);border-radius:var(--radius);
+  background:var(--paper);color:var(--muted);font-size:14.5px;margin-bottom:24px;}
+#tc-more-lead{margin-top:6px;}
+
 .rl-list{display:grid;gap:12px;grid-template-columns:1fr;margin-bottom:6px;}
 @media (min-width:660px){ .rl-list{grid-template-columns:1fr 1fr;} }
 .rl-item{
@@ -1113,12 +1136,24 @@
       <!-- ===================== A TEACHER ===================== -->
       <section class="bk role-land" id="tc-panel" hidden>
         <div class="bk-head">
-          <h2>The teachers&rsquo; portal</h2>
-          <span class="bk-sub">What it will do, and where it has got to.</span>
+          <h2>Your classes</h2>
+          <span class="bk-sub" id="tc-when"></span>
         </div>
-        <p class="rl-lead">Everything below is what the masjid has asked for. None of
-          it is built yet &mdash; this page exists so you can see what is coming and say
-          if something important to your class is missing from it.</p>
+
+        <div class="err" id="tc-error" hidden></div>
+
+        <!-- THE FIRST THING A TEACHER SEES IS THEIR OWN CLASSES, not a list of
+             what the portal will one day do. Drawn from madrasah_my_classes(),
+             which returns the classes this teacher teaches and no others -
+             the scoping is in the database, so a teacher who guesses another
+             class's address is refused by Postgres rather than by this page
+             choosing not to draw a link. See db/090. -->
+        <div class="tc-classes" id="tc-classes"></div>
+
+        <p class="rl-lead" id="tc-more-lead">The rest of the teachers&rsquo;
+          portal is still being built. Everything below is what the masjid has
+          asked for &mdash; say if something important to your class is missing
+          from it.</p>
         <div class="rl-list" id="tc-list"></div>
         <div class="rl-soon">
           <h3>Coming soon</h3>

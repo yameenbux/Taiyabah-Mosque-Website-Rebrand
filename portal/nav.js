@@ -95,6 +95,16 @@
   var ADMIN = ["admin"];
   var BOTH  = ["admin", "madrasah"];
 
+  /*  ANYSTAFF INCLUDES TEACHERS, AND ALMOST NOTHING USES IT.
+      A teacher's whole rail is one row: Register. That is not meanness, it is
+      the scoping - every other screen's function refuses them, so listing
+      Pupils or Families here would be a row that loads and then says no,
+      which teaches somebody the system is broken rather than that the job is
+      not theirs. See db/090: a teacher sees the classes they teach and
+      nothing else, and the refusal lives in Postgres rather than in a page
+      that declines to draw a button.  */
+  var ANYSTAFF = ["admin", "madrasah", "teacher"];
+
   w.MadrasahNav = {
     SECTIONS: [
       { label: "Today", areas: [
@@ -112,7 +122,7 @@
           needs: BOTH,
           what: "Every child on the roll, their class, their family and who to ring" },
         { key: "md-families", href: "portal/families/", icon: "home",   name: "Families",
-          needs: BOTH, soon: true },
+          needs: BOTH },
         { key: "md-classes",  href: "portal/classes/",  icon: "book",   name: "Classes",
           needs: BOTH,
           what: "Every class, who teaches it, and who is in it" },
@@ -124,7 +134,7 @@
 
       { label: "The week", areas: [
         { key: "md-register", href: "portal/register/", icon: "tick",  name: "Register",
-          needs: BOTH, soon: true },
+          needs: ANYSTAFF },
         { key: "md-homework", href: "portal/homework/", icon: "pen",   name: "Homework",
           needs: BOTH, soon: true },
         { key: "md-lessons",  href: "portal/lessons/",  icon: "book",  name: "Lesson log",
@@ -184,6 +194,14 @@
           two. Whoever builds the fees screens: there is no Gift Aid tick box
           on this side, and that is not an oversight.
           ==================================================================== */
+      /*  TWO ENTRIES USED TO SHARE THE KEY `md-families`: this one and the
+          register's own Families screen under WHO IS HERE. Nothing showed it
+          while the second was still `soon`, because a `soon` row is a <span>
+          and never lights up. The day that screen was built, BOTH rows lit,
+          and the fees suite caught it - "highlights its own row [2]".
+
+          A key is how the rail knows which row you are on. Two rows with one
+          key is two answers to that question.  */
       /*  `soon` came off all seven on 20 September, when the screens were
           built. nav.js line 66 says what that means: "Take `soon` off a row
           on the day its screen exists. Nothing else changes."
@@ -210,7 +228,7 @@
             It is second and not last because it is the first thing anybody
             has to do. 543 children were imported from a class list with no
             family column in it. */
-        { key: "md-families",    href: "portal/fees/families/", icon: "people",
+        { key: "md-fees-families", href: "portal/fees/families/", icon: "people",
           name: "Families", needs: ADMIN,
           what: "Who pays, who to write to, and which children are theirs" },
         { key: "md-transfers",   href: "portal/fees/transfers/", icon: "pound",
@@ -268,7 +286,7 @@
         { key: "md-messages", href: "portal/messages/", icon: "chat",   name: "Messages",
           needs: BOTH, soon: true },
         { key: "md-notices",  href: "portal/notices/",  icon: "notice", name: "Notices to parents",
-          needs: BOTH, soon: true }
+          needs: BOTH }
       ]},
 
       { label: "Progress", areas: [

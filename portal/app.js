@@ -78,7 +78,8 @@
       var user = res.data && res.data.user;
       if (!user) throw new Error("No active session.");
       return Promise.all([
-        sb.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
+        sb.from("profiles").select("full_name, email, must_change_password")
+          .eq("id", user.id).maybeSingle(),
         sb.from("user_roles").select("role").eq("user_id", user.id)
       ]).then(function (out) {
         var errs = [];
@@ -88,6 +89,8 @@
           user: user,
           profile: out[0].data || {},
           roles: (out[1].data || []).map(function (r) { return r.role; }),
+          //  See mustChangeGate(). A password somebody else chose is a ticket.
+          mustChange: !!(out[0].data && out[0].data.must_change_password),
           errors: errs
         };
       });
@@ -190,6 +193,7 @@
     //  teachers" and "not loaded yet" are different things and only one of
     //  them is alarming.
     var MINE = null;
+    var TODAY = null;
 
     /* What each area is FOR, in the words somebody in the office would use.
        Written now rather than when it is built: the description is the brief,
@@ -447,6 +451,142 @@
            "already knows." }
     ];
 
+    /*  A TEACHER'S OWN CLASSES.
+        -------------------------------------------------------------------
+        madrasah_my_classes() returns the classes this teacher teaches and no
+        others. The list is short - most teach one or two - so it is cards
+        rather than a table, sized for a thumb, because a teacher opens this
+        standing up at ten past five.
+
+        THE REGISTER IS THE ONLY LINK. Everything else a teacher might expect
+        to tap is still being built, and a row that loads and then refuses
+        teaches somebody the system is broken rather than that the job is not
+        theirs yet.  */
+    /*  THE PASSWORD GATE.
+
+      Deliberately plain and deliberately final: one field, one rule, and no
+      way past it. There is no "remind me later", because later is the same
+      drawer with the same slip in it.
+
+      NO EMAIL RESET EXISTS for these accounts - not one member of staff has
+      an email address, which is why the initial password was on paper in the
+      first place - so the screen says who to ask rather than offering a link
+      that goes nowhere.                                                     */
+  function mustChangeGate(identity) {
+    var host = document.getElementById("app-panel")
+            || document.querySelector(".wrap") || document.body;
+    var who = (identity.profile && identity.profile.full_name) || "";
+    var box = document.createElement("section");
+    box.className = "bk pw-gate";
+    box.id = "pw-gate";
+    box.innerHTML =
+      "<h2>Choose your own password</h2>"
+      + "<p class=\"pw-lead\">Assalamu alaikum" + (who ? ", " + esc(who) : "")
+      + ". The password you were given was written on a slip of paper, so it "
+      + "is not private. Choose one only you know before going any further.</p>"
+      + '<label class="pw-fld"><span>Your new password</span>'
+      + '<input type="password" id="pw-one" autocomplete="new-password"></label>'
+      + '<label class="pw-fld"><span>Type it again</span>'
+      + '<input type="password" id="pw-two" autocomplete="new-password"></label>'
+      + '<p class="pw-hint">At least ten characters. Something you can '
+      + "remember and nobody could guess &mdash; three unrelated words is "
+      + "better than one word with numbers after it.</p>"
+      + '<div class="pw-err" id="pw-err" hidden></div>'
+      + '<button type="button" class="btn btn-gold" id="pw-go">'
+      + "Save it and carry on</button>"
+      + '<p class="pw-hint">There is no email reset on a madrasah login, '
+      + "because the madrasah does not hold your email address. If you forget "
+      + "this one, the office has to set you a new one.</p>";
+
+    //  EVERYTHING ELSE GOES. Not hidden behind it - removed, so that nothing
+    //  is sitting underneath waiting to be reached.
+    var panels = document.querySelectorAll(".bk, .ashell, .ashell-bar");
+    Array.prototype.forEach.call(panels, function (n) { n.hidden = true; });
+    host.parentNode.insertBefore(box, host);
+    box.hidden = false;
+
+    function fail(m) {
+      var e = document.getElementById("pw-err");
+      if (e) { e.textContent = m; e.hidden = false; }
+    }
+
+    document.getElementById("pw-go").addEventListener("click", function () {
+      var a = document.getElementById("pw-one").value;
+      var b = document.getElementById("pw-two").value;
+      if (a.length < 10) { fail("That is too short. Ten characters or more."); return; }
+      if (a !== b) { fail("The two do not match."); return; }
+      var go = document.getElementById("pw-go");
+      go.disabled = true; go.textContent = "Saving\u2026";
+      sb.auth.updateUser({ password: a }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return sb.rpc("clear_must_change_password");
+      }).then(function () {
+        //  Straight back in, rather than asking them to sign in again with
+        //  the password they have just this second chosen.
+        window.location.reload();
+      })["catch"](function (e) {
+        go.disabled = false; go.textContent = "Save it and carry on";
+        fail("That could not be saved. " + (e && e.message ? e.message : ""));
+      });
+    });
+  }
+
+
+  function drawMyClasses() {
+      var host = el("tc-classes");
+      if (!host) return;
+      sb.rpc("madrasah_my_classes").then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        var d = res.data || {};
+        if (d.allowed === false) { host.innerHTML = ""; return; }
+        var when = el("tc-when");
+        var rows = d.rows || [];
+
+        if (!rows.length) {
+          //  SAID IN WORDS. A teacher whose login is not joined to a staff
+          //  row would otherwise see an empty screen and conclude the system
+          //  had lost them.
+          host.innerHTML = '<div class="tc-none">' +
+            esc(d.why || "No classes are recorded against you yet. Ask the " +
+                         "office to put you against your classes.") + "</div>";
+          if (when) when.textContent = "";
+          return;
+        }
+
+        var done = 0;
+        for (var i = 0; i < rows.length; i++) {
+          if (rows[i].on_roll > 0 && rows[i].marked >= rows[i].on_roll) done++;
+        }
+        if (when) {
+          when.textContent = rows.length === done
+            ? "Every register is taken."
+            : (rows.length - done) +
+              ((rows.length - done) === 1 ? " register" : " registers") +
+              " still to take.";
+        }
+
+        host.innerHTML = rows.map(function (c) {
+          var full = (c.on_roll > 0 && c.marked >= c.on_roll);
+          return '<a class="tc-class' + (full ? " is-done" : "") +
+            '" href="register/">' +
+            "<strong>" + esc(c.name) + "</strong>" +
+            '<span class="tc-q">' + esc(c.on_roll) +
+              (c.on_roll === 1 ? " child" : " children") +
+              (c.i_am_the_main_teacher ? "" : " \u00b7 you assist") + "</span>" +
+            '<span class="tc-state">' +
+              (full ? "Register taken \u00b7 " + esc(c.away) + " away"
+                    : "Take the register \u2192") + "</span></a>";
+        }).join("");
+      })["catch"](function (e) {
+        var n = el("tc-error");
+        if (n) {
+          n.textContent = "Your classes would not load. " +
+            (e && e.message ? e.message : "");
+          n.hidden = false;
+        }
+      });
+    }
+
     function drawRoleList(id, items) {
       var box = el(id);
       if (!box) return;
@@ -649,11 +789,57 @@
       "</div>";
     }
 
+    /*  WHAT NEEDS DOING NOW COMES FROM THE DATABASE, NOT FROM THIS FILE.
+        -----------------------------------------------------------------
+        JOBS below decided what was waiting by reading madrasah_overview()
+        and applying rules written here, in JavaScript, on one page. That
+        was fine while there were three of them. It stopped being fine the
+        moment the register, the applications, the privacy notice and the
+        families nobody can ring all became things somebody has to do: each
+        would have been another rule in this file, and the Today screen and
+        the screens themselves would have disagreed about what counted
+        within a fortnight.
+
+        madrasah_today() decides now, once, next to the data. This draws
+        what it returns. JOBS is kept for the two jobs that have no screen
+        yet, which is the one thing the database cannot know.  */
+    function todayHtml(it) {
+      return '<div class="md-job md-job-' + esc(TONE[it.tone] || "warn") +
+             '" data-job="' + esc(it.key) + '">' +
+        '<div class="md-job-n">' + esc(it.count) + "</div>" +
+        '<div class="md-job-b">' +
+          '<span class="md-job-t">' + esc(it.title) + "</span>" +
+          '<span class="md-job-w">' + esc(it.said) + "</span>" +
+        "</div>" +
+        '<a class="md-job-go" href="' + esc(it.href) + '">' +
+          esc(it.action) + "</a>" +
+      "</div>";
+    }
+    //  The page's own three tones, which its stylesheet already knows.
+    var TONE = { bad: "bad", now: "warn", quiet: "ok" };
+
     function drawNeedsDoing() {
       var box = el("md-doing");
-      if (!box || !MINE) return;
+      if (!box) return;
 
-      //  A job with nothing in it is not drawn. See the note above JOBS.
+      if (TODAY && TODAY.items) {
+        if (!TODAY.items.length) {
+          box.innerHTML = '<div class="md-clear">' +
+            "<b>Nothing is waiting.</b> Every register is taken, nobody is " +
+            "waiting to hear from the madrasah, and every family can be " +
+            "reached. This list fills itself when something needs you." +
+            "</div>";
+          return;
+        }
+        box.innerHTML = TODAY.items.map(todayHtml).join("");
+        return;
+      }
+
+      //  madrasah_today() did not answer. Fall back to what this page always
+      //  did rather than showing nothing: a stale list is worse than a fresh
+      //  one and far better than a blank panel on the screen somebody opens
+      //  to find out whether anything is wrong.
+      if (!MINE) return;
       var live = JOBS.filter(function (j) { return (Number(j.n(MINE)) || 0) > 0; })
                      .sort(function (a, b) { return a.rank - b.rank; });
 
@@ -802,6 +988,11 @@
 
            Admin is checked FIRST and on its own: somebody who is both an
            administrator and a teacher is here to administer. */
+        //  A PASSWORD SOMEBODY ELSE CHOSE IS A TICKET, NOT A PASSWORD.
+        //  Nothing is drawn - no panel, no rail, no data - until this
+        //  account has one of its own. See db/093.
+        if (identity.mustChange) { mustChangeGate(identity); return; }
+
         var shown = null;
         if (canSee(identity)) {
           shown = panel;
@@ -816,13 +1007,23 @@
               tiles show an em dash and the page keeps the pre-import wording
               from the markup — which is out of date but TRUE of pupils, and a
               stale caveat is safer than a missing one. */
-          sb.rpc("madrasah_overview").then(function (res) {
-            if (!res.error && res.data) { MINE = res.data; }
-          }).catch(function () { /* draw() copes */ })
-            .then(function () { draw(); drawNeedsDoing(); });
+          //  BOTH, AND NEITHER BLOCKS THE PAGE. madrasah_overview() fills
+          //  the counts; madrasah_today() fills what needs doing. Either may
+          //  fail and the page still draws - see the note above.
+          Promise.all([
+            sb.rpc("madrasah_overview").then(function (res) {
+              if (!res.error && res.data) { MINE = res.data; }
+            }).catch(function () { /* draw() copes */ }),
+            sb.rpc("madrasah_today").then(function (res) {
+              if (!res.error && res.data && res.data.allowed !== false) {
+                TODAY = res.data;
+              }
+            }).catch(function () { /* drawNeedsDoing() falls back */ })
+          ]).then(function () { draw(); drawNeedsDoing(); });
         } else if (identity.roles.indexOf("teacher") !== -1) {
           shown = el("tc-panel");
           drawRoleList("tc-list", TEACHER);
+          drawMyClasses();
         } else if (identity.roles.indexOf("parent") !== -1) {
           shown = el("pa-panel");
           drawRoleList("pa-list", PARENT);
