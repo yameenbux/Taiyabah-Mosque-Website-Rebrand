@@ -437,15 +437,34 @@ boxes = re.findall(r'<input type="checkbox" value="([a-z_]+)"[^>]*class="(?:inv|
 check(boxes.count("madrasah") == 2,
       "the access screen does not offer the `madrasah` role in both places "
       "(invite and edit). Found: %r" % boxes)
-check("teacher" not in boxes,
-      "a tick box still writes `teacher`. It is labelled Madrasah and the madrasah "
-      "portal has never looked at that role, so anybody given it signs in and is "
-      "told they have no access: %r" % boxes)
+#  THIS ASSERTION USED TO BE ITS OWN OPPOSITE, and the reason is worth keeping.
+#  `teacher` granted nothing until db/090, so a tick box writing it handed
+#  somebody an account that signed in and said they had no access - and the
+#  check existed to stop that. 090 gave the role a meaning, so the box must now
+#  EXIST, in both places, or an administrator has no way to give a teacher
+#  access and, worse, no way to take it away from one who has left.
+check(boxes.count("teacher") == 2,
+      "the access screen does not offer the `teacher` role in both places "
+      "(invite and edit). Without it an administrator cannot grant a teacher "
+      "access, and cannot revoke it from one who has left: %r" % boxes)
+
+#  AND THE TWO MUST NOT READ AS THE SAME THING. `madrasah` is the office and
+#  sees every child on the roll; `teacher` sees only their own classes.
+#  Getting them the wrong way round hands somebody 552 children's records.
+check("Madrasah office" in access,
+      "the `madrasah` box no longer says it is the OFFICE role. It used to "
+      "describe itself as the teaching side, which is what `teacher` is now.")
+check("Every child on the roll" in access,
+      "the `madrasah` box does not say it reaches every child on the roll")
 
 nav = open("portal/nav.js", encoding="utf-8").read()
 for key, who in [("md-staff", "ADMIN"), ("md-dbs", "ADMIN"), ("md-fees", "ADMIN"),
                  ("md-admissions", "ADMIN"), ("md-concerns", "ADMIN"),
-                 ("md-register", "BOTH"), ("md-classes", "BOTH")]:
+                 #  md-register is the one row a TEACHER gets, so it needs the
+                 #  wider tier. Everything else stays admin-or-office: a row
+                 #  that loads and then refuses teaches somebody the system is
+                 #  broken rather than that the job is not theirs.
+                 ("md-register", "ANYSTAFF"), ("md-classes", "BOTH")]:
     m = re.search(r'key:\s*"%s".{0,260}?needs:\s*(\w+)' % key, nav, re.S)
     check(m and m.group(1) == who,
           "%s should need %s and needs %r" % (key, who, m.group(1) if m else None))

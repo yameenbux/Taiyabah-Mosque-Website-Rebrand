@@ -78,14 +78,18 @@ def cls(i, name, sect, teachers, n, active=True):
             "is_active": active, "sort_order": i, "pupils": n,
             "teachers": [{"id": "s%d" % i, "name": t} for t in teachers]}
 
+#  EVERY TEACHER HERE IS INVENTED. The first version used the madrasah's real
+#  teachers, because that made the fixture feel true - and put six real names
+#  into a public repository. The rule is that teacher names live in the
+#  database and nowhere else, and a test fixture is nowhere else.
 CLASSES = [
-    cls(1, "Girls OOLA", "girls", ["Apa Nafisa Chhadat"], 12),
-    cls(2, "Girls Class 3", "girls", ["Apa Noorjahan Bhaiji"], 21),
-    cls(5, "Boys Year 6", "boys", ["Hafiz Muhammed Yusuf"], 17),
-    cls(7, "Boys Year 10", "boys", ["Moulana Usman Darvesh"], 2),
-    cls(9, "Play and Pray 1 - 26/27", "mixed", ["Apa Fatima Omarji"], 9),
+    cls(1, "Girls OOLA", "girls", ["Apa Testname One"], 12),
+    cls(2, "Girls Class 3", "girls", ["Apa Testname Two"], 21),
+    cls(5, "Boys Year 6", "boys", ["Hafiz Testname Three"], 17),
+    cls(7, "Boys Year 10", "boys", ["Moulana Testname Four"], 2),
+    cls(9, "Play and Pray 1 - 26/27", "mixed", ["Apa Testname Five"], 9),
     cls(11, "Girls Class 9", "girls", [], 0),
-    cls(12, "Boys Year 11 (2025/26)", "boys", ["Moulana Irfan Ahmed"], 0, False),
+    cls(12, "Boys Year 11 (2025/26)", "boys", ["Moulana Testname Six"], 0, False),
 ]
 ROLL = [{"id": "p%d" % i, "name": n, "first_name": n.split()[0],
          "last_name": n.split()[1], "joined_on": None, "left_on": None}
@@ -182,7 +186,7 @@ with sync_playwright() as p:
     check("Boys Year 6" in pg.inner_text("#cl-d-name"),
           "the wrong class opened: %r" % pg.inner_text("#cl-d-name"))
     facts = pg.inner_text("#cl-d-facts").replace("\n", " ")
-    check("17" in facts and "Hafiz Muhammed Yusuf" in facts,
+    check("17" in facts and "Hafiz Testname Three" in facts,
           "the class page does not carry its headcount and teacher: %r" % facts)
 
     for want in ["Amend this class", "Who is in it", "Print the class list", "Remove this class"]:

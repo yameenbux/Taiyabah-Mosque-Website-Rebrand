@@ -109,14 +109,37 @@ OVERVIEW = {
 }
 
 #  The jobs that must be drawn for that fixture, and the ones that must not.
+#  WHAT madrasah_today() RETURNS. Since 087 THIS is what decides what is
+#  waiting, next to the data, and the page draws what it says. The old JOBS
+#  list in portal/app.js survives only as a fallback for when this call fails.
+TODAY = {
+    "allowed": True, "admin": True, "on_date": "2026-09-27",
+    "items": [
+        {"key": "registers", "count": 7, "tone": "now",
+         "title": "7 classes have no register yet",
+         "said": "Tonight. A register taken tomorrow is somebody remembering.",
+         "href": "register/", "action": "Take the register"},
+        {"key": "dbs", "count": 21, "tone": "bad",
+         "title": "21 of 40 members of staff need a DBS check looked at",
+         "said": "20 with no check recorded and 1 whose check has lapsed.",
+         "href": "staff/", "action": "Open the staff list"},
+        {"key": "siblings", "count": 56, "tone": "quiet",
+         "title": "56 pairs of children might be brothers and sisters",
+         "said": "They share a surname and an address.",
+         "href": "families/", "action": "Settle them"},
+    ],
+    "roll": {"children": 552, "families": 330, "classes": 44,
+             "here_tonight": 0, "away_tonight": 0},
+}
+
 JOBS_LIVE = ["dbs", "main_teacher", "days"]
 JOBS_QUIET = ["no_class", "side", "admissions", "purge"]
 
 
-def stub(roles):
+def stub(roles, today=True):
     return """
 (function(){
-  var ROLES = %s, OV = %s;
+  var ROLES = %s, OV = %s, TODAY = %s;
   var client = {
     auth: {
       getSession: function(){ return Promise.resolve({data:{session:{
@@ -143,21 +166,26 @@ def stub(roles):
       //  the assertions, which is what let the old version of this file pass
       //  while the page showed a number from a different system.
       if (n === 'madrasah_overview') return Promise.resolve({data: OV, error:null});
+      //  null means "this call fails", which is how the fallback is exercised.
+      if (n === 'madrasah_today') return TODAY
+        ? Promise.resolve({data: TODAY, error:null})
+        : Promise.resolve({data:null, error:{message:'today is unavailable'}});
       return Promise.resolve({data:{}, error:null});
     }
   };
   Object.defineProperty(window, 'supabase',
     {value:{createClient:function(){return client;}}, writable:false, configurable:false});
 })();
-""" % (json.dumps(roles), json.dumps(OVERVIEW))
+""" % (json.dumps(roles), json.dumps(OVERVIEW),
+       json.dumps(TODAY) if today else "null")
 
 
-def open_as(b, roles, w=1400, h=1200):
+def open_as(b, roles, w=1400, h=1200, today=True):
     pg = b.new_page(viewport={"width": w, "height": h})
     pg.set_default_timeout(4000)
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.add_init_script(stub(roles))
+    pg.add_init_script(stub(roles, today))
     pg.goto(PAGE, wait_until="load")
     pg.wait_for_timeout(1200)
     return pg, errs
@@ -244,49 +272,107 @@ with sync_playwright() as p:
           % (OVERVIEW["pupils"], lead[:200]))
 
     # =====================================================================
-    #  3. WHAT NEEDS DOING IS A LIST OF JOBS, AND NOUGHTS ARE NOT DRAWN
+    #  3. WHAT NEEDS DOING COMES FROM madrasah_today(), AND NOUGHTS ARE NOT
+    #     DRAWN
+    #
+    #  THIS SECTION USED TO PASS FOR THE WRONG REASON. The stub answered every
+    #  unknown rpc with {} and no error, so madrasah_today() "succeeded" with
+    #  no items in it, the page fell through to its old JavaScript job list,
+    #  and every assertion here was checking the FALLBACK while reading as
+    #  though it checked the new path. The stub now answers madrasah_today()
+    #  properly, and the fallback is exercised on purpose further down.
     # =====================================================================
     jobs = pg.eval_on_selector_all("#md-doing .md-job",
                                    "els => els.map(e => e.getAttribute('data-job'))")
-    check(sorted(jobs) == sorted(JOBS_LIVE),
-          "the jobs drawn are %r, expected %r" % (sorted(jobs), sorted(JOBS_LIVE)))
-    for q in JOBS_QUIET:
-        check(q not in jobs,
-              "a job with nothing in it (%r) was drawn anyway. Seven tiles "
-              "reading nought is a screen people stop reading, and then they "
-              "stop seeing the two that matter." % q)
+    want = [i["key"] for i in TODAY["items"]]
+    check(jobs == want,
+          "the jobs drawn are %r, expected exactly what madrasah_today() "
+          "returned, in its order: %r" % (jobs, want))
 
-    #  SAFEGUARDING IS FIRST. Decided by rank in the page, not by where a field
-    #  happens to sit in the JSON.
-    check(jobs and jobs[0] == "dbs",
-          "DBS is not the first job on the screen: %r" % jobs)
+    #  THE ORDER IS THE DATABASE'S, NOT THE PAGE'S. madrasah_today() puts
+    #  tonight's registers first because they are the only thing with a
+    #  deadline of this evening, and the quiet fifty-six last. A page that
+    #  re-sorts by size would put the sibling pairs at the top.
+    check(jobs and jobs[0] == "registers",
+          "the first job is %r; madrasah_today() put the registers first and "
+          "the page has re-ordered them" % (jobs[0] if jobs else None))
+    check(jobs and jobs[-1] == "siblings",
+          "the quiet job is not last: %r" % jobs)
 
-    #  EACH JOB CARRIES ITS NUMBER AND SOMEWHERE TO GO. A dashboard that names
-    #  a problem and leaves you to find the screen is a worse note on a fridge.
     detail = pg.eval_on_selector_all("#md-doing .md-job", """els => els.map(e => ({
         job: e.getAttribute('data-job'),
         n: (e.querySelector('.md-job-n')||{}).innerText,
         t: (e.querySelector('.md-job-t')||{}).innerText,
+        w: (e.querySelector('.md-job-w')||{}).innerText,
+        cls: e.getAttribute('class'),
         go: (e.querySelector('.md-job-go')||{}).getAttribute
               ? e.querySelector('.md-job-go').getAttribute('href') : null }))""")
-    want_n = {"dbs": len(OVERVIEW["dbs_needs_attention"]),
-              "main_teacher": OVERVIEW["classes_no_main_teacher"],
-              "days": OVERVIEW["staff_without_days"]}
-    for d in detail:
-        #  .get() and not [], because an UNEXPECTED job is precisely what the
-        #  check above is looking for — and looking it up with [] turns that
-        #  finding into a KeyError that kills the run. Found the hard way.
-        if d["job"] not in want_n:
-            check(False, "an unexpected job %r is on the screen" % d["job"])
+    by = dict((d["job"], d) for d in detail)
+    for it in TODAY["items"]:
+        d = by.get(it["key"])
+        if not d:
+            check(False, "madrasah_today() returned %r and the page did not "
+                         "draw it" % it["key"])
             continue
-        check(d["n"].strip() == str(want_n[d["job"]]),
+        check(d["n"].strip() == str(it["count"]),
               "the %s job shows %r, the database said %s"
-              % (d["job"], d["n"], want_n[d["job"]]))
-        check(d["go"], "the %s job has nowhere to go" % d["job"])
+              % (it["key"], d["n"], it["count"]))
+        check(it["title"] in d["t"],
+              "the %s job does not use the database's own wording: %r"
+              % (it["key"], d["t"]))
+        #  THE SENTENCE TRAVELS WITH THE NUMBER. "21" on its own is a figure;
+        #  "20 with no check recorded and 1 whose check has lapsed" is two
+        #  different conversations with two different people.
+        check(it["said"][:30] in d["w"],
+              "the %s job shows a number with no reason beside it: %r"
+              % (it["key"], d["w"]))
+        #  A DASHBOARD THAT NAMES A PROBLEM AND LEAVES YOU TO FIND THE SCREEN
+        #  IS A WORSE NOTE ON A FRIDGE.
+        check(d["go"] == it["href"],
+              "the %s job goes to %r, not %r" % (it["key"], d["go"], it["href"]))
+
+    #  THREE TONES, AND THEY MUST NOT ALL LOOK THE SAME. A safeguarding matter
+    #  and a quiet afternoon's job rendered identically is a screen where
+    #  nothing stands out, which is the same as a screen where nothing is
+    #  wrong.
+    tones = set(by[k]["cls"].split("md-job-")[1].split()[0]
+                for k in by if "md-job-" in by[k]["cls"])
+    check(len(tones) == 3, "the three jobs render in %d tone(s): %r"
+          % (len(tones), tones))
+    check("bad" in by["dbs"]["cls"],
+          "the DBS job is not drawn as the worst kind: %r" % by["dbs"]["cls"])
+    #  THE DENOMINATOR IS NOT DECORATION. "21" is a number somebody files
+    #  away; "21 of 40" is half the people who teach here, and it reads that
+    #  way at a glance. This assertion is the only reason anybody noticed when
+    #  a rewrite dropped it - see db/088.
     dbs = [d for d in detail if d["job"] == "dbs"]
     check(dbs and "21 of 40" in dbs[0]["t"],
           "the DBS job does not read as a sentence with both numbers in it: %r"
           % (dbs or [{}])[0].get("t"))
+
+    # =====================================================================
+    #  3b. WHEN madrasah_today() FAILS, THE PAGE STILL SAYS SOMETHING
+    #
+    #  The old JavaScript job list is kept in portal/app.js for exactly this,
+    #  and until now nothing had ever run it in that state. A fallback nobody
+    #  exercises is a fallback that does not work: this is the screen somebody
+    #  opens to find out whether anything is wrong, and a blank panel on it
+    #  reads as "nothing is wrong".
+    # =====================================================================
+    fb, fb_errs = open_as(b, ["admin", "madrasah"], today=False)
+    fb_jobs = fb.eval_on_selector_all(
+        "#md-doing .md-job", "els => els.map(e => e.getAttribute('data-job'))")
+    check(sorted(fb_jobs) == sorted(JOBS_LIVE),
+          "with madrasah_today() unavailable the page fell back to %r, "
+          "expected the old list %r" % (sorted(fb_jobs), sorted(JOBS_LIVE)))
+    check(fb_jobs and fb_jobs[0] == "dbs",
+          "the fallback does not put safeguarding first: %r" % fb_jobs)
+    check(len(fb_jobs) > 0,
+          "the panel is EMPTY when madrasah_today() fails, which on this "
+          "screen reads as 'nothing is wrong'")
+    check(fb_errs == [],
+          "a failing madrasah_today() threw on the page: %s" % fb_errs)
+    fb.close()
 
     # =====================================================================
     #  4. NO CHILD, AND NO MEMBER OF STAFF, IS NAMED ON THE LANDING PAGE

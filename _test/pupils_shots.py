@@ -58,8 +58,14 @@ CLASSES = [
 FIRST = ["Aaliyah", "Bilal", "Zainab", "Yusuf", "Maryam", "Idris", "Safiyyah",
          "Ismail", "Khadija", "Hamza", "Ruqayyah", "Musa", "Aisha", "Harun",
          "Sumayyah", "Ilyas", "Nusaybah", "Dawud", "Asiya", "Salim"]
-LAST = ["Patel", "Omarji", "Bhaiji", "Chhadat", "Mathar", "Sakeria", "Khoda",
-        "Umarji", "Bapu", "Ibrahim", "Bagas", "Bhaloda", "Mallu", "Teylor"]
+#  INVENTED, AND DELIBERATELY SO. The first version of this list was the real
+#  surnames off the register, used to make the screenshots look convincing.
+#  They are the surnames of the families this system holds records about, and
+#  this repository is public. These read the same way on a screenshot and
+#  belong to nobody.
+LAST = ["Testwood", "Fairbrook", "Nasserly", "Almondine", "Corriveau",
+        "Danforth", "Estbury", "Haleworth", "Ingleby", "Marchetti",
+        "Northolt", "Pendrick", "Quarrell", "Sandringly"]
 
 
 def roll():
