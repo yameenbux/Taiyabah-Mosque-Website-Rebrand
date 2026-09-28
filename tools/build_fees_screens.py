@@ -146,7 +146,7 @@ screen(
 
 # --- 1b. families -----------------------------------------------------------
 screen(
-    "md-families", "portal/fees/families", 3, "Families", "Families",
+    "md-fees-families", "portal/fees/families", 3, "Families", "Families",
     "Who pays, who to write to, and which children belong to them. Nothing "
     "in this section works until the children are in families \u2014 543 were "
     "imported from a class list that has no family column in it, so on day "

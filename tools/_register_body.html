@@ -1,0 +1,35 @@
+
+        <div class="rg-head">
+          <div class="rg-when">
+            <label for="rg-date">Which evening</label>
+            <input type="date" id="rg-date">
+          </div>
+          <div class="rg-head-a">
+            <a class="btn btn-ghost" href="../classes/">Classes</a>
+            <a class="btn btn-ghost" href="../pupils/">Pupils</a>
+          </div>
+        </div>
+
+        <div class="err" id="rg-error" hidden></div>
+        <div class="rg-ok" id="rg-ok" hidden></div>
+
+        <!-- THE GATE. On screen only while parents have not been told the
+             register is being kept, which the privacy notice promises them.
+             It says how many are left and where to go and do it. -->
+        <section class="rg-gate" id="rg-gate" hidden></section>
+
+        <!-- The evening: every class, and whether it has a register yet. -->
+        <section id="rg-classes"></section>
+
+        <!-- One class, being taken. -->
+        <section class="rg-taking" id="rg-taking" hidden></section>
+
+        <!-- One child, for the teacher who teaches them. Opened on this screen
+             rather than by navigating away, because a half-taken register is
+             the thing most easily lost. -->
+        <section class="rg-child" id="rg-child" hidden></section>
+
+        <!-- The paper register. Nothing on screen; only the print stylesheet
+             shows it, and only after the button has filled it. -->
+        <div class="rg-print" id="rg-print" aria-hidden="true"></div>
+

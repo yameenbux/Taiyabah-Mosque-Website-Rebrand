@@ -1,0 +1,82 @@
+
+        <!-- ONE HEADING, NOT TWO SAYING THE SAME THING.
+             The masthead above already carries <h1>Families</h1> and the lead
+             sentence; a second heading with the SAME sentence under it cost
+             about 150px before a single family was on screen, and on a 390px
+             phone that was most of the reason the first row sat at 1289px of a
+             900px screen. The row of links is what this bar is for. -->
+        <div class="fa-head">
+          <div class="fa-head-a">
+            <a class="btn btn-ghost" href="../pupils/">Pupils</a>
+            <a class="btn btn-ghost" href="../fees/families/">Families &amp; fees</a>
+          </div>
+        </div>
+
+        <div class="err" id="fa-error" hidden></div>
+
+        <!-- Each figure filters the list to exactly the families it counts.
+             "No way to reach them" is deliberately first after the total and
+             deliberately red: it is the only one of these that means somebody
+             cannot be told their child is unwell. -->
+        <div class="fa-figs" id="fa-figs"></div>
+
+        <!-- The sibling pairs the register import could not settle. Only on
+             screen when there are some, and folded shut until somebody asks
+             for them - it is a job for a quiet afternoon, not a thing that
+             should sit between the office and the search box every morning. -->
+        <section class="fa-sugg" id="fa-sugg" hidden></section>
+
+        <section class="fa-bk" id="fa-list-bk">
+          <h3 id="fa-roll">Families</h3>
+          <p class="fa-sub">Choose a family to see its children and who to ring.</p>
+
+          <!-- THE SEARCH GETS ITS OWN LINE, for the reason the roll's does:
+               a search box sharing a row with filters ends up too narrow to
+               read what you have typed. -->
+          <div class="fa-search">
+            <label class="sr-only" for="fa-q">Search the families</label>
+            <input type="search" id="fa-q"
+                   placeholder="Search by family name, reference or address">
+            <button type="button" class="fa-clearq" id="fa-clearq" hidden
+                    aria-label="Clear the search">&times;</button>
+          </div>
+
+          <!-- The count, the Clear control and Export share one row. They are
+               three things about the list as a whole, and on a phone three
+               separate rows of them was 110px above the first family. -->
+          <div class="fa-summary">
+            <span class="fa-count" id="fa-count"></span>
+            <button type="button" class="fa-clearall" id="fa-clearall" hidden></button>
+            <div class="fa-export-bk" id="fa-export-bk">
+              <div class="fa-export" id="fa-export"></div>
+            </div>
+          </div>
+          <div class="fa-expanel" id="fa-expanel" hidden></div>
+
+          <div class="fa-pager" id="fa-pager-top"></div>
+
+          <div class="fa-scroll">
+            <table class="fa-table" id="fa-table">
+              <thead>
+                <tr>
+                  <th><button type="button" class="fa-sortable" data-sort="ref" aria-sort="none">Reference</button></th>
+                  <th><button type="button" class="fa-sortable" data-sort="name" aria-sort="none">Family</button></th>
+                  <th><button type="button" class="fa-sortable" data-sort="children" aria-sort="none">Children</button></th>
+                  <th>Guardians</th>
+                  <th>Who to ring</th>
+                  <th><span class="sr-only">Actions</span></th>
+                </tr>
+              </thead>
+              <tbody id="fa-rows"></tbody>
+            </table>
+          </div>
+          <div class="fa-empty" id="fa-empty" hidden></div>
+          <div class="fa-pager" id="fa-pager-bottom"></div>
+        </section>
+
+        <!-- ONE FAMILY, OPENED DELIBERATELY. Telephone numbers, email
+             addresses and the address only appear here, never in the list
+             above. Same split as the roll: the list says whether, the record
+             says what. -->
+        <section class="fa-record" id="fa-record" hidden></section>
+

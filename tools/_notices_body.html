@@ -1,0 +1,81 @@
+
+        <div class="nt-head">
+          <div class="nt-head-a">
+            <a class="btn btn-ghost" href="../families/">Families</a>
+            <a class="btn btn-ghost" href="../../madrasah-privacy/" target="_blank" rel="noopener">Read the notice</a>
+          </div>
+        </div>
+
+        <div class="err" id="nt-error" hidden></div>
+        <div class="nt-ok" id="nt-ok" hidden></div>
+
+        <!-- THE JOB, WITH A NUMBER ON IT. This screen is finished when the
+             second number is nought, and it says what is blocked until then. -->
+        <section class="nt-job" id="nt-job"></section>
+
+        <div class="nt-figs" id="nt-figs"></div>
+
+        <section class="nt-bk" id="nt-list">
+          <h3>Families</h3>
+          <p class="nt-sub">Choose the families you have told, or are about to
+             tell, then print their letters or record them.</p>
+
+          <div class="nt-search">
+            <label class="sr-only" for="nt-q">Search the families</label>
+            <input type="search" id="nt-q"
+                   placeholder="Search by family name or reference">
+          </div>
+
+          <div class="nt-summary">
+            <span class="nt-count" id="nt-count"></span>
+            <button type="button" class="nt-linkish" id="nt-everyone">Choose every family shown</button>
+          </div>
+
+          <div class="nt-pager" id="nt-pager-top"></div>
+
+          <div class="nt-scroll">
+            <table class="nt-table" id="nt-table">
+              <thead>
+                <tr>
+                  <th class="nt-pick">
+                    <input type="checkbox" id="nt-all" aria-label="Choose every family on this page">
+                  </th>
+                  <th>Reference</th>
+                  <th>Family</th>
+                  <th>Children</th>
+                  <th>How we can reach them</th>
+                  <th>Told</th>
+                </tr>
+              </thead>
+              <tbody id="nt-rows"></tbody>
+            </table>
+          </div>
+          <div class="nt-empty" id="nt-empty" hidden></div>
+          <div class="nt-pager" id="nt-pager-bottom"></div>
+        </section>
+
+        <!-- Only on screen when something is chosen, and it says the number
+             every time. -->
+        <div class="nt-chosen" id="nt-chosen" hidden></div>
+        <div class="nt-confirm" id="nt-confirm" hidden></div>
+
+        <!-- The letters. Nothing on screen; only the print stylesheet shows
+             them, and only after the button has filled them. -->
+        <div class="nt-print" id="nt-print" aria-hidden="true"></div>
+
+        <!-- COMING SOON, AND SAID HONESTLY. Sending an email from here needs a
+             change to the part of the system that sends every email on the
+             site, and that is not a change to make in a hurry. Saying "coming
+             soon" is better than a button that does nothing. -->
+        <section class="nt-soon">
+          <h3>Sending a message to parents</h3>
+          <p>Writing to parents about a closure, a trip or a change of time is
+             not built yet. It needs a change to the part of the system that
+             sends every email the masjid sends &mdash; bookings, invitations,
+             receipts, fee reminders &mdash; and that is worth doing carefully
+             rather than quickly.</p>
+          <p>Until then, this screen prints letters, and the office has the
+             families&rsquo; telephone numbers on the
+             <a href="../families/">Families</a> screen.</p>
+        </section>
+
