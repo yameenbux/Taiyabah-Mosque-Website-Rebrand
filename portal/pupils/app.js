@@ -76,7 +76,8 @@
       var user = res.data && res.data.user;
       if (!user) throw new Error("No active session.");
       return Promise.all([
-        sb.from("profiles").select("full_name, email").eq("id", user.id).maybeSingle(),
+        sb.from("profiles").select("full_name, email, must_change_password")
+          .eq("id", user.id).maybeSingle(),
         sb.from("user_roles").select("role").eq("user_id", user.id)
       ]).then(function (out) {
         var errs = [];
@@ -86,8 +87,84 @@
           user: user,
           profile: out[0].data || {},
           roles: (out[1].data || []).map(function (r) { return r.role; }),
+          //  SET WHEN SOMEBODY ELSE CHOSE THIS ACCOUNT'S PASSWORD.
+          //  Teacher logins are created with an initial password handed over
+          //  on paper, which means it exists in a drawer and in whatever
+          //  printed it. mustChange gates every screen until they have
+          //  chosen their own - see mustChangeGate() and db/093.
+          mustChange: !!(out[0].data && out[0].data.must_change_password),
           errors: errs
         };
+      });
+    });
+  }
+
+
+  /*  THE PASSWORD GATE.
+
+      Deliberately plain and deliberately final: one field, one rule, and no
+      way past it. There is no "remind me later", because later is the same
+      drawer with the same slip in it.
+
+      NO EMAIL RESET EXISTS for these accounts - not one member of staff has
+      an email address, which is why the initial password was on paper in the
+      first place - so the screen says who to ask rather than offering a link
+      that goes nowhere.                                                     */
+  function mustChangeGate(identity) {
+    var host = document.getElementById("app-panel")
+            || document.querySelector(".wrap") || document.body;
+    var who = (identity.profile && identity.profile.full_name) || "";
+    var box = document.createElement("section");
+    box.className = "bk pw-gate";
+    box.id = "pw-gate";
+    box.innerHTML =
+      "<h2>Choose your own password</h2>"
+      + "<p class=\"pw-lead\">Assalamu alaikum" + (who ? ", " + esc(who) : "")
+      + ". The password you were given was written on a slip of paper, so it "
+      + "is not private. Choose one only you know before going any further.</p>"
+      + '<label class="pw-fld"><span>Your new password</span>'
+      + '<input type="password" id="pw-one" autocomplete="new-password"></label>'
+      + '<label class="pw-fld"><span>Type it again</span>'
+      + '<input type="password" id="pw-two" autocomplete="new-password"></label>'
+      + '<p class="pw-hint">At least ten characters. Something you can '
+      + "remember and nobody could guess &mdash; three unrelated words is "
+      + "better than one word with numbers after it.</p>"
+      + '<div class="pw-err" id="pw-err" hidden></div>'
+      + '<button type="button" class="btn btn-gold" id="pw-go">'
+      + "Save it and carry on</button>"
+      + '<p class="pw-hint">There is no email reset on a madrasah login, '
+      + "because the madrasah does not hold your email address. If you forget "
+      + "this one, the office has to set you a new one.</p>";
+
+    //  EVERYTHING ELSE GOES. Not hidden behind it - removed, so that nothing
+    //  is sitting underneath waiting to be reached.
+    var panels = document.querySelectorAll(".bk, .ashell, .ashell-bar");
+    Array.prototype.forEach.call(panels, function (n) { n.hidden = true; });
+    host.parentNode.insertBefore(box, host);
+    box.hidden = false;
+
+    function fail(m) {
+      var e = document.getElementById("pw-err");
+      if (e) { e.textContent = m; e.hidden = false; }
+    }
+
+    document.getElementById("pw-go").addEventListener("click", function () {
+      var a = document.getElementById("pw-one").value;
+      var b = document.getElementById("pw-two").value;
+      if (a.length < 10) { fail("That is too short. Ten characters or more."); return; }
+      if (a !== b) { fail("The two do not match."); return; }
+      var go = document.getElementById("pw-go");
+      go.disabled = true; go.textContent = "Saving\u2026";
+      sb.auth.updateUser({ password: a }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        return sb.rpc("clear_must_change_password");
+      }).then(function () {
+        //  Straight back in, rather than asking them to sign in again with
+        //  the password they have just this second chosen.
+        window.location.reload();
+      })["catch"](function (e) {
+        go.disabled = false; go.textContent = "Save it and carry on";
+        fail("That could not be saved. " + (e && e.message ? e.message : ""));
       });
     });
   }
@@ -1055,6 +1132,22 @@
       document.addEventListener("DOMContentLoaded", function () {
         renderApp(identity);
       }, { once: true });
+      return;
+    }
+
+    /*  A PASSWORD SOMEBODY ELSE CHOSE IS A TICKET, NOT A PASSWORD.
+        -------------------------------------------------------------------
+        Teacher logins are created with an initial password printed on a slip
+        and handed over. That slip lives in a drawer, in a message, and in
+        whatever printed it. So the account owes us one of its own, and until
+        it pays, NOTHING else on this page is drawn - not the rail, not the
+        panel, not the data.
+
+        Gated here rather than on each screen because there are six screens
+        and there will be more, and a gate somebody has to remember to add is
+        a gate that is missing from the seventh.                            */
+    if (identity.mustChange) {
+      mustChangeGate(identity);
       return;
     }
 
