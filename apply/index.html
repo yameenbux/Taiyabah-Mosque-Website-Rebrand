@@ -324,7 +324,7 @@ footer a{color:var(--brand-700);}
 
       <label class="declare" id="w_priv">
         <input type="checkbox" id="priv">
-        <span>I understand that Taiyabah Masjid will use the information on this form to consider my child's application and, if a place is offered, to run their madrasah education. This includes health, allergy and additional-needs information, which is kept so that staff can look after my child safely. It is not shared with anyone outside the masjid without my consent, unless the law requires it. See the <a href="../#privacy" target="_blank" rel="noopener">privacy notice</a>.</span>
+        <span>I understand that Taiyabah Masjid will use the information on this form to consider my child's application and, if a place is offered, to run their madrasah education. This includes health, allergy and additional-needs information, which is kept so that staff can look after my child safely. It is not shared with anyone outside the masjid without my consent, unless the law requires it. See the <a href="../madrasah-privacy/" target="_blank" rel="noopener">madrasah privacy notice</a>.</span>
       </label>
 
       <div class="summary" id="summary" role="alert" aria-live="polite">
@@ -376,14 +376,40 @@ footer a{color:var(--brand-700);}
      written. Being unable to keep the data is not the same as not collecting
      it.
 
-     TO TURN THE REAL FORM ON, in this order:
-       1. Finish the DPIA and the ICO registration.
-       2. Apply db/008_admissions.sql.
-       3. Set this to false.
-     Doing 3 before 1 and 2 gives you a form that accepts children's records
-     into a database nobody has assessed. Do not.
+     TURNED ON 27 September 2026. All four conditions were met and each was
+     CHECKED rather than taken on trust:
+
+       1. The DPIA is signed and the ICO registration is done.
+          Confirmed by the masjid. That is the controller's to state.
+
+       2. db/008_admissions.sql is applied.
+          submit_admission_application() and all four tables exist in
+          production. Verified against the live database, not assumed from
+          the migration file being present in this repository.
+
+       3. A parent is told what happens to the information AT THE POINT OF
+          COLLECTION, and the link goes somewhere that covers their child.
+          The declaration below used to link to ../#privacy - the WEBSITE
+          notice, which opens by saying it covers the website only and
+          contains no madrasah section at all. A parent ticked a box about
+          their child's medical needs and was pointed at a notice that
+          disclaimed their child. That is an Article 13 failure at the moment
+          special category data about a minor is collected, and it was the
+          real blocker here rather than anything on the list above. The link
+          now goes to /madrasah-privacy/, which is a real page and covers it.
+
+       4. The pipeline works end to end.
+          A complete application was submitted AS ANON against production in
+          a transaction that was rolled back: one application, one student,
+          one contact, reference TM-26-00011 returned, postcode upper-cased,
+          email lower-cased, the medical note stored. anon could not then
+          read any of it back, which is exactly right - a parent may submit
+          and may not read anybody's application, their own included.
+
+     IF THIS EVER GOES BACK TO true, put the reason here. A flag flipped
+     without a reason is a flag nobody dares flip back.
      --------------------------------------------------------------------- */
-  var PREVIEW_ONLY = true;
+  var PREVIEW_ONLY = false;
 
   var LOADED_AT = Date.now();
 
