@@ -24,7 +24,13 @@
   "use strict";
 
   FeesGate.start({
-    key: "md-families",
+    //  md-fees-families, NOT md-families. The register's own Families screen
+    //  under WHO IS HERE owns that key; two rows with one key means two rows
+    //  light up in the rail and the person cannot tell which screen they are
+    //  on. Caught by the fees suite the day the other screen was built -
+    //  "highlights its own row [2]" - and invisible until then, because a
+    //  `soon` row is a <span> and never lights up.
+    key: "md-fees-families",
     title: "Families",
     depth: 3,
 
