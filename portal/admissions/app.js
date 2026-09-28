@@ -187,6 +187,20 @@
       + ". The password you were given was written on a slip of paper, so it "
       + "is not private. Choose one only you know before going any further.</p>"
       + '<div class="pw-err" id="pw-err" hidden></div>'
+      //  THE CURRENT PASSWORD, ASKED FOR ON PURPOSE.
+      //
+      //  Supabase is set to require it, and that setting is worth keeping.
+      //  These screens get opened on a shared machine in the masjid office.
+      //  Without it, anybody who finds a session somebody left signed in can
+      //  change the password and own the account outright; with it they
+      //  cannot, because the slip is in the teacher's pocket.
+      //
+      //  It is the password they typed a moment ago, so this is one line of
+      //  friction, once, ever. Asking is also more robust than carrying what
+      //  they typed on the sign-in screen: this gate has to work on a page
+      //  opened fresh days later with the session still valid.
+      + '<label class="pw-fld"><span>The password from your slip</span>'
+      + '<input type="password" id="pw-now" autocomplete="current-password"></label>'
       + '<label class="pw-fld"><span>Your new password</span>'
       + '<input type="password" id="pw-one" autocomplete="new-password"></label>'
       + '<label class="pw-fld"><span>Type it again</span>'
@@ -233,7 +247,7 @@
     document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
-    var one = document.getElementById("pw-one");
+    var one = document.getElementById("pw-now");
     if (one && one.focus) { try { one.focus(); } catch (e) {} }
 
     function fail(m) {
@@ -242,13 +256,21 @@
     }
 
     document.getElementById("pw-go").addEventListener("click", function () {
+      var now = document.getElementById("pw-now").value;
       var a = document.getElementById("pw-one").value;
       var b = document.getElementById("pw-two").value;
+      if (!now) { fail("Put in the password from your slip first."); return; }
       if (a.length < 10) { fail("That is too short. Ten characters or more."); return; }
       if (a !== b) { fail("The two do not match."); return; }
+      if (a === now) { fail("That is the same password. Choose a different one."); return; }
       var go = document.getElementById("pw-go");
       go.disabled = true; go.textContent = "Saving…";
-      sb.auth.updateUser({ password: a }).then(function (res) {
+      //  currentPassword goes straight through to the API as the request
+      //  body - updateUser does Object.assign({}, attributes) with no
+      //  whitelist - so the vendored client sends it even though the
+      //  minified bundle never names it. Harmless if the setting is ever
+      //  turned off.
+      sb.auth.updateUser({ password: a, currentPassword: now }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
         return sb.rpc("clear_must_change_password");
       }).then(function () {
@@ -259,7 +281,18 @@
         window.location.reload();
       })["catch"](function (e) {
         go.disabled = false; go.textContent = "Save it and carry on";
-        fail("That could not be saved. " + (e && e.message ? e.message : ""));
+        var m = (e && e.message) ? e.message : "";
+        //  SAY THE USEFUL THING. The API's own wording for a wrong current
+        //  password is about fields and parameters, which tells a teacher
+        //  nothing about what to do next.
+        if (/current password|invalid.*credential|not correct/i.test(m)) {
+          fail("That is not the password on your slip. Check it and try again.");
+        } else if (/weak|pwned|compromis|breach/i.test(m)) {
+          fail("That password has appeared in a known data breach. Please "
+               + "choose a different one.");
+        } else {
+          fail("That could not be saved. " + m);
+        }
       });
     });
   }

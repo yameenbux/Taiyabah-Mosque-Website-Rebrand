@@ -147,7 +147,8 @@ def stub(roles, today=True, must_change=False):
       getUser: function(){ return Promise.resolve({data:{user:{
         id:'u1', email:'someone@example.test'}}}); },
       signOut: function(){ return Promise.resolve({}); },
-      updateUser: function(){ return Promise.resolve({data:{},error:null}); },
+      updateUser: function(a){ window.__UPDATED = a;
+                              return Promise.resolve({data:{},error:null}); },
       mfa: { getAuthenticatorAssuranceLevel: function(){
                return Promise.resolve({data:{currentLevel:'aal2', nextLevel:'aal2'}}); },
              listFactors: function(){ return Promise.resolve({data:{totp:[{id:'f1'}]}}); } }
@@ -166,6 +167,14 @@ def stub(roles, today=True, must_change=False):
       //  checked against THIS object rather than against a literal typed into
       //  the assertions, which is what let the old version of this file pass
       //  while the page showed a number from a different system.
+      //  NEVER SETTLES, ON PURPOSE. On success the gate calls this and then
+      //  window.location.reload(). A reload wipes window.__UPDATED and empties
+      //  the form, so a test that clicks Save and then looks for the evidence
+      //  destroys the thing it is measuring - which is exactly what the first
+      //  version of the gate assertion did, and it read as "updateUser was
+      //  never called". Holding this promise open stops the flow one step
+      //  before the reload, with the evidence still on the page.
+      if (n === 'clear_must_change_password') return new Promise(function(){});
       if (n === 'madrasah_overview') return Promise.resolve({data: OV, error:null});
       //  null means "this call fails", which is how the fallback is exercised.
       if (n === 'madrasah_today') return TODAY
@@ -664,6 +673,35 @@ with sync_playwright() as p:
     }""")
     check(left == [],
           "STILL RENDERED BEHIND THE PASSWORD GATE: %s" % left)
+    #  THE CURRENT PASSWORD IS ASKED FOR, AND ACTUALLY SENT.
+    #
+    #  Supabase is configured to require the current password when setting a
+    #  new one, and the first version of this gate did not ask for it. The
+    #  teacher got "Current password required when setting new password" and
+    #  could go no further. Keeping that setting is right - these screens open
+    #  on a shared office machine, and without it anyone finding a signed-in
+    #  session owns the account - so the gate has to satisfy it.
+    #
+    #  Asserting the FIELD EXISTS would not have caught the bug it is here to
+    #  prevent, which is the value never reaching the API. So fill the form in
+    #  and check what updateUser was actually handed.
+    check(pg.query_selector("#pw-now") is not None,
+          "the gate does not ask for the current password, so Supabase will "
+          "refuse the change")
+    pg.fill("#pw-now", "TheSlipPassword1")
+    pg.fill("#pw-one", "three unrelated words")
+    pg.fill("#pw-two", "three unrelated words")
+    pg.click("#pw-go")
+    pg.wait_for_timeout(400)
+    sent = pg.evaluate("() => window.__UPDATED || null")
+    check(sent is not None, "pressing Save did not call updateUser at all")
+    if sent:
+        check(sent.get("password") == "three unrelated words",
+              "the new password did not reach updateUser: %r" % sent)
+        check(sent.get("currentPassword") == "TheSlipPassword1",
+              "CURRENTPASSWORD WAS NOT SENT, so Supabase will refuse the "
+              "change with 'Current password required': %r" % sent)
+
     check(errs == [], "uncaught exceptions at the password gate: %s" % errs)
     pg.close()
 
