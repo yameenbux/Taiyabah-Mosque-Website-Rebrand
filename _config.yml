@@ -30,6 +30,15 @@ exclude:
   - 404_template.html
   - __pycache__/
 
+  # The screen generators. NOT excluded until 27 September, which means every
+  # one of them - build_pupils_screen.py, the spliced modules, the lot - was a
+  # downloadable file on the masjid's website at a guessable address for as
+  # long as it existed. Nothing secret is in them and nothing was harmed, but
+  # this file's own rule applies: "none of it belongs on the masjid's website
+  # either." Found while adding the Families screen, by reading the exclude
+  # list rather than by anything failing.
+  - tools/
+
   # Database migrations and their local-only test harness
   - db/
 
@@ -55,6 +64,15 @@ exclude:
   - README.md
   - DEPLOY.md
   - DONATIONS.md
+
+  # Instructions for AI coding agents working in this repository. Excluded for
+  # the same reason as the rest of this block — it is not part of the masjid's
+  # website — and noticed only because this file lists README.md and DEPLOY.md
+  # BY NAME rather than excluding "*.md". A new .md file in the root is a public
+  # page by default. That is the trap this whole file exists to document, and it
+  # caught the file being written to warn about it.
+  - CLAUDE.md
+  - AGENTS.md
 
   # CONFIDENTIAL DOCUMENTS DO NOT BELONG IN THIS REPOSITORY AT ALL.
   #
@@ -115,13 +133,22 @@ exclude:
   # from the masjid lands. Excluding it would break every invitation, password
   # reset and email confirmation the website sends.
 
-  # NOTE: apply/ is NO LONGER excluded. It is published deliberately, as a
-  # preview that cannot send: PREVIEW_ONLY in apply/index.html disables the
-  # Send button and removes the network call, so nothing about a child ever
-  # leaves the browser. Excluding the folder instead only broke the "have a
-  # look at the new form" link on the Admissions page and taught nobody
-  # anything. The real gate is PREVIEW_ONLY plus the fact that
-  # 008_admissions.sql has not been applied — see DEPLOY.md.
+  # NOTE: apply/ is NOT excluded, and as of 27 September it is NOT a preview.
+  #
+  # It was one. This comment used to read "a preview that cannot send:
+  # PREVIEW_ONLY disables the Send button... The real gate is PREVIEW_ONLY plus
+  # the fact that 008_admissions.sql has not been applied." Both halves are now
+  # false. PREVIEW_ONLY is false, 008 is applied, and the form has taken a real
+  # child's record — reference TM-26-00014.
+  #
+  # So this is a LIVE FORM collecting a child's name, date of birth, address,
+  # medical notes and allergies from the open internet. Treat any change to
+  # apply/ as a change to a system holding special category data: the gates are
+  # RLS plus submit_admission_application(), not a flag in the page.
+  #
+  # The stale comment is the point. It survived the switch because nothing
+  # fails when a comment goes out of date, and the next person to read this file
+  # would have believed the form was safe to experiment with.
 
 # Keep the site's own files exactly as they are — no Markdown rendering, no
 # layouts, no Jekyll templating touching the built HTML.

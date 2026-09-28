@@ -81,6 +81,72 @@ def main():
         if ph not in open("build.py", encoding="utf-8").read():
             problems.append("%s is used in the template but build.py does not define it" % ph)
 
+    # 7. A portal tile must not disagree with the paragraph under it.
+    #
+    #    This check exists because of a real near-miss. Thirty-nine teachers
+    #    were given working logins while the Teachers Portal tile still read
+    #    "Preview" and the paragraph beneath it still said the sign-in screens
+    #    "are not yet connected and no account will work." Both sentences were
+    #    true when they were written and neither was reviewed when the accounts
+    #    were built. The first thing a teacher holding a slip would have read
+    #    is the site telling them not to bother.
+    #
+    #    The tile is one edit and the paragraph is another, so a person doing
+    #    half the job leaves no visible mark. This makes the half-done state
+    #    fail the build instead.
+    for who in ("Parents", "Teachers"):
+        m = re.search(
+            r'<span class="sh-label">%s Portal</span>\s*'
+            r'<span class="live-tag">([^<]+)</span>' % who, src)
+        if not m:
+            problems.append("the %s Portal tile has gone, or its markup changed — "
+                            "check 7 in verify_structure.py can no longer see it" % who)
+            continue
+        live = m.group(1).strip().lower() != "preview"
+        #  The paragraph names each audience and says whether it is open.
+        says_shut = re.search(
+            r"<strong>%s:</strong>[^<]*?(not open yet|will not work|no \w+ account)"
+            % who, src, re.S | re.I) is not None
+        if live and says_shut:
+            problems.append(
+                '%s Portal tile says "%s" but the paragraph under it still tells '
+                "%s their accounts do not work" % (who, m.group(1), who.lower()))
+        if not live and not says_shut:
+            problems.append(
+                "%s Portal tile says Preview but the paragraph does not tell %s "
+                "their portal is not open — somebody will try to sign in"
+                % (who, who.lower()))
+
+    # 8. A new file in the repository root is a public web page.
+    #
+    #    _config.yml excludes README.md, DEPLOY.md and DONATIONS.md BY NAME, not
+    #    by "*.md". So the next .md or .txt somebody drops in the root is live on
+    #    the masjid's website at a guessable address the moment it is pushed.
+    #
+    #    This check was written after CLAUDE.md — a file whose whole subject is
+    #    "this repository is public and pushing is deploying" — was created in
+    #    the root and would itself have been published. It is not a hypothetical
+    #    failure mode: _config.yml's own comments record the build scripts, the
+    #    database migrations, a working-notes file that sat live for a fortnight,
+    #    and a confidential DPIA, all published or nearly published this way.
+    import os
+    cfg = open("_config.yml", encoding="utf-8").read()
+    excluded = set(re.findall(r'^\s+-\s+"?([^"\n]+?)"?\s*$', cfg, re.M))
+    for name in sorted(os.listdir(".")):
+        if not os.path.isfile(name):
+            continue
+        if not name.lower().endswith((".md", ".txt", ".yaml", ".json", ".csv")):
+            continue
+        if name in ("_config.yml", "CNAME", "robots.txt", "robots.live.txt",
+                    "sitemap.xml", "manifest.json", "site.webmanifest"):
+            continue
+        if name in excluded:
+            continue
+        problems.append(
+            '%s sits in the repository root and _config.yml does not exclude it '
+            "— GitHub Pages will publish it on the masjid's website. Add it to "
+            "exclude:, or delete it." % name)
+
     if problems:
         print("STRUCTURE CHECK FAILED (%d)" % len(problems))
         for p in problems:
