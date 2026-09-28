@@ -1,0 +1,259 @@
+/* ===========================================================================
+   The Register — who came in this evening
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields, the sign-in panel). Prefixed `rg-` so it cannot
+   collide with `pu-`, `fa-`, `nt-`, `ad-` or the shell's own.
+
+   THE MARKS ARE SIZED FOR A THUMB, NOT A MOUSE. A register is taken standing
+   up, holding a tablet, in a room full of children. 48px minimum on every
+   control that takes a mark, and they do not shrink on a phone — a teacher
+   mis-tapping "away" for the child next to the one they meant is the fault
+   this screen most has to avoid.
+   =========================================================================== */
+
+[hidden] { display: none !important; }
+
+.rg-head      { display:flex; gap:16px; align-items:flex-end; flex-wrap:wrap;
+                justify-content:space-between; margin-bottom:20px; }
+.rg-when label { display:block; font-size:13px; font-weight:700; margin-bottom:5px; }
+.rg-when input { min-height:46px; padding:10px 14px; border:1px solid var(--line);
+                border-radius:10px; background:var(--card); color:var(--ink);
+                font:inherit; font-size:15.5px; }
+.rg-head-a    { display:flex; gap:10px; flex-wrap:wrap; }
+.rg-head-a .btn { width:auto; flex:0 0 auto; }
+
+.rg-sub       { margin:0 0 14px; color:var(--muted); font-size:14px; }
+.rg-q         { display:block; color:var(--muted); font-size:12.5px; margin-top:2px; }
+.rg-linkish   { border:0; background:none; padding:0; font:inherit; font-size:13.5px;
+                color:var(--brand-700); font-weight:700; cursor:pointer;
+                text-decoration:underline; }
+.rg-linkish:hover { color:var(--plum); }
+
+.rg-ok        { padding:12px 16px; border-radius:10px; margin-bottom:18px;
+                background:#F2F6F0; border:1px solid var(--success-ink);
+                color:var(--success-ink); font-size:14px; font-weight:600; }
+
+/*  THE GATE. Red-edged and unmissable, with a number and a way out. */
+.rg-gate      { border:1px solid var(--line); border-left:4px solid var(--danger-ink);
+                background:var(--card); border-radius:var(--radius);
+                padding:22px 24px; margin-bottom:24px; }
+.rg-gate h3   { margin:0 0 10px; font-size:1.2rem; color:var(--danger-ink); }
+.rg-gate .rg-sub { max-width:74ch; }
+.rg-gate .btn { width:auto; margin-top:6px; }
+.rg-bignum    { margin:0 0 8px; font-size:15.5px; }
+.rg-bignum b  { font-family:var(--serif); font-size:1.5rem; }
+.rg-bar       { height:8px; border-radius:999px; background:var(--line);
+                overflow:hidden; margin-bottom:10px; max-width:420px; }
+.rg-bar span  { display:block; height:100%; background:var(--danger-ink);
+                border-radius:999px; }
+
+/*  THE EVENING. */
+.rg-evening h3 { margin:0 0 4px; font-family:var(--serif); font-size:1.3rem; }
+.rg-grid      { display:grid; gap:12px; margin-top:16px;
+                grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); }
+.rg-class     { display:flex; flex-direction:column; gap:3px; text-align:left;
+                min-height:96px; padding:15px 17px; border:1px solid var(--line);
+                border-radius:var(--radius); background:var(--card);
+                color:var(--ink); font:inherit; cursor:pointer;
+                transition:border-color .15s ease; }
+.rg-class:hover { border-color:var(--gold-ink); }
+.rg-class strong { font-size:15.5px; }
+.rg-state     { margin-top:auto; padding-top:8px; font-size:13px;
+                color:var(--muted); font-weight:600; }
+/*  A CLASS WITH A REGISTER LOOKS FINISHED. Green edge and a quiet state
+    line, so an evening reads at a glance as "these three left". */
+.rg-class.is-done  { border-left:4px solid var(--success-ink); }
+.rg-class.is-done .rg-state { color:var(--success-ink); }
+.rg-class.is-part  { border-left:4px solid var(--gold-ink); }
+.rg-class.is-part .rg-state { color:var(--gold-ink); }
+.rg-noteacher { color:var(--danger-ink); }
+
+/*  ONE CLASS, BEING TAKEN.
+    `rg-taking`, not `rg-class`. The first version used one name for the class
+    BUTTONS on the evening screen and for the SECTION the class opens into, and
+    then needed `all:unset` to undo the button styling on the section. A name
+    that has to be cancelled out is the wrong name. */
+.rg-back      { border:0; background:none; padding:4px 0; margin-bottom:12px;
+                font:inherit; font-size:13.5px; font-weight:700;
+                color:var(--brand-700); cursor:pointer; }
+.rg-back:hover { text-decoration:underline; color:var(--plum); }
+.rg-taking-head { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap;
+                justify-content:space-between; padding-bottom:14px;
+                border-bottom:1px solid var(--line); margin-bottom:14px; }
+.rg-taking-head h3 { margin:0 0 4px; font-family:var(--serif); font-size:1.35rem; }
+.rg-taking-head .rg-sub { margin:0; }
+.rg-tally     { display:flex; gap:14px; flex-wrap:wrap; }
+.rg-t         { font-size:13px; color:var(--muted); }
+.rg-t b       { font-family:var(--serif); font-size:1.25rem; display:block; }
+.rg-t-present b { color:var(--success-ink); }
+.rg-t-away b    { color:var(--danger-ink); }
+.rg-t-todo b    { color:var(--gold-ink); }
+
+.rg-quick     { display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+                margin-bottom:14px; }
+.rg-quick .btn { width:auto; flex:0 0 auto; }
+
+.rg-list      { list-style:none; margin:0; padding:0;
+                border:1px solid var(--line); border-radius:var(--radius);
+                background:var(--card); overflow:hidden; }
+.rg-row       { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+                padding:11px 16px; border-bottom:1px solid var(--line); }
+.rg-row:last-child { border-bottom:0; }
+.rg-row.is-marked { background:var(--paper); }
+.rg-who       { flex:1 1 210px; min-width:0; }
+.rg-who strong { font-size:15.5px; }
+/*  A MARK, NEVER THE NOTE. Opening the child's record is a deliberate act and
+    it is written down, so this is a link and not a tooltip with the text in. */
+.rg-med       { display:inline-block; margin-left:8px; padding:2px 8px;
+                border-radius:999px; background:var(--danger); color:#fff;
+                font-size:11px; text-transform:uppercase; letter-spacing:.03em;
+                font-weight:700; text-decoration:none; vertical-align:1px; }
+.rg-med:hover { background:var(--danger-ink); color:#fff; }
+.rg-parent    { display:block; margin-top:3px; font-size:12.5px;
+                color:var(--brand-700); font-weight:600; }
+
+.rg-marks     { display:flex; gap:6px; flex:0 0 auto; }
+/*  48px MINIMUM, AND IT DOES NOT SHRINK ON A PHONE. */
+.rg-mark      { min-width:74px; min-height:48px; padding:10px 14px;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:14px; font-weight:600; }
+.rg-mark:hover { border-color:var(--gold-ink); }
+.rg-mark.is-on { color:#fff; border-color:transparent; }
+.rg-present.is-on { background:var(--success-ink); }
+.rg-late.is-on    { background:var(--gold-ink); }
+.rg-absent.is-on  { background:var(--danger-ink); }
+
+.rg-reason    { flex:1 1 100%; }
+.rg-reason-i  { width:100%; min-height:42px; padding:9px 12px;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--paper); color:var(--ink); font:inherit;
+                font-size:14px; }
+
+/*  SAVE IS STICKY. A class of thirty is a scroll, and the person who has just
+    finished marking is at the bottom of it. */
+.rg-save      { position:sticky; bottom:0; z-index:5;
+                display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+                justify-content:space-between; margin-top:14px;
+                padding:14px 18px; border:1px solid var(--ink);
+                border-radius:var(--radius); background:var(--card);
+                box-shadow:0 -6px 22px -14px rgba(43,7,26,.5); }
+.rg-save-n    { font-size:14.5px; color:var(--muted); }
+.rg-save .btn { width:auto; flex:0 0 auto; }
+
+/*  THE PAPER REGISTER. */
+.rg-print     { display:none; }
+
+@media print {
+  body.printing-register > *               { display:none !important; }
+  body.printing-register.has-ashell .shell { display:none !important; }
+  body.printing-register > .rg-print       { display:block !important;
+                                             padding:0; margin:0; }
+  .rg-print   { font-size:11pt; color:#000; }
+  .pr-head    { display:flex; gap:16px; align-items:flex-start;
+                border-bottom:1.5pt solid #000; padding-bottom:9pt;
+                margin-bottom:16pt; }
+  /*  The wordmark is cream, rgb(243,239,227), made for the dark rail. On
+      white paper it printed as nothing at all while a check that asked only
+      "is there an <img>" passed the whole time. brightness(0) makes it ink. */
+  .pr-logo    { width:52px; height:auto; filter:brightness(0); }
+  .pr-head h1 { margin:0; font-size:15pt; }
+  .pr-head p  { margin:0; font-size:10pt; }
+  .pr-date    { margin-left:auto; text-align:right; }
+  .pr-table   { width:100%; border-collapse:collapse; font-size:10.5pt; }
+  .pr-table th, .pr-table td { border:.5pt solid #000; padding:5pt 6pt;
+                text-align:left; }
+  /*  ROOM TO WRITE IN. A box a biro cannot fit a word into is a box somebody
+      writes across three rows instead. */
+  .pr-table td:nth-child(3), .pr-table td:nth-child(4) { width:44pt; }
+  .pr-table td:nth-child(5) { width:150pt; }
+  .pr-table tbody tr { height:26pt; }
+  .pr-foot    { margin-top:12pt; font-size:9pt; }
+}
+
+@media (max-width: 720px) {
+  .rg-head    { align-items:stretch; }
+  .rg-when, .rg-when input { width:100%; }
+  .rg-head-a  { width:100%; }
+  .rg-head-a .btn { flex:1 1 auto; }
+  .rg-grid    { grid-template-columns:1fr; }
+  /*  THE MARKS GET THEIR OWN LINE and stay full size. Shrinking them to fit
+      beside a name is how a teacher taps "away" for the wrong child. */
+  .rg-row     { gap:9px; padding:12px 13px; }
+  .rg-who     { flex:1 1 100%; }
+  .rg-marks   { flex:1 1 100%; }
+  .rg-mark    { flex:1 1 0; min-width:0; }
+  .rg-taking-head { gap:10px; }
+}
+
+/* ===========================================================================
+   ONE CHILD, FOR THE TEACHER WHO TEACHES THEM
+
+   On this screen rather than a page of its own: a teacher is standing up
+   holding a tablet with a register half-taken on it, and losing that to
+   follow a link is how a register does not get finished.
+   =========================================================================== */
+.rg-open      { border:1px solid var(--line); border-radius:999px;
+                background:var(--card); color:var(--muted); cursor:pointer;
+                font:inherit; font-size:11px; text-transform:uppercase;
+                letter-spacing:.03em; font-weight:700; padding:2px 9px;
+                margin-left:6px; vertical-align:1px; }
+.rg-open:hover { border-color:var(--gold-ink); color:var(--ink); }
+button.rg-med { border:0; cursor:pointer; font-family:inherit; }
+
+.rg-child     { margin-top:20px; padding:20px 22px; border:1px solid var(--line);
+                border-top:3px solid var(--plum); border-radius:var(--radius);
+                background:var(--card); }
+.rg-c-head    { display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+                justify-content:space-between; padding-bottom:12px;
+                border-bottom:1px solid var(--line); margin-bottom:14px; }
+.rg-c-head h4 { margin:0 0 2px; font-family:var(--serif); font-size:1.25rem; }
+.rg-c-head .rg-q { margin:0; }
+
+/*  THE SAFETY BLOCKS ARE THE LOUDEST THING ON THE CARD. This is the one
+    screen where a teacher is reading to act, and an allergy set in the same
+    grey as an attendance figure is an allergy nobody reads. */
+.rg-c-block   { padding:12px 14px; border-radius:10px; background:var(--paper);
+                border-left:4px solid var(--line); margin-bottom:10px; }
+.rg-c-block.bad { background:#FBF1ED; border-left-color:var(--danger-ink); }
+.rg-c-block h5 { margin:0 0 4px; font-size:11.5px; text-transform:uppercase;
+                letter-spacing:.04em; color:var(--muted); font-weight:700; }
+.rg-c-block.bad h5 { color:var(--danger-ink); }
+.rg-c-block p { margin:0; font-size:15px; line-height:1.55; }
+
+.rg-c-ring    { margin:16px 0 10px; padding-top:12px;
+                border-top:1px solid var(--line); }
+.rg-c-ring h5 { margin:0 0 4px; font-size:11.5px; text-transform:uppercase;
+                letter-spacing:.04em; color:var(--muted); font-weight:700; }
+.rg-c-ring p  { margin:0; font-size:15px; }
+.rg-c-ring a  { color:var(--brand-700); font-weight:700; }
+.rg-warn-t    { color:var(--danger-ink); font-weight:600; }
+
+.rg-c-acts    { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.rg-c-acts .btn { width:auto; flex:0 0 auto; }
+
+/*  RAISING A CONCERN.
+    The urgent line is first, biggest, and unmissable. A form is not a person,
+    and a teacher who thinks a child is in danger NOW should be finding an
+    adult rather than typing. It is the only part of this form that could
+    save anybody. */
+.rg-concern   { margin-top:16px; padding:16px 18px; border:1px solid var(--line);
+                border-left:4px solid var(--danger-ink); border-radius:10px;
+                background:var(--paper); }
+.rg-urgent    { padding:12px 14px; border-radius:8px; background:var(--danger);
+                color:#fff; font-size:14px; line-height:1.55; margin-bottom:14px; }
+.rg-urgent strong { display:block; margin-bottom:2px; }
+.rg-fld       { display:block; margin-bottom:12px; }
+.rg-fld span  { display:block; font-size:13px; font-weight:700; margin-bottom:5px; }
+.rg-fld textarea, .rg-fld input {
+                width:100%; padding:10px 12px; border:1px solid var(--line);
+                border-radius:10px; background:var(--card); color:var(--ink);
+                font:inherit; font-size:15px; min-height:46px; }
+.rg-fld textarea { line-height:1.55; resize:vertical; }
+
+@media (max-width: 720px) {
+  .rg-child   { padding:16px 14px; }
+  .rg-c-acts .btn { flex:1 1 auto; }
+}
