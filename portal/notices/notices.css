@@ -1,0 +1,539 @@
+/* ===========================================================================
+   Notices to parents — telling them the notice exists
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields, the sign-in panel). Everything here is specific to
+   this screen and prefixed `nt-` so it cannot collide with `pu-`, `ad-`, `fx-`
+   or the shell's own.
+   =========================================================================== */
+
+/*  FIRST RULE IN THE FILE, AND NOT DECORATION. [hidden] is an attribute
+    selector, so any class rule that sets `display` outranks it. This screen
+    hides a family's record, a move box, a letter box, an error strip and the
+    sibling card that way, and the record carries telephone numbers and home
+    addresses. A card that is supposed to be shut and is not is a disclosure,
+    not a cosmetic fault. */
+[hidden] { display: none !important; }
+
+/*  THE HEAD BAR IS TWO LINKS, so it is a row of two links and not a
+    two-column layout with an empty column. The first build kept an empty
+    <div> where a duplicated heading had been, which read on screen as a
+    missing heading rather than as deliberate space. */
+.nt-head      { display:flex; gap:10px; align-items:center;
+                justify-content:flex-end; flex-wrap:wrap; margin-bottom:18px; }
+.nt-head-a    { display:flex; gap:10px; flex-wrap:wrap; }
+.nt-head-a .btn { width:auto; flex:0 0 auto; }
+
+.nt-sub       { margin:0 0 14px; color:var(--muted); font-size:14px; }
+.nt-q         { display:block; color:var(--muted); font-size:12.5px;
+                margin-top:2px; }
+
+/* --------------------------------------------------------------------------
+   THE FIGURES ALONG THE TOP.
+
+   Not a dashboard. Each one is a filter, and each one exists because somebody
+   in the office has to do something about it. "No way to reach them" is red
+   when it is not zero and disabled when it is, because a figure you cannot
+   act on should not look like a button.
+
+   USING THE SPACE. Five figures on one row at desk width, two on a phone,
+   and each keeps its own explanatory line rather than making the number
+   carry the meaning on its own.
+   -------------------------------------------------------------------------- */
+/*  FOUR ACROSS, EVENLY. auto-fit with a 178px minimum gave four tiles on one
+    row and stranded the fifth on a row of its own; there are four now and
+    they are asked to share the width equally rather than to fit as many as
+    happen to go. */
+.nt-figs      { display:grid; gap:12px; margin-bottom:20px;
+                grid-template-columns:repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1040px) {
+  .nt-figs    { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+.nt-fig       { display:flex; flex-direction:column; gap:2px; text-align:left;
+                padding:14px 16px; border:1px solid var(--line);
+                border-radius:var(--radius); background:var(--card);
+                cursor:pointer; font:inherit; color:var(--ink);
+                transition:border-color .15s ease, box-shadow .15s ease; }
+.nt-fig:hover:not([disabled]) { border-color:var(--gold-ink); }
+.nt-fig[disabled] { cursor:default; opacity:.55; }
+.nt-fig b     { font-family:var(--serif); font-size:1.7rem; line-height:1.1;
+                font-weight:700; }
+.nt-fig span  { font-size:13.5px; font-weight:600; }
+.nt-fig small { font-size:12px; color:var(--muted); }
+.nt-fig.is-on { border-color:var(--ink); box-shadow:inset 0 0 0 1px var(--ink); }
+.nt-fig.bad b { color:var(--danger-ink); }
+.nt-fig.bad   { border-color:var(--danger); }
+.nt-fig.warn b{ color:var(--brand-700); }
+
+/* --------------------------------------------------------------------------
+   THE SIBLING PAIRS.
+
+   FOLDED SHUT BY DEFAULT. On the Pupils screen this was a permanent panel
+   between the heading and the search box, and the user asked for it gone from
+   there — rightly: 56 pairs nobody has got round to is not what the office
+   opens this screen to do. Here it is one line that says how many, and opens
+   when somebody chooses to spend an afternoon on it.
+   -------------------------------------------------------------------------- */
+.nt-sugg      { border:1px solid var(--line); border-left:3px solid var(--gold-ink);
+                border-radius:var(--radius); background:var(--paper);
+                padding:14px 18px; margin-bottom:22px; }
+.nt-sugg-top  { display:flex; gap:14px; align-items:baseline;
+                justify-content:space-between; flex-wrap:wrap; }
+.nt-sugg-top h3 { margin:0; font-size:15.5px; }
+.nt-linkish   { border:0; background:none; padding:0; font:inherit;
+                font-size:13.5px; color:var(--brand-700); font-weight:700;
+                cursor:pointer; text-decoration:underline; }
+.nt-linkish:hover { color:var(--plum); }
+.nt-sugg .nt-sub { margin:10px 0 14px; max-width:78ch; }
+.nt-sugg-rows { display:flex; flex-direction:column; gap:8px; }
+.nt-sugg-row  { display:grid; gap:10px; align-items:center;
+                grid-template-columns:1fr auto 1fr auto;
+                padding:10px 12px; border:1px solid var(--line);
+                border-radius:10px; background:var(--card); }
+.nt-amp       { color:var(--muted); font-size:12.5px; }
+.nt-sugg-acts { display:flex; gap:8px; flex-wrap:wrap; }
+.nt-sugg-acts .btn { width:auto; flex:0 0 auto; font-size:13px; padding:7px 12px; }
+
+/* --------------------------------------------------------------------------
+   SEARCH, ON ITS OWN LINE AND WIDE ENOUGH TO READ.
+
+   The roll's search box was
+   reported as "very narrow and tight". It shares this screen's fix: full
+   width, 46px tall, 15.5px text, and a clear button that only appears when
+   there is something to clear.
+   -------------------------------------------------------------------------- */
+.nt-search    { position:relative; margin-bottom:14px; }
+.nt-search input { width:100%; min-height:46px; padding:11px 44px 11px 14px;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--card); color:var(--ink);
+                font:inherit; font-size:15.5px; }
+.nt-search input:focus { outline:2px solid var(--gold-ink); outline-offset:1px;
+                border-color:var(--gold-ink); }
+.nt-clearq    { position:absolute; right:8px; top:50%; transform:translateY(-50%);
+                width:30px; height:30px; border:0; border-radius:50%;
+                background:var(--paper); color:var(--muted); cursor:pointer;
+                font-size:17px; line-height:1; }
+.nt-clearq:hover { background:var(--line); color:var(--ink); }
+
+.nt-summary   { display:flex; gap:14px; align-items:center; flex-wrap:wrap;
+                margin-bottom:12px; }
+.nt-count     { color:var(--muted); font-size:13.5px; }
+.nt-clearall  { border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:13px; padding:5px 11px; }
+.nt-clearall:hover { border-color:var(--gold-ink); }
+
+/* --------------------------------------------------------------------------
+   THE EXPORT, BEHIND A NAMED BUTTON.
+
+   "Export…" then a choice with a sentence of explanation each, rather than two
+   bare buttons whose difference nobody could see. Same pattern as the roll,
+   for the same reason: the person pressing it has to know which one puts
+   telephone numbers in a spreadsheet.
+   -------------------------------------------------------------------------- */
+.nt-export-bk { margin-bottom:14px; }
+.nt-export .btn { width:auto; }
+.nt-expanel   { margin-top:12px; padding:16px 18px; border:1px solid var(--line);
+                border-radius:var(--radius); background:var(--paper); }
+.nt-ex-lead   { margin:0 0 12px; font-size:13.5px; color:var(--muted); }
+.nt-ex-opts   { display:grid; gap:12px;
+                grid-template-columns:repeat(auto-fit, minmax(258px, 1fr)); }
+.nt-ex-opt    { display:flex; flex-direction:column; gap:5px; text-align:left;
+                padding:14px 16px; border:1px solid var(--line);
+                border-radius:10px; background:var(--card); cursor:pointer;
+                font:inherit; color:var(--ink); }
+.nt-ex-opt:hover { border-color:var(--gold-ink); }
+.nt-ex-opt strong { font-size:14.5px; }
+.nt-ex-opt span   { font-size:12.5px; color:var(--muted); line-height:1.5; }
+.nt-ex-opt.is-guarded { border-left:3px solid var(--gold-ink); }
+.nt-ex-note   { margin:0; font-size:12.5px; color:var(--muted); }
+
+/* --------------------------------------------------------------------------
+   THE PAGER, above and below.
+
+   330 families is 6.6 screens of continuous scroll at 50 a page and far more
+   on a phone. Somebody who has read to the bottom of fifty rows should not
+   scroll back to the top to ask for the next fifty.
+   -------------------------------------------------------------------------- */
+.nt-pager     { display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+                justify-content:space-between; margin:12px 0; }
+.nt-pager:empty { display:none; }
+.nt-pages     { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
+.nt-page      { min-width:38px; min-height:38px; padding:6px 10px;
+                border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:14px; }
+.nt-page:hover:not([disabled]) { border-color:var(--gold-ink); }
+.nt-page.is-on { background:var(--ink); color:var(--card);
+                 border-color:var(--ink); font-weight:700; }
+.nt-page[disabled] { opacity:.38; cursor:default; }
+.nt-gap       { padding:0 2px; color:var(--muted); }
+.nt-pers      { display:flex; gap:4px; align-items:center;
+                color:var(--muted); font-size:13px; }
+.nt-per       { min-width:36px; min-height:34px; padding:4px 8px;
+                border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:13px; }
+.nt-per:hover { border-color:var(--gold-ink); }
+.nt-per.is-on { background:var(--ink); color:var(--card); border-color:var(--ink); }
+
+/* --------------------------------------------------------------------------
+   THE TABLE.
+
+   Sticky head, because a family list is read by scanning and a column heading
+   that has scrolled away turns "3" into a number with no name.
+   -------------------------------------------------------------------------- */
+.nt-scroll    { overflow-x:auto; border:1px solid var(--line);
+                border-radius:var(--radius); background:var(--card); }
+.nt-table     { width:100%; border-collapse:collapse; font-size:14px; }
+.nt-table thead th { position:sticky; top:0; z-index:2;
+                background:var(--paper); text-align:left;
+                padding:10px 14px; border-bottom:1px solid var(--line);
+                font-size:12.5px; letter-spacing:.02em; color:var(--muted);
+                text-transform:uppercase; white-space:nowrap; }
+.nt-sortable  { border:0; background:none; padding:0; font:inherit;
+                color:inherit; text-transform:inherit; letter-spacing:inherit;
+                font-size:inherit; cursor:pointer; }
+.nt-sortable::after { content:""; }
+.nt-sortable.is-on { color:var(--ink); font-weight:800; }
+.nt-sortable.is-on[aria-sort="ascending"]::after  { content:" \2191"; }
+.nt-sortable.is-on[aria-sort="descending"]::after { content:" \2193"; }
+.nt-table td  { padding:11px 14px; border-bottom:1px solid var(--line);
+                vertical-align:top; }
+.nt-table tbody tr:last-child td { border-bottom:0; }
+.nt-row       { cursor:pointer; }
+.nt-row:hover td { background:var(--paper); }
+.nt-row:focus { outline:2px solid var(--gold-ink); outline-offset:-2px; }
+.nt-ref       { font-variant-numeric:tabular-nums; color:var(--muted);
+                white-space:nowrap; }
+.nt-who strong, .nt-who { font-weight:600; }
+.nt-ok        { color:var(--muted); font-size:13px; }
+.nt-warn-t    { color:var(--brand-700); font-size:13px; font-weight:600; }
+.nt-bad       { color:var(--danger-ink); font-size:13px; font-weight:700; }
+
+/*  THE WRAPPER CARRIES position:relative, NOT THE CELL. A <td> given
+    position:relative inside border-collapse:collapse drops out of the border
+    model and the row's bottom rule disappears under it. Found on the roll;
+    not repeated here. */
+.nt-acts      { width:1%; white-space:nowrap; }
+.nt-acts-wrap { position:relative; }
+.nt-open      { border:1px solid var(--line); border-radius:8px;
+                background:var(--card); color:var(--ink); cursor:pointer;
+                font:inherit; font-size:13px; padding:6px 13px; }
+.nt-open:hover { border-color:var(--gold-ink); }
+
+.nt-empty     { padding:26px 18px; text-align:center; color:var(--muted);
+                border:1px dashed var(--line); border-radius:var(--radius);
+                margin-top:14px; font-size:14px; }
+
+/* --------------------------------------------------------------------------
+   ONE FAMILY.
+
+   Two columns at desk width — the children on the left, who to ring on the
+   right — because those are the two questions and putting one under the other
+   means scrolling to answer the second.
+   -------------------------------------------------------------------------- */
+/*  THE BACK CONTROL IS THE FIRST THING IN THE CARD and looks like the one in
+    the masthead, because a person who has just lost the list needs to see the
+    way back before they read anything else. */
+.nt-back      { border:0; background:none; padding:4px 0; margin-bottom:12px;
+                font:inherit; font-size:13.5px; font-weight:700;
+                color:var(--brand-700); cursor:pointer; }
+.nt-back:hover { color:var(--plum); text-decoration:underline; }
+
+.nt-record    { margin-top:0; padding:20px 22px; border:1px solid var(--line);
+                border-top:3px solid var(--plum);
+                border-radius:var(--radius); background:var(--card); }
+.nt-rec-head  { display:flex; gap:18px; align-items:flex-start;
+                justify-content:space-between; flex-wrap:wrap;
+                padding-bottom:16px; border-bottom:1px solid var(--line);
+                margin-bottom:18px; }
+.nt-rec-head h3 { margin:0 0 4px; font-family:var(--serif); font-size:1.35rem; }
+.nt-rec-head .nt-sub { margin:0; }
+.nt-rec-acts  { display:flex; gap:10px; flex-wrap:wrap; }
+.nt-rec-acts .btn { width:auto; flex:0 0 auto; }
+
+.nt-two       { display:grid; gap:26px;
+                grid-template-columns:repeat(auto-fit, minmax(270px, 1fr)); }
+.nt-two h4    { margin:0 0 10px; font-size:13px; text-transform:uppercase;
+                letter-spacing:.03em; color:var(--muted); }
+.nt-list      { list-style:none; margin:0; padding:0;
+                display:flex; flex-direction:column; gap:8px; }
+.nt-list li   { display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;
+                padding-bottom:8px; border-bottom:1px solid var(--line); }
+.nt-list li:last-child { border-bottom:0; }
+.nt-kid       { font-weight:700; color:var(--plum); text-decoration:none;
+                font-size:14.5px; }
+.nt-kid:hover { text-decoration:underline; }
+.nt-list .nt-q { display:inline; margin:0; }
+
+.nt-guardian  { padding-bottom:10px; margin-bottom:10px;
+                border-bottom:1px solid var(--line); }
+.nt-guardian:last-child { border-bottom:0; margin-bottom:0; }
+.nt-guardian strong { font-size:14.5px; }
+.nt-guardian a { color:var(--brand-700); }
+.nt-pill      { display:inline-block; padding:2px 8px; border-radius:999px;
+                background:var(--paper); border:1px solid var(--line);
+                font-size:11px; text-transform:uppercase; letter-spacing:.03em;
+                color:var(--muted); vertical-align:1px; }
+
+/*  SAID IN WORDS, not left as an empty column somebody has to notice. Six of
+    the 330 families have neither a telephone number nor an email address. */
+.nt-warn      { margin:0; padding:12px 14px; border-radius:10px;
+                background:var(--danger); border:1px solid var(--danger-ink);
+                color:var(--danger-ink); font-size:13.5px; font-weight:600; }
+
+.nt-move-box, .nt-letter-box {
+                margin-top:22px; padding:16px 18px; border:1px solid var(--line);
+                border-left:3px solid var(--gold-ink); border-radius:10px;
+                background:var(--paper); }
+.nt-move-box h4, .nt-letter-box h4 { margin:0 0 6px; font-size:15px; }
+.nt-fld       { display:block; margin:14px 0 0; }
+.nt-fld span  { display:block; font-size:13px; font-weight:700; margin-bottom:5px; }
+.nt-fld select { width:100%; max-width:430px; min-height:44px; padding:9px 12px;
+                border:1px solid var(--line); border-radius:10px;
+                background:var(--card); color:var(--ink); font:inherit; }
+.nt-move-acts { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+.nt-move-acts .btn { width:auto; flex:0 0 auto; }
+.nt-letter-pick { display:grid; gap:12px; margin-top:12px;
+                grid-template-columns:repeat(auto-fit, minmax(258px, 1fr)); }
+.nt-move      { margin-left:auto; }
+
+/* --------------------------------------------------------------------------
+   THE PRINTED LETTER.
+
+   On screen this is nothing. Only the print stylesheet shows it, and only
+   after the button has filled it.
+
+   THE WHOLE SCREEN USED TO PRINT. On the roll, a @media print block existed
+   and a check asserted that it existed, and the entire page still came out of
+   the printer — because admin/shell.css carries
+
+       body.has-ashell .shell { display:block !important; }
+
+   and when two !important declarations collide, SPECIFICITY decides: (0,2,0)
+   beats `body > *` at (0,0,1). The rail won. The fix is the more specific
+   selector below, and the check now counts what is on the paper rather than
+   what is in the stylesheet.
+   -------------------------------------------------------------------------- */
+.nt-print     { display:none; }
+
+@media print {
+  body.printing-letters > *                 { display:none !important; }
+  body.printing-letters.has-ashell .shell   { display:none !important; }
+  body.printing-letters > .nt-print         { display:block !important;
+                                             padding:0; margin:0; }
+  .nt-print   { font-size:11.5pt; line-height:1.55; color:#000; }
+  .lt-head    { display:flex; gap:16px; align-items:flex-start;
+                border-bottom:1.5pt solid #000; padding-bottom:10pt;
+                margin-bottom:22pt; }
+  /*  THE LOGO PRINTS AS SOMETHING. On the roll the check said "there is an
+      <img>" while the mark came out as nothing at all: the artwork is cream,
+      rgb(243,239,227), on white paper. brightness(0) makes it ink. The check
+      counts dark pixels. */
+  .lt-logo    { width:58px; height:auto; filter:brightness(0); }
+  .lt-head h1 { margin:0; font-size:17pt; letter-spacing:.01em; }
+  .lt-head p  { margin:0; font-size:10pt; }
+  .lt-from    { margin-left:auto; text-align:right; }
+  .lt-from p  { margin:0; font-size:9pt; }
+  .lt-to      { margin:0 0 18pt; }
+  .lt-date    { margin:0 0 18pt; }
+  .lt-re      { margin:0 0 14pt; }
+  .lt-body p  { margin:0 0 11pt; }
+  .lt-body    { outline:none; }
+}
+
+/* --------------------------------------------------------------------------
+   PHONE.
+
+   MEASURED, NOT ASSUMED. The roll's phone check passed with the first row
+   sitting at 883px of a 900px screen — technically present, in practice below
+   the fold. The rule is that a whole row has to fit.
+   -------------------------------------------------------------------------- */
+@media (max-width: 720px) {
+  /*  THE FIGURES BECOME ONE SWIPEABLE ROW.
+      Stacked two-up they were three rows deep — 210px of counters above a list
+      of families, on the screen with the least room for them. As one row that
+      scrolls sideways they cost 84px and nothing is lost: the total is first
+      and "no way to reach them" is second, which are the two anybody standing
+      in the office actually looks at.
+
+      -webkit-overflow-scrolling and the scroll-snap are what make it feel like
+      a row of cards rather than a clipped grid. */
+  .nt-figs    { display:flex; gap:10px; margin-bottom:16px;
+                overflow-x:auto; scroll-snap-type:x proximity;
+                -webkit-overflow-scrolling:touch;
+                padding-bottom:4px; }
+  /*  A little room past the last tile, so the row reads as "there is more
+      this way" rather than as a tile clipped by a broken layout. */
+  .nt-figs::after { content:""; flex:0 0 4px; }
+  .nt-figs::-webkit-scrollbar { height:4px; }
+  .nt-figs::-webkit-scrollbar-thumb { background:var(--line); border-radius:2px; }
+  .nt-fig     { flex:0 0 auto; min-width:132px; padding:10px 12px;
+                scroll-snap-align:start; }
+  .nt-fig b   { font-size:1.35rem; }
+  .nt-fig small { display:none; }
+
+  /*  THE LINKS GO. Pupils and Families & fees are both in the rail, which on
+      a phone is the menu button at the top — so this row was 62px of
+      duplicate navigation directly above the thing people came for. */
+  .nt-head    { display:none; }
+
+  /*  AND SO DOES THE SECOND HEADING. "Families / Choose a family to see its
+      children and who to ring" sits directly under a masthead that already
+      says Families, and cost another 64px.
+
+      WHY THIS MATTERS ENOUGH TO COUNT PIXELS: with all of it in place the
+      first family ended at 895px of a 900px screen. That is the roll's old
+      fault exactly — present, and below the fold — and it is the difference
+      between a screen that looks like a list of families and one that looks
+      like a page of headings you have to scroll past every single time. */
+  #nt-roll    { display:none; }
+  #nt-list-bk > .nt-sub { display:none; }
+
+  /*  Export sits on the count's line rather than a line of its own. */
+  .nt-summary { justify-content:space-between; margin-bottom:8px; }
+  .nt-export-bk { margin:0; order:2; }
+  .nt-search  { margin-bottom:10px; }
+
+  /*  ONE PAGER, AT THE BOTTOM. Two of them is right on a desk, where the top
+      one saves a scroll; on a phone the top one is 62px between the search box
+      and the first family, and the bottom one is where your thumb already is
+      when you have finished reading. */
+  #nt-pager-top { display:none; }
+
+  .nt-sugg    { padding:11px 13px; margin-bottom:14px; }
+  .nt-sugg-top h3 { font-size:14px; }
+  .nt-sugg-row { grid-template-columns:1fr; }
+  .nt-amp     { display:none; }
+  /*  A TABLE BECOMES A STACK OF CARDS.
+      At 390px the five columns did not fit, so .nt-scroll scrolled sideways
+      and put "Who to ring" off the right-hand edge — the one column somebody
+      standing in the office is looking for. A card per family fits, and each
+      value carries its own column name from data-label so "2" and "1" are not
+      two bare numbers. */
+  .nt-scroll  { overflow-x:visible; border:0; background:none; border-radius:0; }
+  .nt-table, .nt-table tbody, .nt-table tr, .nt-table td { display:block;
+                width:auto; }
+  .nt-table thead { display:none; }
+  .nt-row     { border:1px solid var(--line); border-radius:12px;
+                background:var(--card); margin-bottom:10px; padding:12px 14px; }
+  .nt-row:hover td { background:none; }
+  .nt-table td { border:0; padding:3px 0; font-size:14px; }
+  .nt-table tbody tr:last-child td { border-bottom:0; }
+  .nt-table td[data-label]::before {
+                content:attr(data-label) "  ";
+                display:inline-block; min-width:92px;
+                font-size:11.5px; text-transform:uppercase; letter-spacing:.03em;
+                color:var(--muted); font-weight:700; }
+  /*  The family's own name is the card's heading, so it does not want a label
+      in front of it. */
+  .nt-who     { font-size:15.5px !important; font-weight:700; padding-bottom:6px !important; }
+  .nt-who::before { display:none !important; }
+  .nt-who .nt-q { margin-top:1px; font-weight:400; }
+  .nt-ref     { font-size:12px !important; }
+  .nt-acts    { width:auto; padding-top:10px !important; }
+  .nt-open    { width:100%; padding:9px 12px; }
+  .nt-record  { padding:16px 14px; }
+  .nt-rec-acts { width:100%; }
+  .nt-move    { margin-left:0; }
+}
+
+/* ===========================================================================
+   WHAT THIS SCREEN HAS THAT THE FAMILIES SCREEN DOES NOT
+
+   The shapes above are the Families screen's, prefixed nt-: the same pager,
+   the same figures, the same table-that-becomes-cards on a phone. Two screens
+   the same office uses on the same evening should not each have their own idea
+   of what a pager looks like.
+
+   Below is only what is different, which is the job, the choosing, and the
+   letters.
+   =========================================================================== */
+
+/*  THE JOB. Not a dashboard tile: a sentence with a number in it and a bar
+    that is obviously not full. It is meant to look unfinished until it is. */
+.nt-job       { border:1px solid var(--line); border-left:4px solid var(--danger-ink);
+                background:var(--card); border-radius:var(--radius);
+                padding:20px 22px; margin-bottom:22px; }
+.nt-job.is-done { border-left-color:var(--success-ink); }
+.nt-job h3    { margin:0 0 12px; font-size:1.2rem; }
+.nt-bar       { height:8px; border-radius:999px; background:var(--line);
+                overflow:hidden; margin-bottom:10px; }
+.nt-bar span  { display:block; height:100%; background:var(--danger-ink);
+                border-radius:999px; transition:width .3s ease; }
+.nt-job.is-done .nt-bar span { background:var(--success-ink); }
+.nt-bignum    { margin:0 0 8px; font-size:15.5px; }
+.nt-bignum b  { font-family:var(--serif); font-size:1.5rem; }
+.nt-job .nt-sub { max-width:74ch; margin-bottom:8px; }
+.nt-job .nt-sub:last-child { margin-bottom:0; }
+
+.nt-ok        { padding:12px 16px; border-radius:10px; margin-bottom:18px;
+                background:#F2F6F0; border:1px solid var(--success-ink);
+                color:var(--success-ink); font-size:14px; font-weight:600; }
+
+/*  CHOOSING. */
+.nt-pick      { width:1%; white-space:nowrap; }
+.nt-pick input { width:19px; height:19px; cursor:pointer; }
+.nt-yes       { color:var(--success-ink); font-weight:700; font-size:13.5px; }
+.nt-no        { color:var(--danger-ink); font-weight:700; font-size:13.5px; }
+
+/*  THE BAR THAT SAYS WHAT WILL HAPPEN.
+    Sticky at the bottom, because with fifty rows on screen the person doing
+    the choosing is at the bottom of the list when they finish, and a button
+    at the top would mean scrolling back to a number they can no longer see. */
+.nt-chosen    { position:sticky; bottom:0; z-index:5;
+                display:flex; gap:16px; align-items:center; flex-wrap:wrap;
+                justify-content:space-between;
+                margin-top:14px; padding:14px 18px;
+                border:1px solid var(--ink); border-radius:var(--radius);
+                background:var(--card);
+                box-shadow:0 -6px 22px -14px rgba(43,7,26,.5); }
+.nt-chosen-n  { font-size:15px; }
+.nt-chosen-n strong { font-family:var(--serif); font-size:1.3rem; }
+.nt-chosen-acts { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.nt-chosen-acts .btn { width:auto; flex:0 0 auto; }
+
+.nt-confirm   { margin-top:16px; padding:18px 20px; border:1px solid var(--line);
+                border-left:4px solid var(--gold-ink); border-radius:var(--radius);
+                background:var(--paper); }
+.nt-confirm h4 { margin:0 0 8px; font-size:1.05rem; }
+.nt-how       { display:grid; gap:12px; margin:14px 0;
+                grid-template-columns:repeat(auto-fit, minmax(258px, 1fr)); }
+
+.nt-soon      { margin-top:32px; padding:18px 20px; border:1px dashed var(--line);
+                border-radius:var(--radius); background:var(--paper); }
+.nt-soon h3   { margin:0 0 8px; font-size:1.05rem; color:var(--muted); }
+.nt-soon p    { color:var(--muted); font-size:14px; max-width:70ch; }
+.nt-soon p:last-child { margin-bottom:0; }
+
+/*  THE LETTERS. One family per page. */
+.nt-print     { display:none; }
+
+@media print {
+  body.printing-letters > *                { display:none !important; }
+  body.printing-letters.has-ashell .shell  { display:none !important; }
+  body.printing-letters > .nt-print        { display:block !important;
+                                             padding:0; margin:0; }
+  .nt-print   { font-size:11.5pt; line-height:1.55; color:#000; }
+  /*  ONE FAMILY PER SHEET. Two letters running into each other across a page
+      break is not a letter you can hand to anybody. */
+  .lt         { page-break-after:always; break-after:page; }
+  .lt:last-child { page-break-after:auto; break-after:auto; }
+  .lt-head    { display:flex; gap:16px; align-items:flex-start;
+                border-bottom:1.5pt solid #000; padding-bottom:10pt;
+                margin-bottom:22pt; }
+  /*  The wordmark is cream, rgb(243,239,227), made for the dark rail. On
+      white paper it printed as nothing at all while a check that asked only
+      "is there an <img>" passed the whole time. brightness(0) makes it ink. */
+  .lt-logo    { width:58px; height:auto; filter:brightness(0); }
+  .lt-head h1 { margin:0; font-size:17pt; letter-spacing:.01em; }
+  .lt-head p  { margin:0; font-size:10pt; }
+  .lt-from    { margin-left:auto; text-align:right; }
+  .lt-from p  { margin:0; font-size:9pt; }
+  .lt-to      { margin:0 0 18pt; font-weight:700; }
+  .lt-date    { margin:0 0 18pt; }
+  .lt-re      { margin:0 0 14pt; }
+  .lt-body p  { margin:0 0 11pt; }
+}
