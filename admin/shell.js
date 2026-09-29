@@ -394,7 +394,25 @@
     var railRoles = opts.roles || [];
     var canAdmin = railRoles.indexOf("admin") !== -1 ||
                    railRoles.indexOf("hall_office") !== -1;
-    var showHome = canAdmin || railRoles.length === 0;
+    /*  A PARENT IS NOT "NO ROLE", THOUGH THEY HAVE NO ROLE ROW.
+
+        29 September. Parents deliberately have no user_roles row (a row
+        would make current_masjid() resolve for them and widen what the
+        staff gates might show), so on a page that reads roles from that
+        table a parent looks exactly like the account described above. The
+        no-role exception was written for an account with nowhere else to
+        go; a parent has somewhere - portal/parent/ - and the row it
+        offered led to an Admin Centre that refuses them, from a rail with
+        nothing else in it. The first parent to sign in at /portal/ saw
+        precisely that.
+
+        So the caller can say so: `parent: true`, or "parent" in roles (the
+        parents' own screens pass that). Either way the exception does not
+        apply. It is NOT a permission and does not touch canAdmin: somebody
+        who is an administrator keeps their door whatever else they are.
+        A role-less STAFF account is unchanged.                             */
+    var isParent = opts.parent === true || railRoles.indexOf("parent") !== -1;
+    var showHome = canAdmin || (railRoles.length === 0 && !isParent);
 
     out.push('<div class="ashell-top"><a href="' +
              esc(showHome ? up(HOME.href) : up("index.html")) + '" title="' +

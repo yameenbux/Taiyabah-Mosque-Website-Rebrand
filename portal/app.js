@@ -22,8 +22,9 @@
    database has no madrasah tables yet, and must not have until the work listed
    on the page itself is finished. A madrasah roll is Article 9 data.
 
-   The teachers' and parents' views are not built. A teacher signing in here
-   is told so rather than being shown an administrator's console.
+   A teacher lands on the teachers' page and a parent is sent on to the
+   parents' portal at portal/parent/. Somebody with none of those is told so,
+   and what to do, rather than being shown an administrator's console.
    =========================================================================== */
 (function () {
   "use strict";
@@ -73,6 +74,72 @@
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
   });
 
+  /* =========================================================================
+     IS THIS A PARENT? (29 September)
+
+     A PARENT HAS NO ROW IN user_roles, ON PURPOSE - a row would make
+     current_masjid() resolve for them and widen what the staff gates might
+     show (db/119, slice 1). A parent is somebody is_parent() says is one,
+     because madrasah_parent_logins has their login. This page used to decide
+     who somebody was from user_roles alone, so a parent fell through every
+     branch into "no access" - or, when the message was the old one, into a
+     staff page that said the parents' side was not built. It had been built
+     for days.
+
+     ASKED BEFORE THE TWO-STEP PROMPT, NOT AFTER. A parent has no second
+     factor and the parents' portal does not ask for one, but routeAfterPassword
+     below sends every account with no authenticator to enrol one. So the
+     first real parent to sign in here would be told to install an
+     authenticator app for a portal that does not want it. The answer has to
+     exist before that decision, which is why it is not in mount().
+
+     WHERE IT SITS AGAINST THE STAFF ROLES. Somebody who is a parent AND holds
+     admin, madrasah or teacher is treated as staff - the same rule mount()
+     already applies to an administrator who also teaches: they are here to
+     do the job, and the parents' portal is one address away. (db/119's
+     health check reports that combination as a fault, so it should not
+     occur; this is what happens if it does.) A parent is asked about staff
+     roles only once is_parent() has said yes, so staff pay for one small
+     call and nothing else.
+
+     IT NEVER HOLDS THE PAGE UP. The answer is true, false, or null for
+     "could not tell", and null - a failed call, a refusal, three seconds of
+     silence - behaves exactly as this page always did. A slow answer is
+     dropped, not waited for.                                               */
+  var PARENT_CHECK_MS = 3000;
+  var parentState = null;      // true = a parent and nothing else; false/null = not, or unknown
+
+  function isParentOnly() {
+    return new Promise(function (resolve) {
+      var done = false;
+      function finish(v) { if (!done) { done = true; clearTimeout(timer); resolve(v); } }
+      var timer = setTimeout(function () { finish(null); }, PARENT_CHECK_MS);
+      try {
+        sb.rpc("is_parent").then(function (res) {
+          if (!res || res.error) { finish(null); return; }
+          if (res.data !== true) { finish(false); return; }
+          //  A parent. Are they also staff? Local session read, then one row query.
+          sb.auth.getSession().then(function (s) {
+            var u = s && s.data && s.data.session && s.data.session.user;
+            if (!u) { finish(null); return; }
+            sb.from("user_roles").select("role").eq("user_id", u.id).then(function (r) {
+              if (!r || r.error) { finish(null); return; }
+              var staff = (r.data || []).some(function (x) {
+                return x.role === "admin" || x.role === "madrasah" || x.role === "teacher";
+              });
+              finish(!staff);
+            }, function () { finish(null); });
+          }, function () { finish(null); });
+        }, function () { finish(null); });
+      } catch (e) { finish(null); }
+    });
+  }
+
+  //  Same origin, same stored session: the parents' portal signs them straight in.
+  function goToParentPortal() {
+    try { window.location.replace("parent/"); return true; } catch (e) { return false; }
+  }
+
   function loadIdentity() {
     return sb.auth.getUser().then(function (res) {
       var user = res.data && res.data.user;
@@ -91,6 +158,8 @@
           roles: (out[1].data || []).map(function (r) { return r.role; }),
           //  See mustChangeGate(). A password somebody else chose is a ticket.
           mustChange: !!(out[0].data && out[0].data.must_change_password),
+          //  See isParentOnly(). Only ever true when the redirect could not be made.
+          isParent: parentState === true,
           errors: errs
         };
       });
@@ -427,34 +496,35 @@
            "be there." }
     ];
 
-    /* WHAT A PARENT WILL BE ABLE TO DO. Deliberately starts with the two
-       things families actually ring the office about — fees and absence —
-       rather than with the reports, which is what a school system would put
-       first. */
+    /* WHAT A PARENT CAN DO, AND WHAT THEY CANNOT YET. Rewritten 29 September:
+       this was a list of eight promises headed "none of it is built", and
+       four of the eight were built. A row with `live` and an href is a link
+       into portal/parent/; every other row is still a promise, and the
+       heading above the list says so. Fees, collection permissions and
+       end-of-year reports are genuinely not built and are not marked. */
     var PARENT = [
-      { t: "Pay the fees",
-        d: "Online, at any hour, with a receipt — instead of finding cash and " +
-           "catching somebody at the office between 5 and 7." },
-      { t: "Tell the masjid your child is absent",
+      { t: "Tell the masjid your child is absent", live: true, href: "parent/absence/",
         d: "Before the lesson, in a few seconds, so the teacher is not ringing " +
            "round to find out." },
-      { t: "See how your child is getting on",
-        d: "What they are learning, how they are doing, and the end-of-year " +
-           "report when it is ready." },
-      { t: "Keep your details right",
-        d: "A new phone number, a new address, a change of school — changed " +
-           "once and right everywhere, rather than told to somebody and lost." },
+      { t: "See how your child is getting on", live: true, href: "parent/progress/",
+        d: "Sabaq, sabqi and manzil, and a note from the teacher, for what the " +
+           "teacher has chosen to share with you." },
+      { t: "See attendance", live: true, href: "parent/attendance/",
+        d: "Evening by evening, and who recorded it." },
+      { t: "Message the office", live: true, href: "parent/messages/",
+        d: "Write to the madrasah and read the reply, instead of ringing " +
+           "between 5 and 7." },
+      { t: "See what the madrasah holds about your children", live: true, href: "parent/",
+        d: "Their details, medical notes and allergies, and who is on your family record. " +
+           "Something wrong? Tell the office from there and they will correct it." },
+      { t: "Pay the fees",
+        d: "Online, at any hour, with a receipt. Not built: fees are still " +
+           "paid at the office." },
       { t: "Say who may collect them",
-        d: "Who is allowed to take your child home, and who is not. The masjid " +
-           "keeps to what you put here." },
-      { t: "Tell us about medical needs and allergies",
-        d: "So the person in the room on the day knows, and it does not depend " +
-           "on somebody remembering." },
-      { t: "See homework and what was covered",
-        d: "What was set and when it is due, so you can help." },
-      { t: "Enrol another child",
-        d: "Without filling the same form in again for a family the masjid " +
-           "already knows." }
+        d: "Who is allowed to take your child home, and who is not. Not built: " +
+           "tell the teacher or the office." },
+      { t: "End-of-year reports",
+        d: "The report, when it is ready. Not built." }
     ];
 
     /*  A TEACHER'S OWN CLASSES.
@@ -1379,13 +1449,24 @@
       mount: function (identity) {
         var panel = el("md-panel"), noaccess = el("app-noaccess");
 
-        /* THREE PAGES BEHIND ONE DOOR. An administrator gets the console; a
-           teacher and a parent each get a page about their own portal. Until
-           today they got "your side has not been built" and a sign-out button,
-           which is a true sentence and a useless screen.
+        /* THREE PAGES BEHIND ONE DOOR, AND A FOURTH FOR THE PARENT WHO IS SENT
+           ON. An administrator gets the console; a teacher gets the teachers'
+           page; a parent is sent to portal/parent/.
 
            Admin is checked FIRST and on its own: somebody who is both an
-           administrator and a teacher is here to administer. */
+           administrator and a teacher is here to administer. Teacher comes
+           second for the same reason - a teacher who is also a parent is
+           here to teach.
+
+           A PARENT IS DECIDED BEFORE ANY OF THIS, in routeAfterPassword(),
+           from is_parent() - never from a role row, because parents have none
+           by design. By the time this function runs a parent has already been
+           sent on, and the only way one reaches the branch below is that the
+           redirect could not be made (or, in the old data, a `parent` row
+           exists). It was placed there and not here because this function is
+           reached only AFTER the two-step prompt, and a parent has no second
+           factor. The order that matters is: staff roles win, then a parent is
+           a parent, then nothing. */
         //  A PASSWORD SOMEBODY ELSE CHOSE IS A TICKET, NOT A PASSWORD.
         //  Nothing is drawn - no panel, no rail, no data - until this
         //  account has one of its own. See db/093.
@@ -1427,13 +1508,19 @@
           //  address.
           drawRoleList("tc-list", TEACHER);
           drawMyClasses();
-        } else if (identity.roles.indexOf("parent") !== -1) {
+        } else if (identity.isParent === true ||
+                   identity.roles.indexOf("parent") !== -1) {
+          //  THE FALLBACK. Normally unreachable: a parent has been sent to
+          //  portal/parent/ before this page draws. What it shows is true
+          //  about what is built and links to it.
           shown = el("pa-panel");
           drawRoleList("pa-list", PARENT);
         }
 
         if (!shown) {
           if (panel) panel.hidden = true;
+          var who = el("na-email");
+          if (who) who.textContent = identity.user.email;
           if (noaccess) noaccess.hidden = false;
           return;
         }
@@ -1547,8 +1634,20 @@
                    ? ('Assalamu alaikum'
                       + ((identity.profile && identity.profile.full_name)
                           ? ', ' + identity.profile.full_name : ''))
-                   : 'What needs doing',
+                   //  "What needs doing" is an administrator's heading. Over
+                   //  the parents' fallback or the no-access message it was a
+                   //  staff title on a page that is not for staff - seen on
+                   //  the screenshot, not by a test.
+                   : ((identity.roles.indexOf('admin') !== -1 ||
+                       identity.roles.indexOf('madrasah') !== -1)
+                      ? 'What needs doing'
+                      : (identity.isParent === true ||
+                         identity.roles.indexOf('parent') !== -1)
+                         ? 'The parents\u2019 portal' : 'Madrasah'),
         roles:   identity.roles || [],
+        //  A parent has no role row. Without this the rail reads them as an
+        //  account with no role and offers the Admin Centre. See shell.js.
+        parent:  identity.isParent === true,
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""
       });
@@ -1585,6 +1684,20 @@
 
   // Decides where to send someone once their password has been accepted.
   function routeAfterPassword() {
+    //  A PARENT FIRST - see isParentOnly(). Before the two-step decision, so
+    //  that somebody with no authenticator is never asked to make one.
+    return isParentOnly().then(function (parent) {
+      parentState = parent;
+      if (parent === true) {
+        if (goToParentPortal()) return;
+        //  The redirect did not fire. Show the fallback panel, with its link.
+        return loadIdentity().then(renderApp);
+      }
+      return afterParentCheck();
+    });
+  }
+
+  function afterParentCheck() {
     return sb.auth.mfa.getAuthenticatorAssuranceLevel().then(function (res) {
       if (res.error) throw new Error("Couldn't check two-step status: " + res.error.message);
       var data = res.data || {};

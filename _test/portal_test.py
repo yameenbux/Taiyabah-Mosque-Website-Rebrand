@@ -232,11 +232,12 @@ JOBS_LIVE = ["dbs", "main_teacher", "days"]
 JOBS_QUIET = ["no_class", "side", "admissions", "purge"]
 
 
-def stub(roles, today=True, must_change=False, myclasses=None, outstanding=None):
+def stub(roles, today=True, must_change=False, myclasses=None, outstanding=None,
+         is_parent=False, no_factor=False):
     return """
 (function(){
   var ROLES = %s, OV = %s, TODAY = %s, MUSTCHANGE = %s, MYCLASSES = %s,
-      MY_OUTSTANDING = %s;
+      MY_OUTSTANDING = %s, IS_PARENT = %s, NO_FACTOR = %s;
   var client = {
     auth: {
       getSession: function(){ return Promise.resolve({data:{session:{
@@ -246,9 +247,18 @@ def stub(roles, today=True, must_change=False, myclasses=None, outstanding=None)
       signOut: function(){ return Promise.resolve({}); },
       updateUser: function(a){ window.__UPDATED = a;
                               return Promise.resolve({data:{},error:null}); },
+      //  NO_FACTOR is a parent's real state (and a new teacher's): signed in
+      //  at aal1 with nothing enrolled. The page's answer to that is to send
+      //  them to enrol an authenticator, and mfa.enroll is where it shows.
+      //  The flag goes in sessionStorage because a redirect wipes window.
       mfa: { getAuthenticatorAssuranceLevel: function(){
-               return Promise.resolve({data:{currentLevel:'aal2', nextLevel:'aal2'}}); },
-             listFactors: function(){ return Promise.resolve({data:{totp:[{id:'f1'}]}}); } }
+               return Promise.resolve({data: NO_FACTOR
+                 ? {currentLevel:'aal1', nextLevel:'aal1'}
+                 : {currentLevel:'aal2', nextLevel:'aal2'}}); },
+             listFactors: function(){ return Promise.resolve({data:{totp:
+               NO_FACTOR ? [] : [{id:'f1'}]}}); },
+             enroll: function(){ try { sessionStorage.setItem('__ENROLL','1'); } catch(e){}
+                                 return new Promise(function(){}); } }
     },
     from: function(t){
       var rows = t === 'profiles' ? {full_name:'A Person', email:'someone@example.test',
@@ -271,6 +281,13 @@ def stub(roles, today=True, must_change=False, myclasses=None, outstanding=None)
       //  version of the gate assertion did, and it read as "updateUser was
       //  never called". Holding this promise open stops the flow one step
       //  before the reload, with the evidence still on the page.
+      //  THE PARENT CHECK. true / false answer; 'error' fails; 'hang' never
+      //  answers, which is how the three-second give-up is exercised.
+      if (n === 'is_parent') {
+        if (IS_PARENT === 'hang') return new Promise(function(){});
+        if (IS_PARENT === 'error') return Promise.resolve({data:null, error:{message:'is_parent unavailable'}});
+        return Promise.resolve({data: IS_PARENT === true, error:null});
+      }
       if (n === 'madrasah_my_classes') return Promise.resolve({data: MYCLASSES, error:null});
       if (n === 'clear_must_change_password') return new Promise(function(){});
       if (n === 'madrasah_overview') return Promise.resolve({data: OV, error:null});
@@ -293,18 +310,20 @@ def stub(roles, today=True, must_change=False, myclasses=None, outstanding=None)
 """ % (json.dumps(roles), json.dumps(OVERVIEW),
        json.dumps(TODAY) if today else "null", json.dumps(bool(must_change)),
        json.dumps(myclasses if myclasses is not None else MYCLASSES),
-       json.dumps(outstanding))
+       json.dumps(outstanding), json.dumps(is_parent), json.dumps(bool(no_factor)))
 
 
 def open_as(b, roles, w=1400, h=1200, today=True, must_change=False,
-            myclasses=None, outstanding=None):
+            myclasses=None, outstanding=None, is_parent=False, no_factor=False,
+            settle=1200):
     pg = b.new_page(viewport={"width": w, "height": h})
     pg.set_default_timeout(4000)
     errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
-    pg.add_init_script(stub(roles, today, must_change, myclasses, outstanding))
+    pg.add_init_script(stub(roles, today, must_change, myclasses, outstanding,
+                            is_parent, no_factor))
     pg.goto(PAGE, wait_until="load")
-    pg.wait_for_timeout(1200)
+    pg.wait_for_timeout(settle)
     return pg, errs
 
 
@@ -1269,25 +1288,166 @@ with sync_playwright() as p:
     pg.close()
 
     # =====================================================================
-    #  4b. A PARENT
+    #  4b. THE PARENTS' FALLBACK PANEL
+    #
+    #  Reached only when a parent could not be sent on to portal/parent/ - or
+    #  by a `parent` row in user_roles, which the data no longer has. Until
+    #  29 September it said "None of it is built yet" and pointed at the
+    #  telephone, while absence reporting, progress and messaging to the
+    #  office all existed. The assertions below read what it SAYS.
     # =====================================================================
     pg, errs = open_as(b, ["parent"])
     check(pg.is_visible("#pa-panel"), "a parent was not shown the parents' page")
     check(not pg.is_visible("#md-panel"), "A PARENT WAS SHOWN THE ADMINISTRATOR'S CONSOLE")
     check(not pg.is_visible("#tc-panel"), "a parent was shown the teachers' page")
-    items = pg.eval_on_selector_all("#pa-list .rl-item", "els => els.map(e => e.innerText)")
-    check(len(items) >= 6, "the parents' page lists only %d things" % len(items))
-    joined = " ".join(items).lower()
-    for want in ["fee", "absent", "collect"]:
-        check(want in joined, "the parents' page does not mention %r: %r" % (want, joined[:300]))
-    check("coming soon" in text(pg, "#pa-panel").lower(),
-          "the parents' page does not say it is not open yet")
-    #  The one thing a parent needs while it is not open.
-    check("01204" in text(pg, "#pa-panel"),
-          "the parents' page does not say how to reach the office in the meantime")
+    pa = text(pg, "#pa-panel").lower()
+    check("none of it is built" not in pa and "has not been built" not in pa,
+          "the parents' fallback still says nothing is built: %r" % pa[:300])
+    check("not built yet" in pa,
+          "the parents' page does not say what is not built yet")
+    #  The way in is the first thing on it, and it is a real link.
+    hrefs = pg.eval_on_selector_all("#pa-panel a.btn", "els => els.map(e => [e.getAttribute('href'), e.innerText])")
+    check(len(hrefs) == 1 and hrefs[0][0] == "parent/" and "open the parents" in hrefs[0][1].lower(),
+          "the fallback does not offer the way in to the parents' portal: %r" % hrefs)
+    #  What IS built is marked open and is a link to it; what is NOT is neither.
+    rows = pg.eval_on_selector_all("#pa-list .rl-item", """els => els.map(e => ({
+        head: e.querySelector('b').innerText, tag: e.tagName, href: e.getAttribute('href'),
+        live: e.classList.contains('rl-live')}))""")
+    live = dict((r["head"].lower(), r) for r in rows if r["live"])
+    dead = [r for r in rows if not r["live"]]
+    want_live = {"absent": "parent/absence/", "getting on": "parent/progress/",
+                 "attendance": "parent/attendance/", "message the office": "parent/messages/"}
+    for key, href in want_live.items():
+        hit = [r for h, r in live.items() if key in h]
+        check(len(hit) == 1 and hit[0]["tag"] == "A" and hit[0]["href"] == href,
+              "the parents' page does not link %r to %s: %r" % (key, href, hit))
+    check(all(r["tag"] == "DIV" and r["href"] is None for r in dead),
+          "a row that is not built is a link: %r" % dead)
+    dead_txt = " ".join(r["head"] for r in dead).lower()
+    for want in ["fees", "collect", "report"]:
+        check(want in dead_txt,
+              "%r is not built and the parents' page does not list it as such: %r" % (want, dead_txt))
+    check(len(dead) == 3,
+          "the parents' page lists %d unbuilt rows, expected the three that are "
+          "genuinely not built (fees, collection, reports): %r" % (len(dead), dead_txt))
+    check("01204" in pa, "the parents' page does not say how to reach the office in the meantime")
+    check(not pg.is_visible("#app-noaccess"), "a parent was told they have no access")
+    #  Seen on the screenshot, not by a test: the heading over this panel read
+    #  "What needs doing", which is an administrator's.
+    h1 = text(pg, ".ashell-head h1").lower()
+    check("needs doing" not in h1 and "parents" in h1,
+          "the parents' fallback is headed %r" % h1)
     check(not pg.is_visible("#app-top-back"),
           "a parent is offered a link to the admin centre, which refuses them")
     check(errs == [], "uncaught exceptions for a parent: %s" % errs)
+    pg.close()
+
+    # =====================================================================
+    #  4c. A PARENT AS THEY REALLY ARE: NO ROW IN user_roles, is_parent() TRUE
+    #
+    #  The bug the masjid found by signing in as the test parent. Parents have
+    #  no role row, on purpose; the landing page decided who somebody was
+    #  from that table alone, so a parent fell through to "no access" (and,
+    #  before that message was rewritten, to a staff page with a lone
+    #  "Admin Centre" row). They must be SENT ON, and never see the staff page.
+    # =====================================================================
+    STAFF_SAYS = ["what needs doing", "administrators\u2019 view only",
+                  "not been built", "this login does not open anything"]
+    pg, errs = open_as(b, [], is_parent=True, settle=1800)
+    check(pg.url.rstrip("/").endswith("/portal/parent"),
+          "a parent with no role row was not sent to the parents' portal - still at %s" % pg.url)
+    body = text(pg, "body").lower()
+    for phrase in STAFF_SAYS:
+        check(phrase not in body,
+              "a parent, once sent on, is looking at %r" % phrase)
+    check("my children" in body,
+          "a parent was not left on the parents' portal's own page: %r" % body[:200])
+    rail = pg.eval_on_selector_all(".ashell .area .n", "els => els.map(e => e.innerText)")
+    check("Admin Centre" not in " ".join(rail) and "\u2190" not in " ".join(rail),
+          "A PARENT IS OFFERED THE ADMIN CENTRE: %r" % rail)
+    pg.close()
+
+    #  THE ORDER MATTERS. A parent has no authenticator and the parents' portal
+    #  does not want one, but this page sends every account with none to enrol
+    #  one. The answer has to be asked first: this is a parent signed in at aal1
+    #  with nothing enrolled - which is exactly what the test parent looked like
+    #  before somebody enrolled them by hand.
+    pg, errs = open_as(b, [], is_parent=True, no_factor=True, settle=1800)
+    check(pg.url.rstrip("/").endswith("/portal/parent"),
+          "a parent with no authenticator was not sent on - at %s" % pg.url)
+    check(pg.evaluate("sessionStorage.getItem('__ENROLL')") is None,
+          "A PARENT WAS TAKEN TO ENROL AN AUTHENTICATOR before being sent on")
+    pg.close()
+    #  ...and the control that says the flag can be set: the same sign-in for
+    #  somebody who is NOT a parent is taken to enrol, as it always was.
+    pg, errs = open_as(b, [], is_parent=False, no_factor=True)
+    check(pg.evaluate("sessionStorage.getItem('__ENROLL')") == "1",
+          "CONTROL: a non-parent with no authenticator was not taken to enrol, so "
+          "the assertion above proves nothing")
+    pg.close()
+
+    #  Staff who are ALSO parents are staff. Admin first, then teacher, exactly
+    #  as for an administrator who teaches; no redirect, no second landing page.
+    pg, errs = open_as(b, ["admin"], is_parent=True, settle=1800)
+    check(pg.url.rstrip("/").endswith("/portal"),
+          "an administrator who is also a parent was sent away from the console: %s" % pg.url)
+    check(pg.is_visible("#md-panel"), "an administrator who is also a parent lost the console")
+    pg.close()
+    pg, errs = open_as(b, ["teacher"], is_parent=True, settle=1800)
+    check(pg.url.rstrip("/").endswith("/portal"),
+          "a teacher who is also a parent was sent away from the teachers' page: %s" % pg.url)
+    check(pg.is_visible("#tc-panel"), "a teacher who is also a parent lost the teachers' page")
+    pg.close()
+    #  Everybody else is unaffected by the new call.
+    for who, panel in (("admin", "#md-panel"), ("teacher", "#tc-panel")):
+        pg, errs = open_as(b, [who])
+        check(pg.url.rstrip("/").endswith("/portal") and pg.is_visible(panel),
+              "a %s is not where they always were once is_parent() exists: %s" % (who, pg.url))
+        check(errs == [], "uncaught exceptions for a %s: %s" % (who, errs))
+        pg.close()
+
+    #  IF THE CHECK CANNOT BE ANSWERED the page behaves as it always did - it
+    #  does not hang and does not guess. Failing call:
+    pg, errs = open_as(b, [], is_parent="error")
+    check(pg.is_visible("#app-noaccess") and pg.url.rstrip("/").endswith("/portal"),
+          "a failed is_parent() left the page without an answer")
+    check(errs == [], "uncaught exceptions when is_parent() failed: %s" % errs)
+    pg.close()
+    #  Silence. While it waits the page shows nothing that could be misread, and
+    #  when the wait is up it falls through.
+    pg, errs = open_as(b, [], is_parent="hang", settle=1000)
+    check(not pg.is_visible("#app-noaccess") and not pg.is_visible("#md-panel"),
+          "while is_parent() was still pending the page already showed an answer")
+    pg.wait_for_timeout(2900)
+    check(pg.is_visible("#app-noaccess"),
+          "is_parent() never answered and the page never gave up on it")
+    pg.close()
+
+    # =====================================================================
+    #  6b. THE NO-ACCESS MESSAGE IS TRUE, AND SAYS WHAT TO DO
+    # =====================================================================
+    pg, errs = open_as(b, [])
+    na = text(pg, "#app-noaccess")
+    check(pg.is_visible("#app-noaccess"), "somebody with no role and no parent login was not told so")
+    for bad in ["not been built", "has not been built", "administrators\u2019 view only",
+                "administrators' view only"]:
+        check(bad not in na.lower(), "the no-access message still says %r" % bad)
+    check("someone@example.test" in na,
+          "the no-access message does not say which login it is talking about: %r" % na)
+    check("needs doing" not in text(pg, ".ashell-head h1").lower(),
+          "the no-access page is headed %r, an administrator's heading" % text(pg, ".ashell-head h1"))
+    check("01204" in na, "the no-access message does not say who to ring")
+    check("parent" in na.lower() and "teacher" in na.lower() and "administrator" in na.lower(),
+          "the no-access message does not say what to do for a parent, a teacher and staff: %r" % na)
+    check("user access" in na.lower(),
+          "the no-access message does not say where staff access is given: %r" % na)
+    check("sign out" in na.lower(), "the no-access message does not offer signing out and trying again")
+    #  A genuinely role-less staff account keeps its way back, on purpose - see
+    #  admin/shell.js. This is the assertion that says the parent fix did not
+    #  take it away from them.
+    rail = pg.eval_on_selector_all(".ashell .area .n", "els => els.map(e => e.innerText)")
+    check(any("Admin Centre" in r for r in rail),
+          "a role-less staff account lost its way to the named 'no access' screen: %r" % rail)
     pg.close()
 
     # =====================================================================

@@ -899,6 +899,12 @@ a.rl-item:focus-visible{outline:3px solid var(--gold-ink);outline-offset:2px;}
 .rl-item b{display:block;font-size:1.003rem;color:var(--ink);font-weight:700;line-height:1.35;}
 .rl-item span{display:block;font-size:.931rem;color:var(--muted);line-height:1.55;margin-top:3px;}
 
+.pa-open-row{margin:0 0 18px;}
+a.btn.pa-open{width:auto;text-decoration:none;}
+#app-noaccess.na p{margin:0;}
+#app-noaccess.na p + p{margin-top:8px;}
+#app-noaccess.na ul{margin:10px 0 0 1.2em;}
+#app-noaccess.na li{margin-top:6px;}
 .rl-soon{
   margin-top:22px;border:1px solid var(--gold);border-radius:13px;
   background:rgba(198,162,76,.09);padding:16px 18px;
@@ -1044,7 +1050,7 @@ a.rl-item:focus-visible{outline:3px solid var(--gold-ink);outline-offset:2px;}
       <a class="back" href="../portals/">&larr; Back to the admin centre</a>
     </div>
 
-    <p class="pcredit">Designed &amp; built by <a href="https://ysbdesigns.uk" target="_blank" rel="noopener">YSB Designs</a></p>
+    <p class="pcredit">Powered by <a href="https://masjidone.co.uk" target="_blank" rel="noopener">MasjidOne</a></p>
   </div>
 
   <div class="panel">
@@ -1152,9 +1158,26 @@ a.rl-item:focus-visible{outline:3px solid var(--gold-ink);outline-offset:2px;}
 
       <div class="err" id="app-error" hidden></div>
 
-      <div class="err" id="app-noaccess" hidden>
-        The teachers&rsquo; and parents&rsquo; side of the madrasah has not been built yet.
-        This page is the administrators&rsquo; view only, and only after two-step.
+      <!-- READ BY SOMEBODY WHO HAS JUST BEEN REFUSED, so it says what is true
+           and what to do next, in that order. It used to say the teachers' and
+           parents' side "has not been built yet" - false for days, and the
+           reason a parent who signed in here was told their own portal did
+           not exist. Nothing here promises a screen; it names the three ways
+           this happens and the person who can fix each. The email address is
+           put in the first line, because the rail that also shows it is a
+           drawer on a phone. -->
+      <div class="err na" id="app-noaccess" hidden>
+        <p><strong>You are signed in as <span id="na-email"></span>, but this
+          login does not open anything in the madrasah portal.</strong></p>
+        <p>If that is not the email address the madrasah gave you, sign out
+          and try again with the right one.</p>
+        <ul>
+          <li><b>Parents:</b> ring the madrasah office on 01204&nbsp;535&nbsp;997
+            between 5pm and 7pm. They can set up a parent login for your family.</li>
+          <li><b>Teachers and staff:</b> ask an administrator to give this
+            account access. They do it from <i>User access</i> in the Admin
+            Centre.</li>
+        </ul>
       </div>
 
       <section class="bk" id="md-panel" hidden>
@@ -1309,28 +1332,35 @@ a.rl-item:focus-visible{outline:3px solid var(--gold-ink);outline-offset:2px;}
 
       <!-- ===================== A PARENT ===================== -->
       <section class="bk role-land" id="pa-panel" hidden>
+        <!-- A FALLBACK. A parent who signs in is sent straight to
+             portal/parent/, so this is what they see only if that did not
+             happen. It says what is built and what is not, and the first
+             thing on it is the way in. It used to say none of it was built,
+             which stopped being true on 29 September. -->
         <div class="bk-head">
           <h2>The parents&rsquo; portal</h2>
-          <span class="bk-sub">What it will do, and where it has got to.</span>
+          <span class="bk-sub">What is open, and what is not yet.</span>
         </div>
-        <p class="rl-lead">Everything below is what the masjid has asked for. None of
-          it is built yet. Until it is, the office is still the way to do all of
-          it &mdash; ring 01204&nbsp;535&nbsp;997 between 5pm and 7pm.</p>
+        <p class="pa-open-row"><a class="btn btn-gold pa-open" href="parent/">Open the parents&rsquo; portal</a></p>
+        <p class="rl-lead">The rows marked open now are open, and pressing one
+          takes you straight to it. The rest are what the masjid has asked for and are
+          not built yet &mdash; until they are, the office still does them:
+          ring 01204&nbsp;535&nbsp;997 between 5pm and 7pm.</p>
         <div class="rl-list" id="pa-list"></div>
         <div class="rl-soon">
           <h3>Coming soon</h3>
-          <!-- Same correction as the teachers' panel above. The roll HAS
-               moved across; what has not been built is the parents' side of
-               it. Saying "nothing has moved" to a parent whose child is on
-               that roll is not a cautious statement, it is a wrong one. -->
-          <p>None of this is open yet &mdash; the parents&rsquo; portal has not
-            been built. Your child&rsquo;s madrasah record <strong>is</strong>
-            held in this system, and what is kept, why, and for how long is
-            set out in the <a href="../madrasah-privacy/">privacy notice</a>.
-            A madrasah roll is <strong>special category data</strong> under UK
-            law and is treated that way.</p>
-          <p>Nothing changes for you in the meantime. The office handles fees,
-            absences and everything else exactly as it does now.</p>
+          <!-- Fees, collection permissions and end-of-year reports are the
+               three rows that are genuinely not built; the sentence names
+               them so the list above and the line below cannot drift. -->
+          <p>Paying fees online, saying who may collect your child and
+            end-of-year reports are not built yet. Your child&rsquo;s madrasah
+            record <strong>is</strong> held in this system, and what is kept,
+            why, and for how long is set out in the
+            <a href="../madrasah-privacy/">privacy notice</a>. A madrasah roll
+            is <strong>special category data</strong> under UK law and is
+            treated that way.</p>
+          <p>Until those are built, fees, collection and reports go through
+            the office exactly as they do now.</p>
         </div>
       </section>
 

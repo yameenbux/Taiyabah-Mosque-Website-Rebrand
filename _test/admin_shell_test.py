@@ -121,6 +121,19 @@ EXPECTED = {
     #  "you have no access" screen instead of a blank one. That is worth
     #  reaching; an empty rail with nothing to click is not.
     "__none__": ["Admin Centre"],
+    #  ...AND A PARENT IS NOT THAT ACCOUNT. 29 September. Parents have no
+    #  user_roles row by design, so on /portal/ - which reads roles from that
+    #  table - a parent arrives looking exactly like "__none__" above, and was
+    #  offered the Admin Centre: a door that refuses them, from a rail with
+    #  nothing else in it. The no-role exception above is for an account with
+    #  nowhere else to go, and a parent has somewhere. So the caller says so
+    #  (`parent: true` - that is the "__parent__" case, whose ROLES are still
+    #  empty) and the exception does not apply. "parent" as a named role, which
+    #  is what the parents' own screens pass, has never been offered it. What
+    #  did NOT change: "__none__" above, the role-less STAFF account, keeps
+    #  its row for exactly the reason its comment gives.
+    "__parent__": [],
+    "parent": [],
 }
 
 #  The headings, in order, for an administrator. Written out for the same
@@ -386,8 +399,8 @@ for d in SCREENS:
              "them" if len(orphans) > 1 else "it"))
 
 MOUNT = """a => {
-  const [key, title, roles] = a;
-  AdminShell.mount({ current:key, title:title, roles:roles,
+  const [key, title, roles, parent] = a;
+  AdminShell.mount({ current:key, title:title, roles:roles, parent:!!parent,
                      name:'Committee Member', email:'c@example.test' });
 }"""
 
@@ -454,16 +467,22 @@ with sync_playwright() as p:
     pg.goto(BASE + "venue/", wait_until="load", timeout=30000)
     pg.wait_for_timeout(700)
     for role, want in EXPECTED.items():
-        roles = [] if role == "__none__" else [role]
+        roles = [] if role.startswith("__") else [role]
         pg.evaluate("() => { const r = document.querySelector('.ashell'); if (r) r.remove(); "
                     "const b = document.querySelector('.ashell-bar'); if (b) b.remove(); "
                     "const s = document.querySelector('.ashell-scrim'); if (s) s.remove(); "
                     "document.body.classList.remove('has-ashell'); }")
-        pg.evaluate(MOUNT, ["venue", "Hall Hire", roles])
+        pg.evaluate(MOUNT, ["venue", "Hall Hire", roles, role == "__parent__"])
         pg.wait_for_timeout(200)
         r = pg.evaluate(READ)
         check(r["rows"] == want,
               "a %s account is offered %r, expected %r" % (role, r["rows"], want))
+        #  The logo in the corner is a way out too, and says where it goes. A
+        #  parent's goes to the website; the Admin Centre is not theirs.
+        if role in ("__parent__", "parent", "teacher"):
+            tip = pg.evaluate("() => document.querySelector('.ashell-top a').title")
+            check(tip == "Back to the website",
+                  "a %s account's corner link says %r, not 'Back to the website'" % (role, tip))
         #  No group may be drawn with nothing under it. "Admin Centre" is the
         #  one row that sits OUTSIDE every group — it is drawn directly, not
         #  under a <details> heading — so it does not count towards how many
