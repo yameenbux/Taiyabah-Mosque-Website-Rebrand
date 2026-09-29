@@ -175,6 +175,26 @@
     }
 
     var who = (identity.profile && identity.profile.full_name) || "";
+    /*  ITS OWN ESCAPE, AND THE REASON IT NEEDS ONE.
+        This overlay is deliberately self-contained — its own styles, its own
+        markup, nothing borrowed from the page it lands on — because it has to
+        work on whichever screen a person happens to open first. The greeting
+        was the one line that broke that rule: it called the module's esc(),
+        which is a LOCAL of another function in every one of these files, so
+        it threw "esc is not defined" the moment it tried to greet anybody by
+        name. Every teacher login carries a name, and every one of them is
+        created with must_change_password set, so this was the first thing
+        all 39 would have met. The second time this project has had a fault
+        that made every teacher login unusable; the first was four NULL
+        columns in auth.users (db/094). Found 29 September by the parent
+        portal's own test suite, which met it because a parent meets this
+        screen before any other. */
+    function pwEsc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     var shade = document.createElement("div");
     shade.id = "pw-shade";
     shade.setAttribute("role", "dialog");
@@ -183,7 +203,7 @@
     shade.innerHTML =
       '<section id="pw-gate">'
       + '<h2 id="pw-gate-h">Choose your own password</h2>'
-      + "<p>Assalamu alaikum" + (who ? ", " + esc(who) : "")
+      + "<p>Assalamu alaikum" + (who ? ", " + pwEsc(who) : "")
       + ". The password you were given was written on a slip of paper, so it "
       + "is not private. Choose one only you know before going any further.</p>"
       + '<div class="pw-err" id="pw-err" hidden></div>'

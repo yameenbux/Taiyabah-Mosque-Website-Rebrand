@@ -396,16 +396,24 @@
        when it is built — the list IS the brief, and a list written afterwards
        is a description. Anything the masjid needs that is missing here is
        cheaper to add today than after the screens exist. */
+    /*  WHAT IS NOT BUILT YET. "Take the register" was the first item on this
+        list until 28 September, when a teacher signed in, saw a live Register
+        in the rail and a card for their own class - and then this list telling
+        them the register was coming soon. A list of promises that includes
+        something already delivered teaches people not to believe the rest of
+        it. Raising a concern is also live in the register screen, so it is
+        marked rather than promised. */
     var TEACHER = [
-      { t: "Take the register",
-        d: "Mark who is in, who is late and who is absent, from a phone, at the " +
-           "start of the lesson rather than on paper to be typed up later." },
+      { t: "Raise a concern", live: true,
+        d: "Open a child from your register and report an incident or a " +
+           "safeguarding worry. It is logged with your name against it." },
       { t: "Write up the lesson",
         d: "What was covered and how far the class got, so whoever takes them " +
            "next week is not starting from a guess." },
-      { t: "Record how each child is getting on",
-        d: "Sabaq, sabqi and manzil, merits and the things worth telling a " +
-           "parent — kept against the child rather than in a notebook." },
+      { t: "Record how each child is getting on", live: true, href: "progress/",
+        d: "Sabaq, sabqi and manzil for each child in your class, with a note " +
+           "for the parent and a note for yourself. You choose what a family " +
+           "sees; your own note is never shown to them." },
       { t: "Set and see homework",
         d: "What was set, who has done it, and who needs chasing." },
       { t: "End-of-year reports",
@@ -415,10 +423,8 @@
         d: "Through the masjid, so the conversation is on the record and " +
            "nobody has to give out a personal number." },
       { t: "See your classes and times",
-        d: "Who is in your group, when you are on, and who is covering." },
-      { t: "Raise a concern",
-        d: "An incident or a safeguarding worry, logged properly and sent " +
-           "straight to the people who must see it." }
+        d: "When you are on, which room, and who is covering when you cannot " +
+           "be there." }
     ];
 
     /* WHAT A PARENT WILL BE ABLE TO DO. Deliberately starts with the two
@@ -537,6 +543,26 @@
     }
 
     var who = (identity.profile && identity.profile.full_name) || "";
+    /*  ITS OWN ESCAPE, AND THE REASON IT NEEDS ONE.
+        This overlay is deliberately self-contained — its own styles, its own
+        markup, nothing borrowed from the page it lands on — because it has to
+        work on whichever screen a person happens to open first. The greeting
+        was the one line that broke that rule: it called the module's esc(),
+        which is a LOCAL of another function in every one of these files, so
+        it threw "esc is not defined" the moment it tried to greet anybody by
+        name. Every teacher login carries a name, and every one of them is
+        created with must_change_password set, so this was the first thing
+        all 39 would have met. The second time this project has had a fault
+        that made every teacher login unusable; the first was four NULL
+        columns in auth.users (db/094). Found 29 September by the parent
+        portal's own test suite, which met it because a parent meets this
+        screen before any other. */
+    function pwEsc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
     var shade = document.createElement("div");
     shade.id = "pw-shade";
     shade.setAttribute("role", "dialog");
@@ -545,7 +571,7 @@
     shade.innerHTML =
       '<section id="pw-gate">'
       + '<h2 id="pw-gate-h">Choose your own password</h2>'
-      + "<p>Assalamu alaikum" + (who ? ", " + esc(who) : "")
+      + "<p>Assalamu alaikum" + (who ? ", " + pwEsc(who) : "")
       + ". The password you were given was written on a slip of paper, so it "
       + "is not private. Choose one only you know before going any further.</p>"
       + '<div class="pw-err" id="pw-err" hidden></div>'
@@ -678,6 +704,95 @@
   }
 
 
+  //  ---------------------------------------------------------------
+  //  TONIGHT
+  //  ---------------------------------------------------------------
+  function drawTonight(d, toTake, children, marked, away) {
+    var host = el("tc-tonight"), lab = el("tc-tonight-lab"), gate = el("tc-gate");
+    if (!host) return;
+
+    //  THE GATE, IN WORDS, READ FIRST. attendance_permitted() travels with
+    //  the classes, so the teacher is told why the register will not open
+    //  BEFORE they walk into a room and try to take it - and before the
+    //  Tonight tiles below, which it governs. See the Sept 28 report, item
+    //  1: three separate elements once kept inviting a teacher to "take
+    //  the register" directly underneath this same sentence saying there
+    //  was nothing to do. permitted is checked for the exact boolean
+    //  true/false Postgres sends, never merely truthy/falsy.
+    var p = d.permitted || {};
+    var permitted = (p.permitted === true);
+    //  THREE STATES, NOT TWO. permitted READS FALSE FOR BOTH "known
+    //  forbidden" (p.permitted === false) AND "not known to be allowed"
+    //  (p.permitted missing, null, or anything else) - which correctly
+    //  fail-closes every invitation on this page either way. But the GATE
+    //  TEXT used to speak only on the strict false, so a missing/malformed
+    //  permitted left a teacher with no invitation AND no reason: a locked
+    //  page saying nothing. Reviewed 28 September - that reads as the
+    //  system being broken, not closed, and sends a teacher back to paper.
+    //  So the gate now speaks in the "unknown" case too, with its own
+    //  short line that does not invent a reason it does not have (never
+    //  the 330-families sentence below, which is a specific claim this
+    //  branch has no evidence for).
+    if (gate) {
+      if (p.permitted === true) {
+        gate.hidden = true;
+      } else if (p.permitted === false) {
+        gate.textContent = "The register is not open yet. " + (p.why || "")
+          + " The office is doing this \u2014 there is nothing for you to do "
+          + "about it, and your class list below is correct in the meantime.";
+        gate.hidden = false;
+      } else {
+        gate.textContent = "The register is not open at the moment. The "
+          + "office can say why.";
+        gate.hidden = false;
+      }
+    }
+
+    var tiles = [];
+    tiles.push({
+      n: children,
+      k: children === 1 ? "child in your care" : "children in your care",
+      s: "On the roll of your class"
+         + (d.rows && d.rows.length > 1 ? "es" : "") + " tonight."
+    });
+
+    //  THE "STILL TO TAKE" TILE ONLY APPEARS WHEN MARKING IS ACTUALLY
+    //  PERMITTED. #tc-gate above already says there is nothing to do and
+    //  why, when it is not - a tile reading "1 REGISTER STILL TO TAKE"
+    //  right beside that sentence contradicted it in production. The
+    //  class list itself (drawMyClasses(), below) still shows - the gate
+    //  promises the roll is correct - only the invitation to act stands
+    //  down.
+    //
+    //  "A register taken tomorrow is somebody remembering." now lives in
+    //  ONE place - the outstanding-registers prompt (drawMyClasses(),
+    //  below), where it argues for acting now. Said twice on one screen it
+    //  read as a template that had slipped rather than as a point.
+    if (permitted && toTake !== null) {
+      tiles.push(toTake === 0
+        ? { n: "\u2713", k: "every register taken",
+            s: "Nothing left to do on the register tonight." }
+        : { n: toTake,
+            k: toTake === 1 ? "register still to take" : "registers still to take",
+            s: "Still to take tonight." });
+    }
+
+    //  Only once somebody has started. See the note above.
+    if (marked > 0) {
+      tiles.push({ n: marked - away, k: "here tonight",
+                   s: away === 0 ? "Nobody marked away."
+                      : away + (away === 1 ? " marked away." : " marked away.") });
+    }
+
+    host.innerHTML = tiles.map(function (t) {
+      return '<div class="md-count">'
+           + '<span class="n">' + esc(t.n) + "</span>"
+           + '<span class="k">' + esc(t.k) + "</span>"
+           + '<span class="s">' + esc(t.s) + "</span></div>";
+    }).join("");
+    if (lab) lab.hidden = false;
+  }
+
   function drawMyClasses() {
       var host = el("tc-classes");
       if (!host) return;
@@ -699,29 +814,151 @@
           return;
         }
 
-        var done = 0;
+        //  DONE MEANS HANDED IN, AND ONLY THAT. A register is finished when
+        //  the database says state === 'submitted' (db/118 sends it) - not
+        //  when every child happens to carry a mark. A teacher who marks all
+        //  twelve and presses Save but not Hand-in has NOT handed anything
+        //  in, and the office is told so on Monday; this page used to read
+        //  "every register taken - nothing left to do" for that very class.
+        //  A class with nobody on its roll is not due (register_due() says
+        //  so and submit_register() refuses it), so it is neither "taken"
+        //  nor "still to take": it is counted in neither.
+        var done = 0, due = 0, children = 0, marked = 0, away = 0;
         for (var i = 0; i < rows.length; i++) {
-          if (rows[i].on_roll > 0 && rows[i].marked >= rows[i].on_roll) done++;
+          if (rows[i].on_roll > 0) {
+            due++;
+            if (rows[i].state === "submitted") done++;
+          }
+          children += (rows[i].on_roll || 0);
+          marked   += (rows[i].marked  || 0);
+          away     += (rows[i].away    || 0);
         }
+        var toTake = due - done;
+
+        //  TONIGHT, IN THREE NUMBERS AND NO NAMES.
+        //
+        //  Every figure here is summed from the classes this teacher
+        //  actually teaches, so it is theirs and not the madrasah's. Not one
+        //  child is named: this page sits open on a desk in a room people
+        //  walk through, and "ten children" is a fact somebody can glance at
+        //  while "these ten children" is a record left on display.
+        //
+        //  A number with nothing to do about it is not a tile. "Here
+        //  tonight" only appears once a register has actually been started,
+        //  because 0 of 10 before the lesson begins reads as an empty room
+        //  rather than as a register nobody has taken yet.
+        drawTonight(d, due === 0 ? null : toTake, children, marked, away);
+
+        //  permitted READ ONCE HERE TOO, the same exact-boolean test
+        //  drawTonight() just used for #tc-gate and the "still to take"
+        //  tile - so the class-card action and the "Your classes" line
+        //  below can never disagree with what the gate and the tile just
+        //  said.
+        var p = d.permitted || {};
+        var permitted = (p.permitted === true);
+
+        //  THE OUTSTANDING NAG. GATED ON THE SAME attendance_permitted()
+        //  drawTonight() JUST READ TO DRAW #tc-gate, ABOVE.
+        //
+        //  Right now attendance_permitted() is false: 330 families have not
+        //  been told about the register, and mark_register() refuses every
+        //  mark until they are. Not one mark has ever been made, so
+        //  my_registers_outstanding() answering a real number is not a job
+        //  a teacher can act on - #tc-gate already says so, in these exact
+        //  words: "there is nothing for you to do about it". A nag drawn
+        //  UNDERNEATH that sentence, saying registers are waiting and to
+        //  take them now, would tell the same teacher two contradictory
+        //  things on one screen and send them to a link that will refuse
+        //  them. So this is only ever fetched, let alone drawn, once
+        //  permitted reads exactly true.
+        if (permitted) {
+          sb.rpc("my_registers_outstanding").then(function (res) {
+            if (res.error) return;
+            var od = res.data || {}, orows = od.rows || [], box = el("tc-outstanding");
+            if (!box) return;
+            //  THE BACKLOG, NOT THE BARE TOTAL. my_registers_outstanding()
+            //  (db/104) windows current_date-14 TO current_date INCLUSIVE
+            //  OF TONIGHT - checked against its own source rather than
+            //  assumed - so its bare count double-counts the same evening
+            //  the Tonight tile above already names as "N register(s)
+            //  still to take", under a different word ("still to hand
+            //  in") for what reads as the same fact. Excluding tonight's
+            //  own date (d.on_date - the server's own idea of today,
+            //  never the browser's clock, which can disagree with it near
+            //  midnight) leaves only registers from EARLIER evenings,
+            //  which is the different question this prompt actually
+            //  answers. See the Sept 28 report, item 2.
+            var earlier = [];
+            for (var i = 0; i < orows.length; i++) {
+              if (orows[i].on_date !== d.on_date) earlier.push(orows[i]);
+            }
+            var n = earlier.length;
+            //  THE BACKLOG STARTS WHEN THE REGISTER OPENED (db/117). The
+            //  database floors the window at the day the last family was
+            //  told, and sends `note` in words - "Counted from 3 October,
+            //  when the register opened." - so a short list is not mistaken
+            //  for a short memory. Nobody is ever invited to hand in a
+            //  register for an evening nobody was allowed to take one.
+            if (!n) {
+              //  Nothing earlier than tonight. If that is because the
+              //  register opened TONIGHT, say so - a bare silence reads as
+              //  "you are all caught up", which is not what happened.
+              if (od.opened_on && od.opened_on === d.on_date) {
+                box.textContent = "The register opened tonight, so there "
+                  + "are no earlier registers to hand in.";
+                box.hidden = false;
+              }
+              return;
+            }
+            box.innerHTML = "<strong>" + esc(n)
+              + (n === 1 ? " earlier register is" : " earlier registers are")
+              + " still to hand in.</strong> "
+              + "A register taken tomorrow is somebody remembering. "
+              + (od.note ? esc(od.note) + " " : "")
+              + '<a href="register/">Take them now</a>';
+            box.hidden = false;
+          })["catch"](function () { /* the page is useful without it */ });
+        }
+
         if (when) {
-          when.textContent = rows.length === done
+          //  STANDS DOWN WITH THE GATE. "1 register still to take" beside
+          //  "Your classes" is the same invitation #tc-gate has just
+          //  refused, in different words - see the Sept 28 report, item 1.
+          when.textContent = (!permitted || due === 0) ? "" : toTake === 0
             ? "Every register is taken."
-            : (rows.length - done) +
-              ((rows.length - done) === 1 ? " register" : " registers") +
+            : toTake +
+              (toTake === 1 ? " register" : " registers") +
               " still to take.";
         }
 
         host.innerHTML = rows.map(function (c) {
-          var full = (c.on_roll > 0 && c.marked >= c.on_roll);
-          return '<a class="tc-class' + (full ? " is-done" : "") +
-            '" href="register/">' +
-            "<strong>" + esc(c.name) + "</strong>" +
+          //  handedIn is the ONLY "done". allMarked is a different and
+          //  smaller fact - every child has a mark - and is used for one
+          //  thing: telling the teacher the last step is still theirs.
+          var handedIn = (c.state === "submitted");
+          var allMarked = (c.on_roll > 0 && c.marked >= c.on_roll);
+          var body = "<strong>" + esc(c.name) + "</strong>" +
             '<span class="tc-q">' + esc(c.on_roll) +
               (c.on_roll === 1 ? " child" : " children") +
-              (c.i_am_the_main_teacher ? "" : " \u00b7 you assist") + "</span>" +
+              (c.i_am_the_main_teacher ? "" : " \u00b7 you assist") + "</span>";
+          //  NOT PERMITTED: THE ROLL IS STILL SHOWN - #tc-gate promises
+          //  the class list is correct in the meantime, and it is - but
+          //  NOTHING ON THE CARD INVITES THE TEACHER TO ACT: no "Take the
+          //  register" label, and no link, because the screen it pointed
+          //  to would refuse them. A plain, unlinked card rather than an
+          //  <a> - see the Sept 28 report, item 1.
+          //  A class with nobody on its roll is not due, and the register
+          //  screen would refuse it: no invitation, exactly as when locked.
+          if (!permitted || !(c.on_roll > 0)) {
+            return '<div class="tc-class tc-class-locked">' + body + "</div>";
+          }
+          return '<a class="tc-class' + (handedIn ? " is-done" : "") +
+            '" href="register/">' + body +
             '<span class="tc-state">' +
-              (full ? "Register taken \u00b7 " + esc(c.away) + " away"
-                    : "Take the register \u2192") + "</span></a>";
+              (handedIn ? "Register taken \u00b7 " + esc(c.away) + " away"
+                        : (allMarked ? "Marked \u00b7 not handed in yet \u2192"
+                                     : "Take the register \u2192")) +
+              "</span></a>";
         }).join("");
       })["catch"](function (e) {
         var n = el("tc-error");
@@ -737,10 +974,25 @@
       var box = el(id);
       if (!box) return;
       box.innerHTML = items.map(function (i) {
-        return '<div class="rl-item">' +
-          '<span class="rl-mark" aria-hidden="true">\u2713</span>' +
-          "<span><b>" + esc(i.t) + "</b><span>" + esc(i.d) + "</span></span>" +
-        "</div>";
+        //  A TICK MEANS DONE EVERYWHERE ELSE ON THIS SITE. Every row in this
+        //  list carried one while the heading above it said "coming soon",
+        //  which is the same mark meaning the opposite thing two inches
+        //  apart. Built rows keep the tick and say so; the rest get a plain
+        //  bullet, because a promise is not an achievement.
+        var live = !!i.live;
+        //  A BUILT ROW WITH SOMEWHERE TO GO IS A LINK, WHOLE. A tick that says
+        //  "open now" on a row that cannot be pressed teaches people the page
+        //  is broken. Only a row that is live AND has an href is a link; every
+        //  other row stays a plain block, exactly as before.
+        var tag = (live && i.href) ? "a" : "div";
+        return "<" + tag + ' class="rl-item' + (live ? " rl-live" : "") + '"' +
+          (tag === "a" ? ' href="' + esc(i.href) + '"' : "") + ">" +
+          '<span class="rl-mark" aria-hidden="true">' +
+            (live ? "\u2713" : "\u00b7") + "</span>" +
+          "<span><b>" + esc(i.t) +
+            (live ? ' <em class="rl-tag">open now</em>' : "") +
+          "</b><span>" + esc(i.d) + "</span></span>" +
+        "</" + tag + ">";
       }).join("");
     }
 
@@ -1168,6 +1420,11 @@
           ]).then(function () { draw(); drawNeedsDoing(); });
         } else if (identity.roles.indexOf("teacher") !== -1) {
           shown = el("tc-panel");
+          //  THEIR NAME, NOT THEIR EMAIL. The email on a teacher login is a
+          //  handle the system invented - test.teacher.57b9@... - and
+          //  greeting somebody with it is worse than greeting them with
+          //  nothing. Fall back to the plain salam rather than to the
+          //  address.
           drawRoleList("tc-list", TEACHER);
           drawMyClasses();
         } else if (identity.roles.indexOf("parent") !== -1) {
@@ -1278,7 +1535,19 @@
         sections: (window.MadrasahNav || {}).SECTIONS,
         area:    'Madrasah',
         current: 'md-today',
-        title:   'What needs doing',
+        /*  THE HEADING GREETS A TEACHER AND BRIEFS AN ADMINISTRATOR.
+            "What needs doing" is the right heading for somebody who opens
+            this forty times a term to clear a list. Sitting directly above
+            "Assalamu alaikum, Ustadh Ibrahim Patel" it read as an
+            instruction barked over a greeting. A teacher opens this once a
+            week, in the dark, before teaching ten children for an hour
+            unpaid; the heading can be the salam and lose nothing. */
+        title:   (identity.roles.indexOf('admin') === -1
+                  && identity.roles.indexOf('teacher') !== -1)
+                   ? ('Assalamu alaikum'
+                      + ((identity.profile && identity.profile.full_name)
+                          ? ', ' + identity.profile.full_name : ''))
+                   : 'What needs doing',
         roles:   identity.roles || [],
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""

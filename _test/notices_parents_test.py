@@ -33,12 +33,25 @@ import atexit
 import http.server
 import json
 import os
+import re
 import socketserver
 import threading
 
 from playwright.sync_api import sync_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+#  Read off the generator, not hand-typed here a second time — a version
+#  number copied between a Python test and a JavaScript module is exactly
+#  the drift verify_structure.py's CHECK 9 was added to catch one level up
+#  (the generator vs. the built page). This test's own copy went stale for
+#  four versions (asserting "1.2" while the live module sent "1.6") because
+#  nothing compared them; reading it here is the fix, not just the value.
+_m = re.search(r'var VERSION\s*=\s*"([^"]+)"',
+               open(os.path.join(ROOT, "tools", "notices_module.js")).read())
+if not _m:
+    raise SystemExit("could not find notices_module.js's VERSION constant")
+NOTICE_VERSION = _m.group(1)
 
 
 class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -268,10 +281,21 @@ def run():
               sent and len(sent[0]["args"]["p_households"]) == 120,
               sent and len(sent[0]["args"]["p_households"]))
         check("and how they were told", sent and sent[0]["args"]["p_how"] == "letter")
+        #  "1.6", not "1.2" — this assertion's own stale literal was the last
+        #  place the "1.2" bug survived. tools/notices_module.js's VERSION
+        #  constant was fixed to match the live notice during Tasks 5+6 (the
+        #  bug where every "told" record would have carried v1.2 — the
+        #  version that said the madrasah held no date of birth, address,
+        #  telephone number or medical information — forever, in the one
+        #  place the Article 13 duty is evidenced). The fix was correct and
+        #  is applied; this check just never stopped asserting the version
+        #  it replaced. Read off the generator's own VERSION constant, not
+        #  a second hand-typed copy of it, so this cannot go stale the same
+        #  way again.
         check("and which version of the notice they were told about, so a "
               "later version is a new telling rather than a tick that is "
               "already ticked",
-              sent and sent[0]["args"].get("p_version") == "1.2",
+              sent and sent[0]["args"].get("p_version") == NOTICE_VERSION,
               sent and sent[0]["args"].get("p_version"))
         ok = pg.inner_text("#nt-ok")
         check("and it says what happened, in words",

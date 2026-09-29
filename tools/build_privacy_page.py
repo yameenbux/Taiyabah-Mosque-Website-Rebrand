@@ -36,9 +36,9 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "madrasah-privacy")
 
-VERSION = "1.4"
-ISSUED = "27 September 2026"   # v1.3 same day: attendance
-REVIEW = "27 September 2027"
+VERSION = "1.7"
+ISSUED = "29 September 2026"   # v1.7: the progress record and the messages
+REVIEW = "29 September 2027"
 
 #  ======================================================================
 #  WHAT THE MADRASAH DOES NOT HOLD
@@ -64,8 +64,17 @@ NOT_HELD = [
      ["madrasah_behaviour", "madrasah_merits"]),
     ("Test or examination results",
      ["madrasah_exams", "madrasah_exam_results", "madrasah_assessments"]),
-    ("Anything about your child's progress or ability",
-     ["madrasah_reports", "madrasah_progress"]),
+    #  CHANGED AT v1.7, AND THE OLD LINE HAD TO GO, NOT BE NARROWED.
+    #  This read "Anything about your child's progress or ability" and named
+    #  madrasah_progress. Teachers can now write down how a child is getting
+    #  on, so the sentence became false the moment db/127 was applied - the
+    #  table was empty and the guard was quiet, which is the only reason
+    #  nobody was told. What is still honestly not held is a grade, a mark or
+    #  a ranking: there is no column that could carry one, and
+    #  madrasah_reports (a written report) does not exist. The line says that
+    #  and no more.
+    ("A grade, a mark or a ranking of your child",
+     ["madrasah_reports"]),
 ]
 
 #  The counts in this table are read from production when the page is built,
@@ -85,8 +94,10 @@ WHAT_WE_HOLD = [
      "So that two children with the same name are not confused with each "
      "other, and so that a child is put in the right class for their age.",
      ["madrasah_pupils.date_of_birth"]),
-    ("Their class", "Which class they are in. If they move class, we change it.",
-     []),
+    ("Their class",
+     "Which class they are in, and when they were put in it. If they move "
+     "class, we change it and keep the new date.",
+     ["madrasah_pupil_classes.added_at"]),
     ("Boy or girl",
      "The madrasah teaches boys and girls separately, so the register has to "
      "know which.", ["madrasah_pupils.gender"]),
@@ -150,7 +161,8 @@ WHAT_WE_HOLD = [
     ("Whether your child came in, evening by evening",
      "Present, late, away, or away with a reason you have given us. We keep "
      "the reason you tell us and we do not keep an opinion about whether it "
-     "was a good enough one. Nobody outside the madrasah sees it.",
+     "was a good enough one. Nobody outside the madrasah sees it, other than "
+     "you, as the family.",
      ["madrasah_attendance.mark", "madrasah_attendance.reason",
       "madrasah_attendance.on_date", "madrasah_attendance.source",
       "madrasah_attendance.class_id"]),
@@ -168,6 +180,81 @@ WHAT_WE_HOLD = [
       "madrasah_concerns.reference", "madrasah_concerns.status",
       "madrasah_concerns.raised_by_name", "madrasah_concerns.outcome_note",
       "madrasah_concerns.raised_at", "madrasah_concerns.seen_at"]),
+
+    #  ADDED AT v1.6. The log exists because a mark changed used to be a
+    #  mark gone, and "where was this child that evening" is a question
+    #  that can be asked years later.
+    ("Every change to your child's attendance mark",
+     "When a mark is corrected we keep what it said before, who changed "
+     "it and when. It is kept for exactly as long as the attendance "
+     "record itself and is deleted with it.",
+     ["madrasah_attendance_log.mark", "madrasah_attendance_log.reason",
+      "madrasah_attendance_log.source", "madrasah_attendance_log.on_date",
+      "madrasah_attendance_log.was_mark", "madrasah_attendance_log.was_reason",
+      "madrasah_attendance_log.was_source",
+      "madrasah_registers.state", "madrasah_registers.on_date",
+      "madrasah_registers.expected_count", "madrasah_registers.marked_count"]),
+
+    #  ADDED AT v1.6. When the old system's records were brought across, we
+    #  looked for children who might be brothers and sisters so that a
+    #  family is not treated as several strangers who happen to share an
+    #  address. This is a GUESS, not a fact we were told, and it says so.
+    ("A guess that your child has a brother or sister already on the roll",
+     "For 56 pairs of children, matching a surname and a postcode led us "
+     "to guess that they might be from the same family. Every guess "
+     "carries the same standard sentence explaining why — ‘same "
+     "surname and postcode, no shared parent contact’ — not a "
+     "judgement about your family, and it stays a guess, marked as not yet "
+     "looked at, until a member of staff confirms or rejects it.",
+     ["madrasah_sibling_suggestions.pupil_a", "madrasah_sibling_suggestions.pupil_b",
+      "madrasah_sibling_suggestions.why", "madrasah_sibling_suggestions.state"]),
+
+    #  ADDED AT v1.7, BEFORE A TEACHER SAVED THE FIRST ENTRY. db/127 built the
+    #  table empty, and the guard was quiet for exactly that reason and no
+    #  other. The entry has two notes on purpose, and a parent who finds out
+    #  later that a teacher kept one they were never shown will ask why they
+    #  were not told. So it says so, here, with the reason.
+    ("How your child is getting on with their learning",
+     "Written by their teacher: the date, what your child worked on "
+     "(sabaq is the new lesson, sabqi the recent revision, manzil the "
+     "older revision) and a short note. There are no marks, grades or "
+     "rankings. A teacher can write two notes. One is for you: once the "
+     "teacher chooses to share an entry \u2014 they are not shared "
+     "automatically \u2014 you can read it, with the sabaq, sabqi and "
+     "manzil beside it, when you sign in as a parent. The other is the "
+     "teacher\u2019s own working note, and you are not shown it there. It "
+     "exists so that a teacher can write down what they need in order to "
+     "teach your child without every thought being sent to a family. It is "
+     "still part of your child\u2019s record: the teachers of that class and "
+     "the madrasah office can read it, and it is covered when you ask us to "
+     "show you what we hold. Both notes are deleted with your child\u2019s "
+     "record, three years after they leave.",
+     ["madrasah_progress.on_date", "madrasah_progress.sabaq",
+      "madrasah_progress.sabqi", "madrasah_progress.manzil",
+      "madrasah_progress.note_for_parent", "madrasah_progress.note_internal",
+      "madrasah_progress.shared"]),
+
+    #  ADDED AT v1.7. Threads hang off the family, not the child, so the guard
+    #  does not discover them (no pupil_id) - db/128 describes them by name,
+    #  as it does madrasah_registers. That is a mechanism reason and not the
+    #  reason they are here. They are here because a conversation between a
+    #  family and the office is a record about that family, it is kept, and a
+    #  parent is entitled to know that before writing anything.
+    ("Messages between your family and the office",
+     "If you write to the office when signed in as a parent, we keep the "
+     "conversation: a subject, each message, whether you or the office "
+     "wrote it, and when. It belongs to the family rather than to one "
+     "parent, so either of you with a login can read the replies. Only a "
+     "parent starts a conversation; the office replies. Only the "
+     "madrasah\u2019s administrators can read it, using the same two-step "
+     "sign-in as everything else \u2014 teachers cannot \u2014 and the system "
+     "records that a conversation was opened and which one, but not what "
+     "it said. We keep what you wrote as you wrote it, including anything "
+     "you say about your child. It is kept for as long as we keep your "
+     "family\u2019s record and is deleted with it: three years after the "
+     "last child in the family has left.",
+     ["madrasah_threads.subject", "madrasah_threads.state",
+      "madrasah_messages.body", "madrasah_messages.from_parent"]),
 ]
 
 PARENT_HOLD = [
@@ -278,6 +365,21 @@ def guard_columns():
 
     The last migration wins, because that is what Postgres does with
     `create or replace`.
+
+    A REQUIRED CONVENTION, and the reason it is written here rather than left
+    to be rediscovered. This function scrapes a literal `described text[] :=
+    array[...]` block out of the newest migration that mentions the guard. From
+    db/105 onwards those migrations no longer contain one as executable SQL:
+    they read the live definition, `replace()` one anchor and re-execute it, so
+    the array never appears in the file. db/106 therefore carries a
+    hand-written `-- NOT EXECUTED` transcript of the resulting array purely so
+    this function can find it.
+
+    So: ANY migration that changes `described` by splice-and-refuse MUST also
+    add that full-array transcript. Forget it, and this function silently reads
+    an older file's array. It fails loudly on the next build if the page and
+    the stale array disagree — but that is luck, not design, and a version
+    where they happen to agree would pass while checking nothing.
     """
     defs = sorted(glob.glob(os.path.join(ROOT, "db", "*.sql")))
     latest, where = None, None
@@ -446,6 +548,29 @@ footer a{color:var(--brand-700);}
        news. -->
   <section class="changed">
     <h2>This notice changed on {{issued}}, and it matters</h2>
+    <p><strong>Teachers can now write down how your child is getting on with
+       their learning, and you can now write to the office.</strong> A
+       teacher can record what your child has worked on and add a note. A
+       note written for you can be read by you, when you sign in as a parent,
+       once the teacher chooses to share it. A teacher may also keep a
+       working note of their own that you are not shown. What that is, who
+       can read it and why it exists are set out under &ldquo;What we
+       hold&rdquo; and &ldquo;Who can see it&rdquo; below. Parents can also
+       now write to the madrasah office, and we keep those conversations.
+       Earlier versions said we held nothing about your child&rsquo;s
+       progress. That is no longer true, and this is us telling you before
+       any of it is used, not afterwards.</p>
+    <p><strong>Earlier changes, all still in force.</strong> Everything below
+       this line was said in earlier versions of this notice, the most recent
+       being version 1.6 on 28 September 2026.</p>
+    <p><strong>We now keep a short history of your child&rsquo;s attendance
+       record.</strong> If a mark is ever corrected, we keep what it said
+       before, who changed it and when. We also now record the date your
+       child was put in their class, and &mdash; where the madrasah&rsquo;s
+       old records suggested it &mdash; our own guess that your child might
+       have a brother or sister already here. That is a guess, not
+       something you told us, and it stays a guess until a member of staff
+       checks it.</p>
     <p><strong>The madrasah has started keeping a register</strong>, and
        <strong>teachers now have their own logins</strong>. We said in earlier
        versions that we would tell you before the first register mark was made
@@ -459,7 +584,7 @@ footer a{color:var(--brand-700);}
        and dates only, and held no date of birth, address, telephone number or
        medical information. <strong>That is no longer true, and this version
        says what is actually held.</strong></p>
-    <p>Nothing was taken without being given: all of it came from the
+    <p>Nothing in that list was taken without being given: all of it came from the
        madrasah&rsquo;s own previous records when they were moved into the new
        system in September 2026. What went wrong is that the notice was not
        updated at the same time. We are telling you rather than replacing the
@@ -474,6 +599,9 @@ footer a{color:var(--brand-700);}
        additional-needs information that a parent told us, so that staff can
        look after them safely. We keep your name and a way of reaching you, and
        what the family has been charged and paid.</p>
+    <p>If a teacher writes down how your child is getting on with their
+       learning, we keep that too, and you can read what the teacher chooses to
+       share with you. If you write to the office, we keep the conversation.</p>
     <p>We do not share any of it with anybody outside the masjid. We keep it for
        three years after your child leaves and then it is deleted
        automatically.</p>
@@ -519,16 +647,37 @@ footer a{color:var(--brand-700);}
        because the honest question &mdash; &ldquo;what would the madrasah
        actually do with it?&rdquo; &mdash; had no good answer. Information we
        never collect cannot be lost, leaked or misused.</p>
-    <p><strong>We are building an attendance register.</strong> When it starts
-       being used we will issue a new version of this notice and tell you
-       before the first mark is made, not afterwards.</p>
+    <!--  THIS PARAGRAPH SAID THE OPPOSITE OF THE ONE ABOVE IT, IN THE
+          PUBLISHED DOCUMENT, FOR A DAY.
+
+          It read "We are building an attendance register. When it starts
+          being used we will issue a new version of this notice and tell you
+          before the first mark is made." That was written at v1.2 and was
+          true then. At v1.3 the register was added to "what we hold" a few
+          inches further up, and this paragraph was left where it was - in
+          the section headed "What we do NOT hold about your child".
+
+          So the notice the masjid was about to hand to 330 families said
+          both that it keeps a register and that it does not yet. The
+          schema guard could not catch it: madrasah_notice_matches_schema()
+          compares the notice against the COLUMNS, and by that test the
+          notice was correct. Prose contradicting other prose is invisible
+          to it.  -->
+    <p><strong>The register is now in use.</strong> We said in earlier
+       versions of this notice that we would tell you before the first mark
+       was made rather than afterwards, and that is what the change at the
+       top of this page is. The database will not accept a single mark until
+       every family with a child on the roll has been recorded as having been
+       told &mdash; it is not left to anybody remembering.</p>
   </div>
 
   <h3>Where we got it</h3>
   <p>From you, when you enrolled your child, and from the madrasah&rsquo;s own
      previous record system, which these records replaced in September 2026. We
-     did not obtain anything about your child from anywhere else, and we did not
-     add anything to it.</p>
+     did not obtain anything about your child from anywhere else. What has been
+     added since is what the madrasah&rsquo;s own teachers and office write down
+     themselves: the register, the notes on how your child is getting on, and
+     the messages you send us. Those are described above.</p>
 
   <h3>Why we hold it, and what allows us to</h3>
   <p>We hold it to run the madrasah: to know which children are enrolled, which
@@ -569,8 +718,9 @@ footer a{color:var(--brand-700);}
 
   <h3>Who can see it</h3>
   <ul>
-    <li><strong>Administrators at the masjid, and nobody else.</strong> Today
-      that is three people.</li>
+    <li><strong>Administrators at the masjid can see all of it.</strong> Today
+      that is three people. Everybody else sees only the parts described
+      below.</li>
     <li>Every one of them has to use a second step to sign in &mdash; a changing
       code from an app on their phone, as well as a password. A stolen password
       on its own is not enough to see anything.</li>
@@ -584,8 +734,10 @@ footer a{color:var(--brand-700);}
       one and promised you would be told before that changed. This is us
       doing that. A teacher signs in and can see: the classes they teach, the
       children in those classes, whether each child came in, any medical,
-      allergy or additional-needs information for those children, and one
-      telephone number to ring. <strong>Nothing else.</strong> Not another
+      allergy or additional-needs information for those children, one
+      telephone number to ring, and the notes written about how those children
+      are getting on with their learning &mdash; including any teacher&rsquo;s
+      own working note. <strong>Nothing else.</strong> Not another
       class, not your address, not the fees, not the roll as a whole. That is
       not a rule the screen follows &mdash; the database refuses to answer a
       teacher who asks for anything more.</li>
@@ -594,6 +746,15 @@ footer a{color:var(--brand-700);}
       carries an inhaler cannot act, and the alternative is finding out during
       the emergency. Every time a teacher opens a child&rsquo;s record it is
       written down with their name against it.</li>
+    <li><strong>The madrasah office reads the notes on how a child is getting
+      on, and the messages families send.</strong> It does so as the
+      administrators above, with the same two-step sign-in. A teacher cannot
+      read a message a family has sent the office.</li>
+    <li><strong>A parent sees their own family and no other.</strong> A parent
+      with a login can read their own child&rsquo;s attendance, the entries a
+      teacher has chosen to share about how their child is getting on, and the
+      conversations their own family has had with the office. They cannot see
+      a teacher&rsquo;s working note, or anything about another family.</li>
     <li>Nobody outside the masjid sees them. We do not share them with any other
       mosque, school, council, charity or company. We do not sell them. We do
       not use them to ask you for money.</li>

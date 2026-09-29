@@ -1,0 +1,28 @@
+        <div class="err" id="tp-error" role="alert" hidden></div>
+        <div class="tp-ok" id="tp-ok" role="status" hidden></div>
+
+        <!-- THE ONE RULE OF THIS SCREEN, SAID BEFORE ANYTHING IS TYPED. Not
+             everything a teacher writes is for a family, and the two notes
+             below are different in kind. -->
+        <p class="tp-rule" id="tp-rule">Two kinds of note. A <b>note for the parent</b>
+           is read by the family, but only if you choose to share the entry.
+           <b>Your own note</b> is for you and the madrasah staff and is never
+           shown to a family, whatever you choose.</p>
+
+        <p class="tp-loading" id="tp-loading">Loading&hellip;</p>
+
+        <!-- 1. Which class. -->
+        <section class="tp-step" id="tp-classes-wrap" hidden>
+          <h2 class="tp-h">Your class</h2>
+          <div class="tp-pills" id="tp-classes" role="group" aria-label="Your classes"></div>
+        </section>
+        <div class="tp-empty" id="tp-empty" role="status" hidden></div>
+
+        <!-- 2. Which child. -->
+        <section class="tp-step" id="tp-kids-wrap" hidden>
+          <h2 class="tp-h" id="tp-kids-h">Children</h2>
+          <ul class="tp-list" id="tp-kids"></ul>
+        </section>
+
+        <!-- 3. One child: the form, then what has been written. -->
+        <section class="tp-child" id="tp-child" aria-live="polite" hidden></section>

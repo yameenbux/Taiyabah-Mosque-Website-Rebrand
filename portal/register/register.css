@@ -70,11 +70,34 @@
 .rg-class.is-part .rg-state { color:var(--gold-ink); }
 .rg-noteacher { color:var(--danger-ink); }
 
+/*  WHAT WAS NEVER TAKEN. A quieter card than the gate — this is a fact to
+    act on, not an emergency — but still edged, so it does not read as part
+    of tonight's grid above it. */
+.rg-missing  { margin-top:24px; padding:18px 20px; border:1px solid var(--line);
+                border-left:4px solid var(--gold-ink); border-radius:var(--radius);
+                background:var(--card); }
+.rg-missing h3 { margin:0 0 4px; font-family:var(--serif); font-size:1.15rem; }
+.rg-missing .rg-sub { max-width:70ch; }
+.rg-missing-l { list-style:none; margin:12px 0 0; padding:0; }
+.rg-missing-l li { padding:8px 0; border-top:1px solid var(--line); font-size:14.5px; }
+.rg-missing-l li:first-child { border-top:0; }
+
 /*  ONE CLASS, BEING TAKEN.
     `rg-taking`, not `rg-class`. The first version used one name for the class
     BUTTONS on the evening screen and for the SECTION the class opens into, and
     then needed `all:unset` to undo the button styling on the section. A name
-    that has to be cancelled out is the wrong name. */
+    that has to be cancelled out is the wrong name.
+
+    The class went on the section; the box around it did not follow. Every
+    sibling panel here — `.rg-gate`, `.rg-missing`, `.rg-child` — is its own
+    card: a border, a margin-top to clear whatever is above it, a background.
+    This one sat flush against `.rg-missing` with no edge at all, because
+    `.rg-taking-head`'s own border-bottom reads as a divider inside a card
+    that was never drawn. Found the same way `rg-taking-head` was named —
+    read the check, not the screenshot, first: 28 September. */
+.rg-taking    { margin-top:24px; padding:20px 22px; border:1px solid var(--line);
+                border-top:3px solid var(--plum); border-radius:var(--radius);
+                background:var(--card); }
 .rg-back      { border:0; background:none; padding:4px 0; margin-bottom:12px;
                 font:inherit; font-size:13.5px; font-weight:700;
                 color:var(--brand-700); cursor:pointer; }
@@ -84,6 +107,11 @@
                 border-bottom:1px solid var(--line); margin-bottom:14px; }
 .rg-taking-head h3 { margin:0 0 4px; font-family:var(--serif); font-size:1.35rem; }
 .rg-taking-head .rg-sub { margin:0; }
+/*  SAYS SO. The first thing seen on reopening a submitted register — not a
+    lock, just an acknowledgement, in the same green the rest of the screen
+    uses for "done". */
+.rg-handed    { margin:4px 0 0; font-size:13.5px; font-weight:700;
+                color:var(--success-ink); }
 .rg-tally     { display:flex; gap:14px; flex-wrap:wrap; }
 .rg-t         { font-size:13px; color:var(--muted); }
 .rg-t b       { font-family:var(--serif); font-size:1.25rem; display:block; }
@@ -102,6 +130,15 @@
                 padding:11px 16px; border-bottom:1px solid var(--line); }
 .rg-row:last-child { border-bottom:0; }
 .rg-row.is-marked { background:var(--paper); }
+/*  AN UNMARKED CHILD IS THE ONLY THING LEFT TO DO, so it is the only thing
+    on the row that draws the eye. .is-marked is already set by the module;
+    this styles the rows that do not have it. Review (1440w): at .10 the
+    row read as done on the strength of the 3px gold bar alone, not the
+    tint — .17 is unambiguous at a glance, which is what a screen used at
+    speed, in a classroom, by someone also managing a room of children,
+    needs to be. */
+.rg-row:not(.is-marked) { background:rgba(198,162,76,.17);
+                box-shadow:inset 3px 0 0 var(--gold-ink); }
 .rg-who       { flex:1 1 210px; min-width:0; }
 .rg-who strong { font-size:15.5px; }
 /*  A MARK, NEVER THE NOTE. Opening the child's record is a deliberate act and
@@ -142,6 +179,19 @@
                 box-shadow:0 -6px 22px -14px rgba(43,7,26,.5); }
 .rg-save-n    { font-size:14.5px; color:var(--muted); }
 .rg-save .btn { width:auto; flex:0 0 auto; }
+/*  Save and Hand-in are a pair, not two items spread apart by the row's own
+    space-between — they group together on the right of the counter. */
+.rg-save-btns { display:flex; gap:10px; flex-wrap:wrap; }
+
+/*  THE HISTORY. Collapsed by default — a deliberate press, not a panel that
+    is simply on screen the moment a class opens, because it names every
+    child in the class against every change made to their mark. */
+.rg-hist-wrap { margin-top:18px; padding-top:14px; border-top:1px solid var(--line); }
+.rg-history  { margin-top:14px; padding:16px 18px; border:1px solid var(--line);
+                border-radius:var(--radius); background:var(--paper); }
+.rg-hist-l   { list-style:none; margin:0; padding:0; }
+.rg-hist-l li { padding:8px 0; border-top:1px solid var(--line); font-size:14.5px; }
+.rg-hist-l li:first-child { border-top:0; }
 
 /*  THE PAPER REGISTER. */
 .rg-print     { display:none; }

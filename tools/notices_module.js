@@ -32,7 +32,7 @@
     var PER = 50;
     var PICKED = {};          // household id -> true
     var busy = false;
-    var VERSION = "1.2";
+    var VERSION = "1.7";
 
     function el(id) { return document.getElementById(id); }
     function esc(s) {
@@ -442,7 +442,7 @@
           if (pb && !pb.disabled) {
             PAGE = parseInt(pb.getAttribute("data-page"), 10) || 1;
             drawRows();
-            var top = el("nt-list");
+            var top = el("nt-roll");
             if (top && top.scrollIntoView) top.scrollIntoView(true);
           }
         });

@@ -96,7 +96,8 @@
   var BOTH  = ["admin", "madrasah"];
 
   /*  ANYSTAFF INCLUDES TEACHERS, AND ALMOST NOTHING USES IT.
-      A teacher's whole rail is one row: Register. That is not meanness, it is
+      A teacher's whole rail is two rows: Register, and Progress notes (added
+      29 September, db/127). That is not meanness, it is
       the scoping - every other screen's function refuses them, so listing
       Pupils or Families here would be a row that loads and then says no,
       which teaches somebody the system is broken rather than that the job is
@@ -284,12 +285,22 @@
 
       { label: "Talking to families", areas: [
         { key: "md-messages", href: "portal/messages/", icon: "chat",   name: "Messages",
-          needs: BOTH, soon: true },
+          needs: BOTH },
         { key: "md-notices",  href: "portal/notices/",  icon: "notice", name: "Notices to parents",
           needs: BOTH }
       ]},
 
       { label: "Progress", areas: [
+        /*  BUILT 29 September (db/127). `soon` was never on this row because the
+            row did not exist: "how each child is getting on" was a tile on the
+            teacher's landing page and nothing else. It is for ANYSTAFF because
+            a teacher is who writes it; the database (progress_my_classes())
+            decides which classes, so a teacher sees their own and the office
+            with two-step sees all. Merits, exams and reports below are still
+            not built and keep their `soon`.  */
+        { key: "md-progress", href: "portal/progress/", icon: "pen",   name: "Progress notes",
+          needs: ANYSTAFF,
+          what: "Where each child is up to, with a note for the family" },
         { key: "md-merits",   href: "portal/merits/",   icon: "star",  name: "Merits",
           needs: BOTH, soon: true },
         { key: "md-exams",    href: "portal/exams/",    icon: "tick",  name: "Exams & tests",

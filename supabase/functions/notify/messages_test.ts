@@ -469,7 +469,12 @@ Deno.test("THE DIGEST CARRIES NO PERSONAL DATA", () => {
 });
 
 Deno.test("the digest subject is ASCII and short like the others", () => {
-  for (const e of [DIGEST, { kind: "digest", balances_due: 2 } as Event]) {
+  const events: Event[] = [
+    DIGEST,
+    { kind: "digest", balances_due: 2 },
+    { kind: "digest", registers_missed: { open: false, families_untold: 330, count: 0, by_class: [] } },
+  ];
+  for (const e of events) {
     const m = officeMessage(e)!;
     assert([...m.subject].every((c) => c.charCodeAt(0) <= 126),
            `non-ASCII: ${m.subject}`);
@@ -479,6 +484,160 @@ Deno.test("the digest subject is ASCII and short like the others", () => {
 
 Deno.test("nothing is sent to the public in a digest", () => {
   assertEquals(publicMessage(DIGEST), null);
+});
+
+/* ------------------------------------------------ Task 7: registers ---- */
+/* db/108. The whole point of this task is that a class going unmarked for
+   weeks was invisible to EVERYBODY, including this email. These tests are
+   about the one new row, and about the half-state db/108's header warns
+   about: a digest built before that migration exists must render exactly as
+   it always has. */
+
+Deno.test("registers_missed ABSENT renders nothing — the pre-108 half-state", () => {
+  // This is the safety property ruling B depends on: this function is
+  // deployed before db/108 is applied, so for a while every real digest has
+  // no registers_missed key at all. If that produced a row, or changed the
+  // subject, the deploy-then-migrate order would not actually be safe.
+  //
+  // NOTE: every email's footer says "Registered charity 1041569", so the
+  // check below looks for the ROW this task adds, not the bare word
+  // "register" — a naive search would false-positive on the charity number
+  // that appears on every single message this file sends.
+  const m = officeMessage(DIGEST)!;
+  assert(!/not submitted/i.test(m.html), "a digest with no registers_missed key mentions registers");
+  assert(!/not submitted/i.test(m.subject), "the subject mentions registers with no data for it");
+});
+
+const WITH_REGISTERS: Event = {
+  ...DIGEST,
+  registers_missed: {
+    open: true,
+    count: 3,
+    by_class: [
+      { class: "Boys Year 4", missed: 2 },
+      { class: "Girls Class 6", missed: 1 },
+    ],
+  },
+};
+
+Deno.test("registers not submitted are listed BY CLASS", () => {
+  const m = officeMessage(WITH_REGISTERS)!;
+  assertStringIncludes(m.html, "Boys Year 4");
+  assertStringIncludes(m.html, "Girls Class 6");
+  assertStringIncludes(m.html, "3");
+});
+
+Deno.test("registers missing puts the digest into ATTENTION REQUIRED, WITH THE ACTUAL FIGURE", () => {
+  // A bare "the subject mentions the word register" would still pass on a
+  // build that printed the wrong count — CLAUDE.md's line: a check that
+  // asserts something EXISTS is not a check that it WORKS. The figure
+  // itself, not just the word, must be in the subject.
+  const quiet = officeMessage({ kind: "digest",
+    registers_missed: { open: true, count: 4,
+      by_class: [{ class: "Boys Year 4", missed: 4 }] } })!;
+  assertStringIncludes(quiet.subject, "ATTENTION REQUIRED");
+  assertStringIncludes(quiet.subject, "4 registers not submitted");
+});
+
+Deno.test("zero registers missed adds no row, same as any other zero", () => {
+  const m = officeMessage({ ...DIGEST,
+    registers_missed: { open: true, count: 0, by_class: [] } })!;
+  assert(!/not submitted/i.test(m.html), "a zero count still printed a registers row");
+});
+
+Deno.test("THE REGISTERS ROW CARRIES CLASS NAMES, NEVER A TEACHER OR A PUPIL", () => {
+  // The Event type has no field for either on a registers_missed entry —
+  // this proves that stays true if somebody adds one and starts filling it.
+  const leaky = {
+    ...DIGEST,
+    registers_missed: {
+      open: true,
+      count: 1,
+      by_class: [{ class: "Boys Year 4", missed: 1,
+        // deliberately smuggled in — must be ignored, the renderer only
+        // ever reads `.class` and `.missed`
+        teacher: "A Teacher", pupil: "A Pupil" } as unknown as
+        { class: string; missed: number }],
+    },
+  };
+  const m = officeMessage(leaky)!;
+  assert(!m.html.includes("A Teacher"), "a teacher's name reached the digest");
+  assert(!m.html.includes("A Pupil"), "a pupil's name reached the digest");
+  assertStringIncludes(m.html, "Boys Year 4");
+});
+
+Deno.test("CONTROL — the registers row really can appear", () => {
+  // Without this, "registers_missed absent renders nothing" above would pass
+  // on a digestMessage that never renders a registers row at all.
+  const m = officeMessage(WITH_REGISTERS)!;
+  assert(/not submitted/i.test(m.html), "this test cannot bite: no build ever mentions registers");
+});
+
+/* -------------------------------------------------- Task 7b: db/109 ----- */
+/* mark_register() refuses every mark until every family on the roll has
+   been told the register is starting (db/084) — the register can be
+   LOCKED even while classes are meeting every day. A "registers not
+   submitted" figure computed while that lock is on blames forty-four
+   teachers for an office task. These tests are about the two states
+   outstanding_summary() can now report, and that the digest never
+   confuses one for the other. */
+
+const NOT_OPEN: Event = {
+  kind: "digest",
+  registers_missed: { open: false, families_untold: 330, count: 0, by_class: [] },
+};
+
+const MISSED_ONLY: Event = {
+  kind: "digest",
+  registers_missed: { open: true, count: 3,
+    by_class: [{ class: "Boys Year 4", missed: 3 }] },
+};
+
+Deno.test("a not-open register is the OFFICE's action, not a missed mark", () => {
+  const m = officeMessage(NOT_OPEN)!;
+  assertStringIncludes(m.html, "Register not yet open");
+  assertStringIncludes(m.html, "330");
+  assert(!/not submitted/i.test(m.html),
+         "a not-open digest still reported missed registers — blaming a teacher for the office's lock");
+  assertStringIncludes(m.subject, "ATTENTION REQUIRED");
+  assertStringIncludes(m.subject, "330");
+});
+
+Deno.test("CONTROL — the not-open row really can appear", () => {
+  // Without this, the assertion above that the row appears would pass on a
+  // digestMessage that never renders a not-open row at all.
+  const m = officeMessage(NOT_OPEN)!;
+  assert(/register not yet open/i.test(m.html),
+         "this test cannot bite: no build ever renders the not-open row");
+});
+
+Deno.test("an open register with missed marks never renders the not-open row", () => {
+  const m = officeMessage(MISSED_ONLY)!;
+  assert(!/register not yet open/i.test(m.html),
+         "an open register with missed marks rendered the not-open row too");
+  assertStringIncludes(m.html, "not submitted");
+});
+
+Deno.test("the footer follows whatever the subject actually leads with", () => {
+  const refundWeek  = officeMessage(DIGEST)!;   // refunds_due: 1 — leads on refunds
+  const notOpenWeek = officeMessage(NOT_OPEN)!;
+  const missedWeek  = officeMessage(MISSED_ONLY)!;
+  assertStringIncludes(refundWeek.html, "refunds are the ones that matter");
+  assertStringIncludes(notOpenWeek.html, "telling the families is the one that matters");
+  assertStringIncludes(missedWeek.html, "missed registers are the ones that matter");
+  assert(!notOpenWeek.html.includes("refunds are the ones that matter"),
+         "a week with no refunds still closed on the refunds line");
+  assert(!missedWeek.html.includes("refunds are the ones that matter"),
+         "a week with no refunds still closed on the refunds line");
+});
+
+Deno.test("CONTROL — the footer really does change with priority", () => {
+  // Without this, the assertions above could pass on a digestMessage that
+  // hardcodes one footer sentence regardless of what is actually outstanding
+  // — which is the exact bug being fixed here.
+  const a = officeMessage(DIGEST)!.html;
+  const b = officeMessage(NOT_OPEN)!.html;
+  assert(a !== b, "this test cannot bite: the footer text never changes at all");
 });
 
 /* ------------------------------------------------------------ shape ----- */
@@ -966,4 +1125,134 @@ Deno.test("the office's own wording is used when it has set any", () => {
 
 Deno.test("a reminder with no email address produces nothing", () => {
   assertEquals(publicMessage({ ...REMINDER, email: null }), null);
+});
+
+/* -------------------------------------------------- db/117: the floor ---- */
+/* The register cannot be marked before it opens, so the week before it
+   opened has no missed registers to report. The database says so in words
+   (`note`); this renders them, and never turns the absence into good news. */
+
+Deno.test("db/117: a note is rendered, beside a trimmed count", () => {
+  const m = officeMessage({ kind: "digest", registers_missed: {
+    open: true, count: 2, swallowed: false, opened_on: "2026-10-03",
+    note: "Counted from 3 October, when the register opened.",
+    by_class: [{ class: "Boys Year 4", missed: 2 }] } })!;
+  assertStringIncludes(m.html, "Counted from 3 October, when the register opened.");
+  assertStringIncludes(m.text, "Counted from 3 October, when the register opened.");
+  assertStringIncludes(m.subject, "2 registers not submitted");
+});
+
+Deno.test("db/117: a swallowed week says so and does NOT read as all-clear or as a miss", () => {
+  const m = officeMessage({ kind: "digest", balances_due: 1, registers_missed: {
+    open: true, count: 0, swallowed: true, opened_on: "2026-10-03",
+    note: "The register opened on 3 October; there is nothing before it to report.",
+    by_class: [] } })!;
+  assertStringIncludes(m.html,
+    "The register opened on 3 October; there is nothing before it to report.");
+  assert(!/not submitted/i.test(m.html), "a swallowed week still reported missed registers");
+  assert(!/not submitted/i.test(m.subject), "a swallowed week put missed registers in the subject");
+});
+
+Deno.test("db/117: CONTROL - without a note there is no such row", () => {
+  const m = officeMessage(WITH_REGISTERS)!;
+  assert(!/About the register/.test(m.html), "a row appeared with no note behind it");
+});
+
+Deno.test("db/117: the note never appears beside the not-open state", () => {
+  const m = officeMessage({ kind: "digest", registers_missed: {
+    open: false, families_untold: 330, count: 0, by_class: [],
+    note: "Counted from 3 October, when the register opened." } })!;
+  assert(!/Counted from/.test(m.html), "a floor note was shown while the register is not open");
+  assertStringIncludes(m.html, "Register not yet open");
+});
+
+Deno.test("db/117: a note is escaped like everything else", () => {
+  const m = officeMessage({ kind: "digest", balances_due: 1, registers_missed: {
+    open: true, count: 0, note: "<script>x</script>" } })!;
+  assert(!m.html.includes("<script>x"), "the note reached the HTML unescaped");
+});
+
+/* ------------------------------------- db/125: parents' messages waiting ---- */
+/* The digest gains ONE new fact: how many messages from parents nobody has
+   answered, and how long the oldest has waited. A count and an age. Nothing a
+   parent wrote, no family, no subject - and the renderer is deployed BEFORE
+   the migration that sends the field, so "absent" must be a no-op. */
+
+Deno.test("db/125: ABSENT messages_waiting renders exactly what it rendered before", () => {
+  // The half-state db/108 named: old database, new renderer. The whole output
+  // must be identical, byte for byte, to a digest that never heard of it.
+  const before = officeMessage(DIGEST)!;
+  for (const e of [
+    { ...DIGEST },
+    { ...DIGEST, messages_waiting: null },
+    { ...DIGEST, messages_waiting: {} },
+    { ...DIGEST, messages_waiting: { count: 0, oldest_days: 0 } },
+    { ...DIGEST, messages_waiting: { count: 0, oldest_days: 9 } },
+  ] as Event[]) {
+    const m = officeMessage(e)!;
+    assertEquals(m.subject, before.subject);
+    assertEquals(m.html, before.html);
+    assertEquals(m.text, before.text);
+  }
+  assert(!/Parents' messages/.test(before.html),
+         "a digest with no messages_waiting mentions parents' messages");
+});
+
+Deno.test("db/125: a waiting message is a row, with its age, and puts the digest into ATTENTION REQUIRED", () => {
+  const m = officeMessage({ kind: "digest", messages_waiting: { count: 3, oldest_days: 4 } })!;
+  assertStringIncludes(m.html, "Parents' messages waiting for a reply");
+  assertStringIncludes(m.html, "<strong>3</strong>");
+  assertStringIncludes(m.html, "4 days");
+  assertStringIncludes(m.text, "Parents' messages waiting for a reply");
+  assertStringIncludes(m.subject, "3 parent messages waiting");
+  assertStringIncludes(m.subject, "ATTENTION REQUIRED");
+  assertStringIncludes(m.html, "a family has written and is waiting to hear back");
+});
+
+Deno.test("db/125: one message, one day - singular, and no age when it arrived today", () => {
+  const one = officeMessage({ kind: "digest", messages_waiting: { count: 1, oldest_days: 1 } })!;
+  assertStringIncludes(one.subject, "1 parent message waiting");
+  assert(!one.subject.includes("messages waiting"), "said '1 messages'");
+  assertStringIncludes(one.html, "1 day");
+  assert(!one.html.includes("1 days"), "said '1 days'");
+  const fresh = officeMessage({ kind: "digest", messages_waiting: { count: 2, oldest_days: 0 } })!;
+  assert(!/waiting <strong>0 day/.test(fresh.html), "said the oldest has waited 0 days");
+});
+
+Deno.test("db/125: the messages row never carries a name, a subject or a word a parent wrote", () => {
+  const m = officeMessage({ kind: "digest",
+    messages_waiting: { count: 2, oldest_days: 3 },
+    // smuggled in, and every one of them must be ignored
+    subject: "Aaliyah is unwell", body: "Please tell Ustadha about my daughter",
+    family: "Testwood", name: "Parent Testwood", reference: "MF-999999",
+    thread: "11111111-2222-3333-4444-555555555555" } as Event)!;
+  for (const leak of ["Aaliyah", "Ustadha", "Testwood", "MF-999999", "11111111", "unwell"]) {
+    assert(!m.html.includes(leak), `digest leaked ${leak}`);
+    assert(!m.text.includes(leak), `digest leaked ${leak} into the text`);
+    assert(!m.subject.includes(leak), `digest leaked ${leak} into the subject`);
+  }
+});
+
+Deno.test("db/125: refunds still lead, and the messages row sits beside them", () => {
+  const m = officeMessage({ ...DIGEST, messages_waiting: { count: 2, oldest_days: 5 } })!;
+  assertStringIncludes(m.subject, "refund");
+  assert(!m.subject.includes("parent message"), "messages took the headline from refunds");
+  assertStringIncludes(m.html, "Parents' messages waiting for a reply");
+  assertStringIncludes(m.html, "5 days");
+});
+
+Deno.test("db/125: the footer follows the headline when messages are the headline", () => {
+  const m = officeMessage({ kind: "digest", balances_due: 2,
+                            messages_waiting: { count: 1, oldest_days: 2 } })!;
+  assertStringIncludes(m.subject, "1 parent message waiting");
+  assertStringIncludes(m.html, "the parents' messages are the ones that matter");
+  assert(!m.html.includes("the balances are the ones that matter"),
+         "the footer named balances while messages were the headline");
+});
+
+Deno.test("db/125: a hostile count cannot break the HTML", () => {
+  const m = officeMessage({ kind: "digest",
+    messages_waiting: { count: "<script>x</script>" as unknown as number, oldest_days: -3 } })!;
+  assert(!m.html.includes("<script>x"), "a non-number reached the HTML");
+  assert(!/Parents' messages waiting/.test(m.html), "a non-number produced a row");
 });

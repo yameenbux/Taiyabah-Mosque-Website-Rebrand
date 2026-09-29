@@ -111,6 +111,60 @@ export interface Event {
   refunds_due?: number;
   balances_due?: number;
   this_week?: number;
+
+  // Registers due last week and not submitted, by class (db/108, Task 7 of
+  // the register rebuild) — OR the register is not open at all, because the
+  // masjid has not yet told every family it is starting (db/109). A CLASS
+  // NAME IS NOT A PERSON — that is the line CLAUDE.md draws, and it is the
+  // one this carries. No teacher, no pupil, ever.
+  //
+  // `open: false` means none of the cells behind `count`/`by_class` could
+  // ever have been marked — mark_register() itself refuses every mark until
+  // every family has been told (db/084) — so this carries `families_untold`
+  // instead, and count/by_class stay at 0/[]. Reporting a missed-register
+  // figure in that state would blame a teacher for a lock the office holds;
+  // that is the whole reason db/109 exists.
+  //
+  // OPTIONAL, AND EVERY FIELD INSIDE IT OPTIONAL TOO, ON PURPOSE. This
+  // function must be deployed BEFORE db/109 is applied — see that
+  // migration's header, and db/108's before it. A digest with the key
+  // absent, or with the pre-109 shape (`count`/`by_class` only, no `open`),
+  // must render exactly as it already does: `open` defaults to true so an
+  // old-shaped object is read exactly the way it always was.
+  //
+  // db/117 - THE WINDOW HAS A FLOOR. The count starts no earlier than the
+  // day the register opened, because nobody was allowed to mark before it.
+  // `note` is the database's own sentence for what the floor did - "Counted
+  // from 3 October, when the register opened." when it only trimmed the
+  // week, "The register opened on 3 October; there is nothing before it to
+  // report." when it took all of it - and is rendered as it arrives, so the
+  // wording lives in one place. `swallowed` is true in the second case.
+  // ALL THREE ARE OPTIONAL: deployed before or after db/117, a digest
+  // without them renders exactly as it did.
+  registers_missed?: {
+    open?: boolean;
+    families_untold?: number;
+    count?: number;
+    by_class?: { class: string; missed: number }[];
+    opened_on?: string | null;
+    swallowed?: boolean;
+    note?: string | null;
+  } | null;
+
+  // Messages from parents that nobody has answered yet (db/125). A COUNT and
+  // the age of the oldest, and nothing else: no family, no subject, no word of
+  // what a parent wrote - a subject line is a parent's own words and can hold
+  // a child's name. The same number Today shows, computed from the same rows.
+  //
+  // OPTIONAL, AND deployed BEFORE db/125 is applied, on the ordering db/108
+  // established: new database with an old renderer would send an email
+  // because a parent is waiting and draw it as "this week at the masjid",
+  // which is an all-clear. A digest with the key absent must render exactly
+  // as it did before this existed - messages_test.ts holds that.
+  messages_waiting?: {
+    count?: number;
+    oldest_days?: number;
+  } | null;
 }
 
 export interface Message {
@@ -577,11 +631,23 @@ export function officeMessage(e: Event): Message | null {
 
    Counts, and nothing else. No names, no phone numbers, no references — the
    portal holds all of that and this only has to get somebody to open it.
+   Registers are counted BY CLASS, never by teacher and never by pupil — a
+   class name is not a person, and that is the line (see CLAUDE.md).
 
    The database decides whether to send at all: send_weekly_digest() returns
    without posting when nothing is outstanding. A weekly email that always
    arrives becomes furniture within a month, and then the week it says a
-   refund is owed gets skimmed past with the rest.
+   refund is owed gets skimmed past with the rest. Before db/108
+   (Task 7), a masjid could go three weeks with a class unmarked and this
+   digest would say nothing about it at all — outstanding_summary() did not
+   look at attendance. It now does.
+
+   db/109 fixed a false accusation db/108 itself would have made: the
+   register can be LOCKED — mark_register() refuses every mark until every
+   family on the roll has been told the register is starting (db/084) — and
+   a "registers not submitted" figure computed while that lock is on blames
+   forty-four teachers for an office task. The digest now reports whichever
+   of the two states is true (`registers_missed.open`) and never both.
    -------------------------------------------------------------------------- */
 
 function digestMessage(e: Event): Message {
@@ -590,6 +656,28 @@ function digestMessage(e: Event): Message {
   const balances = e.balances_due ?? 0;
   const week     = e.this_week ?? 0;
   const oldest   = e.oldest_nikah_days ?? 0;
+  // ABSENT means nothing to render — see the field's comment on Event. A
+  // digest generated before db/108 is applied has no `registers_missed` key
+  // at all, and this must behave exactly as it did before this existed.
+  //
+  // db/109: `open` decides which of the two register figures is even
+  // meaningful. Absent, or the pre-109 shape (no `open` field at all),
+  // defaults to "open" so this renders exactly as it always has — see the
+  // Event field's comment.
+  const reg             = e.registers_missed ?? null;
+  const registerOpen    = reg?.open ?? true;
+  const untold          = reg?.families_untold ?? 0;
+  const registerNotOpen = reg !== null && registerOpen === false;
+  const missed   = (reg && registerOpen) ? (reg.count ?? 0) : 0;
+  const byClass  = (reg && registerOpen) ? (reg.by_class ?? []) : [];
+  // db/117. Only ever said while the register is open: the not-open state
+  // has its own row and its own words, and a floor note beside it would
+  // describe a week that has not begun.
+  const floorNote = (reg && registerOpen && reg.note) ? String(reg.note) : "";
+
+  // db/125. Absent, null or zero all mean "nothing to say", exactly as before.
+  const msgs       = Math.max(0, Number(e.messages_waiting?.count ?? 0) || 0);
+  const msgsOldest = Math.max(0, Number(e.messages_waiting?.oldest_days ?? 0) || 0);
 
   const rows: [string, string][] = [];
 
@@ -597,6 +685,41 @@ function digestMessage(e: Event): Message {
     rows.push(["Refunds owed",
       `<strong style="color:#8B2E2E;">${refunds}</strong> ` +
       `&mdash; the masjid is holding money it cannot keep`]);
+  }
+  if (registerNotOpen) {
+    // THE OFFICE'S ACTION, NOT THE TEACHERS'. mark_register() refuses every
+    // mark until every family has been told (db/084), so nothing behind
+    // this figure could ever have been taken — this names what is actually
+    // outstanding: telling the families, not chasing a class.
+    rows.push(["Register not yet open",
+      `<strong style="color:#8B2E2E;">${untold}</strong> ` +
+      `famil${untold === 1 ? "y has" : "ies have"} not been told &mdash; ` +
+      `the register cannot open until they are`]);
+  } else if (missed > 0) {
+    // BY CLASS, never by teacher and never by pupil — a class name is not a
+    // person. This is the one row this whole migration exists to add: a
+    // class going unmarked for weeks was invisible until now.
+    const list = byClass.map((c) => `${esc(c.class)} (${c.missed})`).join(", ");
+    rows.push(["Registers not submitted last week",
+      `<strong style="color:#8B2E2E;">${missed}</strong>` +
+      (list ? ` &mdash; ${list}` : "")]);
+  }
+  if (floorNote) {
+    // A SMALLER NUMBER IS NOT BETTER ATTENDANCE. When the register opened
+    // part-way through last week the count starts there; when it opened
+    // after last week there is nothing to count. Either way a bare figure
+    // (or a bare absence of one) would read as "everything was taken".
+    rows.push(["About the register", esc(floorNote)]);
+  }
+  if (msgs > 0) {
+    // A COUNT AND AN AGE, NEVER A FAMILY. A parent who writes and hears
+    // nothing rings, or stops asking; "waiting 4 days" is the sentence that
+    // gets somebody to open the screen. What they wrote is on the screen.
+    rows.push(["Parents' messages waiting for a reply",
+      `<strong>${msgs}</strong>` +
+      (msgsOldest > 0
+        ? ` &mdash; the oldest has been waiting <strong>${msgsOldest} day${msgsOldest === 1 ? "" : "s"}</strong>`
+        : "")]);
   }
   if (nikah > 0) {
     // The number that makes a shared inbox honest. "2 requests" is easy to
@@ -613,15 +736,49 @@ function digestMessage(e: Event): Message {
   rows.push(["Booked this week", String(week)]);
 
   // The subject carries the headline so it can be judged without opening it.
+  // The register sits between refunds and nikah requests, in either of its
+  // two states: not open at all (db/109 — the office's own action, telling
+  // 330 families), or open with classes unmarked (db/108) — not somebody
+  // else's money, but the reason this task exists at all.
   const headline = refunds > 0
     ? `${refunds} refund${refunds === 1 ? "" : "s"} owed`
-    : nikah > 0
-      ? `${nikah} nikah request${nikah === 1 ? "" : "s"} waiting`
-      : balances > 0
-        ? `${balances} balance${balances === 1 ? "" : "s"} due`
-        : "this week at the masjid";
+    : registerNotOpen
+      ? `register not open (${untold} untold)`
+      : missed > 0
+        ? `${missed} register${missed === 1 ? "" : "s"} not submitted`
+        : msgs > 0
+          ? `${msgs} parent message${msgs === 1 ? "" : "s"} waiting`
+        : nikah > 0
+          ? `${nikah} nikah request${nikah === 1 ? "" : "s"} waiting`
+          : balances > 0
+            ? `${balances} balance${balances === 1 ? "" : "s"} due`
+            : "this week at the masjid";
 
-  const needsAction = refunds > 0 || nikah > 0;
+  const needsAction = refunds > 0 || nikah > 0 || missed > 0 || registerNotOpen || msgs > 0;
+
+  // The closing line follows the SAME priority as the subject, so it never
+  // names something other than what is actually outstanding. A footer fixed
+  // on refunds read as an all-clear the week 220 registers were missed —
+  // or the week 330 families were still untold — with no refund in sight.
+  const footer = refunds > 0
+    ? "If nobody has time this week, the refunds are the ones that matter — " +
+      "that is somebody else's money."
+    : registerNotOpen
+      ? "If nobody has time this week, telling the families is the one " +
+        "that matters — the register cannot start without it."
+      : missed > 0
+        ? "If nobody has time this week, the missed registers are the " +
+          "ones that matter — chase the classes listed above."
+        : msgs > 0
+          ? "If nobody has time this week, the parents' messages are the " +
+            "ones that matter — a family has written and is waiting to hear back."
+        : nikah > 0
+          ? "If nobody has time this week, the nikah requests are the " +
+            "ones that matter — somebody is waiting for a call."
+          : balances > 0
+            ? "If nobody has time this week, the balances are the ones " +
+              "that matter — that is money still owed to the masjid."
+            : "Nothing above needs action today.";
 
   return {
     subject: ascii(`Masjid weekly - ${headline}` +
@@ -630,16 +787,12 @@ function digestMessage(e: Event): Message {
       "Still waiting for somebody",
       "This only arrives when something needs doing. Everything below is in " +
       "the portal now and will stay there until somebody deals with it.",
-      rows,
-      "If nobody has time this week, the refunds are the ones that matter — " +
-      "that is somebody else's money.",
+      rows, footer,
       e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
     text: plain(
       "Still waiting for somebody",
       "This only arrives when something needs doing.",
-      rows,
-      "If nobody has time this week, the refunds matter most — that is " +
-      "somebody else's money.",
+      rows, footer,
       e.portal ?? undefined),
   };
 }

@@ -106,7 +106,20 @@ EXPECTED = {
     #  from one menu and not find it in the other.
     "hall_office": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
                     "Food Bank volunteers"],
-    "teacher": ["Admin Centre", "Madrasah portal"],
+    #  ADMIN CENTRE DROPPED HERE ON PURPOSE, 28 September. portals/app.js
+    #  admits admin and hall_office only; a teacher has never been on that
+    #  list. The rail used to offer the row anyway — the small, specific
+    #  unkindness of offering a door that only ever refuses, spelled out in
+    #  admin/shell.js's own comment about the /portal/ header — and this is
+    #  the same rule applied to the rest of the rail. A teacher's own
+    #  destination, Madrasah portal, is unaffected.
+    "teacher": ["Madrasah portal"],
+    #  ADMIN CENTRE KEPT HERE ON PURPOSE, for the opposite reason. A no-role
+    #  account has no destination of its own anywhere in this rail, so unlike
+    #  the teacher above there is nothing this link competes with — and
+    #  portals/ already turns this exact account away with a named
+    #  "you have no access" screen instead of a blank one. That is worth
+    #  reaching; an empty rail with nothing to click is not.
     "__none__": ["Admin Centre"],
 }
 
@@ -451,10 +464,16 @@ with sync_playwright() as p:
         r = pg.evaluate(READ)
         check(r["rows"] == want,
               "a %s account is offered %r, expected %r" % (role, r["rows"], want))
-        #  No group may be drawn with nothing under it.
-        check(len(r["labels"]) <= max(0, len(want) - 1),
+        #  No group may be drawn with nothing under it. "Admin Centre" is the
+        #  one row that sits OUTSIDE every group — it is drawn directly, not
+        #  under a <details> heading — so it does not count towards how many
+        #  headings there is room for. A role offered only "Admin Centre"
+        #  (none of ITS OWN rows are grouped either) still has zero headings
+        #  to show, so the bound cannot go negative.
+        bound = len(want) - (1 if "Admin Centre" in want else 0)
+        check(len(r["labels"]) <= bound,
               "a %s account sees headings %r for only %d row(s) — an empty "
-              "heading reads as a broken screen" % (role, r["labels"], len(want) - 1))
+              "heading reads as a broken screen" % (role, r["labels"], bound))
         #  The weaker counting check above lets a heading with nothing under it
         #  through as long as SOME other group is long enough. This is the
         #  exact version: every heading must be followed by at least one row.

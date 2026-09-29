@@ -365,22 +365,40 @@
         ------------------------------------------------------------------
         A teacher has one role and it opens one thing. The Admin Centre
         refuses them, so every route this rail offers to it is a door that
-        shuts in their face.
+        shuts in their face — and unlike the case below, they already have a
+        working destination of their own (Madrasah portal), so the link buys
+        them nothing and can only end in a refusal.
 
         The header link below already gets this right and says why: "the
         small, specific unkindness of a system that offers you something and
         then says no." The lesson was applied there and not here, so the
         first teacher to sign in got a rail headed "← Admin Centre" above a
-        single row. Same rule, now in both places.
+        single row. Same rule, now in both places — for a NAMED role that is
+        not admin or hall_office.
 
-        FAILS CLOSED, for the same reason as the header: no roles passed
-        means no link. A missing link costs somebody a click; a wrongly-shown
-        one costs them a refusal. */
-    var canAdmin = (opts.roles || []).indexOf("admin") !== -1;
+        AN ACCOUNT WITH NO ROLE AT ALL IS DIFFERENT, ON PURPOSE. It has no
+        destination anywhere in this rail — hiding the Admin Centre link too
+        would leave it looking at an empty list and a line of footer print
+        nobody reads. portals/ already has a proper answer for this exact
+        account: identity.roles.indexOf(...) fails there as well, and it
+        shows a named "you have no access — the office can help" screen
+        instead of a blank one. Sending a no-role account there is a
+        convenience, not a permission, and it is the one row that can tell
+        such an account what is actually wrong, so it stays.
+
+        FAILS CLOSED for every NAMED role that is not admin or hall_office:
+        no matching role means no link. A missing link costs somebody a
+        click; a wrongly-shown one costs them a refusal — except for the
+        no-role case, where there is no "somewhere else" for the link to
+        compete with. */
+    var railRoles = opts.roles || [];
+    var canAdmin = railRoles.indexOf("admin") !== -1 ||
+                   railRoles.indexOf("hall_office") !== -1;
+    var showHome = canAdmin || railRoles.length === 0;
 
     out.push('<div class="ashell-top"><a href="' +
-             esc(canAdmin ? up(HOME.href) : up("index.html")) + '" title="' +
-             (canAdmin ? "Back to the Admin Centre" : "Back to the website") + '">' +
+             esc(showHome ? up(HOME.href) : up("index.html")) + '" title="' +
+             (showHome ? "Back to the Admin Centre" : "Back to the website") + '">' +
              '<img src="' + esc(up("img/masjid-logo.png")) +
              '" alt="Taiyabah Masjid" width="220" height="62">' +
              "<strong>" + esc(label) + "</strong></a></div>");
@@ -390,7 +408,7 @@
     //  The way out is the first row, and it says where it goes. Inside a
     //  sub-area the Admin Centre is not "home" — it is BACK, and somebody who
     //  has gone two levels in needs to see that before they see anything else.
-    if (canAdmin) {
+    if (showHome) {
       out.push('<div class="ashell-group">' +
                row(sections
                      ? { key: "__back", href: HOME.href, icon: "grid",

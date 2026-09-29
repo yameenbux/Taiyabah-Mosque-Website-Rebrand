@@ -29,6 +29,18 @@
 .nt-q         { display:block; color:var(--muted); font-size:12.5px;
                 margin-top:2px; }
 
+/*  THE SAME BLOCK AS EVERY OTHER SCREEN. `.ad-bk` on admissions and `.pu-bk`
+    on Pupils are this exact rule, and a person moving between them should
+    see no seam. This screen's own `.nt-bk` carried the name but never got
+    the rule itself — the section sat with no card around it at all, found
+    28 September alongside the id it was missing below (`#nt-list-bk`,
+    `#nt-roll`): this screen's own section and heading were never given the
+    ids the copied mobile rule at the bottom of this file expects, so on a
+    narrow phone neither ever fired. */
+.nt-bk        { border:1px solid var(--line); border-radius:var(--radius);
+                padding:20px 22px; margin:0 0 20px; background:var(--card); }
+.nt-bk h3     { margin:0 0 4px; }
+
 /* --------------------------------------------------------------------------
    THE FIGURES ALONG THE TOP.
 

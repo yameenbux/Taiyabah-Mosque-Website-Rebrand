@@ -1,0 +1,82 @@
+/* ===========================================================================
+   Messages from parents - the office's side
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields). Prefixed `ms-` so it cannot collide with `nt-`,
+   `pu-`, `fa-` or the shell's own.
+   =========================================================================== */
+
+/*  FIRST RULE IN THE FILE, AND NOT DECORATION. [hidden] is an attribute
+    selector, so any class rule that sets `display` outranks it; an opened
+    conversation carries a family's name and a parent's words, and a panel that
+    is meant to be shut and is not is a disclosure.                          */
+[hidden] { display: none !important; }
+
+.ms-sub      { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; max-width: 72ch; }
+.ms-loading  { color: var(--muted); font-size: 15px; margin: 8px 0 18px; }
+.ms-ok       { margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--success-ink);
+               border-left-width: 4px; border-radius: var(--radius); background: #F2F6F0;
+               color: var(--success-ink); font-weight: 600; }
+#ms-error    { margin-bottom: 16px; }
+
+/*  THE TABS. Waiting is the job, so it carries the alert colour when it has
+    anything in it.                                                          */
+.ms-tabs     { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.ms-tab      { min-height: 44px; padding: 8px 16px; border: 1px solid var(--line);
+               border-radius: 999px; background: var(--card); color: var(--ink);
+               font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.ms-tab.on   { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
+.ms-tab-alert:not(.on) { border-color: var(--danger-ink); color: var(--danger-ink); }
+.ms-n        { display: inline-block; min-width: 1.6em; margin-left: 4px; padding: 0 7px;
+               border-radius: 999px; background: rgba(0,0,0,.08); font-size: 13px;
+               text-align: center; }
+.ms-tab.on .ms-n { background: rgba(255,255,255,.22); }
+.ms-tab:focus-visible, .ms-row:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+
+/*  THE LIST. One conversation is one button: the title, then who and how long. */
+.ms-list     { list-style: none; margin: 0 0 20px; padding: 0; display: grid; gap: 8px; }
+.ms-row      { display: block; width: 100%; text-align: left; padding: 12px 16px;
+               border: 1px solid var(--line); border-left-width: 4px; border-radius: 12px;
+               background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+.ms-row.ms-s-open     { border-left-color: var(--danger-ink); }
+.ms-row.ms-s-answered { border-left-color: var(--gold-ink); }
+.ms-row.ms-s-closed   { border-left-color: var(--line); }
+.ms-row.open { box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.ms-subj     { display: block; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.ms-meta     { display: block; margin-top: 2px; color: var(--muted); font-size: 14px; }
+.ms-new      { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px;
+               background: var(--brand-800); color: #fff; font-size: 12px; font-weight: 700;
+               vertical-align: 1px; }
+.ms-empty    { border: 1px dashed var(--line); border-radius: 12px; padding: 14px 18px;
+               background: color-mix(in srgb, var(--gold) 8%, var(--card)); }
+.ms-empty p  { margin: 0; font-size: 15.5px; max-width: 70ch; }
+
+/*  ONE CONVERSATION. Parents' words on the left, the office's on the right, so
+    who said what is clear at a glance.                                      */
+.ms-thread   { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+               padding: 20px 22px; margin: 0 0 24px; box-shadow: var(--shadow); }
+.ms-th-head h2 { margin: 0 0 2px; font-size: 1.3rem; overflow-wrap: anywhere; }
+.ms-th-fam   { margin: 0 0 14px; color: var(--muted); font-size: 14.5px; }
+.ms-msgs     { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.ms-msg      { max-width: 46rem; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); }
+.ms-from-parent { background: #F7F1DF; justify-self: start; }
+.ms-from-office { background: #EEF3EC; justify-self: end; }
+.ms-who      { margin: 0 0 4px; color: var(--muted); font-size: 13.5px; }
+.ms-body     { margin: 0; font-size: 15.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+#ms-f label  { display: block; margin-bottom: 6px; text-transform: none; letter-spacing: normal;
+               color: var(--ink); font-size: 15px; font-weight: 700; }
+#ms-f textarea { width: 100%; min-height: 110px; padding: 12px 14px; font: inherit; font-size: 16px;
+               color: var(--ink); background: var(--card); border: 1px solid var(--line);
+               border-radius: 12px; resize: vertical; }
+#ms-f textarea:focus { outline: 3px solid var(--gold-ink); outline-offset: 1px; }
+.ms-fine     { display: block; margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+.ms-inline   { margin: 10px 0 0; color: var(--danger-ink); font-size: 15px; font-weight: 700; }
+.ms-acts     { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0 0; }
+.ms-acts .btn { width: auto; flex: 0 0 auto; min-height: 48px; }
+
+@media (max-width: 640px) {
+  .ms-thread { padding: 16px; }
+  .ms-msg    { max-width: 100%; justify-self: stretch; }
+  .ms-acts .btn { flex: 1 1 100%; }
+}

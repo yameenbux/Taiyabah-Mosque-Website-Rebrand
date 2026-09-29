@@ -1,0 +1,127 @@
+/* ===========================================================================
+   Progress notes - the teacher's side
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields). Prefixed `tp-` so it cannot collide with `ms-`,
+   `pu-`, `fa-` or the shell's own.
+   =========================================================================== */
+
+/*  FIRST RULE IN THE FILE, AND NOT DECORATION. [hidden] is an attribute
+    selector, so any class rule that sets `display` outranks it; a panel meant
+    to be shut and not is a child's record on a desk.                        */
+[hidden] { display: none !important; }
+
+.tp-loading { color: var(--muted); font-size: 15px; margin: 8px 0 18px; }
+.tp-ok      { margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--success-ink);
+              border-left-width: 4px; border-radius: var(--radius); background: #F2F6F0;
+              color: var(--success-ink); font-weight: 600; }
+#tp-error   { margin-bottom: 16px; }
+
+/*  THE RULE, said before anything is typed. Gold-edged so it reads as a rule
+    and not as small print.                                                  */
+.tp-rule    { margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--line);
+              border-left: 4px solid var(--gold-ink); border-radius: 12px; background: var(--card);
+              font-size: 15px; max-width: 72ch; }
+
+.tp-step    { margin: 0 0 22px; }
+.tp-h       { margin: 0 0 8px; font-size: 1.25rem; overflow-wrap: anywhere; }
+.tp-h3      { margin: 22px 0 10px; font-size: 1.05rem; }
+.tp-none    { color: var(--muted); font-style: italic; margin: 6px 0; }
+.tp-empty   { border: 1px dashed var(--line); border-radius: 12px; padding: 14px 18px;
+              background: color-mix(in srgb, var(--gold) 8%, var(--card)); }
+.tp-empty p { margin: 0; font-size: 15.5px; max-width: 70ch; }
+
+.tp-pills   { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-pill    { min-height: 44px; padding: 8px 16px; border: 1px solid var(--line);
+              border-radius: 999px; background: var(--card); color: var(--ink);
+              font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.tp-pill.on { background: var(--brand-800); border-color: var(--brand-800); color: #fff; }
+.tp-n       { display: inline-block; margin-left: 4px; padding: 0 8px; border-radius: 999px;
+              background: rgba(0,0,0,.08); font-size: 13px; font-weight: 400; }
+.tp-pill.on .tp-n { background: rgba(255,255,255,.22); }
+.tp-pill:focus-visible, .tp-row:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+
+/*  THE CHILDREN. One button each: the name, then how much is recorded.        */
+.tp-list    { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px;
+              grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); }
+.tp-row     { display: block; width: 100%; text-align: left; padding: 12px 16px;
+              border: 1px solid var(--line); border-left-width: 4px; border-radius: 12px;
+              background: var(--card); color: var(--ink); font: inherit; cursor: pointer; }
+.tp-row.open { border-left-color: var(--brand-800); box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.tp-name    { display: block; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.tp-meta    { display: block; margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+
+/*  ONE CHILD.                                                                */
+.tp-child   { border: 1px solid var(--line); border-radius: var(--radius); background: var(--card);
+              padding: 20px 22px; margin: 22px 0 24px; box-shadow: var(--shadow); }
+.tp-c-head .tp-h { margin-bottom: 0; }
+#tp-f label { text-transform: none; letter-spacing: normal; }
+.tp-field   { margin: 0 0 14px; }
+.tp-field label { display: block; margin-bottom: 6px; color: var(--ink); font-size: 15px; font-weight: 700; }
+.tp-opt     { color: var(--muted); font-weight: 400; }
+.tp-staff   { display: inline-block; margin-left: 6px; padding: 0 8px; border-radius: 999px;
+              background: #EFE9DA; color: var(--ink); font-size: 12px; font-weight: 700; vertical-align: 1px; }
+.tp-field input[type="text"], .tp-field input[type="date"] {
+              width: 100%; min-height: 48px; padding: 10px 14px; font: inherit; font-size: 16px;
+              color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.tp-date input { max-width: 14rem; }
+.tp-field textarea { width: 100%; min-height: 84px; padding: 12px 14px; font: inherit; font-size: 16px;
+              color: var(--ink); background: var(--card); border: 1px solid var(--line);
+              border-radius: 12px; resize: vertical; }
+.tp-field input:focus, .tp-field textarea:focus { outline: 3px solid var(--gold-ink); outline-offset: 1px; }
+.tp-three   { display: grid; gap: 0 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tp-fine    { display: block; margin: 6px 0 0; color: var(--muted); font-size: 13.5px; }
+/*  THE TWO NOTES ARE DIFFERENT IN KIND, so they look it.                     */
+.tp-forparent textarea { border-left: 4px solid var(--gold-ink); }
+.tp-mine textarea      { border-left: 4px solid var(--line); background: #FAF8F2; }
+
+/*  THE CHOICE TO SHARE. Two big targets, each saying what it does.           */
+.tp-share   { border: 0; padding: 0; margin: 4px 0 14px; min-width: 0; }
+.tp-share legend { padding: 0; margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.tp-opt-row { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 8px; padding: 12px 14px;
+              border: 1px solid var(--line); border-radius: 12px; background: var(--card); cursor: pointer;
+              font-size: 15px; font-weight: 400; color: var(--ink); }
+.tp-opt-row input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--brand-800); flex: 0 0 auto; }
+.tp-opt-row span  { display: flex; flex-direction: column; }
+.tp-opt-row b     { font-size: 16px; }
+.tp-opt-row i     { font-style: normal; color: var(--muted); font-size: 13.5px; }
+.tp-opt-row:has(input:checked) { border-color: var(--brand-800); box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.tp-opt-row:focus-within { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+.tp-inline  { margin: 10px 0 0; color: var(--danger-ink); font-size: 15px; font-weight: 700; }
+.tp-acts    { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0 0; }
+.tp-acts .btn { width: auto; flex: 0 0 auto; min-height: 48px; }
+
+/*  ENTRIES SO FAR.                                                           */
+.tp-entries { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tp-entry   { border: 1px solid var(--line); border-left-width: 4px; border-radius: 12px; padding: 12px 16px; }
+.tp-entry.tp-shared { border-left-color: var(--success-ink); }
+.tp-e-head  { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; margin: 0 0 6px; }
+.tp-badge   { display: inline-block; padding: 2px 11px; border-radius: 999px; font-size: 13px; font-weight: 700;
+              border: 1px solid var(--line); }
+.tp-b-shared  { background: #F2F6F0; color: var(--success-ink); border-color: var(--success-ink); }
+.tp-b-private { background: #F3EFE6; color: var(--ink); }
+.tp-dl      { margin: 0 0 8px; display: grid; gap: 4px; }
+.tp-dl > div { display: grid; grid-template-columns: 5rem 1fr; gap: 8px; }
+.tp-dl dt   { color: var(--muted); font-size: 14px; font-weight: 700; }
+.tp-dl dd   { margin: 0; font-size: 15.5px; overflow-wrap: anywhere; }
+.tp-note    { margin: 6px 0; padding: 8px 12px; border-radius: 10px; font-size: 15.5px;
+              white-space: pre-wrap; overflow-wrap: anywhere; }
+.tp-note-parent { background: #F7F1DF; }
+.tp-note-mine   { background: #F1EFEA; }
+.tp-tag     { display: block; margin: 0 0 2px; color: var(--muted); font-size: 12.5px; font-weight: 700;
+              letter-spacing: .03em; text-transform: uppercase; }
+.tp-e-foot  { display: flex; justify-content: space-between; align-items: center; gap: 12px;
+              margin: 8px 0 0; color: var(--muted); font-size: 13.5px; }
+.tp-link    { min-height: 44px; padding: 0 6px; background: none; border: 0; color: var(--brand-800);
+              font: inherit; font-size: 15px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.tp-link:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+
+@media (max-width: 720px) {
+  .tp-three { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .tp-child { padding: 16px; }
+  .tp-acts .btn { flex: 1 1 100%; }
+  .tp-dl > div { grid-template-columns: 1fr; gap: 0; }
+}

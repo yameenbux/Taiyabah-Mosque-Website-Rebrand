@@ -1,192 +1,226 @@
-#!/usr/bin/env python3
-"""
-Structural check for index_template.html.
+# Working on the Taiyabah Masjid site
 
-Catches the class of bug that broke seven pages in August 2026: a single
-missing </div> left the Hall Hire page unclosed, so every page after it became
-a child of it and had nowhere to render. Clicking those pages changed the nav
-highlight and the URL, and showed nothing.
+Bolton Central Islamic Society, registered charity 1041569. This repository is
+the masjid's public website, its admin portal, and the madrasah's record system.
 
-Nothing here needs a browser. Run it before every build:
+**Read this before touching anything.** Most of it exists because something
+went wrong once.
 
-    python3 verify_structure.py && python3 build.py
+---
 
-Exit code 0 = clean, 1 = problems found.
-"""
+## The two facts that change how you work
 
-import re
-import sys
-from collections import Counter
+### 1. This repository is public, and pushing is deploying
 
-TEMPLATE = "index_template.html"
-VOID = {"img", "br", "hr", "input", "meta", "link", "source", "track", "wbr", "col", "area", "base"}
+GitHub Pages serves the repository root. **Anything committed is a public web
+page within a minute of a push** unless `_config.yml` `exclude:` lists it — and
+even then it is still readable in the public repo. There is no staging.
 
+`_config.yml` is long and worth reading once. Its comments are a list of things
+that were briefly published by accident, including the build scripts, the
+database migrations, and — caught the day before a push — a confidential DPIA.
 
-def page_regions(src):
-    """Yield (name, text) for each .page block, split at the next page or </main>."""
-    starts = [m.start() for m in re.finditer(r'<div class="page" data-page="', src)]
-    if not starts:
-        return []
-    end = src.index("</main>")
-    bounds = starts + [end]
-    out = []
-    for i in range(len(starts)):
-        chunk = src[bounds[i]:bounds[i + 1]]
-        name = re.search(r'data-page="([^"]+)"', chunk).group(1)
-        out.append((name, chunk))
-    return out
+**A confidential document does not belong here at all**, excluded or not. The
+DPIA and the breach procedure are deliberately absent. Do not add them.
 
+### 2. There are 552 real children in the database
 
-def main():
-    src = open(TEMPLATE, encoding="utf-8").read()
-    problems = []
+Names, dates of birth, home addresses, guardians' phone numbers, medical notes,
+allergies, SEND marks. That is special category data under Article 9.
 
-    # 1. every page block must balance its divs, or the next page gets swallowed
-    for name, chunk in page_regions(src):
-        depth = len(re.findall(r"<div\b", chunk)) - len(re.findall(r"</div>", chunk))
-        if depth != 0:
-            word = "unclosed" if depth > 0 else "over-closed"
-            problems.append(
-                "page '%s' has %d %s <div> — the next page will be nested inside it"
-                % (name, abs(depth), word)
-            )
+- **Never put a real pupil, parent or staff name in this repository.** Not in a
+  test fixture, not in a SQL comment, not in an example. This has happened four
+  times and each time the names had to be hunted out of served files. Invent
+  names.
+- **Never paste real personal data into a chat.** That includes your own
+  debugging output — `RAISE EXCEPTION '%', <whole json row>` has leaked a family
+  surname and twenty-one staff names into a transcript. Select named scalar
+  fields, never whole rows.
+- **Some functions return names because that is their job. Do not call them to
+  check a number — use the count-only companion instead.**
+  `registers_missing()`, `register_history()`, `madrasah_registers_list()`,
+  `madrasah_roll()`, `madrasah_pupil_one()` and the rest of the office's screen
+  functions exist to put names in front of the person entitled to see them.
+  A bare call to one while verifying a count puts every name in the
+  transcript — 44 teachers on 28 September, 3 more the same day, both times
+  after this rule was already written down. Telling people to be careful is
+  the weakest control there is, so `db/115` gave the four functions above a
+  count-only sibling — `registers_missing_count()`, `register_history_count()`,
+  `madrasah_registers_list_count()`, `madrasah_roll_count()` — same
+  arguments, same gates, same `current_masjid()` scoping, and **no names in
+  the body at all**. **When you want a figure, call the `_count()` function.**
+  For a function with no count-only sibling yet, wrap the call and select
+  `count(*)`, `jsonb_array_length(result->'rows')`, or a boolean — never
+  `select * from` a function whose purpose is to return people, and never
+  select the `rows` key itself, even to compare it against something else.
+- **Never run ad hoc DML against `madrasah_pupils` bare — not even inside a
+  transaction you intend to roll back.** A failed CHECK on that table prints
+  **the whole row** into Postgres's error DETAIL: medical notes, allergies,
+  SEND and EHCP detail, address, postcode, date of birth. Live settings are
+  `log_min_error_statement = error` and `log_error_verbosity = default`, so
+  that DETAIL reaches the **Supabase-retained server log** — not only your
+  transcript, and a rollback does not take it back. This has now happened
+  **twice**, on 27 and 28 September, both times inside a block that rolled
+  back cleanly, both times by someone proving a guard worked.
 
-    # 2. whole-document div balance
-    total = len(re.findall(r"<div\b", src)) - len(re.findall(r"</div>", src))
-    if total != 0:
-        problems.append("document-wide <div> imbalance: %+d" % total)
+  If you must touch that table, wrap it so only the `sqlstate` escapes:
 
-    # 3. every data-nav must point at a page that exists
-    pages = set(re.findall(r'data-page="([^"]+)"', src))
-    for target in set(re.findall(r'data-nav="([^"]+)"', src)):
-        if target not in pages and not target.startswith("'"):
-            problems.append("data-nav=\"%s\" points at a page that does not exist" % target)
+  ```sql
+  begin
+    update public.madrasah_pupils set ... where id = ...;
+  exception when others then
+    raise exception 'refused: %', sqlstate;   --  sqlstate ONLY. Never sqlerrm,
+                                              --  never the row, never a column.
+  end;
+  ```
 
-    # 4. scroll targets and #anchors must resolve
-    ids = set(re.findall(r'\sid="([^"]+)"', src))
-    for target in set(re.findall(r'data-scroll-to="([^"]+)"', src)):
-        if target not in ids:
-            problems.append('data-scroll-to="%s" has no matching element id' % target)
-    for anchor in set(re.findall(r'href="#([^"]+)"', src)):
-        if anchor and anchor not in ids:
-            problems.append('href="#%s" has no matching element id' % anchor)
+  `sqlerrm` is not safe here: for a constraint violation it carries the
+  DETAIL. And prefer not to touch it at all — most proofs can be made
+  against a throwaway table or by reading, and a proof that needs a real
+  child's row is usually the wrong proof.
 
-    # 5. duplicate ids silently break getElementById
-    for elem_id, count in Counter(re.findall(r'\sid="([^"]+)"', src)).items():
-        if count > 1:
-            problems.append('id="%s" appears %d times — getElementById will pick one' % (elem_id, count))
+---
 
-    # 6. unsubstituted build placeholders
-    for ph in set(re.findall(r"\{\{[A-Z_]+\}\}", src)):
-        if ph not in open("build.py", encoding="utf-8").read():
-            problems.append("%s is used in the template but build.py does not define it" % ph)
+## Building
 
-    # 7. A portal tile must not disagree with the paragraph under it.
-    #
-    #    This check exists because of a real near-miss. Thirty-nine teachers
-    #    were given working logins while the Teachers Portal tile still read
-    #    "Preview" and the paragraph beneath it still said the sign-in screens
-    #    "are not yet connected and no account will work." Both sentences were
-    #    true when they were written and neither was reviewed when the accounts
-    #    were built. The first thing a teacher holding a slip would have read
-    #    is the site telling them not to bother.
-    #
-    #    The tile is one edit and the paragraph is another, so a person doing
-    #    half the job leaves no visible mark. This makes the half-done state
-    #    fail the build instead.
-    for who in ("Parents", "Teachers"):
-        m = re.search(
-            r'<span class="sh-label">%s Portal</span>\s*'
-            r'<span class="live-tag">([^<]+)</span>' % who, src)
-        if not m:
-            problems.append("the %s Portal tile has gone, or its markup changed — "
-                            "check 7 in verify_structure.py can no longer see it" % who)
-            continue
-        live = m.group(1).strip().lower() != "preview"
-        #  The paragraph names each audience and says whether it is open.
-        says_shut = re.search(
-            r"<strong>%s:</strong>[^<]*?(not open yet|will not work|no \w+ account)"
-            % who, src, re.S | re.I) is not None
-        if live and says_shut:
-            problems.append(
-                '%s Portal tile says "%s" but the paragraph under it still tells '
-                "%s their accounts do not work" % (who, m.group(1), who.lower()))
-        if not live and not says_shut:
-            problems.append(
-                "%s Portal tile says Preview but the paragraph does not tell %s "
-                "their portal is not open — somebody will try to sign in"
-                % (who, who.lower()))
+```bash
+python3 verify_structure.py && python3 build.py
+```
 
-    # 8. A new file in the repository root is a public web page.
-    #
-    #    _config.yml excludes README.md, DEPLOY.md and DONATIONS.md BY NAME, not
-    #    by "*.md". So the next .md or .txt somebody drops in the root is live on
-    #    the masjid's website at a guessable address the moment it is pushed.
-    #
-    #    This check was written after CLAUDE.md — a file whose whole subject is
-    #    "this repository is public and pushing is deploying" — was created in
-    #    the root and would itself have been published. It is not a hypothetical
-    #    failure mode: _config.yml's own comments record the build scripts, the
-    #    database migrations, a working-notes file that sat live for a fortnight,
-    #    and a confidential DPIA, all published or nearly published this way.
-    import os
-    cfg = open("_config.yml", encoding="utf-8").read()
-    excluded = set(re.findall(r'^\s+-\s+"?([^"\n]+?)"?\s*$', cfg, re.M))
-    for name in sorted(os.listdir(".")):
-        if not os.path.isfile(name):
-            continue
-        if not name.lower().endswith((".md", ".txt", ".yaml", ".json", ".csv")):
-            continue
-        if name in ("_config.yml", "CNAME", "robots.txt", "robots.live.txt",
-                    "sitemap.xml", "manifest.json", "site.webmanifest"):
-            continue
-        if name in excluded:
-            continue
-        problems.append(
-            '%s sits in the repository root and _config.yml does not exclude it '
-            "— GitHub Pages will publish it on the masjid's website. Add it to "
-            "exclude:, or delete it." % name)
+**`index.html` is generated. Never edit it by hand.** It is 634 KB, it is the
+whole public site in one file, and it is built from `index_template.html`. An
+edit to `index.html` is overwritten by the next build and looks, in the diff,
+exactly like an edit that worked.
 
-    if problems:
-        print("STRUCTURE CHECK FAILED (%d)" % len(problems))
-        for p in problems:
-            print("  -", p)
-        return 1
+`verify_structure.py` runs first for a reason — it refuses to let the build
+proceed on a broken structure. It checks div balance, that every `data-nav` and
+anchor resolves, that no `id` is duplicated, that no build placeholder is left
+unsubstituted, that donation links still point somewhere that takes money, and
+that the portal tiles agree with the paragraph under them.
 
-    print("structure OK — %d pages, all divs balanced, all links resolve" % len(pages))
+Portal screens are generated too, by `tools/screen_builder.py` and the
+`tools/build_*_screen.py` scripts. Regenerate rather than hand-editing
+`portal/*/app.js`, and check `--verify-pupils` still reproduces the Pupils
+screen byte-for-byte after changing the generator.
 
-    # 7. Donation links that would silently take no money.
-    #    Two ways this goes wrong, and neither shows on screen:
-    #      a) a link still pointing at the old WordPress site — 404 once the
-    #         domain moves, but the button still looks fine;
-    #      b) a Stripe link created in TEST mode — a complete, convincing
-    #         checkout that never charges anyone.
-    warnings = []
-    stale = sorted(set(re.findall(r'https://www\.taiyabahmasjid\.com/product/[a-z0-9-]+/', src)))
-    if stale:
-        warnings.append(("%d DONATE LINK(S) STILL POINT AT THE OLD WORDPRESS SITE" % len(stale),
-                         stale,
-                         "These break the moment taiyabahmasjid.com points at THIS site."))
-    testmode = sorted(set(re.findall(r'https://buy\.stripe\.com/test_[A-Za-z0-9]+', src)))
-    if testmode:
-        warnings.append(("%d STRIPE LINK(S) ARE IN TEST MODE" % len(testmode),
-                         testmode,
-                         "These look like a real checkout and take no money at all."))
-    for head, urls, why in warnings:
-        print("")
-        print("  " + "!" * 68)
-        print("  !!  " + head)
-        print("  !!")
-        for u in urls:
-            print("  !!    " + u)
-        print("  !!")
-        print("  !!  " + why)
-        print("  !!  See DONATIONS.md.")
-        print("  " + "!" * 68)
-        print("")
+## Testing
 
-    return 0
+```bash
+python3 _test/register_test.py        # and the other 40 in _test/
+```
 
+They drive a real browser against the built files. They are slow — the full
+sweep is several minutes — and they are the only reason most of the bugs in
+this repo were found rather than shipped.
 
-if __name__ == "__main__":
-    sys.exit(main())
+`_test/` is excluded from Pages but committed. It is not optional: four suites
+once lived in a scratch directory where they quietly stopped running, and **a
+suite nobody can run looks exactly like a suite that passes.**
+
+---
+
+## Rules that are not negotiable
+
+**Secrets.** The `service_role` / secret Supabase key must never appear in any
+file here or in any client-side code. The anon publishable key (`sb_publishable_…`)
+**is** safe to commit — RLS is the real protection. The Stripe secret key stays
+local and `STRIPE_SECRET_KEY` must **not** be added to Supabase. A
+`service_role` JWT and the `NOTIFY_SECRET` are stored in plaintext inside
+database-webhook trigger definitions; **never write them to a file.**
+
+**If GitHub secret scanning blocks a push, do not click "Allow secret."**
+Cancel, remove the key, rotate it.
+
+**Browser JavaScript is ES5.** `var` and `function` only — no arrow functions,
+no `const`, no `let`, no template literals. `.finally()` is accepted precedent.
+Older phones in the community run browsers that do not parse the rest, and the
+failure is a blank screen, not a warning.
+
+**Every new stylesheet opens with `[hidden] { display: none !important; }`.**
+
+**Keep two administrators.** One locked-out admin must not be able to strand
+the masjid.
+
+**The `db/*.sql` files are a record, not a queue.** Every migration through 093
+is already applied to production. They are numbered history. Do not re-run
+them; write a new numbered file.
+
+---
+
+## How to think about this codebase
+
+These are not style preferences. Each one is the shape of a bug that shipped.
+
+**The list says WHETHER, the record says WHAT.** A list screen says *nine
+children have no date of birth*. It does not name them. A screen that sits open
+on a desk all evening should not have children's records on it.
+
+**A check that asserts something EXISTS is not a check that it WORKS.** A test
+that finds a button is not a test that the button does anything.
+
+**Never test a guard by breaking the real thing.** Add a throwaway, watch the
+guard fail, drop the throwaway, confirm green.
+
+**Prove a guard can fail before keeping it.** A guard that has never been seen
+to fire is decoration. One here read correctly and could never fire, because
+the state it tested was pre-populated by construction.
+
+**When a rewrite replaces something that works, the failing test is usually
+telling you what the old version knew.** A rewrite of the Today page silently
+dropped "21 **of 40**" down to "21". The denominator was the point.
+
+**When two `!important` declarations collide, specificity decides.**
+`admin/shell.css` has `body.has-ashell .shell { display: block !important }` at
+(0,2,0), which beats `body > *` at (0,0,1). Print sheets must be moved to
+`document.body`.
+
+**Check whether the check is wrong before you change the code.** Roughly half
+the failures in this project were the test, not the system: `inner_text` does
+not see `::before` content or a `placeholder` attribute; `git apply --check` run
+against a tree that already has the commit reports every hunk as a conflict. Read
+the failure before you believe it.
+
+**Ask the right question before answering the wrong one.** "2,468 of 2,485 audit
+rows have no actor" was carried as a security worry for days. 2,288 were a cron
+job purging hall holds, the rest anonymous submissions and webhooks — **nobody
+did those.** The right question was "is there an action a *person* performs that
+does not record them." There were seven, fixed in `db/089`.
+
+**Put a promise where it can fail.** The signed privacy notice was made false
+three times by ordinary schema changes, because prose cannot fail a build.
+`madrasah_notice_matches_schema()` inside `health_check()` now does. When you
+find something the system claims about itself, prefer a check over a comment —
+and a comment over nothing.
+
+---
+
+## Before you say it works
+
+Run the thing. Read the output. The pattern to avoid: a Python heredoc with a
+syntax error meant a "negative control" never ran, and the ALL PASS that
+followed proved nothing.
+
+Say what you verified and how. Do not say a migration is applied because you
+wrote the file, or that emails arrive because the server accepted them —
+**accepted is not delivered.**
+
+---
+
+## Where things stand
+
+`docs/GO-LIVE.md` is the live checklist and is ordered by what breaks if you
+skip it. Read it before starting anything; it is more current than this file.
+
+The two things most likely to bite:
+
+1. **`CNAME` says `taiyabahwebsite.ysbdesigns.uk`; the site says
+   `taiyabahmasjid.com` in 17 places**, including the privacy notice printed for
+   330 families. Fix the domain before any letter goes out.
+2. **Raising a safeguarding concern works; reading concerns does not exist.**
+   There is no triage screen — only a database query. A report nobody reads is
+   worse than no button, because the teacher believes they have discharged their
+   duty.
+
+The committee runs this site day to day, not a developer. When choosing between
+a clever thing and an obvious thing, choose the one a volunteer can still
+operate in a year.

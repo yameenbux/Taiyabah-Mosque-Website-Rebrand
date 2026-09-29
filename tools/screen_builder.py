@@ -65,7 +65,8 @@ class Screen(object):
     """
 
     def __init__(self, name, nav_key, folder, lead, panel_id, module,
-                 var_name, css, body, page_title=None):
+                 var_name, css, body, page_title=None, audience="staff",
+                 depth=2, preamble=None):
         self.name = name
         self.nav_key = nav_key
         self.folder = folder
@@ -76,6 +77,13 @@ class Screen(object):
         self.css = css
         self.body = body
         self.page_title = page_title or name
+        #  audience "parent" is a different SIGN-IN, not a different screen:
+        #  see the section headed THE PARENTS' PORTAL below. Everything here
+        #  that is not under `audience == "parent"` is byte-for-byte what the
+        #  staff screens have always had, which --verify-pupils proves.
+        self.audience = audience
+        self.depth = depth
+        self.preamble = preamble
 
     @property
     def out(self):
@@ -84,6 +92,10 @@ class Screen(object):
     @property
     def module_path(self):
         return os.path.join(ROOT, "tools", self.module)
+
+    @property
+    def up(self):
+        return "../" * self.depth
 
 
 def read_shell(shell=SHELL):
@@ -151,6 +163,9 @@ def build_js(screen, srcjs=SRCJS):
     close += len("  })();\n")
 
     body = open(screen.module_path, encoding="utf-8").read().rstrip() + "\n"
+    if screen.preamble:
+        body = (open(os.path.join(ROOT, "tools", screen.preamble),
+                     encoding="utf-8").read().rstrip() + "\n\n" + body)
     out = src[:start] + body + src[close:]
     out = out.replace("admissions.mount(identity)", "%s.mount(identity)" % screen.var_name)
 
@@ -172,6 +187,8 @@ def build_js(screen, srcjs=SRCJS):
                  % screen.var_name)
     if "var admissions" in out:
         sys.exit("The Applications module survived the splice. Nothing written.")
+    if screen.audience == "parent":
+        out = parent_js(out, screen)
     return out
 
 
@@ -187,7 +204,7 @@ def build_html(screen):
     #  Furniture first, screen second. admin/screen.css carries the tokens,
     #  the buttons and the sign-in panel; the screen's own sheet carries the
     #  screen.
-    h = h.rstrip() + ('\n<link rel="stylesheet" href="../../admin/screen.css">'
+    h = h.rstrip() + ('\n<link rel="stylesheet" href="' + screen.up + 'admin/screen.css">'
                       '\n<link rel="stylesheet" href="%s">\n</head>\n' % screen.css)
     h = h.replace("</head>\n<link", "<link")
 
@@ -201,6 +218,9 @@ def build_html(screen):
                t, flags=re.S)
     t = t.replace('<section class="bk" id="cl-panel" hidden>', "")
     t = re.sub(r"<!-- The staff themselves\..*?-->", "", t, flags=re.S)
+
+    if screen.audience == "parent":
+        h, t, tail = parent_html(screen, h, t, tail)
 
     return (h + t
             + '      <section class="bk" id="%s" hidden>\n' % screen.panel_id
@@ -232,6 +252,141 @@ def build(screen, quiet=False):
         print("  portal/%s/app.js      %6d bytes" % (screen.folder, len(js)))
         print("  portal/%s/config.js   copied from portal/classes/" % screen.folder)
     return html, js
+
+
+#  =======================================================================
+#  THE PARENTS' PORTAL
+#  =======================================================================
+#
+#  WHY THIS IS A PATCH ON THE STAFF SHELL AND NOT A NEW SHELL. The sign-in,
+#  the password gate, the rail and the sign-out are the parts that took months
+#  to get right (see the long notes in portal/admissions/app.js), and a parent
+#  should get exactly those behaviours. What differs is small and every
+#  difference is named here, each one read-patch-refuse: it must occur exactly
+#  once in what was read, or nothing is written.
+#
+#    * NO TWO-STEP. Staff need an authenticator; a parent has no role, sees
+#      only their own household, and the database gates by identity
+#      (my_parent_children), not by assurance level. Sending a parent to a
+#      QR-code enrolment would lock out every household.
+#    * ROLES. loadIdentity() asked user_roles what the account may do. A
+#      parent has no row there BY DESIGN (db/119: that is what makes
+#      current_masjid() NULL for them), so asking is pointless. The identity
+#      carries the single role "parent", which shell.js reads as "no Admin
+#      Centre link, logo goes to the website".
+#    * ITS OWN RAIL. window.ParentNav, from portal/parent/nav.js - never
+#      MadrasahNav, so a parent is not shown a staff row even greyed out.
+#    * THE PASSWORD GATE says "ring the office" and not "the madrasah does not
+#      hold your email".
+#    * DEPTH. The staff screens are two folders down; a parent's second and
+#      third screens are three.
+
+def _once(src, old, new, what):
+    n = src.count(old)
+    if n != 1:
+        sys.exit("The parent patch for %s expected its anchor once and found "
+                 "it %d times. NOTHING was written - the shell it was read "
+                 "from has changed." % (what, n))
+    return src.replace(old, new)
+
+
+def parent_js(out, screen):
+    out = _once(out,
+        'sb.from("user_roles").select("role").eq("user_id", user.id)',
+        'Promise.resolve({ data: [{ role: "parent" }], error: null })',
+        "the roles query")
+
+    out = _once(out,
+        """      + '<p class="pw-hint">There is no email reset on a madrasah login, '
+      + "because the madrasah does not hold your email address. If you forget "
+      + "this one, the office has to set you a new one.</p>\"""",
+        """      + '<p class="pw-hint">There is no email reset on this login. If you '
+      + "forget the new password, ring the madrasah office on 01204 535 997 "
+      + "and they will set you a new one.</p>\"""",
+        "the password gate's closing note")
+
+    #  THE PASSWORD GATE USED TO CALL esc(), WHICH WAS NOT IN ITS SCOPE, AND
+    #  THE PARENT PATCH USED TO REPOINT IT AT parentCommon.esc(). Both are
+    #  gone: the gate now carries its own pwEsc() in the shell source, because
+    #  the fault was never a parent fault. esc() is a LOCAL of another
+    #  function in every one of these files, so the greeting threw "esc is not
+    #  defined" on EVERY screen, staff included - and every teacher login has
+    #  a name and is created with must_change_password set, so all 39 would
+    #  have met it at their first sign-in. Fixed at the source instead of
+    #  patched per screen; --verify-pupils was re-baselined for it.
+
+    a = out.find("  function routeAfterPassword() {")
+    b = out.find("  var pending = { factorId: null, challengeId: null };")
+    if a < 0 or b < a or out.count("  function routeAfterPassword() {") != 1:
+        sys.exit("The parent patch could not find routeAfterPassword(). "
+                 "NOTHING was written.")
+    out = (out[:a]
+           + "  //  A parent has no second factor (see tools/screen_builder.py).\n"
+           + "  function routeAfterPassword() {\n"
+           + "    return loadIdentity().then(renderApp);\n"
+           + "  }\n\n"
+           + out[b:])
+
+    out = _once(out, "area:     'Madrasah',", "area:     'Parents',",
+                "the rail's heading")
+    out = _once(out, "depth:    2,", "depth:    %d," % screen.depth,
+                "the rail's depth")
+    out = out.replace("MadrasahNav", "ParentNav")
+    if "MadrasahNav" in out or "window.ParentNav" not in out:
+        sys.exit("The parent patch did not switch the rail's list. "
+                 "NOTHING was written.")
+    return out
+
+
+def parent_html(screen, h, t, tail):
+    up = screen.up
+    if screen.depth != 2:
+        #  Only the paths the staff shell brought with it ("../../x"). The
+        #  screen's own links were written at this depth already, and start
+        #  with the same characters, so the lookahead leaves them alone.
+        pat = re.compile(r'"\.\./\.\./(?!\.\./)')
+        h = pat.sub('"' + up, h)
+        t = pat.sub('"' + up, t)
+        tail = pat.sub('"' + up, tail)
+    nav_src = "../" * (screen.depth - 2) + "nav.js"
+    h = _once(h, '<script src="../nav.js" defer></script>',
+              '<script src="%s" defer></script>' % nav_src, "the rail's script")
+    h = _once(h, "&mdash; Madrasah &mdash; Taiyabah Masjid",
+              "&mdash; Parents &mdash; Taiyabah Masjid", "the page title")
+    h = re.sub(r"<!-- =+\n     THIS SCREEN IS TWO FOLDERS DOWN.*?-->",
+               lambda m: parent_path_note(screen.depth), h, flags=re.S)
+    t = _once(t, '<a class="back" href="../">&larr; Back to the madrasah portal</a>',
+              '<a class="back" href="%s">&larr; Back to the Taiyabah Masjid '
+              'website</a>' % up, "the back link")
+    t, n = re.subn(r"<!-- Back to the madrasah, not to the Admin Centre\..*?-->\s*",
+                   "", t, flags=re.S)
+    if n != 1:
+        sys.exit("The parent patch could not find the back-link comment. "
+                 "NOTHING was written.")
+    t = _once(t, "Use the email address the masjid office holds for you.",
+              "Use the email address and password the madrasah office gave you.",
+              "the sign-in line")
+    a = t.find('<div class="err" id="app-noaccess" hidden>')
+    b = t.find("</div>", a)
+    if a < 0 or b < 0:
+        sys.exit("The parent patch could not find the no-access box. "
+                 "NOTHING was written.")
+    t = (t[:a] + '<div class="err" id="app-noaccess" hidden>\n'
+         "        This login is not set up as a parent's. If you are a member "
+         "of staff, sign in at the madrasah portal instead; if you are a "
+         "parent, please ring the office.\n      " + t[b:])
+    return h, t, tail
+
+
+def parent_path_note(depth):
+    words = {2: "TWO FOLDERS DOWN", 3: "THREE FOLDERS DOWN"}[depth]
+    return ("<!-- ===========================================================\n"
+            "     THIS SCREEN IS %s (portal/parent/...), so every shared\n"
+            "     asset is reached with %s and the parents' own rail script\n"
+            "     with %s. A wrong path does not error - the page loads with\n"
+            "     no styling and no rail, which reads as a broken deploy.\n"
+            "     =========================================================== -->"
+            % (words, "../" * depth, "nav.js" if depth == 2 else "../nav.js"))
 
 
 #  =======================================================================

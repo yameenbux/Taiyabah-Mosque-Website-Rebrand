@@ -1,0 +1,217 @@
+/* ===========================================================================
+   The parents' portal - my children, attendance, report an absence
+   Bolton Central Islamic Society · Registered charity 1041569
+
+   Loaded after admin/shell.css (the rail) and admin/screen.css (the tokens,
+   the buttons, the fields, the sign-in panel). Prefixed `pt-` so it cannot
+   collide with the staff screens' `rg-`, `pu-`, `fa-` or the shell's own.
+
+   [hidden] FIRST, ALWAYS. An attribute selector beats a plain class, so a rule
+   like `.pt-card { display:block }` would defeat `hidden` and put a panel on
+   screen before the data behind it has arrived.
+
+   BUILT FOR A PHONE FIRST. Most parents will open this from a message on their
+   phone, so nothing here relies on a wide screen: the attendance table turns
+   into stacked rows under 640px, every control is at least 48px tall, and body
+   text is never below 15px.
+   =========================================================================== */
+[hidden] { display: none !important; }
+
+.pt-loading  { color: var(--muted); font-size: 15px; margin: 8px 0 18px; }
+.pt-ref      { margin: 0 0 16px; color: var(--muted); font-size: 14px; }
+.pt-h        { margin: 0 0 8px; font-family: "Fraunces", Georgia, serif;
+               font-size: 1.25rem; color: var(--brand-900); }
+.pt-sub      { margin: 0 0 12px; color: var(--muted); font-size: 15px; max-width: 70ch; }
+.pt-fine     { display: block; margin: 8px 0 0; color: var(--muted); font-size: 13.5px;
+               max-width: 70ch; }
+.pt-none     { color: var(--muted); font-style: italic; }
+.pt-acts     { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0 0; }
+.pt-acts .btn { width: auto; flex: 0 0 auto; min-height: 48px; }
+
+.pt-chip     { display: inline-block; padding: 1px 9px; border-radius: 999px;
+               background: var(--brand-800); color: #fff; font-size: 12px;
+               font-weight: 700; letter-spacing: .02em; vertical-align: 1px; }
+.pt-chip-quiet { background: none; color: var(--muted); border: 1px solid var(--line); }
+
+/*  A CARD IS ONE CHILD. */
+.pt-card     { border: 1px solid var(--line); border-radius: var(--radius);
+               background: var(--card); padding: 20px 22px; margin: 0 0 20px;
+               box-shadow: var(--shadow); }
+.pt-card h2  { margin: 0 0 4px; font-size: 1.45rem; }
+.pt-where    { margin: 0 0 14px; color: var(--ink); font-size: 15.5px; }
+
+.pt-dl       { margin: 0; display: grid; gap: 0; }
+.pt-row      { display: grid; grid-template-columns: 12.5rem 1fr; gap: 4px 16px;
+               padding: 10px 0; border-top: 1px solid var(--line); }
+.pt-row dt   { color: var(--muted); font-size: 14px; font-weight: 700; }
+.pt-row dd   { margin: 0; font-size: 15.5px; overflow-wrap: anywhere; }
+/*  MEDICAL AND ALLERGIES read first and heaviest: they are what a parent must
+    be able to check, and what matters most if it is wrong.                   */
+.pt-key dt   { color: var(--danger-ink); }
+.pt-key dd   { font-weight: 600; }
+.pt-key .pt-none { font-weight: 400; }
+
+.pt-help     { border: 1px solid var(--line); border-left: 4px solid var(--gold-ink);
+               border-radius: var(--radius); background: var(--card);
+               padding: 20px 22px; margin: 0 0 24px; }
+.pt-help p   { margin: 0 0 10px; font-size: 15.5px; max-width: 70ch; }
+.pt-soon     { padding: 10px 14px; border-radius: 10px; background: #F7F1DF;
+               border: 1px solid var(--line); }
+
+.pt-people   { list-style: none; margin: 0 0 24px; padding: 0; display: grid;
+               gap: 10px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.pt-people li { border: 1px solid var(--line); border-radius: 12px;
+                background: var(--card); padding: 12px 16px; font-size: 15.5px; }
+.pt-line     { display: block; color: var(--muted); font-size: 14.5px; margin-top: 3px; }
+
+/*  THE EMPTY CASES ARE SENTENCES, NOT BLANK SPACE. */
+.pt-empty    { border: 1px dashed var(--line); border-radius: 12px; padding: 14px 18px;
+               background: color-mix(in srgb, var(--gold) 8%, var(--card)); }
+.pt-empty p  { margin: 0 0 8px; font-size: 15.5px; max-width: 70ch; }
+.pt-empty p:last-child { margin-bottom: 0; }
+.pt-note     { margin: 12px 0 0; color: var(--muted); font-size: 14.5px; max-width: 70ch; }
+
+/*  ATTENDANCE. */
+.pt-tally    { margin: 0 0 12px; font-size: 15.5px; }
+.pt-tablewrap { overflow-x: auto; }
+.pt-table    { width: 100%; border-collapse: collapse; font-size: 15px; }
+.pt-table th, .pt-table td { text-align: left; padding: 10px 12px;
+               border-top: 1px solid var(--line); vertical-align: top; }
+.pt-table thead th { color: var(--muted); font-size: 13px; letter-spacing: .04em;
+               text-transform: uppercase; border-top: 0; }
+.pt-table tbody th { font-weight: 700; }
+.pt-q        { display: block; color: var(--muted); font-size: 12.5px; font-weight: 400; margin-top: 2px; }
+.pt-mark     { display: inline-block; padding: 3px 11px; border-radius: 999px;
+               font-weight: 700; font-size: 13.5px; background: #EEF3EC;
+               color: var(--success-ink); border: 1px solid var(--success-ink); }
+.pt-m-late .pt-mark    { background: #F8F1DF; color: var(--gold-ink); border-color: var(--gold-ink); }
+.pt-m-absent .pt-mark, .pt-m-excused .pt-mark
+                       { background: #FAEDE6; color: var(--danger-ink); border-color: var(--danger-ink); }
+
+/*  REPORT AN ABSENCE. Every choice is a big target with the words inside it. */
+/*  admin/screen.css gives EVERY <label> small muted capitals, which is right for
+    the staff screens' field captions and wrong here: these labels are the
+    choices themselves, and a parent should read "Tuesday 29 September" as a
+    date, not as "TUESDAY 29 SEPTEMBER" in grey. Reset once, for the three
+    places a label is a choice or a caption in this sheet.                   */
+.pt-ev label, .pt-seg label, .pt-field label
+             { text-transform: none; letter-spacing: normal; color: var(--ink);
+               font-size: 16px; font-weight: 400; }
+.pt-field label { font-size: 15px; font-weight: 700; }
+.pt-fs       { border: 0; padding: 0; margin: 0 0 20px; min-width: 0; }
+.pt-fs legend { padding: 0; margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.pt-evs      { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pt-ev label, .pt-ev.pt-locked
+             { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px;
+               align-items: center; min-height: 56px; padding: 10px 16px;
+               border: 1px solid var(--line); border-radius: 12px;
+               background: var(--card); cursor: pointer; }
+.pt-ev input { grid-row: 1 / span 2; width: 22px; height: 22px; accent-color: var(--brand-800); }
+.pt-ev.pt-locked { display: block; cursor: default; background: #F3EFE6; }
+.pt-ev-d     { font-size: 16px; }
+.pt-ev-s     { grid-column: 2; display: block; color: var(--muted); font-size: 14px; }
+.pt-locked .pt-ev-s { margin-top: 2px; }
+.pt-ev label:has(input:checked) { border-color: var(--brand-800);
+               box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.pt-ev label:focus-within { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+
+.pt-seg      { display: flex; gap: 10px; flex-wrap: wrap; }
+.pt-seg label { flex: 1 1 200px; display: flex; align-items: center; gap: 12px;
+               min-height: 56px; padding: 10px 16px; border: 1px solid var(--line);
+               border-radius: 12px; background: var(--card); cursor: pointer; }
+.pt-seg input { width: 22px; height: 22px; accent-color: var(--brand-800); }
+.pt-seg span { display: flex; flex-direction: column; }
+.pt-seg b    { font-size: 16px; }
+.pt-seg i    { font-style: normal; color: var(--muted); font-size: 13.5px; }
+.pt-seg label:has(input:checked) { border-color: var(--brand-800);
+               box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.pt-seg label:focus-within { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+.pt-kids label { flex: 0 1 220px; }
+
+.pt-field    { margin: 0 0 6px; }
+.pt-field label { display: block; margin-bottom: 6px; font-size: 15px; font-weight: 700; }
+.pt-opt      { color: var(--muted); font-weight: 400; }
+.pt-field textarea { width: 100%; min-height: 96px; padding: 12px 14px; font: inherit;
+               font-size: 16px; color: var(--ink); background: var(--card);
+               border: 1px solid var(--line); border-radius: 12px; resize: vertical; }
+.pt-field textarea:focus { outline: 3px solid var(--gold-ink); outline-offset: 1px; }
+.pt-error-inline { margin: 10px 0 0; color: var(--danger-ink); font-size: 15px; font-weight: 700; }
+
+.pt-done     { border: 1px solid var(--success-ink); border-left-width: 4px;
+               border-radius: var(--radius); background: #F2F6F0; padding: 20px 22px; }
+.pt-done h2  { margin: 0 0 8px; color: var(--success-ink); font-size: 1.3rem; }
+.pt-done p   { margin: 0 0 8px; font-size: 15.5px; }
+
+/*  NARROW SCREENS: the record becomes a stack, and the label moves inside. */
+@media (max-width: 640px) {
+  .pt-card   { padding: 16px 16px; }
+  .pt-row    { grid-template-columns: 1fr; gap: 2px; }
+  .pt-table thead { position: absolute; left: -9999px; }
+  .pt-table, .pt-table tbody, .pt-table tr, .pt-table th, .pt-table td { display: block; }
+  .pt-table tr { border-top: 1px solid var(--line); padding: 8px 0; }
+  .pt-table th, .pt-table td { border: 0; padding: 3px 0; }
+  .pt-table td[data-label]::before { content: attr(data-label) ": "; color: var(--muted);
+               font-size: 13px; font-weight: 700; }
+  .pt-acts .btn { flex: 1 1 100%; }
+}
+
+/*  A refusal sits above the form it refused, with room to breathe. */
+#pk-error, #pa-error, #pb-error { margin-bottom: 18px; }
+
+/*  MESSAGES. The emergency notice is a block of its own, drawn directly above
+    every box a parent types in; it is not a footer and not muted small print. */
+.pm-notice   { margin: 0 0 16px; padding: 14px 18px; border: 1px solid var(--danger-ink);
+               border-left-width: 5px; border-radius: var(--radius); background: #FAEDE6; }
+.pm-notice p { margin: 0 0 8px; font-size: 16px; max-width: 70ch; color: var(--ink); }
+.pm-notice p:last-child { margin-bottom: 0; }
+.pm-compose, .pm-thread { border: 1px solid var(--line); border-radius: var(--radius);
+               background: var(--card); padding: 20px 22px; margin: 0 0 24px; box-shadow: var(--shadow); }
+.pm-thread   { margin-top: 0; }
+.pm-list     { list-style: none; margin: 0 0 24px; padding: 0; display: grid; gap: 8px; }
+.pm-row      { display: block; width: 100%; min-height: 56px; text-align: left; padding: 12px 16px;
+               border: 1px solid var(--line); border-radius: 12px; background: var(--card);
+               color: var(--ink); font: inherit; cursor: pointer; }
+.pm-row.pm-unread { border-color: var(--brand-800); box-shadow: 0 0 0 2px var(--brand-800) inset; }
+.pm-row.open { background: #F3EFE6; }
+.pm-row:focus-visible { outline: 3px solid var(--gold-ink); outline-offset: 2px; }
+.pm-subj     { display: block; font-size: 16px; font-weight: 700; overflow-wrap: anywhere; }
+.pm-meta     { display: block; margin-top: 2px; color: var(--muted); font-size: 14px; }
+.pm-back     { margin: 0 0 10px; }
+.pm-state    { margin: 0 0 12px; }
+.pm-msgs     { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 10px; }
+.pm-msg      { max-width: 44rem; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line); }
+.pm-mine     { background: #F7F1DF; justify-self: end; }
+.pm-office   { background: #EEF3EC; justify-self: start; }
+.pm-who      { margin: 0 0 4px; color: var(--muted); font-size: 13.5px; }
+.pm-body     { margin: 0; font-size: 16px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pt-field input[type="text"] { width: 100%; min-height: 48px; padding: 10px 14px; font: inherit;
+               font-size: 16px; color: var(--ink); background: var(--card);
+               border: 1px solid var(--line); border-radius: 12px; }
+.pt-field input[type="text"]:focus { outline: 3px solid var(--gold-ink); outline-offset: 1px; }
+#pm-error    { margin-bottom: 18px; }
+@media (max-width: 640px) {
+  .pm-compose, .pm-thread { padding: 16px; }
+  .pm-msg { max-width: 100%; justify-self: stretch; }
+}
+
+/*  PROGRESS. What a teacher has chosen to share, newest first. Each entry is a
+    card inside the child's card; the date leads because it is what a parent
+    scans for, and the two notes are never drawn here - only the one meant for
+    the family.                                                              */
+.pp-entries  { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pp-entry    { border: 1px solid var(--line); border-left: 4px solid var(--gold-ink);
+               border-radius: 12px; padding: 12px 16px; background: var(--card); }
+.pp-date     { margin: 0 0 8px; font-size: 1.05rem; }
+.pp-dl       { margin: 0 0 8px; display: grid; gap: 6px; }
+.pp-dl > div { display: grid; grid-template-columns: 11rem 1fr; gap: 4px 16px; }
+.pp-dl dt    { color: var(--muted); font-size: 14px; font-weight: 700; }
+.pp-dl dd    { margin: 0; font-size: 15.5px; overflow-wrap: anywhere; }
+.pp-what     { font-weight: 400; }
+.pp-note     { margin: 8px 0; padding: 10px 14px; border-radius: 10px; background: #F7F1DF;
+               font-size: 15.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pp-tag      { display: block; margin: 0 0 2px; color: var(--muted); font-size: 12.5px; font-weight: 700;
+               letter-spacing: .03em; text-transform: uppercase; }
+.pp-by       { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+@media (max-width: 640px) {
+  .pp-dl > div { grid-template-columns: 1fr; gap: 0; }
+}

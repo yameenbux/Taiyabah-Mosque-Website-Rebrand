@@ -65,9 +65,16 @@ revoke all on function public.madrasah_audit_family_export(
 --  oversight to be helpfully corrected later. A spreadsheet that puts a
 --  child's name next to their home address and their mother's mobile number
 --  is the single worst artefact this system could produce, and the reason the
---  register export was built the way it was. A family list says "the Khonat
+--  register export was built the way it was. A family list says "the Ashrafi
 --  family, three children". Whoever needs to know which three opens the
 --  family.
+--
+--  SURNAME REDACTED, 28 September 2026. A real family's surname stood where
+--  "Ashrafi" now does - in a file whose own heading says no child is named in
+--  it, in a repository that is PUBLIC, written the same day as the paragraph
+--  above arguing that a name next to an address is the worst artefact this
+--  system could produce. It had been there since 27 September. The example
+--  never needed a real name to make its point, which is the point.
 
 create or replace function public.madrasah_family_export(
   p_detail boolean default false,
