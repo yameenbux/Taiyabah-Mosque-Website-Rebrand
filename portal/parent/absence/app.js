@@ -699,7 +699,7 @@
         depth:    3,
         current:  'pt-absence',
         title:    'Report an absence',
-        area:     'Parents',
+        area:     'Parents portal',
         sections: (window.ParentNav || {}).SECTIONS,
         roles:    identity.roles || [],
         name:     (identity.profile && identity.profile.full_name) || "",

@@ -649,7 +649,7 @@
         depth:    2,
         current:  'pt-children',
         title:    'My children',
-        area:     'Parents',
+        area:     'Parents portal',
         sections: (window.ParentNav || {}).SECTIONS,
         roles:    identity.roles || [],
         name:     (identity.profile && identity.profile.full_name) || "",

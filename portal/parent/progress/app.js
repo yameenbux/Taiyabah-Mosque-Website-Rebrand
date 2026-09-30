@@ -583,7 +583,7 @@
         depth:    3,
         current:  'pt-progress',
         title:    'Progress',
-        area:     'Parents',
+        area:     'Parents portal',
         sections: (window.ParentNav || {}).SECTIONS,
         roles:    identity.roles || [],
         name:     (identity.profile && identity.profile.full_name) || "",

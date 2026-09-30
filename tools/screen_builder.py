@@ -327,7 +327,13 @@ def parent_js(out, screen):
            + "  }\n\n"
            + out[b:])
 
-    out = _once(out, "area:     'Madrasah',", "area:     'Parents',",
+    #  "Parents portal", not "Parents". The staff rail says "Madrasah"
+    #  because a member of staff already knows which portal they opened —
+    #  they came through the Admin Centre. A parent arrives from a letter or
+    #  a text message with a link in it, and the first word they read should
+    #  say what this is, not who they are. Asked for by the masjid on
+    #  29 September, looking at the live rail.
+    out = _once(out, "area:     'Madrasah',", "area:     'Parents portal',",
                 "the rail's heading")
     out = _once(out, "depth:    2,", "depth:    %d," % screen.depth,
                 "the rail's depth")

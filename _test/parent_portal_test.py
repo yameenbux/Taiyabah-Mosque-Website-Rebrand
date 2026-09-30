@@ -371,6 +371,24 @@ def run():
         pg = open_page(browser, "/portal/parent/", fx())
         names = rail_names(pg)
         joined = " | ".join(names)
+
+        #  THE HEADING ABOVE THE ROWS, AND WHY IT IS ASSERTED BY ITS EXACT
+        #  WORDS. A parent does not arrive through the Admin Centre the way
+        #  staff do — they come from a letter or a text with a link in it, so
+        #  the first thing they read has to say what this is. It said
+        #  "Parents" until the masjid looked at the live rail on 29 September
+        #  and asked for "Parents portal".
+        #
+        #  This check exists because the whole suite passed either way. The
+        #  same week, ten pages quietly went back to crediting the wrong
+        #  company and nothing noticed that either. A word a person reads is
+        #  worth asserting by its exact spelling; "the heading is not empty"
+        #  would have passed through both.
+        head = pg.evaluate(
+            """() => { var n = document.querySelector('.ashell-top strong');
+                       return n ? n.textContent.trim() : null; }""")
+        check("the parent rail is headed 'Parents portal', not 'Parents'",
+              head == "Parents portal", repr(head))
         check("the rail has exactly five rows",
               len(names) == 5, joined)
         for n in ("My children", "Attendance", "Report an absence"):
