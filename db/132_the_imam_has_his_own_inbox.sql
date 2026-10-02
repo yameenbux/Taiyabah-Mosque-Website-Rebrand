@@ -153,6 +153,25 @@
 --  THEN grant somebody the imam role in access/. The grant is what opens the
 --  form, so doing it last is what makes the order safe.
 --
+--  DONE, 2 October 2026: db/131 and this file are applied, and notify is
+--  DEPLOYED as version 19. Read back and compared against
+--  supabase/functions/notify/ character for character - index.ts identical,
+--  messages.ts identical once the \uXXXX escapes in ascii() are unescaped,
+--  which the deploy pipeline also did to version 18, so it is the pipeline
+--  and not the upload.
+--
+--  Smoke-tested through pg_net without sending a single email, by posting
+--  three bodies and reading the replies out of net._http_response:
+--    {"kind":"ping"}                         -> {"ok":true,"note":"nothing sent"}
+--    advice_requested, a uuid not in the table -> "no such request"
+--    advice_answered, "not-a-uuid"             -> "no request id"
+--  The last two are the proof the new code is live: a notify that had not
+--  learned these kinds would answer "nothing sent" to all three, because it
+--  would fall through to toEvent().
+--
+--  STILL TO DO: grant somebody the imam role. Until then advice_is_open() is
+--  false, the app does not draw the form, and nothing can reach any of this.
+--
 --  The one thing that must not be done out of order is granting the role
 --  before notify is deployed: a question could arrive, be saved correctly,
 --  and nobody be told it had. advice_chase() would notice within the week,
