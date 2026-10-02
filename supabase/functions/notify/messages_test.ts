@@ -24,8 +24,8 @@ function assertStringIncludes(got: string, want: string, msg?: string): void {
 }
 
 import {
-  type Event, officeMessage, publicMessage, staffInviteMessage,
-  longDate, shortDate, money, whatWasHired, slotLabel, esc, ascii,
+  type Event, imamAlertMessage, officeMessage, publicMessage, staffInviteMessage,
+  longDate, shortDate, money, whatWasHired, slotLabel, esc, ascii, typed,
 } from "./messages.ts";
 
 const HALL: Event = {
@@ -1255,4 +1255,154 @@ Deno.test("db/125: a hostile count cannot break the HTML", () => {
     messages_waiting: { count: "<script>x</script>" as unknown as number, oldest_days: -3 } })!;
   assert(!m.html.includes("<script>x"), "a non-number reached the HTML");
   assert(!/Parents' messages waiting/.test(m.html), "a non-number produced a row");
+});
+
+
+/* ===========================================================================
+   db/132 - THE IMAMS' ADVICE INBOX
+
+   The thing worth testing here is not that an email renders. It is that THREE
+   DIFFERENT RECIPIENTS GET THREE DIFFERENT AMOUNTS OF THE TRUTH, and that the
+   two who are not entitled to the question never see a word of it. So every
+   test below smuggles the whole confidence into the Event and then insists it
+   does not come out the other end.
+
+   The invented question is deliberately full of things that would be terrible
+   to leak: a name, a phone number, a subject line that is itself a
+   disclosure, and a sentence nobody would want forwarded.
+   =========================================================================== */
+const CONFIDENCE = {
+  reference: "IA-26-0004",
+  name: "Ayesha Testwood",
+  phone: "07700 900222",
+  email: "ayesha@example.test",
+  subject: "My husband has left and I do not know what my rights are",
+  question: "I have not told anybody in the family. Please can somebody ring me quietly.",
+};
+const LEAKS = [
+  "Testwood", "Ayesha", "900222", "ayesha@example.test",
+  "husband", "rights", "quietly", "told anybody",
+];
+
+Deno.test("db/132: the imam's alert carries the reference and NOTHING else", () => {
+  const m = imamAlertMessage({
+    kind: "advice_requested",
+    reference: CONFIDENCE.reference,
+    portal: "https://taiyabahmasjid.com/portals/",
+    //  Every one of these is smuggled in and every one must be ignored. If
+    //  somebody later "helpfully" adds the subject to this email, this fails.
+    name: CONFIDENCE.name, phone: CONFIDENCE.phone, email: CONFIDENCE.email,
+    subject: CONFIDENCE.subject, body: CONFIDENCE.question,
+    answer: CONFIDENCE.question,
+  } as Event);
+  for (const leak of LEAKS) {
+    assert(!m.html.includes(leak), `the imam's alert leaked ${leak}`);
+    assert(!m.text.includes(leak), `the imam's alert leaked ${leak} into the text`);
+    assert(!m.subject.includes(leak), `the imam's alert leaked ${leak} into the subject`);
+  }
+  //  It still has to be useful: the reference, and somewhere to go.
+  assertStringIncludes(m.subject, "IA-26-0004");
+  assertStringIncludes(m.html, "IA-26-0004");
+  assertStringIncludes(m.html, "is not in this email");
+  assertStringIncludes(m.html, "https://taiyabahmasjid.com/portals/");
+});
+
+Deno.test("db/132: the alert still sends with no portal link, and says nothing about one", () => {
+  const m = imamAlertMessage({ kind: "advice_requested", reference: "IA-26-0005" });
+  assert(!m.html.includes("undefined"), "an unset portal reached the email");
+  assert(!m.html.includes("Open the portal"), "drew a button with nowhere to go");
+  assertStringIncludes(m.html, "IA-26-0005");
+});
+
+Deno.test("db/132: the office is told a NUMBER and is never told a question", () => {
+  const m = officeMessage({
+    kind: "advice_waiting", waiting_count: 3, waiting_days: 7,
+    //  Smuggled, and must not come out. The office is the party this inbox is
+    //  confidential FROM, so a leak here is the worst one in the system.
+    reference: CONFIDENCE.reference, name: CONFIDENCE.name,
+    phone: CONFIDENCE.phone, email: CONFIDENCE.email,
+    subject: CONFIDENCE.subject, answer: CONFIDENCE.question,
+  } as Event)!;
+  for (const leak of LEAKS.concat(["IA-26-0004"])) {
+    assert(!m.html.includes(leak), `the chase email leaked ${leak}`);
+    assert(!m.text.includes(leak), `the chase email leaked ${leak} into the text`);
+    assert(!m.subject.includes(leak), `the chase email leaked ${leak} into the subject`);
+  }
+  assertStringIncludes(m.subject, "3 questions for the imams unanswered");
+  assertStringIncludes(m.html, "3 questions");
+  assertStringIncludes(m.html, "more than 7 days");
+  //  It must say what it cannot do, or somebody will go looking for a screen
+  //  that refuses them and report the portal as broken.
+  assertStringIncludes(m.html, "The office cannot read these");
+});
+
+Deno.test("db/132: one waiting question is not '1 questions'", () => {
+  const m = officeMessage({ kind: "advice_waiting", waiting_count: 1, waiting_days: 1 })!;
+  assertStringIncludes(m.subject, "1 question for the imams unanswered");
+  assert(!m.subject.includes("1 questions"), "pluralised a single question");
+  assertStringIncludes(m.html, "1 question");
+  assertStringIncludes(m.html, "more than a day");
+});
+
+Deno.test("db/132: the office gets no confirmation email about an advice request", () => {
+  //  advice_requested must not fall through into the office's path. If
+  //  officeMessage ever starts answering it, the office is emailed every time
+  //  somebody writes to an imam.
+  assertEquals(officeMessage({ kind: "advice_requested", reference: "IA-26-0006" }), null);
+  //  And the person who asked gets no acknowledgement either - see the long
+  //  note in publicMessage about a family inbox.
+  assertEquals(publicMessage({ kind: "advice_requested", reference: "IA-26-0006",
+                               email: CONFIDENCE.email }), null);
+});
+
+Deno.test("db/132: the answer reaches the person, and the subject line gives nothing away", () => {
+  const m = publicMessage({
+    kind: "advice_answered",
+    reference: CONFIDENCE.reference,
+    name: CONFIDENCE.name,
+    email: CONFIDENCE.email,
+    subject: CONFIDENCE.subject,
+    answer: "Walaikum assalam.\n\nPlease ring the office and ask for me by name.",
+  })!;
+  //  The words the imam wrote, and the greeting, do arrive.
+  assertStringIncludes(m.html, "Walaikum assalam.");
+  assertStringIncludes(m.html, "Assalamu alaikum Ayesha Testwood,");
+  assertStringIncludes(m.text, "Please ring the office and ask for me by name.");
+  //  Their own line comes back to them, because it is theirs.
+  assertStringIncludes(m.html, "You asked about");
+  //  THE SUBJECT LINE IS READ ON A LOCK SCREEN. It may say where it is from
+  //  and the reference, and nothing else.
+  assertEquals(m.subject, "A reply from Taiyabah Masjid - IA-26-0004");
+  for (const leak of ["husband", "rights", "Ayesha", "imam"]) {
+    assert(!m.subject.toLowerCase().includes(leak.toLowerCase()),
+           `the subject line leaked ${leak}`);
+  }
+  //  And it must not invite a reply to a mailbox nobody reads.
+  assertStringIncludes(m.html, "not watched");
+});
+
+Deno.test("db/132: an answer with nothing in it is not sent", () => {
+  assertEquals(publicMessage({ kind: "advice_answered", reference: "IA-26-0004",
+                               email: CONFIDENCE.email, answer: "" }), null);
+  assertEquals(publicMessage({ kind: "advice_answered", reference: "IA-26-0004",
+                               email: CONFIDENCE.email }), null);
+});
+
+Deno.test("db/132: an answer cannot break the HTML, and its line breaks survive", () => {
+  const m = publicMessage({
+    kind: "advice_answered", reference: "IA-26-0004", email: CONFIDENCE.email,
+    name: "<b>Ayesha</b>",
+    answer: "Line one\nLine two\n\nAnd a <script>alert(1)</script> paragraph.",
+  })!;
+  assert(!m.html.includes("<script>alert"), "a script tag reached the email");
+  assert(!m.html.includes("<b>Ayesha</b>"), "an unescaped name reached the email");
+  assertStringIncludes(m.html, "Line one<br>Line two<br><br>");
+  assertStringIncludes(m.html, "&lt;script&gt;");
+});
+
+Deno.test("db/132: typed() escapes before it breaks lines", () => {
+  assertEquals(typed("a<b\nc"), "a&lt;b<br>c");
+  assertEquals(typed("a\r\nb"), "a<br>b");
+  assertEquals(typed("a\n\n\n\nb"), "a<br><br>b");
+  assertEquals(typed(null), "");
 });

@@ -75,7 +75,7 @@
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
-  type Event, officeMessage, publicMessage, staffInviteMessage,
+  type Event, imamAlertMessage, officeMessage, publicMessage, staffInviteMessage,
 } from "./messages.ts";
 
 const SECRET     = Deno.env.get("NOTIFY_SECRET") ?? "";
@@ -97,6 +97,16 @@ const db = createClient(
 
 const officeList = () =>
   MAIL_TO.split(",").map((s) => s.trim()).filter(Boolean);
+
+/*  PORTAL_URL points at /venue/, which is the page the office wants and the
+    one page an imam cannot open. The front door is derived from it rather than
+    configured separately, so there is no second setting to get wrong — and if
+    PORTAL_URL is ever unset or malformed this returns nothing and the email
+    goes out without a button instead of carrying the word "undefined". */
+const portalFrontDoor = () => {
+  try { return new URL(PORTAL_URL).origin + "/portals/"; }
+  catch { return ""; }
+};
 
 /* ---------------------------------------------------------------------------
    Sending
@@ -363,6 +373,82 @@ Deno.serve(async (req) => {
     if (!r.ok) await recordFailure("staff_invite", null, to, r.why);
     return new Response(JSON.stringify({ ok: true, sent: r.ok, note: r.why }),
       { status: 200, headers: { "content-type": "application/json" } });
+  }
+
+  /* --- the imams' advice inbox (db/132) ----------------------------------
+     TWO KINDS, AND NEITHER OF THEM IS TRUSTED WITH ANYTHING BUT AN ID.
+
+     The database posts {kind, request_id} and nothing else — no question, no
+     name, no address — so a confidential question never travels through
+     pg_net's queue. Everything this branch sends, and everybody it sends to,
+     is read back out of the database here. That keeps the fence the
+     staff_invite branch describes above: the recipient is not attacker-chosen
+     even if NOTIFY_SECRET leaks, because it is not in the request at all.
+
+     advice_waiting is NOT handled here. It is a count to the office and goes
+     down the ordinary path, where officeMessage draws it and publicMessage
+     declines it for want of an address. */
+  if (body.kind === "advice_requested" || body.kind === "advice_answered") {
+    const id = String(body.request_id ?? "");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      console.warn("notify: advice event with no usable request id");
+      return ok("no request id");
+    }
+
+    const { data: req, error: reqErr } =
+      await db.rpc("advice_for_notify", { p_request: id });
+    if (reqErr || !req) {
+      //  A request that is not there is not an error worth retrying: the most
+      //  likely cause is that it was purged. The id is safe to log; nothing
+      //  about the person is.
+      console.warn(`notify: advice ${id} — ${reqErr?.message ?? "no such request"}`);
+      return ok("no such request");
+    }
+
+    const front = portalFrontDoor();
+
+    if (body.kind === "advice_requested") {
+      const { data: addrs, error: addrErr } =
+        await db.rpc("advice_alert_addresses", { p_masjid: req.masjid_id });
+      const to: string[] = Array.isArray(addrs) ? addrs : [];
+      if (addrErr || !to.length) {
+        //  NOBODY HOLDS THE ROLE. request_imam_advice() refuses in that state,
+        //  so this should be unreachable — but if it happens, the question is
+        //  sitting unread and that must be on the record. advice_chase() is
+        //  what eventually tells the office.
+        await recordFailure("advice_requested", req.reference ?? null,
+          "imam", addrErr?.message ?? "nobody holds the imam role");
+        return ok("no imam to tell");
+      }
+      const m = imamAlertMessage({
+        kind: "advice_requested",
+        reference: req.reference,
+        portal: front || null,
+      });
+      const r = await send(to, m.subject, m.html, m.text);
+      if (!r.ok) await recordFailure("advice_requested", req.reference ?? null, "imam", r.why);
+      console.log(`notify: advice_requested ${req.reference} — ${r.ok ? "sent" : r.why}`);
+      return ok(r.ok ? "told the imam" : r.why);
+    }
+
+    //  THE ANSWER, to the address on the request and to no other.
+    const m = publicMessage({
+      kind: "advice_answered",
+      reference: req.reference,
+      name: req.name,
+      email: req.email,
+      subject: req.subject,
+      answer: req.answer,
+    });
+    if (!m) {
+      console.warn(`notify: advice_answered ${req.reference} — nothing to send`);
+      return ok("nothing to send");
+    }
+    const r = await send([req.email], m.subject, m.html, m.text);
+    //  Deliberately not logging the address, the same rule as a hirer's.
+    if (!r.ok) await recordFailure("advice_answered", req.reference ?? null, "asker", r.why);
+    console.log(`notify: advice_answered ${req.reference} — ${r.ok ? "sent" : r.why}`);
+    return ok(r.ok ? "answer sent" : r.why);
   }
 
   const event = toEvent(body);

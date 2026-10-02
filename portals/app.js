@@ -540,6 +540,34 @@
       }
     }).catch(function () { /* nothing waiting, or not at aal2 yet */ });
 
+    /*  AN IMAM-ONLY ACCOUNT IS NOT A BROKEN ADMINISTRATOR.
+
+        admin_dashboard() answers {allowed:false} for a session holding only
+        the imam role, which is correct - the figures on this dashboard are the
+        office's. But the branch below turns that into "Couldn't load the admin
+        centre", in red, every time an imam signs in. The screen would be
+        working exactly as designed and telling him it was broken, which is the
+        one thing this repository has written down most often about controls
+        and rows: a refusal dressed as a fault teaches people to ignore real
+        faults.
+
+        So the call is not made at all. He gets his name, his role, his one
+        row, and a sentence saying where to go. */
+    var staff = identity.roles.indexOf("admin") !== -1 ||
+                identity.roles.indexOf("hall_office") !== -1;
+    if (!staff) {
+      setError("dash-error", "");
+      drawNeeds([]);
+      el("dash-tiles").innerHTML = "";
+      drawAreas(identity.roles);
+      el("dash-log").innerHTML =
+        '<p class="dash-skel">The questions people have sent to the imams are ' +
+        'behind <strong>Questions for the imams</strong>. Nothing else on this ' +
+        'page is yours, and the figures the office sees are not shown here.</p>';
+      drawHousekeeping(null);
+      return;
+    }
+
     sb.rpc("admin_dashboard").then(function (res) {
       if (res.error) throw res.error;
       var d = res.data || {};
@@ -589,8 +617,14 @@
       // checks again, at aal2, on the way in, and the database withholds
       // Gift Aid and the staff figures from an office session regardless of
       // what this page asks for.
+      //  db/132 adds `imam`, and it is the only role here with NOWHERE ELSE
+      //  TO GO. An administrator or the office can reach /venue/ by typing the
+      //  address; a teacher has /portal/. The imams' inbox hangs off this page
+      //  and this page only, so leaving it out of this list would mean giving
+      //  somebody a role and a "you have no access here" card.
       var mayEnter = identity.roles.indexOf("admin") !== -1 ||
-                     identity.roles.indexOf("hall_office") !== -1;
+                     identity.roles.indexOf("hall_office") !== -1 ||
+                     identity.roles.indexOf("imam") !== -1;
       if (!mayEnter) { noAccess(identity); return; }
       renderList(identity);
     });

@@ -29,6 +29,19 @@ export type Kind =
   | "course_registered"
   | "volunteer_registered"
   | "madrasah_fee_reminder"
+  //  THE IMAMS' ADVICE INBOX (db/132). Three kinds, and NONE of them carries
+  //  a word of the question somebody asked:
+  //    advice_requested  to the imam: a question is waiting, sign in.
+  //    advice_answered   to the person: what the imam wrote back. This one
+  //                      does carry words, because they are the imam's own
+  //                      and the person they are being sent to is the person
+  //                      who asked.
+  //    advice_waiting    to the OFFICE: a COUNT of questions left open too
+  //                      long. The office may not read these questions and
+  //                      still cannot after this email.
+  | "advice_requested"
+  | "advice_answered"
+  | "advice_waiting"
   | "digest";
 
 export interface Event {
@@ -112,6 +125,25 @@ export interface Event {
   balances_due?: number;
   this_week?: number;
 
+  // THE IMAMS' ADVICE INBOX (db/132).
+  //
+  // THERE IS NO FIELD HERE FOR THE QUESTION, AND THAT IS THE POINT. Somebody
+  // wrote to the imams in confidence. The alert that tells the imam one has
+  // arrived carries the reference and nothing else — not the subject, which
+  // is the person's own words, not their name, not a line of what they said.
+  // An email is a bell; the portal is where the words are.
+  //
+  // `answer` is the exception and it is the only one: it is the imam's own
+  // reply, and it is being sent to the person who asked for it. `subject` is
+  // reused for their "what it is about" line, which is also being quoted
+  // back only to them.
+  //
+  // `waiting_count` / `waiting_days` are the chase email to the office. A
+  // number and an age, and nothing that could identify anybody.
+  answer?: string | null;
+  waiting_count?: number | null;
+  waiting_days?: number | null;
+
   // Registers due last week and not submitted, by class (db/108, Task 7 of
   // the register rebuild) — OR the register is not open at all, because the
   // masjid has not yet told every family it is starting (db/109). A CLASS
@@ -181,6 +213,20 @@ export function esc(v: unknown): string {
   return String(v ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;")
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/*  SOMEBODY'S TYPED PARAGRAPHS, SAFE TO PUT IN AN EMAIL.
+
+    Escaped first, then the line breaks they typed are turned into <br>. Both
+    halves matter: without the escape an answer containing "<" would render as
+    a broken tag, and without the breaks a carefully spaced reply arrives as
+    one block of text. <p> cannot be used because shell() already wraps the
+    lead in one and a nested <p> is invalid. */
+export function typed(v: unknown): string {
+  return esc(v)
+    .replace(/\r\n?/g, "\n")
+    .replace(/\n{2,}/g, "<br><br>")
+    .replace(/\n/g, "<br>");
 }
 
 export function longDate(iso?: string | null): string {
@@ -332,6 +378,55 @@ function plain(heading: string, lead: string, rows: [string, string][],
 }
 
 /* --------------------------------------------------------------------------
+   THE IMAM'S ALERT (db/132)
+
+   ITS OWN FUNCTION BECAUSE ITS RECIPIENT IS NEITHER OF THE OTHER TWO. The
+   office must not be told, and the person who wrote in already knows.
+
+   IT CARRIES THE REFERENCE AND NOTHING ELSE. Not the subject, not a name,
+   not a word of the question — a question put to an imam in confidence can be
+   about a marriage, a death, a debt or an abuse, and the subject line alone
+   can be the whole disclosure. Whoever holds the imam role gets a bell, signs
+   in, and reads it on a screen that records that they did.
+
+   There is no "open the portal" button carrying the request's id, for the
+   same reason: a link in an email is forwarded, and it should not be possible
+   to hand somebody a way straight to one person's question. It points at the
+   portal's front door, which asks for a password and a second step.
+   -------------------------------------------------------------------------- */
+export function imamAlertMessage(e: Event): Message {
+  const ref = e.reference ?? "(no reference)";
+  const rows: [string, string][] = [["Reference", `<strong>${esc(ref)}</strong>`]];
+  return {
+    //  No subject line detail on purpose: this arrives on a phone's lock
+    //  screen, which is the one place the sender cannot control who reads it.
+    subject: ascii(`Somebody has asked the imams a question (${ref})`),
+    html: shell(
+      "A question is waiting for you",
+      "Somebody has sent a question to the imams through the masjid app. " +
+      "<strong>It is not in this email</strong> — what they wrote, who they " +
+      "are and how to reach them are in the portal, and only you can open " +
+      "them. Please sign in and read it.",
+      rows,
+      "Sign in at the portal and open <strong>Questions for the imams</strong>. " +
+      "If you answer from there, your reply is emailed to them for you. " +
+      "If this is urgent or sounds like somebody at risk, ring them rather " +
+      "than writing.",
+      e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+    text: plain(
+      "A question is waiting for you",
+      "Somebody has sent a question to the imams through the masjid app. IT " +
+      "IS NOT IN THIS EMAIL - what they wrote, who they are and how to reach " +
+      "them are in the portal, and only you can open them.",
+      rows,
+      "Sign in and open Questions for the imams. Answering there emails your " +
+      "reply to them. If it is urgent or sounds like somebody at risk, ring " +
+      "them rather than writing.",
+      e.portal ?? undefined),
+  };
+}
+
+/* --------------------------------------------------------------------------
    THE OFFICE'S EMAILS
    -------------------------------------------------------------------------- */
 
@@ -346,6 +441,49 @@ export function officeMessage(e: Event): Message | null {
   //  the week a refund is genuinely owed it would be skimmed past with the
   //  rest. Returning null here is what stops that.
   if (e.kind === "madrasah_fee_reminder") return null;
+
+  /*  QUESTIONS FOR THE IMAMS THAT NOBODY HAS ANSWERED (db/132).
+
+      A COUNT, AND THAT IS ALL IT IS ALLOWED TO BE. The office cannot read
+      these questions — the role that reaches them deliberately excludes
+      `admin` — and this email must not become the way round that. No name,
+      no subject, no reference, nothing that identifies anybody.
+
+      It exists because the alternative is worse. The imam is told by email
+      when a question arrives; if he does not read email, or his role has been
+      taken off, somebody who wrote to the masjid in distress sits unanswered
+      and NOTHING ANYWHERE SAYS SO. This email is the masjid finding out. The
+      only action it asks for is a conversation with the imam. */
+  if (e.kind === "advice_waiting") {
+    const n    = e.waiting_count ?? 0;
+    const days = e.waiting_days ?? 7;
+    const rows: [string, string][] = [
+      ["Waiting", `<strong>${n === 1 ? "1 question" : n + " questions"}</strong>`],
+      ["Unanswered for", `more than ${days === 1 ? "a day" : days + " days"}`],
+    ];
+    return {
+      subject: ascii(`${n} question${n === 1 ? "" : "s"} for the imams unanswered - ATTENTION REQUIRED`),
+      html: shell(
+        "Somebody is still waiting for an imam",
+        `${n === 1 ? "A question" : n + " questions"} sent to the imams through ` +
+        "the app " + (n === 1 ? "has" : "have") + " been waiting more than " +
+        `${days === 1 ? "a day" : days + " days"}. ` +
+        "<strong>The office cannot read these and this email does not change " +
+        "that</strong> — there is nothing here to act on except to ask.",
+        rows,
+        "Please ask the imam to sign in to the portal. If nobody holds the " +
+        "imam role any more, the app has already stopped offering the form — " +
+        "but these were sent before that and are still waiting.",
+        undefined),
+      text: plain(
+        "Somebody is still waiting for an imam",
+        `${n} question(s) sent to the imams through the app have been waiting ` +
+        `more than ${days} days. THE OFFICE CANNOT READ THESE and this email ` +
+        "does not change that. There is nothing here to act on except to ask.",
+        rows,
+        "Please ask the imam to sign in to the portal."),
+    };
+  }
 
   const ref = e.reference ?? "(no reference)";
   const tel = String(e.phone ?? "").replace(/\s/g, "");
@@ -807,6 +945,63 @@ function digestMessage(e: Event): Message {
 export function publicMessage(e: Event): Message | null {
   const ref = e.reference ?? "";
   if (!e.email || !ref) return null;
+
+  /*  THE IMAM'S ANSWER (db/132).
+
+      THE ONE MESSAGE IN THIS SYSTEM THAT CARRIES SOMEBODY'S WORDS ON PURPOSE,
+      and it earns it: the words are the imam's own, and the person reading
+      them is the person who asked for them. Everything else here is a bell
+      pointing at a portal, because the portal is where the words belong — but
+      the person who asked has no portal and no login, and an answer they have
+      to come and fetch is not an answer.
+
+      THE SUBJECT LINE SAYS NOTHING. "A reply from Taiyabah Masjid" and a
+      reference. It does not say "the imams", it does not quote what they
+      asked about, and it names nobody. A subject line is read on a lock
+      screen, over a shoulder, and by whoever else opens a shared inbox, and
+      this person asked in confidence.
+
+      NO ACKNOWLEDGEMENT IS SENT WHEN THE QUESTION ARRIVES, which is a
+      departure from every other form here and is deliberate for the same
+      reason: an email landing in a family inbox saying "we have your question
+      for the imams" tells whoever else reads that inbox that this person
+      wrote to an imam in confidence. The app shows them their reference on
+      the screen instead, where only they are looking.
+
+      THIS MAILBOX IS NOT WATCHED, so the footer says so and tells them the
+      two ways to carry on. Inviting a reply to a no-reply address is how
+      somebody ends up believing they answered and nobody ever reads it. */
+  if (e.kind === "advice_answered") {
+    if (!e.answer) return null;          // nothing written, nothing to send
+    const rows: [string, string][] = [["Your reference", `<strong>${esc(ref)}</strong>`]];
+    if (e.subject) rows.push(["You asked about", esc(e.subject)]);
+
+    const greeting = e.name
+      ? `Assalamu alaikum ${esc(e.name)},`
+      : "Assalamu alaikum,";
+    const carryOn =
+      "This address is not watched, so please do not reply to this email. If " +
+      "you would like to ask something else, send it from the app the same way " +
+      `and quote <strong>${esc(ref)}</strong>, or ring the masjid on ` +
+      "01204&nbsp;535&nbsp;997 and ask to speak to an imam.";
+
+    return {
+      subject: ascii(`A reply from Taiyabah Masjid - ${ref}`),
+      html: shell(
+        "A reply to your question",
+        `${greeting}<br><br>${typed(e.answer)}`,
+        rows,
+        carryOn),
+      text: plain(
+        "A reply to your question",
+        (e.name ? `Assalamu alaikum ${e.name},` : "Assalamu alaikum,") +
+        "\n\n" + String(e.answer),
+        rows,
+        "This address is not watched, so please do not reply to this email. To " +
+        `ask something else, send it from the app and quote ${ref}, or ring ` +
+        "01204 535 997 and ask to speak to an imam."),
+    };
+  }
 
   /* A FEE REMINDER.
 

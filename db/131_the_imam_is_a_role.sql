@@ -1,0 +1,39 @@
+--  =====================================================================
+--  131 - THE IMAM IS A ROLE
+--  2 October 2026
+--  =====================================================================
+--
+--  ONE STATEMENT, AND IT IS ITS OWN FILE FOR A REASON POSTGRES IMPOSES.
+--  `alter type ... add value` may run inside a transaction, but the new
+--  label may NOT BE USED by anything else in that same transaction. Every
+--  `create function` whose body mentions 'imam'::app_role is validated at
+--  CREATE time (check_function_bodies is on), so putting this line at the
+--  top of db/132 would make db/132 fail on a label it had just added --
+--  the confusing kind of failure that reads like a typo.
+--
+--  So: apply this file, commit, then apply db/132.
+--
+--  WHAT THE ROLE IS FOR. The masjid asked for a way for somebody to put a
+--  question to the imams in confidence from the app. The answer is not a
+--  shared mailbox - it is a role, so the question lands in the portal and
+--  is read by the imam and by nobody else. db/132 builds the inbox; this
+--  file only makes the role sayable.
+--
+--  WHY IT IS NOT A VARIANT OF AN EXISTING ROLE. `admin` means everything,
+--  and this is the one thing in the building `admin` deliberately does not
+--  reach - see the long note on verified_imam() in db/132. A role that the
+--  administrators' role contains would not be confidential from them, and
+--  "confidential" was the word the masjid used.
+--
+--  GRANTING IT. Nothing else is needed: set_person_roles(uuid, app_role[])
+--  already takes whatever the enum holds, already refuses to let anybody
+--  change their own access, and already writes a `roles_changed` audit row
+--  naming who changed what. So an administrator cannot give themselves this
+--  role, and another administrator giving it to them is on the record.
+--  access/ gains the tick box in the same commit as db/132.
+--
+--  TO REMOVE: you cannot drop an enum label. Revoke it from everybody
+--  (set_person_roles) and leave the label unused.
+--  =====================================================================
+
+alter type public.app_role add value if not exists 'imam';

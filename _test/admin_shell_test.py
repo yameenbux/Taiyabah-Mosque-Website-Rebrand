@@ -88,6 +88,7 @@ SCREENS = {
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
     "app": "appsend",
+    "advice": "advice",
 }
 
 #  What each role should be offered. Deliberately written out rather than
@@ -134,6 +135,22 @@ EXPECTED = {
     #  its row for exactly the reason its comment gives.
     "__parent__": [],
     "parent": [],
+    #  THE IMAM (db/132). One row, and the way back, and nothing else.
+    #
+    #  "Questions for the imams" is deliberately ABSENT from the admin list
+    #  above, and that absence is the test: it is the only row in this rail
+    #  that `admin` does not reach. If somebody widens verified_imam() to
+    #  include administrators - the obvious "fix" when an administrator asks
+    #  why they cannot see it - the admin list here starts failing, which is
+    #  the alarm this file exists to raise.
+    #
+    #  Admin Centre IS offered, unlike the teacher above, for the teacher's own
+    #  reason in reverse: a teacher has a destination of its own in this rail
+    #  (Madrasah portal) that the Admin Centre would compete with, and an imam
+    #  does not - the inbox hangs off the Admin Centre, the alert email points
+    #  at its front door, and portals/app.js draws the row rather than refusing
+    #  them.
+    "imam": ["Admin Centre", "Questions for the imams"],
 }
 
 #  The headings, in order, for an administrator. Written out for the same
@@ -188,6 +205,13 @@ ADMITS = {
     #  anything is sent — so the rail is a convenience here and the refusal
     #  happens in Postgres. Admin only, like the other three.
     "appsend":     ["admin"],                  # db
+    #  THE ONLY ENTRY HERE WITHOUT "admin", and it is not a typo. advice/app.js
+    #  canSee() tests for `imam` alone because verified_imam() in db/132 does,
+    #  and that exclusion is what the masjid asked for when it said the
+    #  questions were "private and confidential to the imam". Adding "admin" to
+    #  either side would give an administrator a row that loads and then says
+    #  no; adding it to both would quietly end the confidentiality.
+    "advice":      ["imam"],                   # advice/app.js canSee()
 }
 
 # ---------------------------------------------------------------- 1. wiring
@@ -440,15 +464,31 @@ with sync_playwright() as p:
             pg.on("pageerror", lambda e: errs.append(str(e)[:120]))
             pg.goto(BASE + d + "/", wait_until="load", timeout=30000)
             pg.wait_for_timeout(700)
-            pg.evaluate(MOUNT, [key, d, ["admin"]])
+            #  MOUNTED AS SOMEBODY WHO CAN ACTUALLY OPEN THIS SCREEN, not
+            #  always as an administrator.
+            #
+            #  This said ["admin"] until 2 October, which was true of every
+            #  screen until advice/ — the one screen an administrator cannot
+            #  open (db/132). Mounting it as an admin drew a rail with no row
+            #  for the page you were standing on, so check 5 failed on a page
+            #  that was working perfectly. The fix is not to special-case
+            #  advice/: it is that a rail should be tested as the person who
+            #  uses that screen sees it, which is what ADMITS already records.
+            as_role = ADMITS.get(key, ["admin"])
+            pg.evaluate(MOUNT, [key, d, as_role])
             pg.wait_for_timeout(450)
             r = pg.evaluate(READ)
             where = "%s/ @%dpx" % (d, width)
 
             check(r is not None, "%s: no rail was drawn at all" % where)
             if r:
-                check(r["rows"] == EXPECTED["admin"],
-                      "%s: rail rows are %r, expected %r" % (where, r["rows"], EXPECTED["admin"]))
+                #  Whichever of the screen's own roles was used to mount it,
+                #  the rows must be exactly what EXPECTED says that role sees.
+                #  The first entry in ADMITS is the role the rail is drawn for.
+                want_rows = EXPECTED[as_role[0]]
+                check(r["rows"] == want_rows,
+                      "%s: rail rows are %r, expected %r for a %s account"
+                      % (where, r["rows"], want_rows, as_role[0]))
                 check(r["current"] is not None,
                       "%s: nothing is marked aria-current, so the rail does not "
                       "say where you are" % where)
