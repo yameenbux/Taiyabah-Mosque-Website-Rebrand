@@ -1551,17 +1551,14 @@ table if not exists` will not tell you it did nothing.
 > safety that has never once been tested — and it is believed. **Every check
 > added here is proved by deliberately breaking the code it guards.**
 
-`_test/timetable_editor_test.py`
-had a block asserting the Save button is disabled until the paste has been
-checked. It passed. It would have passed with the rule deleted, for two reasons
-at once: the listeners were attached inside `mount()`, which runs only after a
-real sign-in, so in a test they were never attached at all — and the button is
-`disabled` in the markup as well, so reading it showed "disabled" either way.
-The only thing that found this was deleting the line and watching the suite
-still say ALL PASS. **Every check added here is proved by deliberately breaking
-the code it guards**, and this is why: an unproved check is a claim of safety
-that has never once been tested, and it is believed. Where a control fails to
-bite, the fix is usually to make the code reachable — `times/app.js` now splits
+`_test/timetable_editor_test.py` had a block asserting the Save button is
+disabled until the paste has been checked. It passed. It would have passed with
+the rule deleted, for two reasons at once: the listeners were attached inside
+`mount()`, which runs only after a real sign-in, so in a test they were never
+attached at all — and the button is `disabled` in the markup as well, so reading
+it showed "disabled" either way. The only thing that found this was deleting the
+line and watching the suite still say ALL PASS. Where a control fails to bite,
+the fix is usually to make the code reachable — `times/app.js` now splits
 `wireEditor()` out of `mount()` — and then to start from the WRONG state, so a
 pass can only come from the code under test.
 
