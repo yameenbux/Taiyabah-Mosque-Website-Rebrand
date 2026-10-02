@@ -68,7 +68,13 @@
 --------------------------------------------------------------------------- */
 window.TAIYABAH_PUBLIC = {
   SUPABASE_URL:      "https://phenbhmobxwyvdeshvqw.supabase.co",
-  SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
+  SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO",
+  /* Which masjid this build is. The database holds more than one, and a
+     signed-out visitor has no session for it to work that out from — so every
+     public read below says who it is asking about. Leave it out and those
+     reads fall back to the older "the one masjid" functions, which raise as
+     soon as a second masjid exists. */
+  MASJID:            "taiyabah"
 };
 
 </script>
@@ -5990,7 +5996,10 @@ window.TAIYABAH_PUBLIC = {
         headers: { 'Content-Type': 'application/json',
                    'apikey': cfg.SUPABASE_ANON_KEY,
                    'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY },
-        body: JSON.stringify({ p_year: year }),
+        /* p_masjid picks prayer_year(p_masjid, p_year). If MASJID is unset
+           JSON.stringify drops the key and this falls back to the one-masjid
+           prayer_year(p_year), which is what older builds sent. */
+        body: JSON.stringify({ p_masjid: cfg.MASJID, p_year: year }),
         signal: ctrl.signal
       });
       clearTimeout(bail);
@@ -7276,7 +7285,10 @@ window.TAIYABAH_PUBLIC = {
         headers:{ 'Content-Type':'application/json',
                   'apikey':cfg.SUPABASE_ANON_KEY,
                   'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
-        body:'{}'
+        /* Same as the timetable above: name the masjid, because nobody is
+           signed in here. An unset MASJID stringifies away to {} and falls
+           back to courses_public(). */
+        body: JSON.stringify({ p_masjid: cfg.MASJID })
       }).then(function(r){
         if(!r.ok) throw new Error('courses ' + r.status);
         return r.json();
