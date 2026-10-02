@@ -1,0 +1,28 @@
+flowchart LR
+    C["🧕 <b>The masjid</b><br/>Maghrib has moved.<br/>The hall is now £375.<br/>There is a janāzah tonight."]
+
+    subgraph OLD["How that used to reach the website"]
+        direction TB
+        O1["📞 Ring the developer"]
+        O2["✏️ Edit a template,<br/>a JSON file, an array"]
+        O3["🐍 Run two Python scripts"]
+        O4["⬆️ Push to GitHub"]
+        O1 --> O2 --> O3 --> O4
+    end
+
+    C --> OLD
+    OLD -.-> COST["⏳ <b>Days, and a person<br/>who might be on holiday</b><br/>Meanwhile the website quotes<br/>a price the office stopped<br/>charging"]
+
+    C ==> NOW["🖥️ <b>The Admin Centre</b><br/>The committee signs in and<br/>changes it. Drafts first,<br/>published when it is right"]
+    NOW ==> GOOD["✅ <b>Live, in a minute,<br/>with nobody rung</b><br/>and a record of who<br/>changed what"]
+
+    classDef person fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    classDef old fill:#F5F1E8,stroke:#C9BFB2,color:#6E616A
+    classDef miss fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22,stroke-dasharray:4 3
+    classDef core fill:#3C0B2A,stroke:#C6A24C,stroke-width:3px,color:#F5F1E8,font-size:15px
+    classDef good fill:#E4EDE4,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    class C person
+    class O1,O2,O3,O4 old
+    class COST miss
+    class NOW core
+    class GOOD good

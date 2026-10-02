@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph EDITOR["The screen the committee uses — times/"]
+        direction LR
+        X1["📄 <b>The office's spreadsheet,<br/>dropped in whole</b><br/>the .xlsx is read in the browser,<br/>no library — an .xlsx is a ZIP of<br/>XML and the browser inflates it"]
+        X2{{"<b>Check</b><br/>at least 300 days · 14 fields a row ·<br/>every time HH:MM · no day twice ·<br/>today present. The dates in the file<br/>are the truth; a Year box that<br/>disagrees is a complaint, not<br/>an override"}}
+        X3["<b>Draft</b><br/>saved, and visible to<br/>nobody outside the portal"]
+        X4["<b>Publish</b><br/>not offered at all until the<br/>year is complete — 365 days,<br/>366 in a leap year"]
+        X1 --> X2 --> X3 --> X4
+    end
+
+    EDITOR --> DB[("<code>prayer_times</code> · <code>prayer_years</code><br/>three CHECK constraints, so the database refuses<br/>a broken row even if every layer above it is wrong")]
+
+    DB --> PAGE["🌐 <b>The public page</b>"]
+
+    subgraph FLOOR["The built-in year is the floor, not the ceiling"]
+        direction LR
+        F1["<b>1</b> · paints from the year<br/>compiled into the page,<br/>immediately"]
+        F2["<b>2</b> · asks <code>prayer_year()</code> for<br/>a better one, in the background"]
+        F3["<b>3</b> · swaps only if what comes<br/>back is complete and sane"]
+        F4["<b>4</b> · on <i>any</i> failure keeps what<br/>is already on the screen,<br/>and says nothing"]
+        F1 --> F2 --> F3 --> F4
+    end
+
+    PAGE --> FLOOR
+
+    FLOOR --> WHY["<b>Rule 4 is why there is no spinner and no error message.</b><br/>Somebody who wanted Maghrib does not care that a background request<br/>failed; they care that the number in front of them is right, and it already is.<br/>A wrong timetable that loads is far worse than a right one that does not update"]
+
+    NEXT["📅 <b>2026 is published. 2027 does not exist.</b><br/>On 1 January the page falls back to a year<br/>that has run out"]
+    DB -.-> NEXT
+
+    classDef ours fill:#3C0B2A,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef gate fill:#2A0E1F,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef act fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    classDef good fill:#E4EDE4,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    classDef soon fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22,stroke-dasharray:4 3
+    class X1,X3,PAGE act
+    class X2,DB gate
+    class X4,F1,F2,F3,F4 ours
+    class WHY good
+    class NEXT soon

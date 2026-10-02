@@ -1,0 +1,28 @@
+flowchart TB
+    AAL{{"<b>is_aal2()</b><br/>the session has entered its<br/>authenticator code. Every gate<br/>below starts here, and it is<br/>checked in Postgres — a control<br/>that only exists in JavaScript<br/>does not exist"}}
+
+    AAL --> ADM["<b>verified_admin()</b><br/>is_aal2 <b>and</b> is_admin"]
+    AAL --> MAD["<b>verified_madrasah()</b><br/>is_aal2 <b>and</b> (is_admin <b>or</b> the madrasah role)"]
+    AAL --> IMAM["<b>verified_imam()</b><br/>is_aal2 <b>and</b> the imam role.<br/><b>No is_admin.</b> That omission<br/>is the feature: an administrator<br/>is not thereby the imam, and<br/>cannot read what was written<br/>to him"]
+
+    ADM --> R1["<b>admin</b> · 3 accounts<br/>everything, including roughly 550<br/>children's records. The role to<br/>be sparing with"]
+    MAD --> R2["<b>madrasah</b> · 0 accounts<br/>the roll, classes, staff<br/>and households"]
+    IMAM --> R3["<b>imam</b> · 1 account<br/>the advice inbox, and<br/>nothing else"]
+
+    AAL --> R4["<b>teacher</b> · 40 accounts<br/>their own classes and registers.<br/>Reaches madrasah data and<br/>not hall bookings"]
+    AAL --> R5["<b>hall_office</b> · 0 accounts<br/>hall bookings and<br/>provably nothing else"]
+
+    R6["<b>parent</b> · 0 accounts<br/>granted by the madrasah portal,<br/>never from <code>access/</code>"]
+
+    NOTE["🔒 <b>has_role() filters on masjid_id = current_masjid()</b><br/>so a role is held <i>at a masjid</i>, not in general"]
+    NOTE -.-> AAL
+
+    classDef gate fill:#3C0B2A,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef role fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    classDef held fill:#E4EDE4,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    classDef unheld fill:#F5F1E8,stroke:#C9BFB2,color:#6E616A,stroke-dasharray:4 3
+    classDef warn fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22
+    class AAL,ADM,MAD,IMAM gate
+    class R1,R3,R4 held
+    class R2,R5,R6 unheld
+    class NOTE warn

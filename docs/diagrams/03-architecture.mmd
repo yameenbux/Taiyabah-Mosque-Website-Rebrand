@@ -1,0 +1,32 @@
+flowchart TB
+    subgraph BUILD["Building — run before every push"]
+        direction LR
+        B1["<b>index_template.html</b><br/>THE SOURCE. Edit this one"]
+        B2{{"<b>verify_structure.py</b><br/>div balance · dead data-nav · unresolved<br/>anchors · duplicate ids · a donate link still<br/>pointing at WordPress · a Stripe link<br/>containing <code>test_</code>"}}
+        B3["<b>build.py</b> → <b>index.html</b><br/>GENERATED. Never edit it —<br/>the next build wipes the edit,<br/>and the diff looks like it worked"]
+        B1 --> B2 --> B3
+    end
+
+    BUILD --> PAGES["🌐 <b>GitHub Pages, serving the repository root</b><br/>No build step on the server, no staging. <b>Pushing is deploying.</b><br/><code>_config.yml</code>'s <code>exclude:</code> is the entire boundary between committed and public"]
+
+    PAGES --> DB[("🗄️ <b>Supabase Postgres, in London</b><br/>so booking data never leaves the UK. Row Level Security plus the<br/>GRANT in front of it — Postgres checks table privileges <i>before</i><br/>it evaluates any policy, and you need both")]
+
+    PAGES --> ST["💳 <b>Stripe</b><br/>the hall deposit and<br/>the nikāḥ fee"]
+
+    DB --> FN["⚡ <b>Edge Functions</b><br/><code>notify</code> · <code>invite-user</code><br/><code>stripe-webhook</code> · <code>app-notify</code>"]
+    ST --> FN
+
+    FN --> MAIL["✉️ <b>one.com SMTP</b><br/>the masjid's own mail,<br/>no sending service.<br/>Port 465, implicit TLS"]
+    MAIL --> OFF["🧕 <b>The office</b><br/>or a new member of staff"]
+
+    FN --> WK["⚙️ <b>The app's Cloudflare Worker</b><br/>reached by <code>app-notify</code>, which holds the<br/>shared password as a secret nobody on<br/>the committee sees"]
+    WK --> PHONE["📱 <b>Every phone with<br/>the masjid's app</b>"]
+
+    classDef ours fill:#3C0B2A,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef gate fill:#2A0E1F,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef out fill:#F5F1E8,stroke:#C9BFB2,color:#6E616A
+    classDef person fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    class B1,B3,PAGES,FN ours
+    class B2,DB gate
+    class ST,MAIL,WK out
+    class OFF,PHONE person

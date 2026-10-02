@@ -1,17 +1,66 @@
-# Taiyabah Masjid — website, accounts and staff portals
+<div align="center">
+
+# Taiyabah Masjid
+
+**The masjid's website, and the desk the committee runs it from.**
 
 Prayer times, the new build appeal, donations with Gift Aid, community
 information, madrasah admissions, adult courses, hall hire with online payment,
-nikāḥ requests, food bank volunteering, visitor accounts and **seven staff
-areas** behind one sign-in.
+nikāḥ requests, food bank volunteering, the imam's advice,
+and **seven staff areas behind one sign-in**.
 
-**Bolton Central Islamic Society** · Registered charity 1041569 ·
+Bolton Central Islamic Society · Registered charity 1041569
 31a Draycott Street, Bolton BL1 8HD
+
+![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-static%20site-3C0B2A?style=flat-square&labelColor=3C0B2A&color=5E1844)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%2017%2C%20London-3C0B2A?style=flat-square&labelColor=3C0B2A&color=5E1844)
+![Row Level Security](https://img.shields.io/badge/access%20control-row%20level%20security-3C0B2A?style=flat-square&labelColor=3C0B2A&color=5E1844)
+![Two step](https://img.shields.io/badge/staff%20sign--in-authenticator%20required-3C0B2A?style=flat-square&labelColor=3C0B2A&color=5E1844)
+![Browser JS](https://img.shields.io/badge/browser%20JS-ES5%20only-C6A24C?style=flat-square&labelColor=3C0B2A)
+![Tests](https://img.shields.io/badge/tests-16%20SQL%20·%2040%20browser-C6A24C?style=flat-square&labelColor=3C0B2A)
+![Licence](https://img.shields.io/badge/licence-all%20rights%20reserved-7A5D14?style=flat-square&labelColor=3C0B2A)
+
+</div>
 
 ![The Taiyabah Masjid website home page](docs/screenshot-home.jpg)
 
+<br/>
+
+> [!NOTE]
+> **Reading this without a technical background?** Start at *The problem*, *What
+> is in here* and *Who may do what*. Those three explain what this repository is
+> and what it does for the masjid. Everything from *How the pieces fit* onwards
+> is for whoever maintains it.
+
+> [!WARNING]
 > **Not live yet.** `robots.txt` blocks every search engine. See
 > [Launch day](#launch-day) before that changes.
+
+### How to read the diagrams
+
+Every picture in this file uses the same four colours, and they always mean the
+same thing. The connectors animate, so you can see which way the information
+actually travels.
+
+| | Means |
+| :--- | :--- |
+| ⬛ **Deep plum, gold border** | This repository, or the database it owns |
+| 🟩 **Pale green** | Live, working, in use today |
+| 🟨 **Sand, dashed border** | A warning, or something not built — never described as built |
+| ⬜ **Stone** | A person, or something outside this repository |
+
+---
+
+## The problem, in one picture
+
+Maghrib moves. The hall rate goes up. There is a janāzah tonight. None of those
+are development work, and none of them should need a developer.
+
+<img src="docs/diagrams/01-the-problem.svg" alt="Before: ring the developer, edit a template, run two Python scripts, push to GitHub, and wait days. Now: the committee signs in to the Admin Centre, saves a draft, publishes it, and it is live in a minute with a record of who changed what" width="100%">
+
+**The committee runs this site day to day, not a developer.** When choosing
+between a clever thing and an obvious thing, choose the one a volunteer can
+still operate in a year.
 
 ---
 
@@ -32,18 +81,24 @@ python3 verify_structure.py && python3 build.py
 cd db/harness && ./run-all.sh
 ```
 
-If you only remember three things about this repository:
-
-1. **`index.html` is generated.** Editing it works until the next build wipes it.
-2. **Re-run `011_require_two_step.sql` after every migration.** It only protects
-   the policies that exist at the moment it runs, so a new table arrives
-   unprotected until you do.
-3. **Pushing to GitHub *is* deploying.** Pages serves this repository's root.
-   `_config.yml` is the only thing standing between a file and the public web.
+> [!IMPORTANT]
+> If you only remember three things about this repository:
+>
+> 1. **`index.html` is generated.** Editing it works until the next build wipes
+>    it — and the diff looks exactly like an edit that worked.
+> 2. **Re-run `011_require_two_step.sql` after every migration.** It only
+>    protects the policies that exist at the moment it runs, so a new table
+>    arrives unprotected until you do.
+> 3. **Pushing to GitHub *is* deploying.** Pages serves this repository's root.
+>    `_config.yml` is the only thing standing between a file and the public web.
 
 ---
 
 ## What is in here
+
+Three surfaces, one sign-in, one database.
+
+<img src="docs/diagrams/02-what-is-in-here.svg" alt="The repository holds the public website, the Admin Centre and the madrasah portal; the Admin Centre's rail is grouped as What people have asked for, Change what the website says, Money, Settings and The madrasah; the phone app is a separate repository writing into the same Supabase project" width="100%">
 
 | | |
 |---|---|
@@ -58,6 +113,7 @@ If you only remember three things about this repository:
 | **`volunteers/`** | **Food bank volunteers** — who offered, who has been rung. |
 | **`collections/`** | **Charity collections** — chanda requests from outside charities. Flags a paid collector and two charities booked for one day. |
 | **`collection/`** | A four-line redirect, nothing else. `taiyabahmasjid.com/collection` → `/#collection`, because this link is read out on the phone and the hash is the part people drop. |
+| **`advice/`** | **The imam's advice** — the inbox for questions put to the imams from the phone app. The only screen behind `verified_imam()`, which does **not** fall back to `is_admin()`: holding `admin` does not open it. |
 | **`access/`** | **User access** — every staff account, what each may do, and whether two-step is on. Invitations are sent from here; **no password is ever typed here, for anybody**. |
 | **`newbuild/`** | **The new build page editor** — the appeal figure, what it pays for and the timeline of phases, so the masjid can keep its own page current. |
 | **`notices/`** | **Notices** — what the masjid is telling people this week. Write it, attach a poster, publish it. It appears on the front page; nothing is visible to anybody until somebody presses Publish. |
@@ -70,18 +126,87 @@ If you only remember three things about this repository:
 All sign-in areas share one Supabase project, one set of accounts and one
 two-factor setup. A person sees only what their role allows.
 
-**Roles.** `admin` sees everything. `teacher` reaches madrasah data and not hall
-bookings. `hall_office` reaches hall bookings and provably nothing else.
-`parent` is granted by the madrasah portal, not from `access/`.
+---
 
-**As of 14 September 2026 the only role actually granted is `admin`, to three
-accounts.** The other three are unused but every policy that honours them is
-intact, so separating the duties again is one `grant` — done from `access/`,
-with no SQL.
+## Who may do what
+
+Six roles, and three gates in front of them. **Every one of these runs in
+Postgres**, not in the page: the rail in the browser hides a row, and hiding a
+row is not a lock.
+
+<img src="docs/diagrams/04-the-six-roles.svg" alt="is_aal2 gates everything; verified_admin is is_aal2 and is_admin; verified_madrasah is is_aal2 and either is_admin or the madrasah role; verified_imam is is_aal2 and the imam role with no admin fallback; teacher, hall_office and parent sit beside them" width="100%">
+
+`admin` sees everything. `teacher` reaches madrasah data and not hall bookings.
+`hall_office` reaches hall bookings and provably nothing else. `imam` reaches the
+advice inbox and nothing else. `parent` is granted by the madrasah portal, not
+from `access/`.
+
+> [!IMPORTANT]
+> **`verified_imam()` does not fall back to `is_admin()`, and that omission is
+> the feature.** `verified_madrasah()` does, because an administrator running the
+> madrasah is the ordinary case. Somebody writing to the imam in confidence is
+> not writing to the committee, so holding `admin` does not open that inbox. If
+> a future screen needs an administrator to see advice, that is a decision to
+> take deliberately and write down — not a convenience to add to the gate.
+
+> [!NOTE]
+> **These counts came from the database, not from this file.** On 2 October 2026:
+> `admin` 3, `teacher` 40, `imam` 1, and `madrasah`, `hall_office` and `parent`
+> none. This paragraph said for months that **`admin` was the only role ever
+> granted, to three accounts** — which stopped being true when forty staff were
+> imported and granted `teacher`. Zero rows means nobody has used it yet, not
+> that it does not exist, and a document is not evidence either way. **Query the
+> database.**
+
+The three unused roles are not aspirational: every policy that honours them is
+intact, so separating the duties is one `grant` from `access/`, with no SQL.
+
+`admin` is the role to be sparing with: it is the only one that opens roughly
+550 children's records — names, dates of birth, medical and SEND notes, which
+are special-category data. **The question to revisit annually** is whether every
+person holding `admin` is somebody the masjid would be content to name in an ICO
+response as having lawful access to every child's file. If the answer is ever
+"not quite", grant the narrower role instead.
 
 ---
 
-## Repository layout
+## The imam's inbox
+
+The newest thing here, and the clearest example of the shape the rest of this
+repository is built in: a request a congregant can make, that only one person
+can read, with nobody's mailbox published anywhere.
+
+<img src="docs/diagrams/05-the-imams-inbox.svg" alt="A congregant writes from the phone app giving name, phone and email; request_imam_advice writes one row the app cannot read back; the office is told something is waiting without any address for the imam; the imam signs in with his authenticator under verified_imam, answers, and the answer is emailed to the person who asked" width="100%">
+
+**There is deliberately no imam email address.** An address published on a
+website is an address that gets harvested, and a mailbox is a thing somebody has
+to maintain and hand over. The request goes into the database, the imam signs in
+with an account and an authenticator like everybody else, and the reply is sent
+by the server reading the answer back out of the row — rather than trusting
+anything the original request said.
+
+`advice_requests` has RLS enabled and **no policies at all**, with every grant
+revoked. That is the denial, not an oversight: no policy means no row passes, and
+the only way in is through functions that check `verified_imam()` themselves.
+There are no CHECK constraints on the free text either — a failing CHECK prints
+the whole row into Postgres's error DETAIL, which reaches the retained server
+log, and the whole point of this table is that what somebody wrote is private.
+The bounds live in the functions instead.
+
+Nothing is read back into the app, because the congregant has no login: a reply
+they cannot be shown has to be sent. A daily job chases a request nobody has
+answered, and old ones are purged on a schedule.
+
+---
+
+## How the pieces fit
+
+What gets edited, what it compiles to, where that runs, and the four outside
+services it talks to.
+
+<img src="docs/diagrams/03-architecture.svg" alt="index_template.html through verify_structure.py and build.py to a generated index.html; GitHub Pages serving the repository root; Supabase Postgres in London behind row level security and the GRANT in front of it; Stripe; the notify, invite-user, stripe-webhook and app-notify Edge Functions; one.com SMTP to the office; and app-notify reaching the phone app's Cloudflare Worker" width="100%">
+
+### Repository layout
 
 ```
 index_template.html     THE SOURCE of the website. Edit this.
@@ -120,6 +245,10 @@ admin/   what those fifteen pages SHARE.
                     through. Mounted by each page from renderApp(identity),
                     which runs only AFTER sign-in.
 tools/   scripts that generate committed files. Run them, commit the result.
+         build_diagrams.mjs turns docs/diagrams/*.mmd into the SVGs this
+         README embeds.
+
+docs/diagrams/  those diagrams — .mmd source beside the .svg it builds to.
 
 img/     photographs, fetched only when their page opens
 fonts/   self-hosted woff2 — no Google Fonts, so no visitor IP leaves the UK
@@ -349,6 +478,8 @@ the site was never configured to send, is a misleading entry in a log that has
 to be trustworthy.
 
 ### The prayer timetable
+
+<img src="docs/diagrams/06-the-prayer-timetable.svg" alt="The committee drops the office spreadsheet into times/, it is checked for at least 300 days and 14 fields a row with the file's own dates winning over the Year box, saved as a draft and published only when complete; the public page paints the built-in year first, asks prayer_year for a better one, swaps only if it is complete and sane, and on any failure keeps what is on screen and says nothing" width="100%">
 
 **This was a deadline, not a feature request.** The timetable was
 `const FULL_2026 = [...]`, 365 rows compiled into the page by `build.py`, and
@@ -752,9 +883,58 @@ rm index.html 404.html && python3 verify_structure.py && python3 build.py
 
 Both should come back byte-identical.
 
+### The diagrams
+
+Seven SVGs, and the connectors animate — GitHub renders mermaid but cannot
+animate it, so these are built rather than inlined. The sources stay in the
+repository as text, so a diagram is still something you can edit and diff rather
+than a picture nobody can change:
+
+```bash
+docs/diagrams/*.mmd               # the source, one file per diagram
+node tools/build_diagrams.mjs     # regenerates the SVGs
+```
+
+They live under `docs/` rather than `assets/` for the reason given above: a
+lowercase `assets` beside the committed `Assets` collides on Windows and macOS,
+after which Pages 404s every photograph. `docs/` is already excluded from Pages,
+and GitHub renders the README from the repository rather than from the built
+site, so the pictures still appear.
+
+The build script holds the palette and the animation in one place, declares the
+colours light-first and redefines them under `prefers-color-scheme` so they
+follow GitHub's theme, and keeps a `prefers-reduced-motion` guard.
+
+> [!NOTE]
+> **Do not add a `font-family` override to that stylesheet.** Mermaid measures
+> every label and sizes each box *before* the stylesheet is appended, so changing
+> the face afterwards reflows text inside boxes built for a different font and
+> silently clips the last line. Mermaid embeds the face it measured with. The
+> `wrappingWidth` in the mermaid config *is* safe to change, because that is
+> applied during measurement.
+>
+> Rendering needs a Chromium: `PUPPETEER_EXECUTABLE_PATH=/path/to/chrome node
+> tools/build_diagrams.mjs`. **Look at what comes out.** Three of these were
+> rewritten after being rendered and read — one laid itself out bottom-to-top
+> because a back edge made a cycle, and two came out a thousand pixels taller
+> than they were wide.
+
 ---
 
 ## Deploying
+
+<img src="docs/diagrams/07-pushing-is-deploying.svg" alt="A committed file is either named in _config.yml's exclude list, in which case it is in git but not on the web, or it is a public web page within a minute of the push; and either way it is still readable in the public repository, so a confidential document does not belong here at all" width="100%">
+
+> [!CAUTION]
+> **`_config.yml`'s `exclude:` list is the entire boundary between "committed"
+> and "on the internet".** Its comments are a list of things that were briefly
+> published by accident, including the build scripts, the screen generators, the
+> database migrations, and — caught the day before a push — a confidential DPIA.
+> **Read it before adding any file to the root**, including a stray note, which
+> is why it carries patterns like `READ-ME*.txt` as well as named files.
+>
+> Excluded is not private. **A confidential document does not belong in this
+> repository at all.** The DPIA and the breach procedure are deliberately absent.
 
 **GitHub Pages serves the repository root, so pushing is deploying.** There is
 no build step on the server and no staging environment. `_config.yml`'s
@@ -809,6 +989,30 @@ Migrations are pasted into the SQL editor in order.
 | `038_retention_actually_runs` | **The two most sensitive tables were the two nothing ever purged.** Eight cron jobs ran the retention policy; `purge_old_admission_applications` and `purge_old_charity_collections` existed and were never scheduled — so children's dates of birth, SEND status, allergies and medical conditions, and charity trustees who never contacted the masjid at all, were kept indefinitely while everything else was purged on time. They could not have been scheduled either: both opened with `if not is_admin()`, and pg_cron has no JWT, so a schedule would have failed silently every night. The guard now allows an internal caller and requires `verified_admin()` of a signed-in one — which also matters because one administrator still has no authenticator. Both now run nightly at twelve months. |
 | `037_rate_limit_every_public_form` | **Four more forms with no limit at all.** A first pass searching each function for "rate" or "limit" said they were protected; the word that matched was `limit` in unrelated SQL. Searching source for a reassuring word is not a test. Looking for `now() - interval` gave the real answer: nikāḥ, admissions, courses and volunteers had nothing. One generic `rate_limit_by_contact()` trigger, parameterised by column names, applied to all four. It does **not** stop somebody varying both phone and email — nothing in Postgres can, since it cannot see an IP — and if that ever happens the answer is Cloudflare in front of the site, not a lower number here. |
 | `035_notify_the_other_three_forms` | **Three more forms that wrote a row and told nobody**, found by asking of every anon-callable function "and then who is told?" Madrasah admissions, course registrations and foodbank volunteers all collected an email address and never used it. Adds their webhooks the same way `033` does, plus `grant select on courses to service_role` so a course key becomes its real name. The madrasah email deliberately carries **nothing at all about a child** — no name, date of birth, school, SEND, EHCP, allergy or medical detail. |
+| `132_the_imam_has_his_own_inbox` | **The imam's advice, end to end.** The masjid asked for a form so somebody can put a question to the imams, "private and confidential to the imam". **The first design was a mailbox, `imam@…`, and it was dropped on purpose**: a published address is an address that gets harvested, and a mailbox is a thing somebody has to maintain and hand over. `advice_requests` and `advice_answers` have RLS on with **no policies at all** and every grant revoked, reached only through functions behind `verified_imam()`. There are **no CHECK constraints on the free text**, deliberately — a failing CHECK prints the whole row into Postgres's error DETAIL, which reaches the retained server log, and privacy is the entire point of this table. The bounds live in the functions. A daily job chases what nobody has answered; another purges the old. |
+| `131_the_imam_is_a_role` | **One statement, in its own file, for a reason Postgres imposes.** `alter type … add value` may run inside a transaction, but the new label may not be *used* by anything else in that same transaction — and `check_function_bodies` validates a SQL-language body at CREATE time, so every function mentioning `'imam'::app_role` would fail if it shared the file. Same shape as `055`. |
+| `130_the_log_knows_a_machine_when_it_sees_one` | **The Daily Log promised that automatic jobs are counted at the bottom rather than listed, and then listed them.** On the real database 120 of 130 audit rows were one job clearing holds, which is a log nobody can read. The database decides what is a machine now, rather than the browser guessing from a string. |
+| `129_the_sweep_only_complains_when_there_is_work` | **An hourly job that writes an audit row every hour saying it is not configured fills the log with its own silence.** `sweep_bmcc_certificates()` now complains only when it has work it cannot do. The deliberate part of `060` — nothing is deleted when storage cannot be reached — is unchanged. |
+| `128_notice_v1_7_progress_and_messages_are_described` | **The privacy notice is a promise, and `127` and `125` were about to make it false in two ways at once.** Both were applied to production empty, so the guard stayed green until the first teacher saved a progress entry. The notice describes the progress record and the messages before anybody can write one. |
+| `127_progress_teacher_writes_parent_reads` | **A teacher records how a child is getting on, and the parent reads what the teacher chose to share.** The sharing is the gate: what is written and what is published are different acts. |
+| `126_messages_carry_their_masjid` | **`125` built the messages table exactly as the design drew it, and the design had no `masjid_id`** — it reached its masjid through its thread. `health_check()`'s `every_table_has_a_masjid` found it. Reading the health check after a migration is how this was caught, not a test. |
+| `125_parents_write_to_the_office` | **A parent can write to the office, and the office can write back.** The piece the masjid asked for by name. Two tables, reached only through functions. |
+| `122_the_health_functions_are_the_administrators` | **`health_check()`, `madrasah_notice_matches_schema()` and `madrasah_list_minimisation()` were executable by any signed-in account and checked nothing themselves.** Harmless while every account was staff. With parent logins that is 330 households able to read the madrasah's internal health. Found by building the parents' portal, not by an audit. |
+| `119_parent_identity_and_the_gates` | **A parent gets an identity and three gates, and no screen.** It shows no child. **The gates are the whole job** — a parent who can reach another family's record is the failure this file exists to prevent, so they were built and proved before anything was built on top of them. |
+| `118_the_landing_page_knows_handed_in` | **A teacher who marks all twelve children and presses nothing had a screen telling her she was finished.** `madrasah_my_classes()` never looked at `madrasah_registers`, so the browser decided a class was done with `marked >= on_roll`. Fully marked and handed in are different states and the screen can tell them apart now. |
+| `117_the_register_has_an_opening_day` | **Nothing is reported missing before the register opens.** Three separate surfaces each stopped reporting while marking is forbidden — by testing the gate *as it is now*. None of them floored the window, so the day the office finishes setting the year up, every date before it becomes a missed register. |
+| `116_a_parents_word_is_scoped_and_gated` | **`record_parent_absence()` had three holes, and each was proved reachable on production before this file was written** — inside a block ending in `raise exception`, so nothing it wrote survived. A parent's word is now scoped, gated and dated like every other mark. |
+| `115_count_only_companions` | **`registers_missing()`, `register_history()`, `madrasah_registers_list()` and `madrasah_roll()` each gained a `_count()` sibling with the same arguments, the same gates and no names in the body at all.** The rule against putting children's names in a transcript had been broken twice in one day *after* being written down and quoted. **Telling people to be careful is the weakest control there is**, so the control is now a function that cannot return a name. |
+| `114_the_audit_could_not_write_from_stable` | **`113` spliced an INSERT into a function left declared `STABLE`, which cannot write.** Found immediately by calling the function rather than only reading the diff. |
+| `113_history_is_audited_and_the_grid_says_so` | The office's own view of what was never taken and what a mark used to say: the history is audited, the grid says who is done, and Sunday is spelled right. |
+| `111_today_counts_registers` | **`registers_missing()` could already answer "which registers were never taken" — and only somebody who opened the right screen and picked a class and a date ever asked it.** Today is the screen the office opens first, so the answer is on it. Only when the office is free to act on it. |
+| `110_a_submitted_register_says_so` | **A register had two states and the teacher was shown neither.** `madrasah_register_list()` is the only call the Register screen makes when it opens a class, and it returned nothing about draft or submitted. |
+| `108_the_digest_counts_registers` | **On-screen is not told.** `registers_missing()` and `my_registers_outstanding()` tell the office and the teacher on a screen; nobody who does not open that screen on that evening is told at all, and a class could go three weeks unmarked. The Monday email counts registers now. |
+| `107_the_sibling_decision_is_housekeeping` | **All 56 sibling-suggestion rows had a null decision, so `105`'s discovery and `106`'s description left the guard green.** That is a landmine, not a clean state: the guard would have gone red the first time the office used the screen it is told to use. |
+| `106_notice_v1_6_the_attendance_history_is_described` | **`105` made the guard find its own tables, and the correct, deliberate result was red** — five columns nobody had ever added to the privacy notice, holding real facts about real children. This is the notice catching up. |
+| `105_the_guard_finds_its_own_tables` | **`madrasah_notice_matches_schema()` checked a hard-coded list of five table names.** A guard that is told what to watch stops watching the moment somebody adds a table and forgets to tell it. It discovers them now. |
+| `103_what_was_missed_and_what_it_said` | **A register taken has always been visible; a register NOT taken was visible nowhere** — which is the half that matters, because a class can go three weeks unmarked and every screen look normal. |
+| `102_a_register_that_is_no_longer_complete` | Fix round 1 of 5 on `097`. **That file is applied and is the record; it is not edited** — this corrects on top of it, the way `094` corrected `093`. Four fixes, and one new guard the reviewer asked for instead of a fix. |
 | `050_the_app_can_publish_a_notice_again` | **A production outage this project caused, and did not notice.** `040` dropped `publish_notice()` — rightly; it had no admin check at all and was safe only by its grant. What nobody asked was who else was calling it. The phone app's Cloudflare Worker was, and it sends the push *after* writing the row, so from that morning **pressing "Send notification" on the app's trustee screen failed and no notification went out either**. Restores it with the same name, argument and return shape the Worker expects, service_role only, and validating through `check_notice()` — so the app and the website have one definition of a valid notice and two doors to it. |
 | `097_draft_then_submit` | **A register is not taken until every child on the roll carries a mark — but marks save as they are made, so a teacher interrupted mid-class does not lose the ones they already gave.** `save_register_draft()` writes marks one at a time; `submit_register()` is the thing that demands a full register and counts against the roll **as it is at that moment**, never against a stored `expected_count` — a child who joins the class between the draft and the submit must not make a genuinely complete register read as short. Also `mark_register()` and `record_parent_absence()`. |
 | `093_teacher_logins` | **Thirty-nine teachers, each with a login scoped to their own classes**, created inside the database rather than by anyone typing a password. The sheet of slips is the only copy and the table that held them has been dropped. |
@@ -1161,9 +1365,10 @@ and nothing keeps them in step. **After ever changing it, run
 ## Testing
 
 ```bash
-cd db/harness && ./run-all.sh          # 17 SQL suites
+cd db/harness && ./run-all.sh          # the 16 suites in db/_test_*.sql
 deno test supabase/functions/notify/messages_test.ts    # 76 assertions
-python3 _test/<name>.py                # 31 suites
+python3 _test/<name>.py                # 40 browser suites in _test/*_test.py
+python3 _test/readme_test.py           # this file, held to the repository
 python3 tools/build_admin_fonts.py     # after changing the site's fonts
 ```
 
@@ -1173,9 +1378,10 @@ migrations for each suite, and reports one line per suite. It needs the sister
 repo `taiyabah-madrasah-db` beside this one for migrations 001–007; override
 with `MADRASAH_DB=/path/to/it`.
 
-**Every harness reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS` role
-before asserting anything.** Skip that and the tests run as a superuser, which
-ignores RLS entirely — and a broken policy set passes.
+> [!IMPORTANT]
+> **Every harness reassigns table ownership to a `NOSUPERUSER NOBYPASSRLS` role
+> before asserting anything.** Skip that and the tests run as a superuser, which
+> ignores RLS entirely — and a broken policy set passes, silently, for ever.
 
 **One exception, and it is not laziness: `_test_fees.sql`.** The fee tables use
 `FORCE ROW LEVEL SECURITY` with *no policies at all*, which under FORCE makes
@@ -1187,6 +1393,20 @@ test, it would be a different system. What protects those tables is the
 privilege gate in front of RLS — `revoke all … from anon, authenticated`, which
 is checked before RLS is ever consulted, so a wrong policy cannot leak a row.
 Test 12 asserts that, and it is the one that matters.
+
+> [!CAUTION]
+> **`_test/readme_test.py` globbed `db/0*.sql`, so it stopped covering the
+> migrations the day they reached 100 — and it stopped silently**, because a
+> glob that matches fewer files does not complain. Twenty-four applied
+> migrations had accumulated behind it by 2 October 2026, every one of them
+> `1xx`, and the suite said ALL PASS throughout. Its image check had the
+> opposite fault: it asserted that a shields.io URL exists as a path on disk,
+> which is not a stricter test but a wrong one.
+>
+> Both are fixed, and the migration check now carries a **floor** — if it ever
+> matches fewer than a hundred files it fails saying it is not looking at the
+> repository it thinks it is. **A check that silently narrows its own scope is
+> the hardest kind to notice**, because nothing about it ever turns red.
 
 Three browser-test habits, each bought with a bug:
 
@@ -1202,15 +1422,22 @@ Three browser-test habits, each bought with a bug:
 
 ## Security
 
-- **Only the anon (publishable) key reaches a browser.** It is safe to commit.
-  RLS is the real boundary.
-- **The `service_role` key must never appear in this repository, in any file,
-  ever.** If GitHub secret scanning blocks a push, do **not** click "Allow
-  secret" — cancel, remove the key, and rotate it in Supabase.
+> [!CAUTION]
+> **The `service_role` key must never appear in this repository, in any file,
+> ever.** It bypasses Row Level Security entirely. **If GitHub secret scanning
+> blocks a push, do not click "Allow secret"** — cancel, remove the key, and
+> rotate it in Supabase.
+>
+> The anon (publishable) key is the one that reaches a browser, and it is safe
+> to commit. RLS is the real boundary.
+
+> [!IMPORTANT]
+> **Keep two administrators.** Deleting the only admin destroys its roles and
+> profile by cascade, and nobody can grant the role back. One locked-out
+> administrator must not be able to strand the masjid.
+
 - **Roles live in their own table**, never as a column on `profiles`, so nobody
   can promote themselves by updating their own row.
-- **Keep two administrators.** Deleting the only admin destroys its roles and
-  profile by cascade, and nobody can grant the role back.
 - **Secrets live in Supabase**, never in `config.js` or this repository.
   Edge Function secrets are **project-wide**, not per-function.
 - **`STRIPE_SECRET_KEY` is not in Supabase.** The webhook needs only
@@ -1218,12 +1445,8 @@ Three browser-test habits, each bought with a bug:
 - **The SMTP credential is the `noreply@` mailbox only.** It holds no mail, so a
   leak exposes nothing to read.
 
-`admin` is the role to be sparing with: it is the only one that opens roughly
-800 children's records — names, dates of birth, and in time medical and SEND
-notes, which are special-category data. **The question to revisit annually** is
-whether every person holding `admin` is somebody the masjid would be content to
-name in an ICO response as having lawful access to every child's file. If the
-answer is ever "not quite", grant the narrower role instead.
+See [Who may do what](#who-may-do-what) for which role opens what, and for why
+`admin` is the one to be sparing with.
 
 ---
 
@@ -1323,7 +1546,12 @@ table that refused 71. **Nullability is part of that truth and is not in
 `pg_constraint` at all** — it is in `information_schema.columns` — and `create
 table if not exists` will not tell you it did nothing.
 
-**A check that cannot fail is worse than no check.** `_test/timetable_editor_test.py`
+> [!CAUTION]
+> **A check that cannot fail is worse than no check**, because it is a claim of
+> safety that has never once been tested — and it is believed. **Every check
+> added here is proved by deliberately breaking the code it guards.**
+
+`_test/timetable_editor_test.py`
 had a block asserting the Save button is disabled until the paste has been
 checked. It passed. It would have passed with the rule deleted, for two reasons
 at once: the listeners were attached inside `mount()`, which runs only after a
@@ -1434,6 +1662,19 @@ nothing. **After an `eok` on a write, read the row back.**
 
 ## Known limitations
 
+> [!WARNING]
+> **Four items in this list had gone stale before 2 October 2026**, every one in
+> the same direction: something had been fixed and the file still said it was
+> broken. The counts of children, classes and staff had all moved; the
+> administrator without an authenticator had scanned the square; the three
+> without a phone number had added one; and teachers had been linked to staff
+> records, so the line saying no teacher could see any child was wrong about the
+> one thing on this page that matters most.
+>
+> **Query the database rather than trusting this list, including where it says
+> something is resolved.** Zero rows means nobody has used it yet, not that it
+> does not exist — and a document is not evidence either way.
+
 - **`notices` AND `notices_live` HAVE NO MIGRATION IN THIS REPOSITORY.** They
   are on the production database and have no file in `db/`, so that part of the
   schema still cannot be rebuilt from a clean clone. `022` was in the same
@@ -1502,12 +1743,12 @@ nothing. **After an `eok` on a write, read the row back.**
   closest thing to a reviewable record that is safe to keep. **If you add a
   table that should email somebody, the webhook is a separate job and nothing
   will remind you.**
-- **One administrator has no authenticator**, so `011_require_two_step.sql`
-  cannot be re-run and every later migration is unprotected until it is. Nobody
-  can fix this for them — they have to sign in and scan the square. The Admin
-  Centre says so on the front page every time anybody signs in.
-- **All three administrators have no phone number on file.** One minute each
-  from their page under `access/`.
+- ~~**One administrator has no authenticator**, so `011_require_two_step.sql`
+  cannot be re-run.~~ **Resolved.** All three administrators now hold a verified
+  factor, so the migration can be re-run after every later one — which it must
+  be. Checked against `auth.mfa_factors` on 2 October 2026, not assumed.
+- ~~**All three administrators have no phone number on file.**~~ **Resolved** —
+  all three have one.
 - **The nikāḥ form now holds five people's details, and the DPIA is not done.**
   It was on the list for the madrasah; the nikāḥ form has moved into the same
   territory. The ICO entry and the lawful-basis note should be checked against
@@ -1520,23 +1761,28 @@ nothing. **After an `eok` on a write, read the row back.**
   through the booking form proves the webhook, the database, the office alert
   and the hirer's confirmation together. Until then the masjid is taking
   deposits on trust.
-- **Prayer times end 31 December 2026.** The 2027 timetable must be supplied.
+- **Prayer times end 31 December 2026, and 2027 does not exist in the database.**
+  2026 is the only published year. This is the one item here with a date on it:
+  on 1 January the public page falls back to a built-in year that has run out,
+  and so does the phone app. See *The prayer timetable*.
 - **Adult class fees** are still "ring the office".
 - **`MAIL_TO` has one address.** One inbox is a single point of failure the
   first time somebody is on holiday.
 - **The madrasah portal is no longer a shell, and this line used to say it
-  was.** It now holds 543 children, 45 classes and 40 members of staff, loaded
-  from the masjid's own export on 18 September 2026. That changes what this
-  repository is: a bug on a madrasah screen is a bug about children's records,
-  not about a demo. The DPIA is done and the ICO registration is in hand — both
-  were confirmed before the import, not after. What is still outstanding is
-  listed under *For the committee*, and the first item is the one that matters:
-  **no teacher account is tied to a staff record yet**, so no teacher can see
-  any child. That is the right default and it is also a gap: it means the
-  portal is administrator-only in practice.
-- **Ten of the forty-five classes have no main teacher**, and twenty of the
-  forty staff have no DBS date on file. Both are visible on their screens by
-  design rather than hidden behind a green tick — see the DBS figures at the
+  was.** As of 2 October 2026 it holds **553 children, 49 classes and 41 members
+  of staff**, loaded from the masjid's own export on 18 September 2026. That
+  changes what this repository is: a bug on a madrasah screen is a bug about
+  children's records, not about a demo. The DPIA is done and the ICO
+  registration is in hand — both were confirmed before the import, not after.
+
+  ~~No teacher account is tied to a staff record yet, so no teacher can see any
+  child.~~ **No longer true, and this file said it for a fortnight after it
+  stopped being true.** 40 of the 41 staff rows are linked to an account and 40
+  accounts hold `teacher`, so teachers reach their own classes and registers. One
+  staff row is still unlinked.
+- **Three of the forty-nine classes have no main teacher**, and **twenty of the
+  forty-one staff have no DBS date** on file. Both are visible on their screens
+  by design rather than hidden behind a green tick — see the DBS figures at the
   top of `/portal/staff/` — but visible is not the same as answered.
 - **The public Holiday Planner still reads a hard-coded array.** The calendar
   screen writes to `madrasah_events`, and `index_template.html` does not read
@@ -1548,6 +1794,8 @@ nothing. **After an `eok` on a write, read the row back.**
   one entry in `GRANTABLE` and one line in the role list.
 - **No shop, no mobile app, no in-mosque screens yet.** All separate work; none
   of it blocks the website.
+
+---
 
 ## For the committee
 
@@ -1562,7 +1810,29 @@ nothing. **After an `eok` on a write, read the row back.**
 
 ---
 
-## Credits
+## Credits and licence
 
-Built for Bolton Central Islamic Society. Fraunces, Hanken Grotesk and Amiri are
-self-hosted under their open licences. Photographs by the masjid.
+Built for Bolton Central Islamic Society by **Yameen Bux**. Fraunces, Hanken
+Grotesk and Amiri are self-hosted under their own open licences. Photographs by
+the masjid.
+
+Ownership is split, and the distinction matters:
+
+**Owned by Bolton Central Islamic Society (Taiyabah Masjid)** — the Taiyabah
+Masjid name and logo, the prayer timetable and all prayer times, and all masjid
+content: history, photography, announcements, service details, contact and
+campaign information. **Every record in the database belongs to the charity**,
+and the madrasah's records are the charity's responsibility under the UK GDPR,
+not the developer's.
+
+**Owned by Yameen Bux** — © 2026, all rights reserved — the source code in full,
+the interface and visual design, the build and verification pipeline, the
+migration set, and all original written content authored for this site.
+
+The charity holds a **perpetual, irrevocable, royalty-free licence** to use, host
+and operate this website and its portals for the purposes of the masjid and its
+community, including engaging others to maintain it on the charity's behalf. That
+licence covers use of this site; it does not transfer ownership of the code or
+design, and it grants no right to reuse either elsewhere.
+
+All rights reserved. Not open source.

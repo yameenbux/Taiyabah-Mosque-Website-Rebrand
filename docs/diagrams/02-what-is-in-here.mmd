@@ -1,0 +1,27 @@
+flowchart TB
+    REPO(("This<br/>repository"))
+
+    REPO --> SITE["🌐 <b>The public website</b><br/>Prayer times, the new build appeal, donations with<br/>Gift Aid, services, madrasah, hall hire, contact.<br/>One document, built from one template"]
+    REPO --> DESK["🖥️ <b>The Admin Centre</b><br/>One sign-in, one authenticator, one rail —<br/>and on it, only the screens this<br/>account is allowed to open"]
+    REPO --> MAD["🎓 <b>The madrasah portal</b><br/>The roll, classes, staff,<br/>households and registers"]
+
+    DESK --> G1["<b>What people have asked for</b><br/>Hall hire &amp; nikāḥ · Charity collections · Adult classes<br/>Food bank volunteers · The imam's advice"]
+    DESK --> G2["<b>Change what the website says</b><br/>Notices · Hall hire charges<br/>Prayer timetable · The new build page"]
+    DESK --> G3["<b>Money</b> — Gift Aid<br/><b>Settings</b> — User access<br/><b>The madrasah</b> — the portal"]
+
+    APP["📱 <b>The phone app</b> — a separate repository, the same Supabase project.<br/>Notices, hall bookings, nikāḥ dates and requests for the imam's advice<br/>are written there and arrive in these screens"]
+    APP -.-> DESK
+
+    NAME["<b>The heading is not called Settings.</b><br/>The masjid asked for one, and the grouping was<br/>right while the word was not: <i>settings</i> means<br/>configuration — who may sign in, where mail goes.<br/>A volunteer looking for the hall hire prices will<br/>search for the word <i>website</i>"]
+    G2 -.-> NAME
+
+    classDef core fill:#3C0B2A,stroke:#C6A24C,stroke-width:3px,color:#F5F1E8,font-size:16px
+    classDef live fill:#EDE7DD,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    classDef row fill:#2A0E1F,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef out fill:#F5F1E8,stroke:#C9BFB2,color:#6E616A
+    classDef warn fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22
+    class REPO core
+    class SITE,DESK,MAD live
+    class G1,G2,G3 row
+    class APP out
+    class NAME warn

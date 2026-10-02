@@ -1,0 +1,29 @@
+flowchart TB
+    P["🧕 <b>Somebody in the congregation</b><br/>writes to the imam from the phone app,<br/>giving their name, phone and email<br/>— because he has to be able to answer"]
+
+    P --> REQ["<b>request_imam_advice()</b><br/>one row in <code>advice_requests</code>, under a<br/>reference like <b>IA-26-0001</b>. The app holds<br/>only the publishable key and <b>cannot read<br/>the row back</b> — RLS is on and there is<br/>no policy at all, which is the denial"]
+
+    REQ --> ALERT["✉️ <b>The office is told something is waiting</b><br/>The alert carries no address for the imam, because<br/>there is no imam mailbox to publish or to maintain"]
+
+    ALERT --> IN["🖥️ <b>The imam signs in to the Admin Centre</b><br/>account, authenticator, <code>verified_imam()</code>.<br/>His rail has one row on it"]
+
+    IN --> ANS["<b>imam_advice_answer()</b><br/>he reads it and writes back"]
+
+    ANS --> MAIL["✉️ <b>The answer is emailed to the person who asked</b><br/>read back out of the database by the function that sends it,<br/>rather than trusted from the request"]
+
+    NOTE["❓ <b>Why not a screen in the app</b><br/>The congregant has no login. A reply<br/>they cannot be shown has to be sent"]
+    NOTE -.-> MAIL
+
+    CHASE["⏰ <b>Nothing is left to be forgotten</b><br/>a daily job chases a request<br/>nobody has answered, and old ones<br/>are purged on a schedule"]
+    CHASE -.-> IN
+
+    classDef person fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    classDef ours fill:#3C0B2A,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef out fill:#F5F1E8,stroke:#C9BFB2,color:#6E616A
+    classDef good fill:#E4EDE4,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    classDef warn fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22
+    class P person
+    class REQ,ANS,IN ours
+    class ALERT out
+    class MAIL good
+    class NOTE,CHASE warn

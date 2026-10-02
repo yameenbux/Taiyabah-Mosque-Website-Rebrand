@@ -1,0 +1,22 @@
+flowchart LR
+    F["📄 <b>A file is committed</b><br/>a note, a migration, a<br/>screenshot, a build script"]
+
+    F --> EX{{"Is it named in<br/><code>_config.yml</code>'s<br/><code>exclude:</code>?"}}
+
+    EX -->|"no"| WEB["🌐 <b>It is a public web page<br/>within a minute of the push</b><br/>There is no staging"]
+    EX -->|"yes"| GIT["📁 <b>In git, not on the web</b><br/><code>db/</code> · <code>supabase/</code> · <code>tools/</code> ·<br/><code>_test/</code> · <code>docs/</code> · the templates<br/>and the build inputs"]
+
+    GIT -.-> STILL["⚠️ <b>Still readable in the public repository.</b><br/>A confidential document does not belong here at<br/>all, excluded or not. The DPIA and the breach<br/>procedure are deliberately absent"]
+
+    WEB -.-> ONCE["The <code>exclude:</code> comments are a list of things<br/>briefly published by accident — the build scripts,<br/>the screen generators, the database migrations,<br/>and, caught the day before a push, a confidential<br/>DPIA. <b>Read that file before adding anything<br/>to the root</b>"]
+
+    classDef act fill:#EDE7DD,stroke:#C9BFB2,color:#261B22
+    classDef gate fill:#3C0B2A,stroke:#C6A24C,stroke-width:2px,color:#F5F1E8
+    classDef bad fill:#F6E2DA,stroke:#B4532F,stroke-width:2px,color:#261B22
+    classDef good fill:#E4EDE4,stroke:#3F7A46,stroke-width:2px,color:#261B22
+    classDef warn fill:#F3EBD8,stroke:#8A6A18,stroke-width:2px,color:#261B22
+    class F act
+    class EX gate
+    class WEB bad
+    class GIT good
+    class STILL,ONCE warn

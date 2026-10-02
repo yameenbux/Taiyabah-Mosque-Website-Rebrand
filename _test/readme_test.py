@@ -54,8 +54,24 @@ for m in re.finditer(r"`([\w./-]+\.(?:sql|py|ts|html|js|yml|txt|xml|ico|jpg))`",
         check(any(ROOT.rglob(f)),
               "the README names %s, which is nowhere in this repository" % f)
 
+#  A badge is an image too, and its src is a URL. Checking that a URL exists
+#  as a path on disk is not a stricter test, it is a wrong one — it failed on
+#  every shields.io badge the moment one was added. Remote images are left to
+#  the renderer; local ones are still held to existing.
 for m in re.finditer(r"!\[[^\]]*\]\(([^)]+)\)", s):
-    check(pathlib.Path(m.group(1)).exists(), "missing image: %s" % m.group(1))
+    src = m.group(1)
+    if re.match(r"https?://", src):
+        continue
+    check(pathlib.Path(src).exists(), "missing image: %s" % src)
+
+#  The same for <img src="..."> — the diagrams are HTML rather than markdown,
+#  because they carry a width. A picture that 404s is a picture that 404s
+#  whichever syntax put it there.
+for m in re.finditer(r'<img[^>]+src="([^"]+)"', s):
+    src = m.group(1)
+    if re.match(r"https?://", src):
+        continue
+    check(pathlib.Path(src).exists(), "missing image: %s" % src)
 
 #  THE FOLDER LIST. This is the assertion that goes stale first: a new staff
 #  area is built, and the README keeps listing the old set.
@@ -71,7 +87,18 @@ for d in served:
           '"What is in here" table' % d)
 
 #  And the migrations. Same failure, one layer down.
-for f in sorted((ROOT / "db").glob("0*.sql")):
+#
+#  This globbed "0*.sql" until 2 October 2026, which meant it stopped covering
+#  anything the day migrations reached 100 — and it stopped SILENTLY, because a
+#  glob that matches fewer files does not complain. Twenty-four applied
+#  migrations had accumulated behind it, every one of them 1xx. The pattern is
+#  "[0-9]*.sql" now, and the floor below says so: if this ever matches fewer
+#  files than the repository plainly has, it is this check that is broken.
+mig = sorted((ROOT / "db").glob("[0-9]*.sql"))
+check(len(mig) >= 100,
+      "only %d numbered migrations found — this check is not looking at the "
+      "repository it thinks it is" % len(mig))
+for f in mig:
     n = f.name
     if "_test" in n or "PRECHECK" in n or "ROLLBACK" in n:
         continue
