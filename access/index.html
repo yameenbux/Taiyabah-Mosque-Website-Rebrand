@@ -814,8 +814,31 @@
               <span><b>Teacher</b><i>The classes this person teaches, and nothing else. Their register, the children in those classes, and the medical and allergy information for <b>those children only</b> &mdash; which is why the madrasah holds it. They cannot see another class, the roll as a whole, families, fees or admissions, and the database refuses them rather than the screen hiding a button. No second step is needed to sign in.</i></span></label>
             <label class="inv-role"><input type="checkbox" value="madrasah" class="inv-r">
               <span><b>Madrasah office</b><i><b>Every child on the roll</b>, every family and their contact details, the register for all classes, and the notices. Not staff records, DBS, fees or admissions, which stay with &ldquo;Everything&rdquo;. This is the office&rsquo;s role, not a teacher&rsquo;s &mdash; tick <b>Teacher</b> above for somebody who only teaches.</i></span></label>
+            <!--  THE ONE TICK BOX "EVERYTHING" DOES NOT CONTAIN.
+
+                  Every other role on this screen is a subset of Everything.
+                  This one is not, and it is not an oversight: the masjid asked
+                  for a way somebody can put a question to the imams "private
+                  and confidential to the imam", and that cannot be true if the
+                  role meaning everything also reaches it. So verified_imam()
+                  in db/132 tests for this role ALONE - an administrator opening
+                  the portal sees no row for the inbox and the database refuses
+                  them if they ask for it anyway.
+
+                  WHICH MEANS AN ADMINISTRATOR MUST TICK THIS FOR SOMEBODY ELSE
+                  AND CANNOT TICK IT FOR THEMSELVES. set_person_roles() refuses
+                  `p_user = auth.uid()`, and the grant writes a `roles_changed`
+                  audit row naming both people. The control is accountability,
+                  not impossibility - say that honestly if anybody asks. -->
+            <label class="inv-role"><input type="checkbox" value="imam" class="inv-r">
+              <span><b>Questions for the imams</b><i>The written questions people send from
+                the app, and the ability to answer them. <b>Nothing else on this screen
+                reaches these, including &ldquo;Everything&rdquo;</b> &mdash; that is the
+                point of them. Give this only to an imam, and only to somebody who will
+                sign in and read it: a question nobody reads is worse than a form nobody
+                offered. They will need the second step to sign in.</i></span></label>
             <label class="inv-role"><input type="checkbox" value="admin" class="inv-r">
-              <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do. <b>This includes the whole madrasah portal</b>, so it does not need the box above ticked as well.</i></span></label>
+              <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do. <b>This includes the whole madrasah portal</b>, so it does not need the box above ticked as well. It does <b>not</b> include the imams&rsquo; questions &mdash; nothing does but the box above.</i></span></label>
           </div>
 
           <!-- Typing the address again, not a tick box. Granting admin or
@@ -936,8 +959,10 @@
                 <span><b>Teacher</b><i>The classes this person teaches, and nothing else.</i></span></label>
               <label class="inv-role"><input type="checkbox" value="madrasah" class="pp-r">
                 <span><b>Madrasah</b><i>The teaching side of the madrasah portal. <b>Not</b> staff records, DBS, fees or admissions.</i></span></label>
+              <label class="inv-role"><input type="checkbox" value="imam" class="pp-r">
+                <span><b>Questions for the imams</b><i>The written questions people send from the app, and answering them. <b>Not reached by &ldquo;Everything&rdquo;</b> &mdash; see the invitation screen.</i></span></label>
               <label class="inv-role"><input type="checkbox" value="admin" class="pp-r">
-                <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do.</i></span></label>
+                <span><b>Everything</b><i>Every payment, every record, and the power to change what anybody else can do. Not the imams&rsquo; questions.</i></span></label>
               <div class="pp-acts">
                 <button type="button" class="go" id="pp-save-roles">Save what they can do</button>
               </div>

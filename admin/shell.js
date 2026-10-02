@@ -156,7 +156,26 @@
           not in the rail. */
       { key: "volunteers",  href: "volunteers/",  icon: "basket", name: "Food Bank volunteers",
         needs: ["admin", "hall_office"],
-        what: "Mark rung, helping or withdrawn; download the list" }
+        what: "Mark rung, helping or withdrawn; download the list" },
+      /*  THE ONLY ROW IN THIS WHOLE RAIL THAT `admin` DOES NOT REACH, and the
+          only one whose `needs` is a single role (db/132).
+
+          It is filed here because it IS something that arrived and somebody
+          must answer. It is not filed under a heading of its own, because a
+          heading called "The imams" visible only to the imam would tell every
+          other account that such a thing exists without saying what - and a
+          group whose rows are all hidden is not drawn at all, so an imam who
+          holds nothing else gets this row under this heading and nothing more,
+          which reads as a working screen.
+
+          needs MUST stay ["imam"] and must not gain "admin". The pair test
+          that checks every row against the screen behind it would pass if
+          both sides were widened together, so the reason lives here in words:
+          "private and confidential to the imam" is what the masjid asked for,
+          and a role that the administrators' role contains is not that. */
+      { key: "advice",      href: "advice/",      icon: "chat",   name: "Questions for the imams",
+        needs: ["imam"],
+        what: "Read a question somebody sent in confidence, and answer it - your reply is emailed to them" }
     ]},
     { label: "Money", areas: [
       { key: "giftaid",     href: "giftaid/",     icon: "heart",  name: "Gift Aid",
@@ -392,8 +411,21 @@
         no-role case, where there is no "somewhere else" for the link to
         compete with. */
     var railRoles = opts.roles || [];
+    /*  THIS LIST MUST MATCH portals/app.js's `mayEnter`, AND THAT IS THE
+        WHOLE BUG IT KEEPS FIXING. The two have disagreed twice: once when
+        this said admin-only while /venue/ admitted the hall office, and once
+        when the Food Bank row said admin-only while volunteers/app.js had
+        always admitted both. A rail offering a door that refuses you, or
+        hiding one that opens, is the same unkindness either way.
+
+        `imam` joined on 2 October (db/132) because the imams' inbox hangs off
+        the Admin Centre and nowhere else - the alert email points at its front
+        door - so an imam who was sent "back to the website" instead would have
+        no way back to the one screen that is theirs. portals/app.js admits
+        them and draws their one row rather than an error. */
     var canAdmin = railRoles.indexOf("admin") !== -1 ||
-                   railRoles.indexOf("hall_office") !== -1;
+                   railRoles.indexOf("hall_office") !== -1 ||
+                   railRoles.indexOf("imam") !== -1;
     /*  A PARENT IS NOT "NO ROLE", THOUGH THEY HAVE NO ROLE ROW.
 
         29 September. Parents deliberately have no user_roles row (a row

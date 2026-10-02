@@ -156,6 +156,11 @@
       admin:       "Everything",
       hall_office: "Hall bookings and nikāḥ",
       madrasah:    "Madrasah",
+      //  db/132. Reads "Imams' questions" rather than "Imam", because the row
+      //  describes what somebody can reach and not what they are - and because
+      //  "Imam" beside "Everything" would read as the smaller of the two,
+      //  which is the one thing it is not.
+      imam:        "Imams' questions",
       //  KEPT, though nothing grants it any more. Until 18 September the
       //  "Madrasah" tick box wrote `teacher`, and if any account anywhere
       //  still holds it this list is what stops that row rendering the raw
