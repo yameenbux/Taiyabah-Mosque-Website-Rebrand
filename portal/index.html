@@ -769,7 +769,28 @@
     one paragraph and a list of promises. With a teacher's classes and
     tonight's figures on it, 820 leaves two thirds of a laptop screen empty
     and makes a page with real content on it look unfinished. */
-.role-land{max-width:1140px;}
+/*  NO CAP. Third time this number has been argued with, so this time the
+    reasoning is written down rather than the number raised again: 820 became
+    1140 on 28 September, and on a 1885px screen 1140 still left a third of
+    the desk empty while the rail, the gate band and the admin panel beside it
+    all ran to the edge.
+
+    The cap was never protecting the page — it was protecting the PROSE on it,
+    and prose is capped where prose lives: .rl-lead at 62ch and .tc-gate at
+    78ch below. Everything else on this panel is a band, a grid of figures or
+    a grid of cards, all of which are laid out in columns that reflow and are
+    better for the extra width, not worse. #md-panel, the administrator's
+    equivalent, has never had a cap at all, which is why the Today screen
+    filled the window and this one did not.
+
+    If a future block of running text is added here, give THAT block a ch
+    measure. Do not put the cap back on the container. */
+
+/*  AND 78ch RATHER THAN NONE, for the band that says the register is not
+    open. It is the one full-width paragraph on the page, and at 1625px with
+    no cap it is a 200-character line — the exact fault the container cap was
+    hiding. */
+.tc-gate{max-width:78ch;}
 
 /*  THE HADITH BANNER.
     A band across the top of the page rather than a centred stack. Plum,

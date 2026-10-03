@@ -336,6 +336,39 @@ with sync_playwright() as p:
     b = p.chromium.launch(executable_path="/opt/pw-browsers/chromium")
 
     # =====================================================================
+    #  0. THE TEACHER'S PANEL FILLS A WIDE SCREEN, AND ITS PROSE DOES NOT
+    #
+    #  .role-land carried max-width:820px, then 1140px, and on a 1885px
+    #  screen it still left a third of the desk empty while the rail, the
+    #  gate band and the administrator's own panel all ran to the edge. The
+    #  masjid asked about it twice. The cap was never protecting the page, it
+    #  was protecting the PROSE on it, so the cap came off the container and
+    #  went on the two paragraphs that need a measure.
+    #
+    #  Asserted as a RATIO of the window rather than a pixel count, so this
+    #  says "fills the screen" rather than "is 1489 wide" - a number that
+    #  would be wrong on the next screen somebody opens it on.
+    pgw, errsw = open_as(b, ["teacher"], w=1885, h=1100, myclasses=MYCLASSES)
+    wide = pgw.evaluate("""() => {
+        var s = document.getElementById('tc-panel');
+        var g = document.getElementById('tc-gate');
+        var r = s ? s.getBoundingClientRect() : null;
+        var rg = g && !g.hidden ? g.getBoundingClientRect() : null;
+        return {panel: r ? r.width : 0, gate: rg ? rg.width : 0,
+                win: window.innerWidth,
+                hscroll: document.documentElement.scrollWidth > window.innerWidth};
+    }""")
+    check(wide["panel"] > wide["win"] * 0.72,
+          "the teacher's panel leaves a wide screen half empty: %d of %d"
+          % (wide["panel"], wide["win"]))
+    check(0 < wide["gate"] < 820,
+          "the 'register is not open' band has no reading measure at 1885px: "
+          "%d px" % wide["gate"])
+    check(not wide["hscroll"], "a wide screen scrolls sideways")
+    check(not errsw, "the teacher page threw at 1885px: %r" % (errsw,))
+    pgw.close()
+
+    # =====================================================================
     #  1. AN ADMINISTRATOR GETS THE CONSOLE
     # =====================================================================
     pg, errs = open_as(b, ["admin"])
