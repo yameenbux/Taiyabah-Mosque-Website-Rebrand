@@ -6186,9 +6186,15 @@ window.TAIYABAH_PUBLIC = {
     /* ---------------------------------------------------------------------
        Real availability.
 
-       Read from the hall_availability view, which holds nothing but the dates
-       of bookings the office has CONFIRMED. A request nobody has agreed to
-       yet does not block anyone else's date.
+       Read from hall_availability(), which holds nothing but the dates of
+       bookings the office has CONFIRMED. A request nobody has agreed to yet
+       does not block anyone else's date.
+
+       THE FUNCTION, NOT THE VIEW OF THE SAME NAME. The view decides the
+       masjid with sole_masjid(), which raises the moment a second masjid
+       exists — so reading it would empty this calendar for Taiyabah on
+       somebody else's onboarding day. The function is given the masjid
+       instead. Same columns, so nothing below this changed.
 
        Until this has loaded — and if it fails to load at all — every day
        stays 'unknown'. The calendar must never claim a date is free when it
@@ -6204,11 +6210,14 @@ window.TAIYABAH_PUBLIC = {
       var base = String(cfg.SUPABASE_URL).trim()
                    .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
 
-      fetch(base + '/rest/v1/hall_availability?select=booking_date', {
+      fetch(base + '/rest/v1/rpc/hall_availability', {
+        method: 'POST',
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
-        }
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_masjid: cfg.MASJID })
       }).then(function(res){
         if(!res.ok) throw new Error('availability ' + res.status);
         return res.json();
