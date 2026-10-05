@@ -173,7 +173,7 @@
 
     // ---- reading ------------------------------------------------------------
     function load() {
-      return sb.rpc("madrasah_calendar").then(function (res) {
+      return sb.rpc("madrasah_calendar", { p_masjid: cfg.MASJID }).then(function (res) {
         if (res.error) throw new Error(res.error.message);
         var d = res.data || {};
         YEAR     = d.year || null;
