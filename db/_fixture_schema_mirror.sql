@@ -28,6 +28,18 @@ create schema if not exists auth;
    no test. Mirror what is really there, not the minimum that compiles. */
 create table auth.users (id uuid primary key, email text);
 
+/* Two-step. 139 turns entirely on this: a platform_admins row on an account
+   with no verified factor grants nothing, because is_platform_admin() requires
+   aal2. A fixture without it could not test the one failure that locks the
+   owner out of his own company. */
+create table auth.mfa_factors (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null,
+  factor_type text not null default 'totp',
+  status text not null default 'verified',
+  created_at timestamptz not null default now()
+);
+
 -- Test seam. Production reads auth.uid() and auth.jwt(); here a row stands in
 -- for the session so a test can become a different person.
 create table public._test_session (uid uuid, aal2 boolean default true);
