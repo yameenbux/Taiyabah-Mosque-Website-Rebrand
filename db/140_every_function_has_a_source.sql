@@ -1654,11 +1654,23 @@ commit;
 --     raises the day a second masjid exists, so anything still selecting from
 --     either view starts failing then, with an error about passing a slug.
 --
---     The website reads neither — index_template.html calls the RPC — but the
---     congregation app is a separate repository and has not been checked, so
---     dropping them or rewriting them is not a thing to do blind. The step is
---     to find the app's call sites first, move them to the functions, and then
---     drop both views in a migration of their own.
+--     CHECKED ON 5 OCTOBER 2026, and the answer is yes: the congregation app
+--     reads BOTH views directly, over REST, with the publishable key —
+--     `GET /rest/v1/notices_live?select=*` and
+--     `GET /rest/v1/hall_availability?select=booking_date`. So both views are
+--     load-bearing today and both stop working the day a second masjid exists.
+--
+--     The app's fix is small, because notices_live(text) and
+--     hall_availability(text) already exist and return the same shapes: change
+--     the two GETs to POSTs against /rest/v1/rpc/ with {"p_masjid":"taiyabah"}.
+--     Once that ships, neither view has a consumer and both can be dropped,
+--     which removes the fuse rather than resetting it.
+--
+--     Audited at the same time and CLEAN: the website (four call sites, all
+--     naming a masjid), the Stripe webhook (every money function gets
+--     p_masjid from one shared args object), and both screen repositories,
+--     which turn out not to touch Supabase at all — the interactive screens
+--     read a static foyer-content.json and the home screen only caches.
 --
 --  2. masjid_theme(text), below, which should be dropped rather than captured.
 -- ===========================================================================
