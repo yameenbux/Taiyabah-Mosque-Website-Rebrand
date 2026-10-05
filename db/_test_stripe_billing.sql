@@ -317,8 +317,11 @@ select pg_temp.ok('a cancelled subscription switches collection off and lets the
 -- ---------------------------------------------------------------------------
 -- What the console is told, in words a person can act on.
 -- ---------------------------------------------------------------------------
-select pg_temp.ok('the console is told the founding masjid is not billed, and why',
-  (public.billing_direct_debit('founder') ->> 'where_it_stands') ilike '%not billed%');
+/* 144 moved the long version to its own key, because the panel above this one
+   already prints the agreement clause in full and printing it twice three
+   lines apart is what the screen actually did. */
+select pg_temp.ok('the console is still told the founding masjid is not billed, and why',
+  (public.billing_direct_debit('founder') ->> 'not_billed_sentence') ilike '%not billed%');
 select pg_temp.ok('a masjid with nothing set up is told to send the link',
   (public.billing_direct_debit('founder') -> 'auto_bill')::boolean = false);
 
@@ -425,3 +428,15 @@ select pg_temp.ok('and whether the setup fee still stands',
   (public.billing_direct_debit('alpha') ->> 'setup_fee_state') = 'due');
 
 select 'all assertions passed (including /start inputs)' as result;
+
+-- ---------------------------------------------------------------------------
+-- 144. Said once, and punctuated once.
+-- ---------------------------------------------------------------------------
+select pg_temp.ok('the not-billed sentence does not double the full stop the reason already ends with',
+  (public.billing_direct_debit('founder') ->> 'not_billed_sentence') not like '%..%');
+select pg_temp.ok('and it still ends in one',
+  (public.billing_direct_debit('founder') ->> 'not_billed_sentence') like '%.');
+select pg_temp.ok('where_it_stands no longer repeats the agreement clause the panel above already prints',
+  (public.billing_direct_debit('founder') ->> 'where_it_stands') not ilike '%clause%');
+select pg_temp.ok('but it still says why a Direct Debit is refused',
+  (public.billing_direct_debit('founder') ->> 'where_it_stands') ilike '%collects itself%');
