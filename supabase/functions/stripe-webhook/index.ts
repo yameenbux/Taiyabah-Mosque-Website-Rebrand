@@ -101,11 +101,31 @@ function signers(): Signer[] {
     const secret = Deno.env.get(key);
     if (secret) out.push({ masjid: "taiyabah", secret });
   }
-  for (const [key, secret] of Object.entries(Deno.env.toObject())) {
-    const m = /^STRIPE_WEBHOOK_SECRET__([A-Z0-9_]+?)(_TEST)?$/.exec(key);
-    if (m && secret) {
-      out.push({ masjid: m[1].toLowerCase().replaceAll("_", "-"), secret });
+  /* GUARDED, because this runs at module load and a throw here would take the
+     whole function down — every delivery for every masjid, including the two
+     named secrets above that were read perfectly well a line earlier.
+
+     Deno.env.toObject() needs blanket env access. Deno.env.get() needs only
+     the one variable, so a runtime that grants env by allow-list would serve
+     the loop above and throw on this one. Whether Supabase grants it wholesale
+     was not verifiable from here, and "it probably works" is not a good enough
+     reason to risk the payment path.
+
+     So a failure here costs the ability to find ADDITIONAL masajid, and
+     nothing else: Taiyabah keeps working on the unsuffixed names. */
+  try {
+    for (const [key, secret] of Object.entries(Deno.env.toObject())) {
+      const m = /^STRIPE_WEBHOOK_SECRET__([A-Z0-9_]+?)(_TEST)?$/.exec(key);
+      if (m && secret) {
+        out.push({ masjid: m[1].toLowerCase().replaceAll("_", "-"), secret });
+      }
     }
+  } catch (err) {
+    console.error(
+      "stripe-webhook: could not enumerate the environment, so only the " +
+      "unsuffixed secrets are available. Any other masjid's webhook will be " +
+      `rejected until this is fixed. ${(err as Error).message}`,
+    );
   }
   return out;
 }
