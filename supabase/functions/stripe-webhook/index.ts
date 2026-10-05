@@ -71,10 +71,46 @@ const stripe = new Stripe("", {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const SECRETS = [
-  Deno.env.get("STRIPE_WEBHOOK_SECRET"),
-  Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST"),
-].filter((s): s is string => !!s && s.length > 0);
+/* WHICH MASJID SENT THIS, and why it is derived from the signing secret.
+ *
+ * Each masjid takes its own money, through its own Stripe account, so each
+ * has its own webhook signing secret. The secret that verifies a delivery is
+ * therefore the identity of the masjid that sent it — and that is the whole
+ * point: a forged delivery cannot claim to be another masjid, because the
+ * name never comes out of the request body. It comes out of an HMAC only the
+ * real Stripe account can produce.
+ *
+ * Adding a masjid is an environment variable and a Stripe endpoint. It is not
+ * a code change and not a deploy:
+ *
+ *     STRIPE_WEBHOOK_SECRET__BOLTON_WELFARE        whsec_…   live
+ *     STRIPE_WEBHOOK_SECRET__BOLTON_WELFARE_TEST   whsec_…   test
+ *
+ * The part after the double underscore is the slug in upper case with hyphens
+ * written as underscores, because an environment variable name cannot contain
+ * a hyphen. A slug is ^[a-z][a-z0-9-]*$ and may never contain an underscore,
+ * so translating it back is unambiguous.
+ *
+ * The two original unsuffixed names are kept and mean Taiyabah, so this
+ * deploys without touching the configuration already in place. */
+type Signer = { masjid: string; secret: string };
+
+function signers(): Signer[] {
+  const out: Signer[] = [];
+  for (const key of ["STRIPE_WEBHOOK_SECRET", "STRIPE_WEBHOOK_SECRET_TEST"]) {
+    const secret = Deno.env.get(key);
+    if (secret) out.push({ masjid: "taiyabah", secret });
+  }
+  for (const [key, secret] of Object.entries(Deno.env.toObject())) {
+    const m = /^STRIPE_WEBHOOK_SECRET__([A-Z0-9_]+?)(_TEST)?$/.exec(key);
+    if (m && secret) {
+      out.push({ masjid: m[1].toLowerCase().replaceAll("_", "-"), secret });
+    }
+  }
+  return out;
+}
+
+const SECRETS = signers();
 
 const db = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -93,8 +129,19 @@ const PURPOSES = ["general", "sadaqah", "lillah", "newbuild"];
    version was not: an insert that fails silently reads exactly like one that
    worked, which is how forty-two payments went unrecorded for a fortnight
    while this endpoint answered 200 to every one of them. */
-async function auditPayment(action: string, detail: Record<string, unknown>) {
+async function auditPayment(
+  masjid: string,
+  action: string,
+  detail: Record<string, unknown>,
+) {
+  /* p_masjid is what selects the overload that does not guess. The original
+     record_unmatched_payment(p_action, p_detail) resolves the masjid with
+     sole_masjid(), which RAISES as soon as a second masjid exists — so on
+     the day of the second onboarding this safety net would have broken for
+     a third time, and in the same silent way, with Stripe still being told
+     200. Passing the masjid is what stops that. */
   const { error } = await db.rpc("record_unmatched_payment", {
+    p_masjid: masjid,
     p_action: action,
     p_detail: detail,
   });
@@ -126,10 +173,12 @@ Deno.serve(async (req) => {
   const raw = await req.text();
 
   let event: Stripe.Event | null = null;
+  let masjid = "";
   let lastError = "";
-  for (const secret of SECRETS) {
+  for (const signer of SECRETS) {
     try {
-      event = await stripe.webhooks.constructEventAsync(raw, signature, secret);
+      event = await stripe.webhooks.constructEventAsync(raw, signature, signer.secret);
+      masjid = signer.masjid;
       break;
     } catch (err) {
       lastError = (err as Error).message;
@@ -164,7 +213,7 @@ Deno.serve(async (req) => {
     // reference — typically by opening a Payment Link URL directly. Real
     // money, so it is logged rather than shrugged off.
     console.error(`stripe-webhook: ${sessionId} arrived with no client_reference_id`);
-    const audited = await auditPayment("payment_without_reference", {
+    const audited = await auditPayment(masjid, "payment_without_reference", {
       session: sessionId,
       amount_pence: amount,
       payment_link: (session.payment_link as string) ?? null,
@@ -193,7 +242,7 @@ Deno.serve(async (req) => {
     // not claimed. The only way anybody finds out is if something says so.
     if (ga.fieldMissing) {
       console.error(`stripe-webhook: a ${purpose} donation had NO Gift Aid field on the checkout`);
-      await auditPayment("gift_aid_field_missing", {
+      await auditPayment(masjid, "gift_aid_field_missing", {
         session: sessionId,
         purpose,
         payment_link: (session.payment_link as string) ?? null,
@@ -201,6 +250,8 @@ Deno.serve(async (req) => {
     }
 
     const { data, error } = await db.rpc("record_public_donation", {
+      /* From the verified signature, never from the payload. */
+      p_masjid: masjid,
       p_session_id: sessionId,
       p_amount_p: amount,
       p_purpose: purpose,
@@ -241,7 +292,7 @@ Deno.serve(async (req) => {
     // Money has still been taken, so this is audited rather than ignored — but
     // not retried, because retrying will not teach this function a new prefix.
     console.error(`stripe-webhook: ${sessionId} has an unrecognised reference "${reference}"`);
-    const audited = await auditPayment("payment_with_unknown_reference_kind", {
+    const audited = await auditPayment(masjid, "payment_with_unknown_reference_kind", {
       session: sessionId,
       reference,
       amount_pence: amount,
@@ -254,6 +305,10 @@ Deno.serve(async (req) => {
   }
 
   let args: Record<string, unknown> = {
+    /* Selects the p_masjid overload of whichever function kind.rpc names.
+       Without it PostgREST picks the one that resolves the masjid itself,
+       and that one stops working the day a second masjid exists. */
+    p_masjid: masjid,
     p_reference: reference,
     p_session_id: sessionId,
     p_amount_p: amount,
@@ -269,7 +324,7 @@ Deno.serve(async (req) => {
 
     if (ga.fieldMissing) {
       console.error(`stripe-webhook: ${reference} had NO Gift Aid field on the checkout`);
-      await auditPayment("gift_aid_field_missing", {
+      await auditPayment(masjid, "gift_aid_field_missing", {
         reference,
         session: sessionId,
         payment_link: (session.payment_link as string) ?? null,
