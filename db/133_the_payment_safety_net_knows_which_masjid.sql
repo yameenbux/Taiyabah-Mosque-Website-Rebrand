@@ -73,6 +73,25 @@ begin
 end;
 $$;
 
+/* THE GRANTS GO HERE, NOT AT THE END OF THE FILE, and that is the whole point
+   of this placement. A new function is created with EXECUTE granted to PUBLIC
+   by default, and the files in this folder are applied BY HAND, one statement
+   at a time, in the SQL editor. With the revoke at the bottom, every statement
+   between the create and the revoke is a window in which anon can call it.
+
+   This was not hypothetical. Applying this very migration on 5 October left
+   record_unmatched_payment(text,text,jsonb) executable by anon and
+   authenticated — an anonymous visitor could have written rows into any live
+   masjid's audit log — because the MCP tooling timed out before reaching the
+   bottom of the file. Caught by checking has_function_privilege afterwards
+   rather than assuming the file had run to the end.
+
+   Mirrors the existing two-argument form: service_role only. Nothing in a
+   browser has any business writing a payment audit row, and the webhook is
+   the only caller. */
+revoke all on function public.record_unmatched_payment(text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.record_unmatched_payment(text, text, jsonb) to service_role;
+
 -- ---------------------------------------------------------------------------
 -- The old two-argument form STAYS, and is now a shim over the one above.
 --
@@ -109,11 +128,6 @@ comment on function public.record_unmatched_payment(text, jsonb) is
   'DEPRECATED. Calls sole_masjid() and so raises once a second masjid exists. '
   'Kept only until the stripe-webhook that passes p_masjid is deployed; drop it then.';
 
--- Grants mirror the existing function exactly: service_role only. Nothing in a
--- browser has any business writing a payment audit row, and the webhook is the
--- only caller.
-revoke all on function public.record_unmatched_payment(text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.record_unmatched_payment(text, text, jsonb) to service_role;
 
 -- ---------------------------------------------------------------------------
 -- TO REVERSE. The three-argument form is additive, so reversing is a drop:
@@ -127,7 +141,21 @@ grant execute on function public.record_unmatched_payment(text, text, jsonb) to 
 -- Note that `create or replace function` PRESERVES the existing grants — checked
 -- rather than assumed, because if it reset them the two-argument form would
 -- have silently become executable by anon, and an anonymous visitor could then
--- write rows into the masjid's audit log.
+-- write rows into the masjid's audit log. A NEW function is the opposite case:
+-- it starts PUBLIC, which is why its revoke sits next to its create above.
+--
+-- APPLIED to production on 5 October 2026, statement by statement because the
+-- MCP tooling timed out on the file as a whole. Verified afterwards: two forms,
+-- one taking p_masjid, nothing reachable from a browser, all three refusal
+-- paths correct, and the write path exercised inside a subtransaction that
+-- rolled itself back so no test row reached the audit log.
+--
+-- ONE STATEMENT DID NOT APPLY: the `comment on function` for the two-argument
+-- form times out repeatedly while every other statement goes through — the
+-- same symptom this repo already records for
+-- `drop function public.masjid_theme(text)`. It is documentation only; the
+-- deprecation and its deadline are stated in this file, which is the record
+-- that matters. Re-run it from the Supabase SQL editor when convenient.
 
 -- ---------------------------------------------------------------------------
 -- Verification, in the house style: both forms present, and nothing public.
