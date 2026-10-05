@@ -259,7 +259,7 @@ select pg_temp.ok('paid is recorded with when, how much and how',
   (select status = 'paid' and paid_amount_p = 26900 and paid_method = 'bacs_debit'
       and paid_on is not null and paid_reference = 'pi_in_1'
      from public.invoices where stripe_invoice_id = 'in_1'));
-select pg_temp.ok('the lines were rewritten, not doubled',
+select pg_temp.ok('the lines are not doubled by a second delivery',
   (select count(*) from public.invoice_lines l
      join public.invoices i on i.id = l.invoice_id
     where i.stripe_invoice_id = 'in_1') = 1);
@@ -371,9 +371,25 @@ select pg_temp.raises('an exemption with no reason is refused',
 drop table public.a_table_somebody_forgot;
 delete from public.tenancy_exempt where table_name = 'a_table_somebody_forgot';
 
-select pg_temp.ok('the tables 136 and 139 added are exempt now, which is why the check was red',
+select pg_temp.ok('the tables 134, 136 and 139 added are exempt now, which is why the check was red',
   (select count(*) from public.tenancy_exempt
-    where table_name in ('invoice_lines','platform_audit')) = 2);
+    where table_name in ('invoice_lines','platform_audit','plans')) = 3);
+
+select pg_temp.ok('active_masjid is NOT exempt, because it really does carry a masjid_id',
+  not exists (select 1 from public.tenancy_exempt where table_name = 'active_masjid')
+  and exists (select 1 from pg_attribute a
+               where a.attrelid = 'public.active_masjid'::regclass
+                 and a.attname = 'masjid_id' and not a.attisdropped));
+
+-- The check itself, which is the thing that was red.
+select pg_temp.ok('every table in public is now either a masjid''s or exempt with a reason',
+  not exists (select 1 from pg_class c
+           where c.relnamespace='public'::regnamespace and c.relkind='r'
+             and c.relname not in (select e.table_name from public.tenancy_exempt e)
+             and c.relname not like '\_test%'
+             and not exists (select 1 from pg_attribute a
+                              where a.attrelid=c.oid and a.attname='masjid_id'
+                                and not a.attisdropped)));
 
 select 'all assertions passed' as result;
 

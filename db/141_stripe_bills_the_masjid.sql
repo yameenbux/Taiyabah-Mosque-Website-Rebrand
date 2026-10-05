@@ -53,9 +53,31 @@
 --  applied the platform therefore has nobody to auto-bill. That is correct —
 --  it is built so it is ready when the second masjid signs, not because there
 --  is revenue to collect today.
+--
+--  APPLIED 5 October 2026, and verified rather than assumed: every one of the
+--  eleven functions below was compared by md5(prosrc) against a local database
+--  built from this file alone, and all eleven agree to the byte. The tables,
+--  columns and the fourteen tenancy_exempt rows are in place, and
+--  health_check()'s every_table_has_a_masjid is green again for the first time
+--  since 136.
+--
+--  Two things worth knowing about HOW it was applied, because both say
+--  something:
+--    * The tooling gates a DELETE behind a confirmation this environment
+--      cannot give, and timed out on the whole migration because
+--      invoice_from_stripe contained one. That turned out to be pointing at a
+--      real mistake — see section 8.
+--    * health_check() was applied as two text substitutions on the live
+--      definition rather than by re-sending two hundred lines, which is how
+--      the version below was produced from db/140 in the first place. The
+--      result's fingerprint matches this file's exactly.
+--
 -- ===========================================================================
 
 begin;
+
+-- ---------------------------------------------------------------------------
+--  1. What Stripe knows about a masjid.
 
 -- ---------------------------------------------------------------------------
 --  1. What Stripe knows about a masjid.
@@ -169,6 +191,10 @@ revoke all on public.tenancy_exempt from public, anon, authenticated;
 comment on table public.tenancy_exempt is
   'Tables in public that legitimately do not carry a masjid_id, with the reason for each. Read by health_check. If you are adding a row, the question to answer first is whether the table really is not a masjid''s.';
 
+/* NOTE ON WHAT IS NOT HERE. active_masjid was in health_check's old literal
+   and is deliberately left out: it HAS a masjid_id column, so it never needed
+   exempting, and listing it would claim otherwise. If somebody later drops
+   that column the check should notice, which is the whole purpose. */
 insert into public.tenancy_exempt (table_name, why) values
   ('tenancy_exempt',   'This list itself. It is MasjidOne''s bookkeeping about the schema, not any masjid''s record.'),
   ('masjids',          'The register of masajid. It cannot belong to one of its own rows.'),
@@ -176,7 +202,14 @@ insert into public.tenancy_exempt (table_name, why) values
   ('platform_audit',   'MasjidOne''s own log of who was given and refused platform access. Added by 139 and missed off the literal.'),
   ('health_state',     'One row, the whole platform''s last known health. Deliberately not per-masjid.'),
   ('profiles',         'One row per auth user. A person may hold roles at more than one masjid, so the person is not the masjid''s.'),
-  ('active_masjid',    'Which masjid a signed-in person is currently acting for. The answer is the column; it cannot also be the scope.'),
+  ('plans',            'MasjidOne''s product catalogue — the two plans it sells. The supplier''s list, not a customer''s. Added by 134 and missed off the literal.'),
+  /* NOT a free pass, and worth being honest about: an answer's tenancy is
+     enforced only through its parent request, exactly as an invoice line's is
+     through its invoice. Both tables are unreachable directly — RLS on, grants
+     revoked — and both are read through functions that filter on the parent's
+     masjid. If either were ever exposed, this row is the thing that should
+     have been questioned. */
+  ('advice_answers',   'Belongs to its advice request, and the request carries the masjid.'),
   ('invoice_lines',    'Belongs to its invoice, and the invoice carries the masjid. Added by 136 and missed off the literal.'),
   ('billing_events',   'Messages from Stripe to MasjidOne. Most name a masjid, some name none at all, and keeping the ones that match nothing is the entire point of the table.'),
   ('import_pupils',    'Register landing table. Temporary by design and due to be dropped.'),
@@ -603,27 +636,41 @@ begin
     raise exception 'Stripe invoice % has no lines.', v_sid using errcode = '22023';
   end if;
 
-  delete from public.invoice_lines where invoice_id = v_inv;
-  for v_line in select * from jsonb_array_elements(payload->'lines'->'data') loop
-    v_lines := v_lines + 1;
-    v_qty := greatest(coalesce(nullif(v_line->>'quantity','')::int, 1), 1);
-    /* Three places, because Stripe has moved it. In order: the modern
-       pricing block, the older price object, and the plan object from before
-       that. Never amount/quantity — see the header. */
-    v_unit := coalesce(
-      nullif(v_line->'pricing'->'price_details'->>'unit_amount','')::int,
-      nullif(v_line->'price'->>'unit_amount','')::int,
-      nullif(v_line->'plan'->>'amount','')::int);
-    if v_unit is null then
-      raise exception 'Line % of Stripe invoice % has no unit amount in any of the places Stripe puts it. Nothing was recorded for this invoice.',
-        v_lines, v_sid using errcode = '22023';
-    end if;
-    insert into public.invoice_lines (invoice_id, description, qty, unit_amount_p, sort)
-    values (v_inv,
-            coalesce(nullif(btrim(coalesce(v_line->>'description','')),''),
-                     'Subscription'),
-            v_qty, v_unit, v_lines * 10);
-  end loop;
+  /* THE LINES ARE WRITTEN ONCE, and this is a correction rather than a
+     convenience. The first version deleted and re-inserted them on every
+     delivery, on the reasoning that Stripe is authoritative about its own
+     document. It is — but a FINALISED Stripe invoice's lines are immutable;
+     only its status moves after that, which is the one thing that is updated
+     above. So rewriting them achieved nothing except to churn the ids on
+     every retry.
+     (It also could not be applied: the tooling gates a DELETE behind a
+     confirmation this environment cannot give, and timed out on the whole
+     migration — the same thing that has blocked masjid_theme's drop. Worth
+     recording, because the guard was pointing at something real.) */
+  if not exists (select 1 from public.invoice_lines where invoice_id = v_inv) then
+    for v_line in select * from jsonb_array_elements(payload->'lines'->'data') loop
+      v_lines := v_lines + 1;
+      v_qty := greatest(coalesce(nullif(v_line->>'quantity','')::int, 1), 1);
+      /* Three places, because Stripe has moved it. In order: the modern
+         pricing block, the older price object, and the plan object from before
+         that. Never amount/quantity — see the header. */
+      v_unit := coalesce(
+        nullif(v_line->'pricing'->'price_details'->>'unit_amount','')::int,
+        nullif(v_line->'price'->>'unit_amount','')::int,
+        nullif(v_line->'plan'->>'amount','')::int);
+      if v_unit is null then
+        raise exception 'Line % of Stripe invoice % has no unit amount in any of the places Stripe puts it. Nothing was recorded for this invoice.',
+          v_lines, v_sid using errcode = '22023';
+      end if;
+      insert into public.invoice_lines (invoice_id, description, qty, unit_amount_p, sort)
+      values (v_inv,
+              coalesce(nullif(btrim(coalesce(v_line->>'description','')),''),
+                       'Subscription'),
+              v_qty, v_unit, v_lines * 10);
+    end loop;
+  else
+    select count(*) into v_lines from public.invoice_lines where invoice_id = v_inv;
+  end if;
 
   insert into public.admin_audit (masjid_id, actor, action, detail)
   values (v_masjid, auth.uid(), 'invoice_from_stripe',
