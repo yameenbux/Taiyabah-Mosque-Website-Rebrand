@@ -113,7 +113,28 @@ alter table public.prayer_years add constraint prayer_years_pkey primary key (ma
 alter table public.user_roles add constraint user_roles_pkey primary key (user_id, masjid_id, role);
 create unique index masjids_slug_key on public.masjids (slug);
 
--- Gate functions, copied verbatim from production.
+/* Gate functions. THE AUTHORITY FOR THESE IS NOW db/140, which holds their
+   production definitions; what is here has to agree with it, allowing for
+   vintage — see the next paragraph.
+
+   THIS FIXTURE IS THE PRE-139 BASE, deliberately. platform_admins has no
+   revoked_at here because db/139 adds it, and a suite that tests 139 applies
+   139 on top of this file, which replaces is_platform_admin() with the
+   version that reads it. So the body below is the older one ON PURPOSE. Do
+   not "correct" it to production's — the column it would need does not exist
+   until 139 has run, and the file stops with "column p.revoked_at does not
+   exist".
+
+   current_masjid() IS A DIFFERENT MATTER, and it was wrong until 5 October
+   2026. Nothing re-creates it, so every suite used whatever is here, and what
+   was here had no JWT branch: production reads app_metadata.masjid_id first
+   and this did not. Every test that turned on which masjid a caller belongs
+   to was testing a paraphrase. It is now verbatim.
+
+   The rule this file keeps relearning, in its own words: when a test fails for
+   a reason that smells like the fixture, fix the fixture. The corollary is the
+   expensive one — when a test PASSES against a paraphrase, nothing smells at
+   all. */
 create or replace function public.is_platform_admin() returns boolean
  language sql stable security definer set search_path to 'public','pg_temp' as $function$
   select public.is_aal2()
@@ -144,17 +165,24 @@ end $function$;
 create or replace function public.current_masjid() returns uuid
  language sql stable security definer set search_path to 'public','pg_temp' as $function$
   with chosen as (
-    select 2 as pri, a.masjid_id from public.active_masjid a where a.user_id = auth.uid()
+    select 1 as pri, nullif(current_setting('request.jwt.claims', true)::jsonb
+                    -> 'app_metadata' ->> 'masjid_id', '')::uuid as id
     union all
-    select 3, r.masjid_id from public.user_roles r where r.user_id = auth.uid()
+    select 2, a.masjid_id from public.active_masjid a where a.user_id = auth.uid()
+    union all
+    select 3, r.masjid_id from public.user_roles r
+     where r.user_id = auth.uid()
      group by r.masjid_id
-    having (select count(distinct masjid_id) from public.user_roles where user_id = auth.uid()) = 1)
-  select c.masjid_id from chosen c
-   where c.masjid_id is not null
+    having (select count(distinct masjid_id) from public.user_roles
+             where user_id = auth.uid()) = 1
+  )
+  select c.id from chosen c
+   where c.id is not null
      and (exists (select 1 from public.user_roles r
-                   where r.user_id = auth.uid() and r.masjid_id = c.masjid_id)
+                   where r.user_id = auth.uid() and r.masjid_id = c.id)
        or public.is_platform_admin())
-   order by c.pri limit 1;
+   order by c.pri
+   limit 1;
 $function$;
 
 /* Verbatim from production. 137's tests turn on what this does and does not
