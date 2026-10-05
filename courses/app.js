@@ -1712,7 +1712,7 @@
     function load(keepDoc) {
       return Promise.all([
         sb.rpc("courses_admin_list"),
-        sb.rpc("courses_public")
+        sb.rpc("courses_public", { p_masjid: cfg.MASJID })
       ]).then(function (out) {
         if (out[0].error) {
           // Until 043 is applied none of these functions exist. That is "not

@@ -1,113 +1,61 @@
 // ===========================================================================
 //  stripe-webhook — records a payment made to the masjid
-//
 //  Taiyabah Masjid · Bolton Central Islamic Society · Charity 1041569
 //
-//  THE CODE IN THIS FILE MATCHES WHAT IS DEPLOYED. The comments do not —
-//  production carries a shorter version of them, because a deploy from the
-//  dashboard condensed them and nobody wrote that back.
-//
-//  NO VERSION NUMBER IS WRITTEN HERE ANY MORE. It used to say "version 16",
-//  and by 15 September production was on 18 while the line still said 16. A
-//  version number in a comment is a claim that rots silently, and it rots
-//  into the most dangerous shape there is: a reassurance. Somebody reads it,
-//  believes the file is current, and deploys.
-//
-//  To find out what is actually deployed, ASK:
-//      mcp__Supabase__get_edge_function(project_id, 'stripe-webhook')
-//  or `supabase functions download stripe-webhook`, and diff.
-//
-//  This repository has been caught FOUR times holding a copy that did not
-//  match production — twice on this function, once on notify, once on
-//  invite-user. Read production before you deploy over it, every time.
-//
-//  ONE ENDPOINT, THREE KINDS OF PAYMENT
-//  ------------------------------------
-//  Decided by what the payment carries in client_reference_id:
-//
-//      HH-26-0001                 a hall hire deposit -> mark_deposit_paid()
-//      NK-26-0001                 a nikāḥ fee         -> mark_nikah_fee_paid()
-//      DN-…                       a donation with a reference already made
+//  ONE ENDPOINT, THREE KINDS OF PAYMENT, decided by client_reference_id:
+//      HH-26-0001   hall hire deposit -> mark_deposit_paid()
+//      NK-26-0001   nikāḥ fee         -> mark_nikah_fee_paid()
+//      DN-…         a donation with a reference already made
 //      general|sadaqah|lillah|newbuild
-//                                 a donation from the DONATE PAGE
-//                                                     -> record_public_donation()
+//                   a donation from the DONATE PAGE -> record_public_donation()
 //
-//  THE LAST ONE IS NEW, AND IT IS WHY THE MASJID'S FIRST REAL PAYMENT WENT
-//  MISSING. The donate page sends the PURPOSE as client_reference_id, because
-//  a Stripe Payment Link cannot carry an amount or anything else in its URL
-//  and that is the only field available. But this function was already
-//  routing on the first three characters of that same field, so "sadaqah"
-//  matched nothing, was logged as an unrecognised reference, and no donation
-//  was recorded. Reading Stripe's documentation on client_reference_id was
-//  not enough: the code already listening on the other end had its own
-//  meaning for it.
+//  THE LAST ONE IS WHY THE MASJID'S FIRST REAL PAYMENT WENT MISSING. The
+//  donate page sends the PURPOSE as client_reference_id, because a Stripe
+//  Payment Link cannot carry anything else in its URL. But this function was
+//  already routing on the first three characters of that same field, so
+//  "sadaqah" matched nothing and no donation was recorded. A purpose has no
+//  prefix and never will, so it is checked BEFORE the prefix table. The
+//  reference is minted by the DATABASE — donations.reference is UNIQUE, so a
+//  fixed "DN-sadaqah" would collide on the second one. See db/032.
 //
-//  A purpose has no prefix and never will, so it is checked BEFORE the prefix
-//  table rather than bolted into it. The reference for such a donation is
-//  minted by the DATABASE — donations.reference is UNIQUE, so a fixed string
-//  like "DN-sadaqah" would collide on the second sadaqah donation. See db/032.
+//  Rules that are easy to get wrong and expensive to get wrong:
+//    1. VERIFY THE SIGNATURE FIRST. Without it, anybody who finds this URL
+//       can mark any booking paid by posting some JSON. constructEventAsync,
+//       because Deno has no synchronous crypto and the sync version silently
+//       fails here.
+//    2. ALWAYS RETURN 200 ONCE THE SIGNATURE IS GOOD. Stripe retries a non-2xx
+//       for days; a retry storm buries the real problem.
+//    3. AND THE AUDIT WRITE HAS TO ACTUALLY WORK. Until 032 service_role held
+//       no INSERT on admin_audit and no USAGE on its sequence, so every "money
+//       arrived that I cannot match" row was silently discarded.
 //
-//  One endpoint rather than several because Stripe signs every delivery with
-//  the same endpoint secret; another function would need its own secret, its
-//  own deployment and its own chance to be forgotten.
+//  RULE 3 BROKE A SECOND TIME, AND NOBODY FOUND OUT FOR A FORTNIGHT.
+//  admin_audit gained masjid_id NOT NULL with no default. This function was
+//  still inserting into that table directly, with no masjid_id, so every
+//  safety-net row failed with 23502 from 17 September 2026 — and because the
+//  result of that insert was never checked, the failure was thrown away and
+//  Stripe was told 200. On 2 October alone, FORTY-TWO paid checkout sessions
+//  arrived with no reference and left no trace in the masjid's systems.
 //
-//  The kinds are NOT the same transaction, and the difference is deliberate:
+//  Two things changed as a result, and both matter more than the fix itself:
+//    * Audit rows are written through record_unmatched_payment(), a function
+//      that owns the masjid_id question. A webhook that writes to a TABLE
+//      inherits every future change to that table's shape; one that calls a
+//      function does not.
+//    * EVERY audit write is now checked and shouts if it fails. An unchecked
+//      write is not a safety net. It is a safety net with a hole in it that
+//      nobody can see, which is worse than none, because people trust it.
 //
-//    - Paying a hall deposit CONFIRMS the booking. The site knows what is
-//      free, so it can sell a date outright (migration 017).
-//    - Paying a nikāḥ fee confirms NOTHING. The masjid does not publish its
-//      nikāḥ diary, so the site cannot know whether a date is available. The
-//      office agrees the date on the phone; this is only a way to pay without
-//      coming in with cash (migration 018).
-//    - A donation confirms nothing and nobody has to act on it.
+//  Deploy:  supabase functions deploy stripe-webhook --no-verify-jwt
+//  --no-verify-jwt is REQUIRED: Stripe does not send a Supabase JWT.
 //
-//  If you are tempted to unify them, read the header of 018 first.
+//  Secrets — none is the Stripe API key:
+//      STRIPE_WEBHOOK_SECRET / STRIPE_WEBHOOK_SECRET_TEST  whsec_…
+//      SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (from the platform)
+//  Verifying a signature is a local HMAC and never calls Stripe. Do not add
+//  an sk_live_ "just in case": it can issue refunds and read every customer.
 //
-//  Stripe tells us a deposit has been paid. This is the ONLY thing that may
-//  say so: a browser claiming "I have paid" is not evidence of anything,
-//  which is why mark_deposit_paid() has EXECUTE revoked from anon and
-//  authenticated and is reached here with the service role key.
-//
-//  Two rules that are easy to get wrong and expensive to get wrong:
-//
-//    1. VERIFY THE SIGNATURE FIRST. Anything else — reading the body, looking
-//       up the reference, being helpful — happens after. Without it, anybody
-//       who finds this URL can mark any booking paid by posting some JSON.
-//       Checked with constructEventAsync, because Deno has no synchronous
-//       crypto and the sync version silently fails here.
-//
-//    2. ALWAYS RETURN 200 ONCE THE SIGNATURE IS GOOD. Stripe retries a
-//       non-2xx for days. Retrying cannot fix an unknown reference, and a
-//       retry storm buries the real problem. Those cases are recorded in
-//       admin_audit and answered 200.
-//
-//       AND THE AUDIT WRITE HAS TO ACTUALLY WORK. Until 14 September 2026 it
-//       did not: service_role held no INSERT on admin_audit and no USAGE on
-//       its sequence, so every "money arrived that I cannot match" row was
-//       silently discarded — the one mechanism meant to make the bug above
-//       visible was itself mute. Migration 032 grants both. GRANT and RLS are
-//       different things and you need both.
-//
-//  Deploy:
-//      supabase functions deploy stripe-webhook --no-verify-jwt
-//
-//  --no-verify-jwt is REQUIRED. Stripe does not send a Supabase JWT, so with
-//  verification on, every delivery is rejected before this file ever runs.
-//
-//  Secrets — and none of them is the Stripe API key:
-//      STRIPE_WEBHOOK_SECRET       whsec_… — the LIVE endpoint in Stripe
-//      STRIPE_WEBHOOK_SECRET_TEST  whsec_… — optional, a test-mode endpoint
-//      SUPABASE_URL               provided by the platform
-//      SUPABASE_SERVICE_ROLE_KEY  provided by the platform
-//
-//  There is deliberately no STRIPE_SECRET_KEY here. Verifying a webhook
-//  signature is a local HMAC of the raw body against the WEBHOOK secret; it
-//  makes no call to Stripe. A leaked whsec_ lets somebody forge events into
-//  this one function; a leaked sk_live_ can issue refunds and read every
-//  customer. Do not add one "just in case".
-//
-//  In Stripe, add an endpoint pointing at this function and subscribe it to
-//  `checkout.session.completed` and nothing else.
+//  In Stripe, subscribe the endpoint to `checkout.session.completed` only.
 // ===========================================================================
 
 import { readGiftAid, donorDetails } from "./giftaid.ts";
@@ -115,18 +63,54 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 // The empty key is not an oversight. This client is only ever used for
-// stripe.webhooks.constructEventAsync(), which verifies an HMAC locally and
-// makes no request to Stripe — verified against stripe@14.21.0, where an
-// empty key verifies a good signature and still rejects a forged one.
+// constructEventAsync(), which verifies an HMAC locally and makes no request
+// to Stripe — verified against stripe@14.21.0, where an empty key verifies a
+// good signature and still rejects a forged one.
 const stripe = new Stripe("", {
   apiVersion: "2024-06-20",
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const SECRETS = [
-  Deno.env.get("STRIPE_WEBHOOK_SECRET"),
-  Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST"),
-].filter((s): s is string => !!s && s.length > 0);
+/* WHICH MASJID SENT THIS, and why it is derived from the signing secret.
+ *
+ * Each masjid takes its own money, through its own Stripe account, so each
+ * has its own webhook signing secret. The secret that verifies a delivery is
+ * therefore the identity of the masjid that sent it — and that is the whole
+ * point: a forged delivery cannot claim to be another masjid, because the
+ * name never comes out of the request body. It comes out of an HMAC only the
+ * real Stripe account can produce.
+ *
+ * Adding a masjid is an environment variable and a Stripe endpoint. It is not
+ * a code change and not a deploy:
+ *
+ *     STRIPE_WEBHOOK_SECRET__BOLTON_WELFARE        whsec_…   live
+ *     STRIPE_WEBHOOK_SECRET__BOLTON_WELFARE_TEST   whsec_…   test
+ *
+ * The part after the double underscore is the slug in upper case with hyphens
+ * written as underscores, because an environment variable name cannot contain
+ * a hyphen. A slug is ^[a-z][a-z0-9-]*$ and may never contain an underscore,
+ * so translating it back is unambiguous.
+ *
+ * The two original unsuffixed names are kept and mean Taiyabah, so this
+ * deploys without touching the configuration already in place. */
+type Signer = { masjid: string; secret: string };
+
+function signers(): Signer[] {
+  const out: Signer[] = [];
+  for (const key of ["STRIPE_WEBHOOK_SECRET", "STRIPE_WEBHOOK_SECRET_TEST"]) {
+    const secret = Deno.env.get(key);
+    if (secret) out.push({ masjid: "taiyabah", secret });
+  }
+  for (const [key, secret] of Object.entries(Deno.env.toObject())) {
+    const m = /^STRIPE_WEBHOOK_SECRET__([A-Z0-9_]+?)(_TEST)?$/.exec(key);
+    if (m && secret) {
+      out.push({ masjid: m[1].toLowerCase().replaceAll("_", "-"), secret });
+    }
+  }
+  return out;
+}
+
+const SECRETS = signers();
 
 const db = createClient(
   Deno.env.get("SUPABASE_URL") ?? "",
@@ -139,6 +123,40 @@ const db = createClient(
 // out of somebody else's payment.
 const PURPOSES = ["general", "sadaqah", "lillah", "newbuild"];
 
+/* The safety net, and the only way money that cannot be matched is ever seen
+   by a human. It goes through a function because admin_audit has a masjid_id
+   this webhook has no way to know, and it is CHECKED because the previous
+   version was not: an insert that fails silently reads exactly like one that
+   worked, which is how forty-two payments went unrecorded for a fortnight
+   while this endpoint answered 200 to every one of them. */
+async function auditPayment(
+  masjid: string,
+  action: string,
+  detail: Record<string, unknown>,
+) {
+  /* p_masjid is what selects the overload that does not guess. The original
+     record_unmatched_payment(p_action, p_detail) resolves the masjid with
+     sole_masjid(), which RAISES as soon as a second masjid exists — so on
+     the day of the second onboarding this safety net would have broken for
+     a third time, and in the same silent way, with Stripe still being told
+     200. Passing the masjid is what stops that. */
+  const { error } = await db.rpc("record_unmatched_payment", {
+    p_masjid: masjid,
+    p_action: action,
+    p_detail: detail,
+  });
+  if (error) {
+    // Nothing else can be done from here — Stripe must still get its 200 or
+    // it will retry for days — but this must never be silent again.
+    console.error(
+      `stripe-webhook: COULD NOT AUDIT "${action}" — money has arrived that ` +
+      `nothing has recorded. ${error.message}`,
+    );
+    return false;
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
@@ -146,24 +164,21 @@ Deno.serve(async (req) => {
 
   const signature = req.headers.get("stripe-signature");
   if (!signature || SECRETS.length === 0) {
-    // 400, not 200: this genuinely is a bad request, and Stripe should be
-    // told rather than have us pretend we handled it.
     console.error("stripe-webhook: no signature, or no webhook secret is set");
     return new Response("Bad request", { status: 400 });
   }
 
   // The RAW body. Reading it as JSON first and re-serialising changes the
-  // bytes and the signature will not match — a mistake that produces a
-  // baffling "no signatures found" and hours of looking in the wrong place.
+  // bytes and the signature will not match.
   const raw = await req.text();
 
-  // Tried against each secret in turn. A delivery signed by EITHER the live or
-  // the test endpoint is genuine; one signed by neither is not.
   let event: Stripe.Event | null = null;
+  let masjid = "";
   let lastError = "";
-  for (const secret of SECRETS) {
+  for (const signer of SECRETS) {
     try {
-      event = await stripe.webhooks.constructEventAsync(raw, signature, secret);
+      event = await stripe.webhooks.constructEventAsync(raw, signature, signer.secret);
+      masjid = signer.masjid;
       break;
     } catch (err) {
       lastError = (err as Error).message;
@@ -187,8 +202,6 @@ Deno.serve(async (req) => {
   const amount = session.amount_total ?? null;
 
   if (session.payment_status !== "paid") {
-    // A completed session that is not paid — a delayed method, say. Not an
-    // error, and not a deposit either.
     console.log(`stripe-webhook: ${sessionId} completed but payment_status=${session.payment_status}`);
     return new Response(JSON.stringify({ ok: true, note: "not paid" }), {
       status: 200, headers: { "content-type": "application/json" },
@@ -198,27 +211,23 @@ Deno.serve(async (req) => {
   if (!reference) {
     // Somebody paid a link without going through the form that sets the
     // reference — typically by opening a Payment Link URL directly. Real
-    // money, so it is logged rather than shrugged off: the office has to find
-    // them, work out what it was for, and refund it if it cannot be placed.
+    // money, so it is logged rather than shrugged off.
     console.error(`stripe-webhook: ${sessionId} arrived with no client_reference_id`);
-    await db.from("admin_audit").insert({
-      action: "payment_without_reference",
-      detail: { session: sessionId, amount_pence: amount,
-                payment_link: (session.payment_link as string) ?? null,
-                email: session.customer_details?.email ?? null },
+    const audited = await auditPayment(masjid, "payment_without_reference", {
+      session: sessionId,
+      amount_pence: amount,
+      payment_link: (session.payment_link as string) ?? null,
+      email: session.customer_details?.email ?? null,
     });
-    return new Response(JSON.stringify({ ok: true, note: "no reference" }), {
+    return new Response(JSON.stringify({ ok: true, note: "no reference", audited }), {
       status: 200, headers: { "content-type": "application/json" },
     });
   }
 
-  // -----------------------------------------------------------------------
-  //  A DONATION FROM THE DONATE PAGE.
-  //
-  //  Checked before the prefix table because a purpose has no prefix. See the
-  //  header: this is the case that was missing, and the case that made the
-  //  masjid's first real donation vanish.
-  // -----------------------------------------------------------------------
+  // ---------------------------------------------------------------------
+  //  A DONATION FROM THE DONATE PAGE. Checked before the prefix table
+  //  because a purpose has no prefix.
+  // ---------------------------------------------------------------------
   const purpose = reference.trim().toLowerCase();
   if (PURPOSES.includes(purpose)) {
     const ga = readGiftAid(session.custom_fields as never);
@@ -228,20 +237,21 @@ Deno.serve(async (req) => {
     console.log(`stripe-webhook: donation (${purpose}) gift aid = ${ga.giftAid} ` +
                 `(matched by ${ga.matchedBy}, answer "${ga.answer}")`);
 
-    // A donation link with no Gift Aid question on it. Every donation through
-    // it records as "no", no error is raised, no payment fails — and 25p in
-    // every eligible pound is quietly not claimed. The only way anybody finds
-    // out is if something says so here.
+    // A donation link with no Gift Aid question on it records every donation
+    // as "no" with no error anywhere — 25p in every eligible pound quietly
+    // not claimed. The only way anybody finds out is if something says so.
     if (ga.fieldMissing) {
       console.error(`stripe-webhook: a ${purpose} donation had NO Gift Aid field on the checkout`);
-      await db.from("admin_audit").insert({
-        action: "gift_aid_field_missing",
-        detail: { session: sessionId, purpose,
-                  payment_link: (session.payment_link as string) ?? null },
+      await auditPayment(masjid, "gift_aid_field_missing", {
+        session: sessionId,
+        purpose,
+        payment_link: (session.payment_link as string) ?? null,
       });
     }
 
     const { data, error } = await db.rpc("record_public_donation", {
+      /* From the verified signature, never from the payload. */
+      p_masjid: masjid,
       p_session_id: sessionId,
       p_amount_p: amount,
       p_purpose: purpose,
@@ -262,8 +272,7 @@ Deno.serve(async (req) => {
                 (data?.already_recorded ? " (already recorded)" : ""));
 
     // Deliberately no email. Nobody has to act when a donation arrives, and
-    // one message per donation would bury the two that DO need a human — a
-    // nikāḥ request waiting for a call, and a refund the masjid owes somebody.
+    // one message per donation would bury the two that DO need a human.
     return new Response(JSON.stringify({ ok: true, result: data }), {
       status: 200, headers: { "content-type": "application/json" },
     });
@@ -271,8 +280,7 @@ Deno.serve(async (req) => {
 
   // Which kind of payment is this? Decided by the prefix and nothing else —
   // not by the amount (a hall deposit and a member's nikāḥ fee are both £100),
-  // and not by which payment link was used (the masjid can add links without
-  // this file knowing).
+  // and not by which payment link was used.
   const KINDS: Record<string, { rpc: string; state: string; what: string }> = {
     "HH-": { rpc: "mark_deposit_paid",     state: "deposit_status", what: "hall deposit" },
     "NK-": { rpc: "mark_nikah_fee_paid",   state: "fee_status",     what: "nikāḥ fee" },
@@ -281,26 +289,26 @@ Deno.serve(async (req) => {
   const kind = KINDS[reference.slice(0, 3).toUpperCase()];
 
   if (!kind) {
-    // A reference in a shape nothing here recognises. Money has still been
-    // taken, so this is audited rather than ignored — but it is not retried,
-    // because retrying will not teach this function a new prefix.
+    // Money has still been taken, so this is audited rather than ignored — but
+    // not retried, because retrying will not teach this function a new prefix.
     console.error(`stripe-webhook: ${sessionId} has an unrecognised reference "${reference}"`);
-    await db.from("admin_audit").insert({
-      action: "payment_with_unknown_reference_kind",
-      detail: { session: sessionId, reference, amount_pence: amount,
-                payment_link: (session.payment_link as string) ?? null,
-                email: session.customer_details?.email ?? null },
+    const audited = await auditPayment(masjid, "payment_with_unknown_reference_kind", {
+      session: sessionId,
+      reference,
+      amount_pence: amount,
+      payment_link: (session.payment_link as string) ?? null,
+      email: session.customer_details?.email ?? null,
     });
-    return new Response(JSON.stringify({ ok: true, note: "unknown reference kind" }), {
+    return new Response(JSON.stringify({ ok: true, note: "unknown reference kind", audited }), {
       status: 200, headers: { "content-type": "application/json" },
     });
   }
 
-  // A donation carries two things the other two do not: the donor's answer to
-  // the Gift Aid dropdown, and — only if they said yes — the name and address
-  // HMRC needs. Both come from Stripe rather than from anything the masjid's
-  // website could have made up.
   let args: Record<string, unknown> = {
+    /* Selects the p_masjid overload of whichever function kind.rpc names.
+       Without it PostgREST picks the one that resolves the masjid itself,
+       and that one stops working the day a second masjid exists. */
+    p_masjid: masjid,
     p_reference: reference,
     p_session_id: sessionId,
     p_amount_p: amount,
@@ -316,10 +324,10 @@ Deno.serve(async (req) => {
 
     if (ga.fieldMissing) {
       console.error(`stripe-webhook: ${reference} had NO Gift Aid field on the checkout`);
-      await db.from("admin_audit").insert({
-        action: "gift_aid_field_missing",
-        detail: { reference, session: sessionId,
-                  payment_link: (session.payment_link as string) ?? null },
+      await auditPayment(masjid, "gift_aid_field_missing", {
+        reference,
+        session: sessionId,
+        payment_link: (session.payment_link as string) ?? null,
       });
     }
 
@@ -335,8 +343,6 @@ Deno.serve(async (req) => {
   const { data, error } = await db.rpc(kind.rpc, args);
 
   if (error) {
-    // The database refused. 500 so Stripe retries, because unlike an unknown
-    // reference this one might genuinely be transient.
     console.error(`stripe-webhook: ${kind.rpc} failed for ${reference} —`, error.message);
     return new Response("Could not record the payment", { status: 500 });
   }
@@ -345,9 +351,6 @@ Deno.serve(async (req) => {
               (data?.already_recorded ? " (already recorded)" : "") +
               (data?.duplicate_payment ? " (DUPLICATE — needs refunding)" : ""));
 
-  // Tell somebody. Until now a paid deposit sold a Saturday and nothing said
-  // so until a human opened the portal; a refund owed sat in a tab nobody was
-  // watching. This is the only moment either of those is known.
   if (!data?.already_recorded && kind.rpc !== "record_donation_paid") {
     await notify(reference, kind, data, session);
   }
@@ -357,14 +360,9 @@ Deno.serve(async (req) => {
   });
 });
 
-/* ---------------------------------------------------------------------------
-   Handing off to the notify function.
-
-   Deliberately best-effort. The payment is already recorded in the database by
-   the time this runs, and that is the part that matters — if the email fails,
-   the booking is still correct and the portal still shows it. Throwing here
-   would make Stripe retry a payment that was recorded perfectly well.
-   --------------------------------------------------------------------------- */
+/* Handing off to the notify function. Deliberately best-effort: the payment is
+   already recorded by the time this runs, and that is the part that matters.
+   Throwing here would make Stripe retry a payment recorded perfectly well. */
 async function notify(
   reference: string,
   kind: { rpc: string; state: string; what: string },
@@ -378,8 +376,6 @@ async function notify(
   const state = String(data?.[kind.state] ?? "");
   const hall  = kind.rpc === "mark_deposit_paid";
 
-  // What actually happened decides what gets sent. 'refund_due' and a
-  // duplicate payment both mean the masjid is holding money it cannot keep.
   let payload: Record<string, unknown> | null = null;
 
   if (state === "paid") {
@@ -387,10 +383,6 @@ async function notify(
       kind: hall ? "deposit_paid" : "nikah_fee_paid",
       reference,
       amount_p: session.amount_total ?? null,
-      // Stripe collected this at checkout. The hall booking form does not ask
-      // for an email, so this is the only address the masjid has for a hirer —
-      // and it belongs to the person who just paid. It is passed straight
-      // through to send one confirmation and is not stored anywhere.
       email: hall ? (session.customer_details?.email ?? null) : null,
       name: session.customer_details?.name ?? null,
     };

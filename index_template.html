@@ -67,6 +67,9 @@
    details.
 --------------------------------------------------------------------------- */
 window.TAIYABAH_PUBLIC = {
+  /* WHICH MASJID — the database stops guessing the moment a second
+     masjid exists. See any config.js for the full reason. */
+  MASJID:            "taiyabah",
   SUPABASE_URL:      "https://phenbhmobxwyvdeshvqw.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
 };
@@ -5990,7 +5993,7 @@ window.TAIYABAH_PUBLIC = {
         headers: { 'Content-Type': 'application/json',
                    'apikey': cfg.SUPABASE_ANON_KEY,
                    'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY },
-        body: JSON.stringify({ p_year: year }),
+        body: JSON.stringify({ p_masjid: cfg.MASJID, p_year: year }),
         signal: ctrl.signal
       });
       clearTimeout(bail);
@@ -6183,9 +6186,15 @@ window.TAIYABAH_PUBLIC = {
     /* ---------------------------------------------------------------------
        Real availability.
 
-       Read from the hall_availability view, which holds nothing but the dates
-       of bookings the office has CONFIRMED. A request nobody has agreed to
-       yet does not block anyone else's date.
+       Read from hall_availability(), which holds nothing but the dates of
+       bookings the office has CONFIRMED. A request nobody has agreed to yet
+       does not block anyone else's date.
+
+       THE FUNCTION, NOT THE VIEW OF THE SAME NAME. The view decides the
+       masjid with sole_masjid(), which raises the moment a second masjid
+       exists — so reading it would empty this calendar for Taiyabah on
+       somebody else's onboarding day. The function is given the masjid
+       instead. Same columns, so nothing below this changed.
 
        Until this has loaded — and if it fails to load at all — every day
        stays 'unknown'. The calendar must never claim a date is free when it
@@ -6201,11 +6210,14 @@ window.TAIYABAH_PUBLIC = {
       var base = String(cfg.SUPABASE_URL).trim()
                    .replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
 
-      fetch(base + '/rest/v1/hall_availability?select=booking_date', {
+      fetch(base + '/rest/v1/rpc/hall_availability', {
+        method: 'POST',
         headers: {
           'apikey': cfg.SUPABASE_ANON_KEY,
-          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
-        }
+          'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ p_masjid: cfg.MASJID })
       }).then(function(res){
         if(!res.ok) throw new Error('availability ' + res.status);
         return res.json();
@@ -6538,6 +6550,7 @@ window.TAIYABAH_PUBLIC = {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ payload: {
+          masjid: cfg.MASJID,
           booking_date: iso(selected),
           hire_type:    hire.type,
           halls_count:  hire.type === 'halls' ? hire.count : null,
@@ -7014,6 +7027,7 @@ window.TAIYABAH_PUBLIC = {
           headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
                     'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
           body: JSON.stringify({ payload:{
+            masjid: cfg.MASJID,
             course_key: key, cohort: cohort.value,
             first_name: val('first'), surname: val('last'),
             email: val('email'), mobile: val('mobile'),
@@ -7276,7 +7290,7 @@ window.TAIYABAH_PUBLIC = {
         headers:{ 'Content-Type':'application/json',
                   'apikey':cfg.SUPABASE_ANON_KEY,
                   'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
-        body:'{}'
+        body: JSON.stringify({ p_masjid: cfg.MASJID })
       }).then(function(r){
         if(!r.ok) throw new Error('courses ' + r.status);
         return r.json();
@@ -7467,6 +7481,7 @@ window.TAIYABAH_PUBLIC = {
                   'apikey': cfg.SUPABASE_ANON_KEY,
                   'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
         body: JSON.stringify({ payload:{
+          masjid: cfg.MASJID,
           full_name: name, phone: phone, email: email,
           gender: gender, age: age, preferred_contact: pref,
           sunday_mornings: (sun === 'yes'), frequency: freq,
@@ -7833,6 +7848,7 @@ window.TAIYABAH_PUBLIC = {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ payload: {
+          masjid: cfg.MASJID,
           requested_date:  $('ccDate').value,
           org_name:        $('ccOrg').value.trim(),
           org_address:     $('ccAddr').value.trim(),
@@ -8468,6 +8484,7 @@ window.TAIYABAH_PUBLIC = {
           headers:{ 'Content-Type':'application/json', 'apikey':cfg.SUPABASE_ANON_KEY,
                     'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
           body: JSON.stringify({ payload:{
+            masjid: cfg.MASJID,
             preferred_date: S.a,
             slot: S.flex ? 'flexible' : S.slot,
             preferred_time: (S.flex || !S.slot) ? '' :

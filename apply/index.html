@@ -760,6 +760,9 @@ footer a{color:var(--brand-700);}
   /* Payload + submit                                                      */
   /* --------------------------------------------------------------------- */
   function buildPayload(){
+    /* Which masjid. submit_admission_application() reads
+       payload->>'masjid' and only guesses when it is absent — and it
+       stops guessing the day a second masjid exists. */
     var students = [];
     $("children").querySelectorAll(".child").forEach(function(b){
       var q = function(s){ return b.querySelector(s); };
@@ -808,6 +811,7 @@ footer a{color:var(--brand-700);}
     });
 
     return {
+      masjid: CFG.MASJID,
       academic_year: ADM.academicYear,
       parent_first_name: val("pFirst"),
       parent_surname:    val("pLast"),
