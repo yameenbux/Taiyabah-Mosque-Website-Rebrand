@@ -1151,6 +1151,36 @@ Migrations are pasted into the SQL editor in order.
 | `052_the_madrasah_knows_its_staff` | **The first tables of the Madrasah Portal — staff and classes, no pupil record.** A madrasah roll reveals a child's religion, which is Article 9 data before anybody adds a note; an employment record for an adult who works there is ordinary personal data of the kind `profiles` already holds. So this could be built and the pupil tables could not. Three departures from the system it replaces: **DBS status is derived from dates, never stored** (a stored green "Valid" badge is wrong from the morning after the check lapses and stays green until somebody edits the record); **a DBS certificate has no expiry date** — it holds the issue date, whether they are on the Update Service and when the masjid last looked, and derives "due" from a 36-month renewal period, which is what gives *due in 90 days* rather than *already expired*; and **the certificate number is not stored at all**, being the one field that would hurt to leak and the one no screen needs. The honorific is its own column so the list sorts by surname instead of filing nineteen people under A. |
 | `051_a_push_has_a_sender` | **The one irreversible action in the whole system had no record of who took it.** Every hall booking, Gift Aid claim and role change leaves an `admin_audit` row naming a person; a notification reaching every phone in the congregation left nothing, and its history lived in one browser's `localStorage` — so two trustees could not see each other's sends. Adds `app_notifications` and **two** functions rather than one: `app_notification_start()` runs under the caller's own JWT so `auth.uid()` decides who the sender is, and `app_notification_finish()` is service_role only and may change nothing but how it went. The row is written **before** the send, because a record written afterwards is missing exactly the sends somebody will be trying to reconstruct. |
 
+**`132` and earlier, not yet catalogued here.** This table stopped being kept in
+step somewhere after `058`; the migrations between it and `133` exist in `db/`
+and run against the live database, but aren't individually described in this
+table yet. Added 8 October 2026 by a code review's `readme_test.py` finding —
+flagged rather than silently backfilled, because writing an accurate one-line
+summary of 70-odd migrations this session didn't author is a worse kind of
+wrong than an honest gap. If you're looking for one of them, read its header
+comment in `db/` directly; they carry the same why-not-just-what narration as
+everything else in this table.
+
+**`133` onward: MasjidOne.** The point this repository stopped being
+single-masjid software and became a platform one masjid (Taiyabah) is the
+first customer of. Plans, billing, platform administrators separate from
+masjid roles, a payment safety net that now has to be told *which* masjid —
+all genuinely new surface area, not a renumbering of what came before.
+
+| Migration | What it does |
+|---|---|
+| `133_the_payment_safety_net_knows_which_masjid` | `record_unmatched_payment()` — the only way money that can't be matched to a booking, a nikāḥ or a donation is ever seen by a human — resolves the masjid with `sole_masjid()`, which now **raises** the moment a second masjid exists rather than guessing. |
+| `134_plans_and_entitlements` | Which pricing **band** a masjid is on. Deliberately holds no prices — those stay in `PRICING_BANDS` in the website code, kept out of this public repository on purpose. Moved here from MasjidOne's own gitignored `founder/` folder, which held margins and commercial workings that must never reach a public repo; this file holds none of those. |
+| `135_onboarding_a_masjid` | The other half of `134` — bringing a new masjid onto the platform. Same provenance, same reason it lives here and not in `founder/`. |
+| `136_billing_a_masjid` | An actual invoice ledger: raise, record payment, answer "who owes us money" — which didn't exist before this. `134` recorded the plan and band; nothing billed anybody until this. |
+| `137_one_hat_each` | A platform administrator holds no role at a masjid. Written after noticing the founder's own login held `platform_admins`, `admin` and `imam` on one account at once — three hats that quietly defeat the control meant to make supplier access accountable. |
+| `138_masjid_attention_counts_attendance` | Fixes the support console's "what needs attention" panel, which was failing outright on `column a.register_id does not exist` and showing none of its twenty figures. |
+| `139_who_runs_masjidone` | Adding and retiring platform administrators safely — a handover done as three ordered statements against a live database rather than by hand, so getting the order wrong can't lock the owner out of his own company. |
+| `140_every_function_has_a_source` | Thirty-five functions were running in the live database with no `CREATE` statement for any of them in this repository — reconstructed and committed so every function this database runs now has a source a person can read and a diff can show changing. |
+| `141_stripe_bills_the_masjid` | Stripe charges each masjid on its plan automatically, so nobody has to be chased for payment every month by hand. |
+| `142_a_reversed_direct_debit_is_not_paid` | Closes a hole where a Bacs Direct Debit payment can be reversed by the payer *after* it has already been recorded as paid, with no time limit on the reversal. |
+| `143_stripe_moved_the_invoice_fields` | Stripe's 2025-03-31.basil API release (and everything after it, including what a new account defaults to) removed fields this project's webhook read from an Invoice object and replaced one of them with a different shape — found and fixed before it reached production data, by reading both the old and new shapes rather than assuming one. |
+
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs
 are running. `CHECK_course_registrations.sql` shows what has actually arrived
