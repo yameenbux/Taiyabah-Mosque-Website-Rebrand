@@ -268,6 +268,98 @@ alongside it collides on Windows and macOS, where the filesystem cannot tell
 them apart, and GitHub Pages — which is case-sensitive — then 404s every
 photograph.
 
+### Finding your way around `index_template.html`
+
+8 October 2026, from an external code review that rated this codebase's
+architecture Amber. Not for being one template with no framework — that's a
+defensible choice for one small team with no build pipeline to maintain — but
+for a specific, fixable gap: nothing told a second person where anything
+*inside* the file actually was. Every portal directory above is small enough
+to just open and read. This one isn't: 8,931 lines, and until now, no map.
+
+It breaks into three regions, in this order, always:
+
+```
+lines 1–2,489      <head>, meta tags, the nav bar, the mobile drawer
+lines 2,490–5,691   the 30 pages themselves — see the table below
+lines 5,692–8,931   one single <script> tag — every page's JS, back to back
+```
+
+**The pages.** Each is a `<div class="page" data-page="…">`, found by
+`showPage('…')` at runtime and switching the browser's visible panel — not a
+separate request, not a separate file. The id is also the URL hash
+(`#prayer`, `#donate`) and what `_test/sweep_test.py` walks to check every one
+of them loads clean.
+
+| Line | `data-page` | What's there |
+|---|---|---|
+| 2490 | `home` | Landing page |
+| 2687 | `newbuild` | The appeal — tiers, Gift Aid, the donate card |
+| 2914 | `prayer` | Prayer times |
+| 2975 | `about` | History |
+| 3033 | `madrasah` | Madrasah overview |
+| 3098 | `madrasah-admissions` | Admissions |
+| 3199 | `madrasah-holidays` | Holiday Planner |
+| 3277 | `getapp` | App download (coming soon) |
+| 3313 | `shop` | Shop (coming soon) |
+| 3386 | `articles` | Articles index |
+| 3451 | `article-what-is-islam` | Article |
+| 3544 | `article-five-pillars` | Article |
+| 3614 | `article-ramadan` | Article |
+| 3686 | `article-hajj` | Article |
+| 3787 | `services` | Services index |
+| 3843 | `svc-education` | Education |
+| 3905 | `svc-edu-arabic` | Arabic classes |
+| 3951 | `svc-edu-ghusl` | Ghusl workshop |
+| 4027 | `collection` | Charity collection (Chanda) request form |
+| 4265 | `svc-hallhire` | Hall / room hire |
+| 4626 | `svc-bmd` | Birth, Marriage & Death index |
+| 4672 | `svc-birth` | Birth guidance |
+| 4718 | `svc-marriage` | Nikāḥ |
+| 4839 | `donate` | General donate widget |
+| 4968 | `svc-will` | Islamic Will |
+| 5026 | `svc-funeral` | Funeral services |
+| 5117 | `svc-advice` | Imams' Advice |
+| 5169 | `media` | YouTube videos |
+| 5260 | `volunteer` | Volunteer registration |
+| 5387 | `privacy` | Privacy notice |
+| 5574 | `contact` | Contact |
+
+**The script.** One tag, no modules, every feature's logic in its own
+commented block, mostly in the order its page appears above. Find a block by
+searching for its banner comment, not by guessing a line number — the table
+below is a starting point, not a promise the numbers won't drift as the file
+grows.
+
+| Line (approx.) | Section |
+|---|---|
+| 5937 | A newer timetable, if there is one (live refresh against the database) |
+| 6016 | Gift Aid |
+| 6080 | Page switching (`showPage`) |
+| 6184 | Hall hire: real availability |
+| 6531 | Hall booking request |
+| 6711 | Madrasah holiday planner |
+| 6859 | Course registration |
+| 7363 | Food bank volunteer registration |
+| 7526 | Paying the nikāḥ fee online |
+| 7613 | Charity collection (Chanda) request form |
+| 7931 | Donate widget |
+| 8100 | Nikāḥ date request |
+| 8601 | Header + burger menu |
+| 8646 | Account/basket/login/register placeholders |
+| 8655 | Shop account sign-in status |
+| 8721 | New Build appeal figure, read from the database |
+| 8883 | Copy to clipboard |
+| 8902 | Imams' Advice contact form |
+
+**Keeping this honest.** A line-number table in a file that changes daily
+goes stale the way every such table does — quietly, and nobody notices until
+it's wrong for someone. Treat a mismatch of a line or two as normal drift, not
+a bug; treat the table pointing at the wrong *section* entirely as worth a
+one-line fix in the same commit that moved it. This isn't enforced by a test,
+on purpose — a check that fails on every refactor gets `--no-verify`'d, and a
+false sense of freshness is worse than an honest "may have drifted."
+
 ### One rail, on every staff screen — and a desk under it
 
 **The rail was only half of it, and a screenshot is what proved that.** Every
