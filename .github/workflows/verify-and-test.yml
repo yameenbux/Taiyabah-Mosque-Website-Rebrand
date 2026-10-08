@@ -28,6 +28,19 @@ on:
 jobs:
   verify-and-test:
     runs-on: ubuntu-latest
+    env:
+      # Every test file launches Chromium with
+      # executable_path="/opt/pw-browsers/chromium" — the exact path Claude
+      # Code's own sandbox pins its pre-installed browser to, which is where
+      # these tests were written and run. A stock runner has no such path or
+      # convenience symlink by default, so this job recreates it rather than
+      # editing 40+ test files to stop assuming one environment. A handful of
+      # files (favicon_test.py among them) call .launch() with no
+      # executable_path at all; those fall back to Playwright's own
+      # discovery, which reads this same PLAYWRIGHT_BROWSERS_PATH at runtime,
+      # not only at install time — so it has to stay set for every step
+      # after the install, not just during it.
+      PLAYWRIGHT_BROWSERS_PATH: /opt/pw-browsers
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +52,21 @@ jobs:
         run: pip install playwright Pillow
 
       - name: Install Chromium
-        run: playwright install --with-deps chromium
+        run: |
+          sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+          sudo chown -R "$(id -u):$(id -g)" "$PLAYWRIGHT_BROWSERS_PATH"
+          playwright install --with-deps chromium chromium-headless-shell
+          # Recreate the "chromium" convenience symlink the test suite's
+          # executable_path hardcodes — Playwright's own install layout
+          # names the real binary by version (chromium-####/chrome-linux/
+          # chrome) and does not create this symlink itself.
+          chrome_bin="$(find "$PLAYWRIGHT_BROWSERS_PATH" -maxdepth 3 -type f -name chrome | head -1)"
+          if [ -z "$chrome_bin" ]; then
+            echo "::error::playwright install did not produce a chrome binary under $PLAYWRIGHT_BROWSERS_PATH"
+            exit 1
+          fi
+          ln -sf "$chrome_bin" "$PLAYWRIGHT_BROWSERS_PATH/chromium"
+          echo "chromium -> $chrome_bin"
 
       - name: Verify structure
         run: python3 verify_structure.py
