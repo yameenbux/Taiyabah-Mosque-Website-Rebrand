@@ -95,6 +95,37 @@ VIEWPORTS = [(360, 780), (768, 1000), (1280, 900), (1920, 1080)]
 #  reaches us truncated to its last 70 characters.
 OFFSITE = ("upabase.co", "ytimg.com", "youtube.com", "gstatic", "googleapis")
 
+
+def classify(errs, bad_req):
+    """Split what a page run collected into an offsite failure (allowed)
+    and everything else (not).
+
+    bad_req carries the URL, so OFFSITE matches it directly — that is
+    local_bad below, same as it always was. A generic "Failed to load
+    resource: ...404" console message does not carry the URL — Chromium's
+    own text for it never names the resource — so OFFSITE cannot match it
+    the same way, and it was slipping through as a "the page threw" failure
+    on every YouTube thumbnail this sandbox cannot reach. Exactly one such
+    message is emitted per failed request, though, so as many of them as
+    there were offsite HTTP failures are the ones that message was about,
+    and only that many are discounted.
+    """
+    local_bad = [shown for url, shown in sorted(set(bad_req))
+                 if not any(o in url for o in OFFSITE)]
+    offsite_fails = sum(1 for url, _ in bad_req if any(o in url for o in OFFSITE))
+    real_errs = [e for e in errs
+                 if "ERR_TUNNEL_CONNECTION_FAILED" not in e
+                 and "Failed to fetch" not in e
+                 and "NetworkError" not in e
+                 and not any(o in e for o in OFFSITE)]
+    for _ in range(offsite_fails):
+        for i, e in enumerate(real_errs):
+            if "Failed to load resource" in e:
+                del real_errs[i]
+                break
+    return real_errs, local_bad
+
+
 #  A minimum tap target, in CSS pixels. WCAG 2.2 Success Criterion 2.5.8.
 MIN_TARGET = 24
 
@@ -287,13 +318,7 @@ with sync_playwright() as p:
         #  the filter ever sees it. One Supabase call was then reported as a
         #  broken link on every page at every width, which is a test that has
         #  started lying rather than a page that has started failing.
-        local_bad  = [shown for url, shown in sorted(set(bad_req))
-                      if not any(o in url for o in OFFSITE)]
-        real_errs  = [e for e in errs
-                      if "ERR_TUNNEL_CONNECTION_FAILED" not in e
-                      and "Failed to fetch" not in e
-                      and "NetworkError" not in e
-                      and not any(o in e for o in OFFSITE)]
+        real_errs, local_bad = classify(errs, bad_req)
         check(real_errs == [], "@%dpx the main site threw: %s" % (width, real_errs[:4]))
         check(local_bad == [], "@%dpx the main site requested something that failed: %s"
                              % (width, local_bad[:4]))
@@ -331,12 +356,7 @@ with sync_playwright() as p:
         #  Same rule as the main site: this machine cannot reach Supabase,
         #  and the URL arrives truncated to its last 70 characters, so the
         #  leading "s" of "supabase" is often already gone.
-        local_bad = [shown for url, shown in sorted(set(bad_req))
-                     if not any(o in url for o in OFFSITE)]
-        real_errs = [e for e in errs
-                     if "ERR_TUNNEL_CONNECTION_FAILED" not in e
-                     and "Failed to fetch" not in e and "NetworkError" not in e
-                     and not any(o in e for o in OFFSITE)]
+        real_errs, local_bad = classify(errs, bad_req)
         check(real_errs == [], "%s/ threw on load: %s" % (folder, real_errs[:3]))
         check(local_bad == [], "%s/ requested something that failed: %s"
                                % (folder, local_bad[:3]))
