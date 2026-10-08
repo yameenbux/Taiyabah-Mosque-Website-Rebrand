@@ -51,6 +51,19 @@ jobs:
       - name: Install Python dependencies
         run: pip install playwright Pillow
 
+      - name: Install acorn
+        # messages_test.py, parent_portal_test.py and progress_test.py each
+        # check several portal scripts against CLAUDE.md's "Browser
+        # JavaScript is ES5" rule (older phones in the community run
+        # browsers that don't parse the rest — a blank screen, not a
+        # warning). The real check is a parse with acorn --ecma5; without
+        # acorn on PATH each test falls back to a naive regex line-scan,
+        # which doesn't know a comment or a string from code — "`hidden`"
+        # in a comment and "let us know" in a sentence both false-positive
+        # as ES6. Installing the real parser is the fix; the nine files
+        # those three tests were failing on were already correct ES5.
+        run: npm install -g acorn
+
       - name: Install Chromium
         run: |
           sudo mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"

@@ -272,7 +272,16 @@ with sync_playwright() as p:
                   #  is merely kept in step with the page proves only that
                   #  the page agrees with itself.
                   "bmcc_certificate_path", "bmcc_certificate_date",
-                  "students_total", "students_boarding"]
+                  "students_total", "students_boarding",
+                  #  masjid. Added 8 October 2026: this list had drifted
+                  #  behind the live function, not the other way round.
+                  #  pg_get_functiondef confirmed the function's first
+                  #  executable line is
+                  #    v_masjid := public.masjid_or_sole(payload ->> 'masjid');
+                  #  — part of the MasjidOne multi-tenancy work — and the
+                  #  page already sends `masjid: cfg.MASJID`. Both sides
+                  #  agree; only this list was stale.
+                  "masjid"]
         missing = [k for k in EXPECT if k not in pl]
         extra = [k for k in pl if k not in EXPECT]
         check(not missing, "the page never sends these, so they arrive null: %s" % missing)
