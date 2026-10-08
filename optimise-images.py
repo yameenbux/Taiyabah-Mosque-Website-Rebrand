@@ -21,12 +21,21 @@ cached separately by the browser, and served without the base64 overhead.
 
 FORMAT
 ------
-Progressive JPEG, deliberately, not WebP. WebP would be roughly 25% smaller
-again, but it is a compatibility bet — Safari only gained it in 2020 — and the
-win here comes from not shipping the images at all until they are needed, not
-from the codec. If someone later decides the extra 25% is worth the bet, it is
-a one-line change to FORMAT below. Broken photographs on an older phone are a
-worse failure than a slightly larger file.
+WebP as of 8 October 2026. The original call here was Progressive JPEG,
+deliberately not WebP, because WebP support was a compatibility bet — Safari
+only gained it in 2020, and this script predates that being long enough ago to
+trust. It no longer is: every browser still receiving updates has supported
+WebP for several years, so the bet this file worried about has already been
+won. WebP is roughly 25% smaller than JPEG at the same visual quality, on top
+of the win from not shipping images until they're needed, which still holds
+either way.
+
+Changing FORMAT is not quite the one-line change the previous version of this
+comment promised — the output extension, the save() call's JPEG-only kwargs
+(progressive, subsampling), and the manifest entries all had ".jpg" written in
+by hand rather than derived from FORMAT. EXT below is now the single source of
+truth for the extension; save_image() below holds the one format-specific
+branch. If a future format needs the same swap, that is where it goes.
 
 SIZES
 -----
@@ -44,7 +53,19 @@ import base64, io, json, os, re, sys
 from PIL import Image
 
 OUT_DIR = "img"
-FORMAT  = "JPEG"
+FORMAT  = "WEBP"
+EXT     = FORMAT.lower()
+
+
+def save_image(im, buf, quality):
+    """Encode im into buf at FORMAT. progressive/subsampling are JPEG-only
+    kwargs — Pillow's WebP writer raises on a kwarg it doesn't take, so they
+    only get passed when FORMAT is actually JPEG."""
+    if FORMAT == "JPEG":
+        im.save(buf, FORMAT, quality=quality, optimize=True,
+                 progressive=True, subsampling=2)
+    else:
+        im.save(buf, FORMAT, quality=quality, method=6)
 
 # (longest edge, quality) by role. Anything not listed falls back to DEFAULT.
 ROLES = {
@@ -184,13 +205,20 @@ def source_path(placeholder, mapping, slug=None):
         guess = os.path.join("build-inputs", slug.replace("-", "_") + "_b64.txt")
         if os.path.exists(guess):
             return guess
-        master = os.path.join(OUT_DIR, slug + ".jpg")
-        if os.path.exists(master):
-            return master
+        # Checked in the CURRENT format first, then the legacy JPEG master —
+        # a file that has already been through this script once (common for
+        # the handful of slugs with no build-inputs source at all) is its own
+        # best source on every later run, in whatever format it was last
+        # written. Falling back to .jpg keeps a repo that has not re-run this
+        # script since FORMAT changed from breaking outright.
+        for ext in (EXT, "jpg"):
+            master = os.path.join(OUT_DIR, slug + "." + ext)
+            if os.path.exists(master):
+                return master
     sys.exit(
         f"no source for {{{{{placeholder}}}}}: build.py has no load() line for "
         f"it, build-inputs/{(slug or '').replace('-', '_')}_b64.txt does not "
-        f"exist, and neither does {OUT_DIR}/{slug}.jpg. Nothing was written.")
+        f"exist, and neither does {OUT_DIR}/{slug}.{EXT} or .jpg. Nothing was written.")
 
 
 def decode(path):
@@ -210,7 +238,7 @@ def main():
         src = source_path(ph, mapping, slug)
         if not os.path.exists(src):
             sys.exit(f"missing input for {ph}: {src}")
-        from_master = src.endswith(".jpg")
+        from_master = src.endswith("." + EXT) or src.endswith(".jpg")
         data = open(src, "rb").read() if from_master else decode(src)
         im = Image.open(io.BytesIO(data))
         im_format = im.format
@@ -224,35 +252,46 @@ def main():
             im.thumbnail((cap, cap), Image.LANCZOS)
 
         buf = io.BytesIO()
-        im.save(buf, FORMAT, quality=quality, optimize=True, progressive=True,
-                subsampling=2)
+        save_image(im, buf, quality)
         out = buf.getvalue()
 
         # Never ship a file that a re-encode made bigger. Two ways that
         # happens, and they want different answers:
         #
-        #  * the source is already a JPEG compressed harder than our target,
-        #    so re-encoding only adds generation loss AND bytes. Keep the
+        #  * the source is already compressed harder than our target, so
+        #    re-encoding only adds generation loss AND bytes. Keep the
         #    original bytes untouched — it is already the better file.
+        #    ONLY valid when the source format IS the output format: the
+        #    source's bytes have to actually decode as FORMAT, or this is
+        #    the same mislabelling the from_master guard above exists to
+        #    stop, just reached from the other direction.
         #  * the source is flat-colour artwork (a QR code, a logo). JPEG is
         #    the wrong format for it entirely and the ringing it introduces
         #    can stop a phone camera reading a code. That is a mistake in
         #    EXTERNAL, so stop and say so.
+        #  THIS FILE'S OWN EXTENSION, which is usually just EXT. The one case
+        #  it isn't: the "kept original" branch below keeps the source's
+        #  bytes, so it has to keep the source's extension too — writing an
+        #  untouched JPEG under a .webp name is the exact mislabelling the
+        #  from_master guard above exists to stop, reached a third way.
+        out_ext = EXT
         note = "FROM MASTER (2nd generation)" if from_master else ""
         if len(out) >= len(data):
-            if im_format == "JPEG" and not resized:
-                out, note = data, "kept original"
+            if not resized:
+                out, note = data, f"kept original ({im_format.lower()}, smaller than a {FORMAT} re-encode)"
+                out_ext = {"JPEG": "jpg"}.get(im_format, im_format.lower())
             else:
                 sys.exit(
-                    f"{slug}: re-encoding {im_format} made it bigger "
-                    f"({len(data)//1024}K -> {len(out)//1024}K). Flat-colour "
-                    f"artwork does not belong in a JPEG — take it out of "
-                    f"EXTERNAL and leave it inline.")
+                    f"{slug}: re-encoding {im_format} as {FORMAT} made it "
+                    f"bigger ({len(data)//1024}K -> {len(out)//1024}K) even "
+                    f"after resizing. Flat-colour artwork does not belong in "
+                    f"a lossy format — take it out of EXTERNAL and leave it "
+                    f"inline.")
 
         # base64 in the document costs 4 bytes per 3, which is what we compare
         # against — that is what the page actually carried.
         was = os.path.getsize(src) if from_master else len(open(src).read())
-        path = os.path.join(OUT_DIR, slug + ".jpg")
+        path = os.path.join(OUT_DIR, slug + "." + out_ext)
 
         #  WHEN THE SOURCE IS THE MASTER, THE MASTER IS NOT REWRITTEN.
         #
@@ -265,7 +304,16 @@ def main():
         #
         #  The re-encode still happens above, because the narrow copy below
         #  needs the decoded pixels. Only the write back is skipped.
-        if from_master:
+        #
+        #  ONLY WHEN FORMAT MATCHES WHAT'S ALREADY ON DISK. This shortcut
+        #  existed to avoid a second JPEG generation when the master IS a
+        #  JPEG and the output IS a JPEG — reusing the original bytes rather
+        #  than re-encoding them. With FORMAT as WebP and the on-disk master
+        #  still JPEG (it has no other source), reusing those bytes under a
+        #  .webp name would ship a JPEG mislabelled as WebP. The real WebP
+        #  encode computed above has to be written instead, every time the
+        #  two formats differ.
+        if from_master and im_format == FORMAT:
             out = data
             note = "left alone (it is its own source)"
         with open(path, "wb") as f:
@@ -273,9 +321,9 @@ def main():
 
         before += was
         after += len(out)
-        manifest[ph] = {"file": f"{OUT_DIR}/{slug}.jpg",
+        manifest[ph] = {"file": f"{OUT_DIR}/{slug}.{out_ext}",
                         "w": im.size[0], "h": im.size[1], "bytes": len(out)}
-        print(f"{slug + '.jpg':26} {was//1024:>7}K {len(out)//1024:>7}K "
+        print(f"{slug + '.' + out_ext:26} {was//1024:>7}K {len(out)//1024:>7}K "
               f"{100 - len(out)*100//max(was,1):>6}%  "
               f"{im.size[0]}x{im.size[1]} {note}")
 
@@ -293,17 +341,16 @@ def main():
                 sm = Image.open(io.BytesIO(data)).convert("RGB")
                 sm.thumbnail((NARROW_CAP, NARROW_CAP), Image.LANCZOS)
                 sbuf = io.BytesIO()
-                sm.save(sbuf, FORMAT, quality=NARROW_QUALITY, optimize=True,
-                        progressive=True, subsampling=2)
+                save_image(sm, sbuf, NARROW_QUALITY)
                 sout = sbuf.getvalue()
-                spath = os.path.join(OUT_DIR, slug + NARROW_SUFFIX + ".jpg")
+                spath = os.path.join(OUT_DIR, slug + NARROW_SUFFIX + "." + EXT)
                 with open(spath, "wb") as f:
                     f.write(sout)
                 after += len(sout)
                 manifest[ph]["narrow"] = {
-                    "file": f"{OUT_DIR}/{slug}{NARROW_SUFFIX}.jpg",
+                    "file": f"{OUT_DIR}/{slug}{NARROW_SUFFIX}.{EXT}",
                     "w": sm.size[0], "h": sm.size[1], "bytes": len(sout)}
-                print(f"{'  + ' + slug + NARROW_SUFFIX + '.jpg':26} "
+                print(f"{'  + ' + slug + NARROW_SUFFIX + '.' + EXT:26} "
                       f"{'':>7}  {len(sout)//1024:>7}K "
                       f"{100 - len(sout)*100//max(len(out),1):>6}%  "
                       f"{sm.size[0]}x{sm.size[1]} phone copy")
@@ -313,7 +360,7 @@ def main():
 
     print(f"\n{len(manifest)} files written to {OUT_DIR}/")
     print(f"in the document before: {before/1024/1024:.2f} MB of base64")
-    print(f"on disk now:            {after/1024/1024:.2f} MB of JPEG "
+    print(f"on disk now:            {after/1024/1024:.2f} MB of {FORMAT} "
           f"({100 - after*100//before}% smaller, and none of it loads up front)")
 
 

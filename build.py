@@ -214,12 +214,20 @@ def timetable_js():
     return js
 
 
+#  WebP since 8 October 2026 (optimise-images.py's FORMAT), except the rare
+#  file optimise-images.py found actually got SMALLER as the original format
+#  — it keeps that file's original bytes and extension rather than shipping a
+#  bigger one just to be consistent. So this checks on disk per file instead
+#  of assuming one extension for all of them; .jpg is still tried as a
+#  fallback for a repo that has not re-run optimise-images.py since FORMAT
+#  changed.
 def image(slug):
-    path = f"img/{slug}.jpg"
-    if not os.path.exists(path):
-        raise SystemExit(
-            f"{path} is missing. Run: python3 optimise-images.py")
-    return path
+    for ext in ("webp", "jpg"):
+        path = f"img/{slug}.{ext}"
+        if os.path.exists(path):
+            return path
+    raise SystemExit(
+        f"img/{slug}.webp (or .jpg) is missing. Run: python3 optimise-images.py")
 
 
 #  A PHONE SHOULD NOT DOWNLOAD THE DESKTOP'S MASTHEAD.

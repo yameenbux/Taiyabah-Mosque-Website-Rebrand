@@ -1,41 +1,41 @@
 {
   "APP_SHOT_DONATE_B64": {
-    "bytes": 34489,
-    "file": "img/app-shot-donate.jpg",
+    "bytes": 22100,
+    "file": "img/app-shot-donate.webp",
     "h": 700,
     "w": 324
   },
   "APP_SHOT_LIVE_B64": {
-    "bytes": 18924,
-    "file": "img/app-shot-live.jpg",
+    "bytes": 11268,
+    "file": "img/app-shot-live.webp",
     "h": 700,
     "w": 324
   },
   "APP_SHOT_TIMES_B64": {
-    "bytes": 28516,
-    "file": "img/app-shot-times.jpg",
+    "bytes": 17194,
+    "file": "img/app-shot-times.webp",
     "h": 700,
     "w": 324
   },
   "ARTICLES_HERO_B64": {
-    "bytes": 360495,
-    "file": "img/articles-hero.jpg",
+    "bytes": 335342,
+    "file": "img/articles-hero.webp",
     "h": 1050,
     "narrow": {
-      "bytes": 136244,
-      "file": "img/articles-hero-800.jpg",
+      "bytes": 134878,
+      "file": "img/articles-hero-800.webp",
       "h": 600,
       "w": 800
     },
     "w": 1400
   },
   "ARTICLE_HAJJ_HERO_B64": {
-    "bytes": 323296,
-    "file": "img/article-hajj-hero.jpg",
+    "bytes": 309904,
+    "file": "img/article-hajj-hero.webp",
     "h": 933,
     "narrow": {
-      "bytes": 122770,
-      "file": "img/article-hajj-hero-800.jpg",
+      "bytes": 121476,
+      "file": "img/article-hajj-hero-800.webp",
       "h": 533,
       "w": 800
     },
@@ -48,242 +48,242 @@
     "w": 620
   },
   "ARTICLE_ISLAM_HERO_B64": {
-    "bytes": 139856,
-    "file": "img/article-islam-hero.jpg",
+    "bytes": 94512,
+    "file": "img/article-islam-hero.webp",
     "h": 933,
     "narrow": {
-      "bytes": 55381,
-      "file": "img/article-islam-hero-800.jpg",
+      "bytes": 39172,
+      "file": "img/article-islam-hero-800.webp",
       "h": 533,
       "w": 800
     },
     "w": 1400
   },
   "ARTICLE_PILLARS_HERO_B64": {
-    "bytes": 70816,
-    "file": "img/article-pillars-hero.jpg",
+    "bytes": 39448,
+    "file": "img/article-pillars-hero.webp",
     "h": 933,
     "narrow": {
-      "bytes": 30517,
-      "file": "img/article-pillars-hero-800.jpg",
+      "bytes": 17708,
+      "file": "img/article-pillars-hero-800.webp",
       "h": 533,
       "w": 800
     },
     "w": 1400
   },
   "ARTICLE_PILLARS_THUMB_B64": {
-    "bytes": 22686,
-    "file": "img/article-pillars-thumb.jpg",
+    "bytes": 13288,
+    "file": "img/article-pillars-thumb.webp",
     "h": 426,
     "w": 640
   },
   "ARTICLE_RAMADAN_HERO_B64": {
-    "bytes": 144029,
-    "file": "img/article-ramadan-hero.jpg",
+    "bytes": 97338,
+    "file": "img/article-ramadan-hero.webp",
     "h": 933,
     "narrow": {
-      "bytes": 59346,
-      "file": "img/article-ramadan-hero-800.jpg",
+      "bytes": 43976,
+      "file": "img/article-ramadan-hero-800.webp",
       "h": 533,
       "w": 800
     },
     "w": 1400
   },
   "ARTICLE_RAMADAN_THUMB_B64": {
-    "bytes": 44310,
-    "file": "img/article-ramadan-thumb.jpg",
+    "bytes": 32450,
+    "file": "img/article-ramadan-thumb.webp",
     "h": 426,
     "w": 640
   },
   "BANNER_ACCENT_B64": {
-    "bytes": 82202,
-    "file": "img/banner-accent.jpg",
+    "bytes": 43556,
+    "file": "img/banner-accent.webp",
     "h": 715,
     "narrow": {
-      "bytes": 44545,
-      "file": "img/banner-accent-800.jpg",
+      "bytes": 26610,
+      "file": "img/banner-accent-800.webp",
       "h": 520,
       "w": 800
     },
     "w": 1100
   },
   "BANNER_PHOTO_B64": {
-    "bytes": 159741,
-    "file": "img/banner-photo.jpg",
+    "bytes": 87482,
+    "file": "img/banner-photo.webp",
     "h": 924,
     "narrow": {
-      "bytes": 53040,
-      "file": "img/banner-photo-800.jpg",
+      "bytes": 36990,
+      "file": "img/banner-photo-800.webp",
       "h": 528,
       "w": 800
     },
     "w": 1400
   },
   "CONTACT_BUILDING_B64": {
-    "bytes": 81410,
-    "file": "img/contact-building.jpg",
+    "bytes": 54566,
+    "file": "img/contact-building.webp",
     "h": 629,
     "w": 760
   },
   "CONTACT_HERO_B64": {
-    "bytes": 69530,
-    "file": "img/contact-hero.jpg",
+    "bytes": 37492,
+    "file": "img/contact-hero.webp",
     "h": 1050,
     "narrow": {
-      "bytes": 28707,
-      "file": "img/contact-hero-800.jpg",
+      "bytes": 15580,
+      "file": "img/contact-hero-800.webp",
       "h": 600,
       "w": 800
     },
     "w": 1400
   },
   "EDU_ARABIC_B64": {
-    "bytes": 59376,
-    "file": "img/edu-arabic.jpg",
+    "bytes": 36742,
+    "file": "img/edu-arabic.webp",
     "h": 450,
     "w": 800
   },
   "EDU_GHUSL_B64": {
-    "bytes": 46051,
-    "file": "img/edu-ghusl.jpg",
+    "bytes": 25418,
+    "file": "img/edu-ghusl.webp",
     "h": 450,
     "w": 800
   },
   "HALLHIRE_BAND_B64": {
-    "bytes": 107079,
-    "file": "img/hallhire-band.jpg",
+    "bytes": 65352,
+    "file": "img/hallhire-band.webp",
     "h": 700,
     "narrow": {
-      "bytes": 46184,
-      "file": "img/hallhire-band-800.jpg",
+      "bytes": 31380,
+      "file": "img/hallhire-band-800.webp",
       "h": 400,
       "w": 800
     },
     "w": 1400
   },
   "HOME_BUILDING_B64": {
-    "bytes": 130148,
-    "file": "img/home-building.jpg",
+    "bytes": 74898,
+    "file": "img/home-building.webp",
     "h": 993,
     "narrow": {
-      "bytes": 67175,
-      "file": "img/home-building-800.jpg",
+      "bytes": 42648,
+      "file": "img/home-building-800.webp",
       "h": 662,
       "w": 800
     },
     "w": 1200
   },
   "MADRASAH_HERO_B64": {
-    "bytes": 101232,
-    "file": "img/madrasah-hero.jpg",
+    "bytes": 56556,
+    "file": "img/madrasah-hero.webp",
     "h": 786,
     "narrow": {
-      "bytes": 44844,
-      "file": "img/madrasah-hero-800.jpg",
+      "bytes": 26664,
+      "file": "img/madrasah-hero-800.webp",
       "h": 449,
       "w": 800
     },
     "w": 1400
   },
   "MEDIA_HERO_B64": {
-    "bytes": 122327,
-    "file": "img/media-hero.jpg",
+    "bytes": 79520,
+    "file": "img/media-hero.webp",
     "h": 1400,
     "narrow": {
-      "bytes": 47525,
-      "file": "img/media-hero-800.jpg",
+      "bytes": 30420,
+      "file": "img/media-hero-800.webp",
       "h": 800,
       "w": 600
     },
     "w": 1050
   },
   "PRAYER_HERO_B64": {
-    "bytes": 249429,
-    "file": "img/prayer-hero.jpg",
+    "bytes": 216568,
+    "file": "img/prayer-hero.webp",
     "h": 1050,
     "narrow": {
-      "bytes": 85587,
-      "file": "img/prayer-hero-800.jpg",
+      "bytes": 73378,
+      "file": "img/prayer-hero-800.webp",
       "h": 600,
       "w": 800
     },
     "w": 1400
   },
   "SERVICES_HERO_B64": {
-    "bytes": 60503,
-    "file": "img/services-hero.jpg",
+    "bytes": 24334,
+    "file": "img/services-hero.webp",
     "h": 933,
     "narrow": {
-      "bytes": 24317,
-      "file": "img/services-hero-800.jpg",
+      "bytes": 10804,
+      "file": "img/services-hero-800.webp",
       "h": 533,
       "w": 800
     },
     "w": 1400
   },
   "SHOP_BOOKS_B64": {
-    "bytes": 20869,
-    "file": "img/shop-books.jpg",
+    "bytes": 13270,
+    "file": "img/shop-books.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_DATES_B64": {
-    "bytes": 34590,
-    "file": "img/shop-dates.jpg",
+    "bytes": 30944,
+    "file": "img/shop-dates.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_HAJJ_B64": {
-    "bytes": 30572,
-    "file": "img/shop-hajj.jpg",
+    "bytes": 27040,
+    "file": "img/shop-hajj.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_HERBAL_B64": {
-    "bytes": 14522,
-    "file": "img/shop-herbal.jpg",
+    "bytes": 8942,
+    "file": "img/shop-herbal.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_HERO_B64": {
-    "bytes": 349223,
-    "file": "img/shop-hero.jpg",
+    "bytes": 307908,
+    "file": "img/shop-hero.webp",
     "h": 1400,
     "narrow": {
-      "bytes": 118982,
-      "file": "img/shop-hero-800.jpg",
+      "bytes": 108830,
+      "file": "img/shop-hero-800.webp",
       "h": 800,
       "w": 533
     },
     "w": 933
   },
   "SHOP_HONEY_B64": {
-    "bytes": 18857,
-    "file": "img/shop-honey.jpg",
+    "bytes": 11812,
+    "file": "img/shop-honey.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_OILS_B64": {
-    "bytes": 79347,
-    "file": "img/shop-oils.jpg",
+    "bytes": 42302,
+    "file": "img/shop-oils.webp",
     "h": 781,
     "w": 800
   },
   "SHOP_PERFUME_B64": {
-    "bytes": 40411,
-    "file": "img/shop-perfume.jpg",
+    "bytes": 19702,
+    "file": "img/shop-perfume.webp",
     "h": 628,
     "w": 800
   },
   "SHOP_PRAYER_B64": {
-    "bytes": 35457,
-    "file": "img/shop-prayer.jpg",
+    "bytes": 31340,
+    "file": "img/shop-prayer.webp",
     "h": 285,
     "w": 380
   },
   "SHOP_ZAMZAM_B64": {
-    "bytes": 88743,
-    "file": "img/shop-zamzam.jpg",
+    "bytes": 58376,
+    "file": "img/shop-zamzam.webp",
     "h": 800,
     "w": 800
   }

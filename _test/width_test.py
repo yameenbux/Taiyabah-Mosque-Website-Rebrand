@@ -17,7 +17,8 @@ the width available to it, on every staff screen, at a desk-sized viewport.
 import os, json, http.server, socketserver, threading, functools, sys
 from playwright.sync_api import sync_playwright
 
-ROOT = "/home/claude/taiyabah-site-v2"
+ROOT = os.environ.get("SITE_ROOT") or os.path.abspath(
+    os.path.join(os.path.dirname(__file__), ".."))
 os.chdir(ROOT)
 socketserver.TCPServer.allow_reuse_address = True
 

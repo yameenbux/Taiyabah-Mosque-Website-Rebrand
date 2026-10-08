@@ -1,0 +1,69 @@
+name: Verify and test
+
+# Runs on every push and every pull request. Added 8 October 2026, after an
+# external code review pointed out that pushing to main IS deploying — this
+# repo has no staging environment, GitHub Pages serves straight from the
+# repository root — and until now nothing stood between a commit and
+# production except a human remembering to run the test suite by hand first.
+#
+# This does three things, in order, each one gating the next:
+#   1. verify_structure.py  — the repo's own fast structural checks
+#   2. build.py, then confirm the committed index.html/404.html are not
+#      stale — these are GENERATED files (see DEPLOY.md); editing them by
+#      hand instead of index_template.html/404_template.html is a mistake
+#      this repo's own README already warns about, and nothing used to catch
+#      it actually happening
+#   3. every _test/*_test.py and _test/*_mutants.py file — the real
+#      Playwright-driven suite. _test/*_shots.py files are deliberately
+#      excluded: they photograph a screen for human review and assert
+#      nothing, so there is no pass/fail signal to gate on.
+#
+# All three stages are self-maintaining: the loop in the last step picks up
+# any test file added later with no workflow edit required.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: pip install playwright Pillow
+
+      - name: Install Chromium
+        run: playwright install --with-deps chromium
+
+      - name: Verify structure
+        run: python3 verify_structure.py
+
+      - name: Build
+        run: python3 build.py
+
+      - name: Confirm index.html and 404.html are not stale
+        run: |
+          if ! git diff --exit-code -- index.html 404.html; then
+            echo "::error::index.html and/or 404.html do not match what build.py" \
+                 "generates from index_template.html/404_template.html. Someone" \
+                 "edited the generated file directly, or forgot to rebuild and" \
+                 "commit after editing the template. Run 'python3 build.py' and" \
+                 "commit the result."
+            exit 1
+          fi
+
+      - name: Run the test suite
+        run: |
+          set -e
+          shopt -s nullglob
+          for f in _test/*_test.py _test/*_mutants.py; do
+            echo "::group::$f"
+            python3 "$f"
+            echo "::endgroup::"
+          done
