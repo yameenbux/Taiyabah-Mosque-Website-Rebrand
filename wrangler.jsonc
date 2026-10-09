@@ -1,0 +1,17 @@
+{
+  // Static hosting only — no Worker script. This repo has no server-side
+  // code of its own; everything dynamic already runs in Supabase Edge
+  // Functions. Omitting "main" is what tells Cloudflare this Worker serves
+  // assets and nothing else.
+  "name": "taiyabah-mosque-website-rebrand",
+  "compatibility_date": "2026-10-09",
+  "assets": {
+    // Repo root, matching how GitHub Pages already serves this site —
+    // "straight from the repository root" (see verify-and-test.yml).
+    "directory": "./",
+    // Multi-page site with a real 404.html per DEPLOY.md, not a
+    // single-page app — closest 404.html wins, nothing is rewritten to
+    // index.html.
+    "not_found_handling": "404-page"
+  }
+}
