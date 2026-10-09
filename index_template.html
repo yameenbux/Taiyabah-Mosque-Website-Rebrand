@@ -72,8 +72,28 @@
      already hosting the Cloudflare staging deploy, so this cost a hostname
      entry rather than a new signup. type="module" is deferred by the HTML
      spec on its own, same effect as Sentry's async above, without needing
-     the attribute spelled out. -->
-<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0809b0d9fe194705855e8b14cd1f7ae6"}'></script>
+     the attribute spelled out.
+
+     LOADED ONLY ON THE MASJID'S OWN DOMAINS, not unconditionally like
+     Sentry above. beacon.min.js makes a second call of its own, to
+     cloudflareinsights.com/cdn-cgi/rum, and that one throws a CORS error
+     on any origin Cloudflare hasn't provisioned for this beacon — every
+     CI run (sweep_test.py serves pages from 127.0.0.1), every Cloudflare
+     preview URL, every future PR preview. Unconditional, that is not a
+     flaky test; it is every run, forever, because every run serves from
+     somewhere that isn't one of these two hostnames. Gating here fixes
+     the CI failure and is also the right analytics hygiene on its own
+     terms — a bot or a PR preview reporting as a "visit" would be noise
+     in the dashboard regardless of what broke the test. -->
+<script>
+if (['taiyabahwebsite.ysbdesigns.uk', 'taiyabahmasjid.com', 'www.taiyabahmasjid.com'].indexOf(location.hostname) !== -1) {
+  var cfBeacon = document.createElement('script');
+  cfBeacon.type = 'module';
+  cfBeacon.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  cfBeacon.setAttribute('data-cf-beacon', '{"token": "0809b0d9fe194705855e8b14cd1f7ae6"}');
+  document.head.appendChild(cfBeacon);
+}
+</script>
 <script>
 /* ---------------------------------------------------------------------------
    Connection settings for the hall hire form.
