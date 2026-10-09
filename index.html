@@ -53,10 +53,20 @@
 <meta name="twitter:image:alt" content="The Taiyabah Masjid logo — Bolton, established 1967">
 <!-- Sentry error tracking. Loader script, not the full SDK bundle: it ships
      ~1KB and only pulls in the rest if something actually throws, so it
-     doesn't touch the page weight budget weight_test enforces. Placed first
-     so it can catch errors from every script after it, including the one
-     immediately below. -->
-<script src="https://js-de.sentry-cdn.com/962ffbb321bec1c2efc2d15b552a1152.min.js" crossorigin="anonymous"></script>
+     doesn't touch the page weight budget weight_test enforces.
+
+     ASYNC, NOT A PLAIN <script src>. The first version blocked the parser
+     here at the top of <head> while it fetched over the network, which
+     pushed back everything after it — including the inline script that
+     flips #dn-go off aria-disabled. donate_test.py caught it: the gold
+     background is a .2s transition, timed against a fixed wait, and a
+     delayed flip left the transition short of done — rgb(198,162,77),
+     one unit off rgb(198,162,76), caught on the real network a CI runner
+     has and this project's own sandbox doesn't. A visitor on a slow
+     connection would feel the same delay across the whole page, which is
+     the opposite of what weight_test's budget is for. async keeps Sentry
+     loading in parallel instead of ahead of everything else. -->
+<script src="https://js-de.sentry-cdn.com/962ffbb321bec1c2efc2d15b552a1152.min.js" crossorigin="anonymous" async></script>
 <script>
 /* ---------------------------------------------------------------------------
    Connection settings for the hall hire form.
