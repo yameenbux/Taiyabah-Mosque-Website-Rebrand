@@ -51,6 +51,12 @@
 <meta name="twitter:description" content="Serving Bolton's Muslim community since 1967. Prayer times, the new build appeal, the madrasah, hall hire and how to reach us.">
 <meta name="twitter:image" content="https://www.taiyabahmasjid.com/og-image.jpg">
 <meta name="twitter:image:alt" content="The Taiyabah Masjid logo — Bolton, established 1967">
+<!-- Sentry error tracking. Loader script, not the full SDK bundle: it ships
+     ~1KB and only pulls in the rest if something actually throws, so it
+     doesn't touch the page weight budget weight_test enforces. Placed first
+     so it can catch errors from every script after it, including the one
+     immediately below. -->
+<script src="https://js-de.sentry-cdn.com/962ffbb321bec1c2efc2d15b552a1152.min.js" crossorigin="anonymous"></script>
 <script>
 /* ---------------------------------------------------------------------------
    Connection settings for the hall hire form.
