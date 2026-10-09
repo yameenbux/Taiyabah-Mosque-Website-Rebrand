@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>System health — Taiyabah Masjid</title>
+<link rel="preload" href="../fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../admin/fonts.css">
+<link rel="stylesheet" href="../admin/shell.css">
+<script src="../admin/shell.js" defer></script>
+<style>
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
+    --gold:#C6A24C; --gold-bright:#DCBB63;
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
+    --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:940px){ .shell{grid-template-columns:1.03fr 1fr;} }
+
+  /* ---- brand panel ---- */
+  .brand{
+    position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    padding:46px 0 44px;display:flex;flex-direction:column;justify-content:flex-start;
+  }
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
+  .brand::after{
+    content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
+    border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
+  }
+  .brand-inner{position:relative;z-index:2;width:min(470px,86%);margin:0 auto;}
+  @media (min-width:940px){ .brand-inner{margin:0 auto auto max(6vw,32px);} }
+  .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
+  .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
+  .brand p{color:rgba(243,239,227,.82);font-size:1.035rem;line-height:1.65;max-width:44ch;}
+  .brand .back{
+    display:inline-flex;align-items:center;gap:6px;margin-top:26px;
+    color:rgba(243,239,227,.66);font-size:.943rem;font-weight:600;text-decoration:none;
+  }
+  .brand .back:hover{color:#F3EFE3;}
+  .pcredit{
+    position:relative;z-index:2;margin:auto auto 0;padding-top:28px;
+    width:min(470px,86%);font-size:.88rem;color:rgba(243,239,227,.45);
+  }
+  @media (min-width:940px){ .pcredit{margin:auto auto 0 max(6vw,32px);} }
+  .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
+  .pcredit a:hover{color:var(--gold-bright);}
+
+  /* ---- form side ---- */
+  .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
+  @media (min-width:940px){ .panel{padding:64px 0;} }
+  .card{
+    width:min(420px,86%);background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
+  }
+  .card h2{font-size:1.408rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.977rem;line-height:1.55;margin-bottom:22px;}
+
+  form{display:flex;flex-direction:column;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  input[type=email],input[type=password],input[type=text]{
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
+  }
+  input::placeholder{color:#A99CA4;}
+  input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .pw{position:relative;display:flex;}
+  .pw input{padding-right:62px;}
+  .pw button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.88rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
+    padding:6px 8px;border-radius:6px;
+  }
+  .pw button:hover{background:var(--paper);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:1.003rem;
+    cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
+  .btn-ghost{background:none;border-color:var(--line);color:var(--brand-800);}
+  .btn-ghost:hover{border-color:var(--brand-800);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .err{
+    background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
+    border-radius:9px;padding:11px 13px;font-size:.949rem;line-height:1.5;
+  }
+  .note{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.931rem;line-height:1.6;color:var(--muted);text-align:center;
+  }
+
+  /* ---- MFA ---- */
+  .code-input{
+    font-size:1.5rem !important;letter-spacing:.42em;text-align:center;
+    font-variant-numeric:tabular-nums;font-weight:700;padding:14px 13px !important;
+  }
+  .qr{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:4px;
+  }
+  .qr img{width:172px;height:172px;display:block;}
+  .secret{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.907rem;
+    letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
+    background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+  }
+  .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .steps li{font-size:.954rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li::before{
+    content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold);
+  }
+
+  /* ---- signed in ---- */
+  .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(160deg,var(--brand-800),var(--brand-600,#772157));
+    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces",serif;font-weight:700;font-size:1.115rem;
+  }
+  .who-t{min-width:0;}
+  .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
+  .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+  .role-chip{
+    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
+  }
+  .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+
+  /*  Inside the identity block, which shell.css hides once the rail is up —
+      so on a signed-in desk this is never drawn. Styled anyway rather than
+      deleted, because the markup it sits on is real (app.js fills #app-name
+      and #app-email) and a class with no rules is how times/ shipped a form
+      three centimetres wide with every other test passing. */
+  .av{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    background:var(--brand-700);color:#F3EFE3;font-size:.95rem;
+  }
+
+  .card.is-wide{width:min(720px,94%);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  /* ---- loading ---- */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+  .loading p{font-size:.96rem;color:var(--muted);}
+
+  .card-foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);}
+
+  /* ---------- the health screen itself ----------
+     Everything from here down is new. The rest of this stylesheet above —
+     shell, brand, card, buttons, .err, MFA, .who, .roles — is the portal's
+     own and is left exactly as every other screen has it. */
+
+  /*  THE HEADLINE. Plum-and-gold is this project's "nothing is wrong, look
+      anyway" colour (see rates/ and venue/'s own notes on this); it is wrong
+      here on purpose. "Fail" does not get the gold treatment anywhere else on
+      this site and should not start here — it is the one state on this
+      screen that means a developer needs to look. */
+  .hh-status{
+    display:flex;align-items:center;gap:14px;border-radius:12px;
+    padding:16px 18px;margin-bottom:22px;
+  }
+  .hh-status.is-ok{background:rgba(63,122,70,.1);border:1px solid rgba(63,122,70,.35);}
+  .hh-status.is-fail{background:rgba(180,83,47,.1);border:1px solid rgba(180,83,47,.4);}
+  .hh-dot{width:13px;height:13px;border-radius:50%;flex:0 0 auto;}
+  .hh-status.is-ok .hh-dot{background:var(--success);}
+  .hh-status.is-fail .hh-dot{background:var(--danger);}
+  .hh-status h3{font-size:1.08rem;margin:0;}
+  .hh-status.is-ok h3{color:var(--success-ink);}
+  .hh-status.is-fail h3{color:var(--danger-ink);}
+  .hh-status p{font-size:.92rem;color:var(--muted);margin-top:2px;}
+
+  .hh-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+  .hh-toolbar .btn{width:auto;}
+  .hh-checked{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  .hh-list{display:flex;flex-direction:column;gap:9px;}
+  .hh-row{
+    display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);
+    border-radius:11px;padding:12px 14px;background:var(--paper);
+  }
+  .hh-row.is-fail{border-color:rgba(180,83,47,.4);background:rgba(180,83,47,.06);}
+  .hh-mk{
+    flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:grid;
+    place-items:center;font-size:.8rem;font-weight:800;margin-top:1px;
+  }
+  .hh-row:not(.is-fail) .hh-mk{background:rgba(63,122,70,.15);color:var(--success-ink);}
+  .hh-row.is-fail .hh-mk{background:rgba(180,83,47,.16);color:var(--danger-ink);}
+  .hh-body{min-width:0;}
+  .hh-name{font-size:.94rem;font-weight:700;color:var(--ink);}
+  .hh-row.is-fail .hh-name{color:var(--danger-ink);}
+  .hh-detail{font-size:.9rem;line-height:1.5;color:var(--muted);margin-top:2px;}
+
+  .hh-empty{
+    text-align:center;padding:24px 18px;color:var(--muted);font-size:.965rem;
+    line-height:1.6;background:var(--paper);border:1px dashed var(--line);border-radius:12px;
+  }
+  .hh-note{
+    font-size:.88rem;line-height:1.6;color:var(--muted);margin-top:18px;
+    padding-top:16px;border-top:1px solid var(--line);
+  }
+</style>
+<style>
+  .brand{justify-content:flex-start;}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand">
+    <div class="brand-inner">
+      <img class="logo" src="../img/masjid-logo.png" alt="Taiyabah Masjid">
+      <div class="eyebrow">Taiyabah Masjid</div>
+      <h1>System health</h1>
+      <p>What the website's own checks have found, run on demand &mdash; the same fourteen things a cron job already checks every fifteen minutes, read here instead of waiting for an email.</p>
+      <!-- Administrators only, so this always points at the admin centre. -->
+      <a class="back" href="../portals/">&larr; Back to the admin centre</a>
+    </div>
+
+    <p class="pcredit">Powered by <a href="https://masjidone.co.uk" target="_blank" rel="noopener">MasjidOne</a></p>
+  </div>
+
+  <div class="panel">
+
+    <!-- loading -->
+    <div class="card" id="view-loading">
+      <div class="loading">
+        <div class="spinner" role="status" aria-label="Checking your session"></div>
+        <p>Checking your session&hellip;</p>
+      </div>
+    </div>
+
+    <!-- sign in -->
+    <div class="card" id="view-signin" hidden>
+      <h2>Sign in</h2>
+      <p class="sub">Use the email address the masjid office holds for you.</p>
+      <div class="err" id="signin-error" hidden></div>
+      <form id="signin-form" novalidate>
+        <div class="field">
+          <label for="signin-email">Email address</label>
+          <input type="email" id="signin-email" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="signin-password">Password</label>
+          <div class="pw">
+            <input type="password" id="signin-password" autocomplete="current-password" required placeholder="••••••••">
+            <button type="button" id="pw-toggle" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gold" id="signin-submit">Sign in</button>
+      </form>
+      <p class="note">Accounts are issued by the masjid office. If you can't get in, ring 01204 535 997.</p>
+    </div>
+
+    <!-- MFA: verify -->
+    <div class="card" id="view-mfa" hidden>
+      <h2>Two-step verification</h2>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+      <div class="err" id="mfa-error" hidden></div>
+      <form id="mfa-form" novalidate>
+        <div class="field">
+          <label for="mfa-code">Verification code</label>
+          <input type="text" id="mfa-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="mfa-submit">Verify</button>
+      </form>
+      <p class="note">Codes refresh every 30 seconds. If yours keeps failing, check your phone's clock is set automatically.</p>
+    </div>
+
+    <!-- MFA: enrol -->
+    <div class="card" id="view-enrol" hidden>
+      <h2>Set up two-step verification</h2>
+      <p class="sub">Your account can read what is actually wrong with the website's own systems, so it needs a second factor before you can continue.</p>
+      <div class="err" id="enrol-error" hidden></div>
+
+      <ul class="steps">
+        <li>Install an authenticator app — Google Authenticator, Microsoft Authenticator or Authy.</li>
+        <li>Scan the square below with it.</li>
+        <li>Enter the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="enrol-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="enrol-secret"></div>
+      </div>
+      <p class="sub" style="margin:0 0 4px;font-size:.931rem;">Can't scan it? Type the code above into your app by hand.</p>
+
+      <form id="enrol-form" novalidate>
+        <div class="field">
+          <label for="enrol-code">Code from your app</label>
+          <input type="text" id="enrol-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="enrol-submit">Confirm and finish setup</button>
+      </form>
+      <p class="note">Keep the app installed — you'll need it every time you sign in.</p>
+    </div>
+
+    <!-- signed in -->
+    <div class="card is-wide" id="view-app" hidden>
+      <div class="who">
+        <span class="av" id="app-av">✓</span>
+        <span class="who-t">
+          <strong id="app-name">—</strong>
+          <span id="app-email">—</span>
+        </span>
+      </div>
+      <div class="roles" id="app-roles"></div>
+      <div class="err" id="app-error" hidden></div>
+
+      <h2>System health</h2>
+      <p class="sub">Fourteen things a cron job already checks every fifteen minutes — the scheduler itself, whether every form can still reach somebody, and a handful of data-integrity rules specific to this masjid. This page runs the same check on demand, signed in, rather than waiting for the next cycle or an email.</p>
+
+      <div class="err" id="hh-error" hidden></div>
+
+      <div class="hh-status" id="hh-status" hidden>
+        <span class="hh-dot" aria-hidden="true"></span>
+        <div>
+          <h3 id="hh-status-h">—</h3>
+          <p id="hh-status-p"></p>
+        </div>
+      </div>
+
+      <div class="hh-toolbar">
+        <button type="button" class="btn btn-gold" id="hh-recheck">Check now</button>
+        <span class="hh-checked" id="hh-checked"></span>
+      </div>
+
+      <div class="hh-list" id="hh-list"></div>
+
+      <p class="hh-note">This reads <code>health_check()</code> directly — nothing here writes anything, and checking does not send the alert email a real change triggers. The same fourteen checks run unattended every fifteen minutes regardless of whether anybody opens this page.</p>
+
+      <div class="card-foot">
+        <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../admin/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+  document.getElementById('pw-toggle').addEventListener('click', function(){
+    var i = document.getElementById('signin-password');
+    var showing = i.type === 'text';
+    i.type = showing ? 'password' : 'text';
+    this.textContent = showing ? 'Show' : 'Hide';
+    this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>

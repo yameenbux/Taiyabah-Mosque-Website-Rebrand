@@ -378,6 +378,84 @@ function plain(heading: string, lead: string, rows: [string, string][],
 }
 
 /* --------------------------------------------------------------------------
+   THE HEALTH ALERT (db/122, db/130, db/148, db/149)
+
+   health_watch() runs every 15 minutes, checks fourteen things from a
+   stalled scheduler to an unpublished prayer timetable, and already POSTs
+   here the moment any of them changes — it has done since before this
+   function existed. Nothing read `kind: "health_alert"`, so every one of
+   those posts has been landing on `return ok("nothing to send for this")`
+   and going nowhere. There is no screen anywhere in this codebase that
+   shows health_check()'s result either, so until this is read, this email
+   is the only place a human ever sees it — the full detail goes in the
+   message itself, not behind a link.
+
+   ONLY FAILING, UNTIL DB/149. health_watch() originally posted only when
+   the new status was 'fail' — a recovery updated admin_audit and nothing
+   else, so the only way to learn something had been fixed was to remember
+   it had broken and go and check. 149 posts on a recovery too; this
+   function tells the two apart on `status`, not on `failing.length`, so a
+   recovery with new, different, UNRELATED failures (unlikely, but the
+   check does not assume otherwise) still reads as "still failing".
+
+   NO FENCE NEEDED ON THE RECIPIENT, UNLIKE staff_invite ABOVE. This always
+   goes to MAIL_TO, with nothing in the request body ever choosing who reads
+   it, so a leaked NOTIFY_SECRET can make this send early or often but
+   cannot redirect it.
+   -------------------------------------------------------------------------- */
+export function healthAlertMessage(
+  status: string,
+  failing: { check: string; detail: string }[],
+): Message {
+  if (status !== "fail") {
+    return {
+      subject: ascii("Masjid website health check — back to normal"),
+      html: shell(
+        "Health check recovered",
+        "The website's own health check runs every fifteen minutes. " +
+        "Whatever it found wrong last time is no longer failing.",
+        [["Status", "<strong>ok</strong>"]],
+        "No action needed. This is the all-clear for whatever the previous " +
+        "alert reported."),
+      text: plain(
+        "Health check recovered",
+        "The website's own health check runs every fifteen minutes. " +
+        "Whatever it found wrong last time is no longer failing.",
+        [["Status", "ok"]],
+        "No action needed. This is the all-clear for whatever the previous " +
+        "alert reported."),
+    };
+  }
+
+  const n = failing.length;
+  const rows: [string, string][] = failing.length
+    ? failing.map((f) => [f.check, esc(f.detail)])
+    : [["status", "failing, but with no detail attached"]];
+  return {
+    subject: ascii(`Masjid website health check — ${n} thing${n === 1 ? "" : "s"} failing — ATTENTION REQUIRED`),
+    html: shell(
+      `${n} health check${n === 1 ? "" : "s"} failing`,
+      "The website's own health check runs every fifteen minutes and has " +
+      "found something wrong. This email only arrives when the result " +
+      "<strong>changes</strong> — it will not repeat while the same thing " +
+      "stays broken, and a second email will follow the moment it recovers.",
+      rows,
+      "This needs a developer, not the office. Forward this email to " +
+      "whoever maintains the website rather than trying to fix it from " +
+      "here."),
+    text: plain(
+      `${n} health check${n === 1 ? "" : "s"} failing`,
+      "The website's own health check runs every fifteen minutes and has " +
+      "found something wrong. This only arrives when the result CHANGES - " +
+      "it will not repeat while the same thing stays broken, and a second " +
+      "email will follow the moment it recovers.",
+      rows,
+      "This needs a developer, not the office. Forward this email to " +
+      "whoever maintains the website rather than trying to fix it from here."),
+  };
+}
+
+/* --------------------------------------------------------------------------
    THE IMAM'S ALERT (db/132)
 
    ITS OWN FUNCTION BECAUSE ITS RECIPIENT IS NEITHER OF THE OTHER TWO. The

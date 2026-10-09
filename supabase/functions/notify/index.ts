@@ -75,7 +75,8 @@
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import {
-  type Event, imamAlertMessage, officeMessage, publicMessage, staffInviteMessage,
+  type Event, healthAlertMessage, imamAlertMessage, officeMessage, publicMessage,
+  staffInviteMessage,
 } from "./messages.ts";
 
 const SECRET     = Deno.env.get("NOTIFY_SECRET") ?? "";
@@ -317,6 +318,30 @@ Deno.serve(async (req) => {
       note: r.ok ? `sent to ${officeList().join(", ")}` : r.why,
       host: `${SMTP_HOST}:${SMTP_PORT}`,
     }), { status: 200, headers: { "content-type": "application/json" } });
+  }
+
+  /* --- the health check (db/122, db/130, db/149) -------------------------
+     health_watch() has posted this every time the result changes since
+     before this function existed, and nothing here ever read it — it fell
+     through to toEvent() returning null, every single time. See the long
+     comment on healthAlertMessage() in messages.ts for why this is the
+     only place a human ever sees the result at all right now. */
+  if (body.kind === "health_alert") {
+    const status = String(body.status ?? "fail");
+    const names  = Array.isArray(body.failing) ? body.failing.map(String) : [];
+    const checks = Array.isArray(body.checks)
+      ? body.checks as { check?: string; detail?: string }[]
+      : [];
+    const failing = names.map((name) => ({
+      check: name,
+      detail: checks.find((c) => c.check === name)?.detail ?? "(no detail given)",
+    }));
+    const m = healthAlertMessage(status, failing);
+    const r = await send(officeList(), m.subject, m.html, m.text);
+    if (!r.ok) await recordFailure("health_alert", null, "office", r.why);
+    console.log(`notify: health_alert (${status}, ${failing.length} failing) — ` +
+                `${r.ok ? "sent" : r.why}`);
+    return ok(r.ok ? "office told" : r.why);
   }
 
   /* --- a staff invitation, or a password reset ---------------------------

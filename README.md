@@ -115,6 +115,7 @@ Three surfaces, one sign-in, one database.
 | **`collection/`** | A four-line redirect, nothing else. `taiyabahmasjid.com/collection` → `/#collection`, because this link is read out on the phone and the hash is the part people drop. |
 | **`advice/`** | **The imam's advice** — the inbox for questions put to the imams from the phone app. The only screen behind `verified_imam()`, which does **not** fall back to `is_admin()`: holding `admin` does not open it. |
 | **`access/`** | **User access** — every staff account, what each may do, and whether two-step is on. Invitations are sent from here; **no password is ever typed here, for anybody**. |
+| **`health/`** | **System health** — the same fourteen checks `health_watch()` already runs every fifteen minutes (db/122), read on demand instead of waiting for the email a change in them sends. Writes nothing; `health_check()` itself is the only gate. |
 | **`newbuild/`** | **The new build page editor** — the appeal figure, what it pays for and the timeline of phases, so the masjid can keep its own page current. |
 | **`notices/`** | **Notices** — what the masjid is telling people this week. Write it, attach a poster, publish it. It appears on the front page; nothing is visible to anybody until somebody presses Publish. |
 | **`times/`** | **Prayer timetable** — paste a year in, check it, save it as a draft, publish it when it is complete. The masjid changes its own prayer times here; nobody needs a developer and nobody needs to push to GitHub. |
@@ -228,7 +229,7 @@ site.webmanifest        name, colours, home-screen icons
 
 account/  auth/  portals/  venue/  courses/  giftaid/  volunteers/
 access/   newbuild/  portal/  apply/  collections/  times/  notices/
-rates/
+rates/    health/
                         each: index.html, app.js, config.js. Standalone —
                         NOT built from a template, edit them directly.
                         times/, notices/, rates/ and courses/ are the
@@ -1181,6 +1182,7 @@ all genuinely new surface area, not a renumbering of what came before.
 | `142_a_reversed_direct_debit_is_not_paid` | Closes a hole where a Bacs Direct Debit payment can be reversed by the payer *after* it has already been recorded as paid, with no time limit on the reversal. |
 | `143_stripe_moved_the_invoice_fields` | Stripe's 2025-03-31.basil API release (and everything after it, including what a new account defaults to) removed fields this project's webhook read from an Invoice object and replaced one of them with a different shape — found and fixed before it reached production data, by reading both the old and new shapes rather than assuming one. |
 | `148_a_shared_stripe_account_is_not_one_payment` | iBeams, which still runs the madrasah's fees, shares this masjid's Stripe account — so every iBeams payment also reaches `stripe-webhook`, which correctly can't match it and was logging it under the same category as someone genuinely misusing one of this codebase's own payment links. Teaches `audit_kind()` to file an iBeams-shaped payment (no Payment Link, no reference — this codebase's own flows are always Payment-Link-based) as `'auto'` instead, counted rather than raised as a problem. |
+| `149_health_watch_also_says_when_it_recovers` | `health_watch()` had only ever emailed on a transition **into** failure — a fix landing was recorded in `admin_audit` and nothing else, so the only way to learn something had been fixed was to remember it had broken and go and check. The guard narrowing it to one direction is removed; `v_changed` above it was already the correct, two-directional gate. |
 
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs

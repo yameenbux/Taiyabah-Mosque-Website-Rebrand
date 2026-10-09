@@ -91,7 +91,8 @@
     pound:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.8 6.3a3.4 3.4 0 00-5.9 2.3v4.1c0 1.3-.5 2.4-1.4 3.2"/><path d="M7.5 12.6h5.6"/><path d="M6.8 19h10"/></svg>',
     star:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.6 2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L3.5 9.8l5.9-.9z"/></svg>',
     chat:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.6c0 3.9-3.8 7-8.5 7-1.1 0-2.2-.2-3.2-.5L3.5 21l1.6-4a6.6 6.6 0 01-1.6-4.4c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>',
-    inbox:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5h4l1.6 2.6h5.8l1.6-2.6h4"/><path d="M5.6 4.6h12.8l2.1 8.9v4a2 2 0 01-2 2H5.5a2 2 0 01-2-2v-4z"/></svg>'
+    inbox:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5h4l1.6 2.6h5.8l1.6-2.6h4"/><path d="M5.6 4.6h12.8l2.1 8.9v4a2 2 0 01-2 2H5.5a2 2 0 01-2-2v-4z"/></svg>',
+    pulse:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.5h4l2-6 4 12 3-14 2 8h4"/></svg>'
   };
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
@@ -219,7 +220,10 @@
     { label: "Settings", areas: [
       { key: "access",      href: "access/",      icon: "lock",   name: "User access",
         needs: ["admin"],
-        what: "Invite somebody, change what they can do, suspend an account" }
+        what: "Invite somebody, change what they can do, suspend an account" },
+      { key: "health",      href: "health/",      icon: "pulse",  name: "System health",
+        needs: ["admin"],
+        what: "The same fourteen checks a cron job runs every fifteen minutes, read on demand" }
     ]}
   ];
 

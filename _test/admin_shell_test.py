@@ -87,6 +87,7 @@ SCREENS = {
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
+    "health": "health",
     "app": "appsend",
     "advice": "advice",
 }
@@ -100,7 +101,7 @@ EXPECTED = {
               "Adult classes", "Food Bank volunteers", "Gift Aid",
               "Madrasah portal", "Send a notification",
               "Notices", "Hall hire charges", "Prayer timetable",
-              "The new build page", "User access"],
+              "The new build page", "User access", "System health"],
     #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
     #  hall_office and always has; the Admin Centre home drew it for the
     #  office; this rail said admin-only. The office could open the screen
@@ -200,6 +201,10 @@ ADMITS = {
     "notices":     ["admin"],                  # db
     "rates":       ["admin"],                  # db
     "times":       ["admin"],                  # db
+    #  health_check() itself runs verified_admin() and raises 42501 for
+    #  anybody else signed in (db/122) — the rail here is a convenience,
+    #  same as notices/rates/times above.
+    "health":      ["admin"],                  # db
     #  app/ has no role test of its own either. The Edge Function behind it
     #  calls app_notification_start(), which runs verified_admin() before
     #  anything is sent — so the rail is a convenience here and the refusal
