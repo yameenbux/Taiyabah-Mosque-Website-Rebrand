@@ -229,14 +229,44 @@ Deno.serve(async (req) => {
   }
 
   if (!reference) {
-    // Somebody paid a link without going through the form that sets the
-    // reference — typically by opening a Payment Link URL directly. Real
-    // money, so it is logged rather than shrugged off.
+    const paymentLink = (session.payment_link as string) ?? null;
+
+    if (!paymentLink) {
+      // No Payment Link AND no reference. Every payment this codebase
+      // creates goes through a Payment Link — the donate matrix, New Build,
+      // nikāḥ fees, the hall deposit — because that is the only way a
+      // Stripe Payment Link can carry a fixed price at all (see the DONATE
+      // comment further down). So a session with neither isn't one of ours
+      // paid the wrong way; it was never created by anything this codebase
+      // owns. The masjid's Stripe account is shared with iBeams, which
+      // bills madrasah fees by creating a Checkout Session directly through
+      // the API — a different amount every time, for exactly that reason —
+      // and has no reason to know this codebase's reference convention.
+      // Real money, on the masjid's own account, so still recorded — just
+      // not as a problem needing a person's attention. audit_kind() files
+      // this under 'auto' (db/148), the same bucket as a cron job: counted,
+      // not listed in the Daily Log a committee member reads.
+      console.log(`stripe-webhook: ${sessionId} has no payment_link and no reference — ` +
+                  `likely iBeams, on the masjid's shared Stripe account`);
+      const audited = await auditPayment(masjid, "external_payment_received", {
+        session: sessionId,
+        amount_pence: amount,
+        email: session.customer_details?.email ?? null,
+      });
+      return new Response(JSON.stringify({ ok: true, note: "other system", audited }), {
+        status: 200, headers: { "content-type": "application/json" },
+      });
+    }
+
+    // A Payment Link WAS used, but without going through the form that sets
+    // the reference — typically by opening a Payment Link URL directly.
+    // This one genuinely is ours: real money, paid the wrong way, and still
+    // worth a person looking at.
     console.error(`stripe-webhook: ${sessionId} arrived with no client_reference_id`);
     const audited = await auditPayment(masjid, "payment_without_reference", {
       session: sessionId,
       amount_pence: amount,
-      payment_link: (session.payment_link as string) ?? null,
+      payment_link: paymentLink,
       email: session.customer_details?.email ?? null,
     });
     return new Response(JSON.stringify({ ok: true, note: "no reference", audited }), {
