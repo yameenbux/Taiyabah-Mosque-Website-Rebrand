@@ -1180,6 +1180,7 @@ all genuinely new surface area, not a renumbering of what came before.
 | `141_stripe_bills_the_masjid` | Stripe charges each masjid on its plan automatically, so nobody has to be chased for payment every month by hand. |
 | `142_a_reversed_direct_debit_is_not_paid` | Closes a hole where a Bacs Direct Debit payment can be reversed by the payer *after* it has already been recorded as paid, with no time limit on the reversal. |
 | `143_stripe_moved_the_invoice_fields` | Stripe's 2025-03-31.basil API release (and everything after it, including what a new account defaults to) removed fields this project's webhook read from an Invoice object and replaced one of them with a different shape — found and fixed before it reached production data, by reading both the old and new shapes rather than assuming one. |
+| `148_a_shared_stripe_account_is_not_one_payment` | iBeams, which still runs the madrasah's fees, shares this masjid's Stripe account — so every iBeams payment also reaches `stripe-webhook`, which correctly can't match it and was logging it under the same category as someone genuinely misusing one of this codebase's own payment links. Teaches `audit_kind()` to file an iBeams-shaped payment (no Payment Link, no reference — this codebase's own flows are always Payment-Link-based) as `'auto'` instead, counted rather than raised as a problem. |
 
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs
