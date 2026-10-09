@@ -67,6 +67,13 @@
      the opposite of what weight_test's budget is for. async keeps Sentry
      loading in parallel instead of ahead of everything else. -->
 <script src="https://js-de.sentry-cdn.com/962ffbb321bec1c2efc2d15b552a1152.min.js" crossorigin="anonymous" async></script>
+<!-- Cloudflare Web Analytics. No cookie, counts page views and visits only
+     ("Cloudflare does not track individual visitors") — same account
+     already hosting the Cloudflare staging deploy, so this cost a hostname
+     entry rather than a new signup. type="module" is deferred by the HTML
+     spec on its own, same effect as Sentry's async above, without needing
+     the attribute spelled out. -->
+<script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0809b0d9fe194705855e8b14cd1f7ae6"}'></script>
 <script>
 /* ---------------------------------------------------------------------------
    Connection settings for the hall hire form.
@@ -831,6 +838,26 @@ window.TAIYABAH_PUBLIC = {
      gold hairline labels used across this site.
      =================================================================== */
   [data-page="donate"] [hidden]{display:none !important;}
+
+  /* ---- language switcher: donate & new build only, the two pages the
+     agency review flagged as the biggest conversion gap for a congregation
+     that isn't all English-first. Urdu is RTL and gets an Arabic-script
+     font stack; Gujarati stays LTR with its own script font. Neither font
+     is bundled as a file — both scripts are already covered by the fonts
+     a modern phone OS ships, and a downloaded Nastaliq face alone would
+     cost more than this page's entire weight budget. ---- */
+  .lang-switch{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;}
+  .lang-switch button{
+    font-family:"Hanken Grotesk","Hanken fallback",system-ui,sans-serif;
+    font-size:.86rem;font-weight:600;padding:6px 14px;border-radius:999px;
+    border:1px solid rgba(198,162,76,.4);background:rgba(255,255,255,.06);
+    color:inherit;cursor:pointer;
+  }
+  .lang-switch button[aria-pressed="true"]{background:var(--gold);border-color:var(--gold);color:var(--brand-900);}
+  [lang="ur"]{font-family:"Noto Nastaliq Urdu","Noto Naskh Arabic","Geeza Pro",sans-serif;}
+  [lang="gu"]{font-family:"Noto Sans Gujarati",sans-serif;}
+  [data-page="donate"][dir="rtl"] .dn-line,[data-page="newbuild"][dir="rtl"] .nb-tl-body{direction:rtl;text-align:right;}
+  [data-page="donate"][dir="rtl"] .dn-lab,[data-page="donate"][dir="rtl"] .dn-row{text-align:right;}
 
   .dn-main{
     background:var(--card);
@@ -2700,20 +2727,25 @@ window.TAIYABAH_PUBLIC = {
 </div>
 
 <!-- ================= NEW BUILD ================= -->
-<div class="page" data-page="newbuild">
+<div class="page" data-page="newbuild" data-i18n-root>
   <section class="newbuild-page-hero pm-photo">
     <img class="pm-bg" src="{{BANNER_ACCENT_B64}}"{{BANNER_ACCENT_SRCSET}} alt="Architect's render of the new Taiyabah Masjid building at dusk" loading="lazy" decoding="async">
     <div class="pm-scrim"></div>
     <div class="container">
       <div class="nbh-grid">
         <div class="section-head on-dark" style="margin-bottom:0;">
-          <div class="eyebrow">The New Build</div>
-          <h1 style="font-size:clamp(1.9rem,4vw,2.7rem);">Building a lasting home for Taiyabah Masjid.</h1>
-          <p>A purpose-built centre for prayer, learning and community life — designed with the community, funded by the community.</p>
+          <div class="eyebrow" data-i18n="nb.eyebrow">The New Build</div>
+          <h1 style="font-size:clamp(1.9rem,4vw,2.7rem);" data-i18n="nb.h1">Building a lasting home for Taiyabah Masjid.</h1>
+          <p data-i18n="nb.intro">A purpose-built centre for prayer, learning and community life — designed with the community, funded by the community.</p>
+          <div class="lang-switch" role="group" aria-label="Choose a language">
+            <button type="button" data-lang="en" aria-pressed="true">English</button>
+            <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
+            <button type="button" data-lang="gu" aria-pressed="false" lang="gu">ગુજરાતી</button>
+          </div>
         </div>
         <div class="hadith-block">
           <p class="h-ar arabic" lang="ar" dir="rtl">مَنْ بَنَى مَسْجِدًا لِلَّهِ بَنَى اللَّهُ لَهُ فِي الْجَنَّةِ مِثْلَهُ</p>
-          <p class="h-en">"Whoever builds a mosque for Allah, Allah will build for him a house like it in Paradise."</p>
+          <p class="h-en" data-i18n="nb.hadith.en">"Whoever builds a mosque for Allah, Allah will build for him a house like it in Paradise."</p>
           <p class="h-src">Narrated by ʿUthmān ibn ʿAffān &middot; Ṣaḥīḥ al-Bukhārī 450 &middot; Ṣaḥīḥ Muslim 533</p>
         </div>
       </div>
@@ -2736,7 +2768,18 @@ window.TAIYABAH_PUBLIC = {
                They used to be the only copy, which meant the appeal moved only
                when somebody edited this file, rebuilt and pushed. A fundraising
                figure that needs a developer to change is a fundraising figure
-               that goes stale. -->
+               that goes stale.
+
+               NOT TRANSLATED. Everything in this card, and the whole journey
+               timeline below it, is overwritten by nbLoad() from site_content
+               at runtime — the office edits it without a developer. Giving it
+               Urdu/Gujarati text here would translate only the English
+               fallback nobody normally sees; the figures a real visitor sees
+               would stay English regardless. Translating this card properly
+               needs a language column on site_content and an nbLoad() that
+               reads it, which is a database change, not a page edit — left
+               for a follow-up rather than rushed in alongside the static
+               text below. -->
           <div class="phase-card" id="nb-appeal">
             <div class="ph-tag" id="nb-tag">Current appeal &middot; Phase 3.3</div>
             <h3 class="ph-h" id="nb-h">Internal fixtures &amp; fittings</h3>
@@ -2761,11 +2804,11 @@ window.TAIYABAH_PUBLIC = {
             <div class="needs" id="nb-needs"><span>Tiling</span><span>Carpets</span><span>Heating</span><span>Lighting</span><span>Electrical</span><span>Decor</span></div>
           </div>
           <div class="card nb-plan-card">
-            <div class="nb-plan-tag">What's planned</div>
-            <p>Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.</p>
+            <div class="nb-plan-tag" data-i18n="nb.plan.tag">What's planned</div>
+            <p data-i18n="nb.plan.p">Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.</p>
             <div class="plans-row">
-              <span>Large prayer hall</span><span>Modern ablution areas</span><span>Integrated kitchen</span>
-              <span>Additional lecture rooms</span><span>Wi-Fi &amp; video streaming</span><span>Educational centre &amp; library</span>
+              <span data-i18n="nb.plan.hall">Large prayer hall</span><span data-i18n="nb.plan.ablution">Modern ablution areas</span><span data-i18n="nb.plan.kitchen">Integrated kitchen</span>
+              <span data-i18n="nb.plan.lecture">Additional lecture rooms</span><span data-i18n="nb.plan.wifi">Wi-Fi &amp; video streaming</span><span data-i18n="nb.plan.edu">Educational centre &amp; library</span>
             </div>
           </div>
         </div>
@@ -2848,7 +2891,7 @@ window.TAIYABAH_PUBLIC = {
           </div>
 
           <div class="nb-journey-col nb-give-card" id="give">
-            <div class="nb-give-head"><h4>Give online</h4><span class="tag">Apple &amp; Google Pay</span></div>
+            <div class="nb-give-head"><h4 data-i18n="give.h">Give online</h4><span class="tag" data-i18n="give.apple">Apple &amp; Google Pay</span></div>
 
             <!-- Hidden until GIFT_AID_OPEN is switched on, which happens once the
                  five Payment Links carry the Gift Aid dropdown. A page that
@@ -2859,21 +2902,29 @@ window.TAIYABAH_PUBLIC = {
                  the checkout, with this same declaration in the product
                  description beside it. This block exists so somebody can read
                  the wording before they decide, and so the masjid can show
-                 what was on screen — but it collects nothing. -->
+                 what was on screen — but it collects nothing.
+
+                 THE LEGAL DECLARATION ITSELF (ga-decl below) IS NOT
+                 TRANSLATED. It is HMRC's exact wording, the donor answers it
+                 in English on Stripe's own checkout regardless of the
+                 language chosen on this page, and a subtly-off translation
+                 of tax declaration text is a worse outcome than asking a
+                 reader to take the explanation above it in their own
+                 language and the declaration itself in English. -->
             <div class="ga" id="ga-block" data-ga-version="2026-09-12" hidden>
               <div class="ga-head">
-                <h5>Gift Aid</h5>
-                <span class="ga-boost">+25p per &pound;1, at no cost to you</span>
+                <h5 data-i18n="ga.h">Gift Aid</h5>
+                <span class="ga-boost" data-i18n="ga.boost">+25p per &pound;1, at no cost to you</span>
               </div>
 
-              <p class="ga-lead">If you are a UK taxpayer, the masjid can reclaim
+              <p class="ga-lead" data-i18n="ga.lead">If you are a UK taxpayer, the masjid can reclaim
                 25p of tax for every &pound;1 you give. <b>You will be asked on the
                 payment page</b> &mdash; choose <b>Yes</b> under Gift Aid, and give
                 your name and home address including postcode. HMRC will not allow
                 the claim without them.</p>
 
               <details class="ga-more">
-                <summary>The declaration you are agreeing to</summary>
+                <summary data-i18n="ga.summary">The declaration you are agreeing to</summary>
                 <div class="ga-decl">
                   <p><strong>I am a UK taxpayer and understand that if I pay less
                     Income Tax and/or Capital Gains Tax in the current tax year than
@@ -2897,28 +2948,28 @@ window.TAIYABAH_PUBLIC = {
             </div>
 
             <div class="tiers">
-              <a class="tier t-bronze" href="https://buy.stripe.com/eVqaEX0Z63PGb3E2cSf3a01" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name">Bronze</span></a>
-              <a class="tier t-silver" href="https://buy.stripe.com/3cI7sLgY4fyo2x8eZEf3a02" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name">Silver</span></a>
-              <a class="tier t-gold" href="https://buy.stripe.com/fZubJ123a4TK5Jk18Of3a03" target="_blank" rel="noopener"><span class="t-amt">£1,000</span><span class="t-name">Gold</span></a>
-              <a class="tier t-plat" href="https://buy.stripe.com/28EbJ1cHOcmc5Jk04Kf3a04" target="_blank" rel="noopener"><span class="t-amt">£5,000</span><span class="t-name">Platinum</span></a>
+              <a class="tier t-bronze" href="https://buy.stripe.com/eVqaEX0Z63PGb3E2cSf3a01" target="_blank" rel="noopener"><span class="t-amt">£250</span><span class="t-name" data-i18n="tier.bronze">Bronze</span></a>
+              <a class="tier t-silver" href="https://buy.stripe.com/3cI7sLgY4fyo2x8eZEf3a02" target="_blank" rel="noopener"><span class="t-amt">£500</span><span class="t-name" data-i18n="tier.silver">Silver</span></a>
+              <a class="tier t-gold" href="https://buy.stripe.com/fZubJ123a4TK5Jk18Of3a03" target="_blank" rel="noopener"><span class="t-amt">£1,000</span><span class="t-name" data-i18n="tier.gold">Gold</span></a>
+              <a class="tier t-plat" href="https://buy.stripe.com/28EbJ1cHOcmc5Jk04Kf3a04" target="_blank" rel="noopener"><span class="t-amt">£5,000</span><span class="t-name" data-i18n="tier.plat">Platinum</span></a>
             </div>
             <a class="donate-cta" href="https://buy.stripe.com/6oU3cvbDK1Hy2x8g3If3a05" target="_blank" rel="noopener">
-              <span class="dc-main">Give any other amount</span>
+              <span class="dc-main" data-i18n="nb.other">Give any other amount</span>
               <span class="dc-sub">Card &middot; Apple Pay &middot; Google Pay</span>
             </a>
-            <p class="dc-note">Opens the masjid's secure donation page. Card payments carry a small processing fee &mdash; a bank transfer below reaches the masjid in full, if that suits you better.</p>
+            <p class="dc-note" data-i18n="dn.cardnote">Opens the masjid's secure donation page. Card payments carry a small processing fee &mdash; a bank transfer below reaches the masjid in full, if that suits you better.</p>
 
             <div class="nb-give-divider"></div>
 
-            <div class="nb-give-head"><h4>Or transfer directly</h4><span class="tag">Tap to copy</span></div>
+            <div class="nb-give-head"><h4 data-i18n="bank.h">Or transfer directly</h4><span class="tag" data-i18n="bank.tap">Tap to copy</span></div>
             <div class="bank-card">
-              <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
-              <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
-              <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
-              <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+              <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k" data-i18n="bank.name">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+              <button class="bk" data-copy="HSBC"><span class="bk-k" data-i18n="bank.bank">Bank</span><span class="bk-v">HSBC</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+              <button class="bk" data-copy="40-04-15"><span class="bk-k" data-i18n="bank.sort">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+              <button class="bk" data-copy="02320258"><span class="bk-k" data-i18n="bank.acc">Account number</span><span class="bk-v tnum">02320258</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
             </div>
-            <button class="copyall" id="copyall">Copy all details</button>
-            <p class="dnote">Bolton Central Islamic Society &middot; Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.</p>
+            <button class="copyall" id="copyall" data-i18n="nb.copyall">Copy all details</button>
+            <p class="dnote" data-i18n="nb.dnote">Bolton Central Islamic Society &middot; Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.</p>
           </div>
         </div>
       </div>
@@ -4852,16 +4903,21 @@ window.TAIYABAH_PUBLIC = {
      build appeal, which meant the masjid had no way at all to take a gift for
      anything else — the roof, the bills, the food bank. This is that page.
      The new build keeps a panel at the foot so it is not forgotten. -->
-<div class="page" data-page="donate">
+<div class="page" data-page="donate" data-i18n-root>
   <section class="page-masthead">
     <div class="container">
       <div class="section-head on-dark">
-        <div class="eyebrow">Support the masjid</div>
+        <div class="eyebrow" data-i18n="dn.eyebrow">Support the masjid</div>
         <div class="arabic" lang="ar" dir="rtl" style="font-size:1.316rem;color:var(--gold-bright);margin:-4px 0 8px;">&#1589;&#1614;&#1583;&#1614;&#1602;&#1614;&#1577;</div>
-        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Give to Taiyabah Masjid</h1>
-        <p>Every prayer held here, every child taught, every jan&#257;zah carried out
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);" data-i18n="dn.h1">Give to Taiyabah Masjid</h1>
+        <p data-i18n="dn.intro">Every prayer held here, every child taught, every jan&#257;zah carried out
           rests on what the community gives. This page is for the masjid itself
           &mdash; its upkeep, its running, and the work it does in Bolton.</p>
+        <div class="lang-switch" role="group" aria-label="Choose a language">
+          <button type="button" data-lang="en" aria-pressed="true">English</button>
+          <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
+          <button type="button" data-lang="gu" aria-pressed="false" lang="gu">ગુજરાતી</button>
+        </div>
       </div>
     </div>
   </section>
@@ -4876,23 +4932,23 @@ window.TAIYABAH_PUBLIC = {
            card they were never going to use.
            =================================================================== -->
       <div class="dn-top">
-        <div class="subhead"><h3 style="font-size:1.15rem;">Where your giving goes</h3><span class="rule"></span></div>
+        <div class="subhead"><h3 style="font-size:1.15rem;" data-i18n="dn.goes-h">Where your giving goes</h3><span class="rule"></span></div>
         <div class="dn-where">
-        <div class="dn-line"><span class="k">Keeping the doors open</span>
-          <span class="v">Heating, lighting, water and insurance. The masjid is open
+        <div class="dn-line"><span class="k" data-i18n="dn.goes.doors.k">Keeping the doors open</span>
+          <span class="v" data-i18n="dn.goes.doors.v">Heating, lighting, water and insurance. The masjid is open
             for five prayers a day, every day of the year, and that is the bill
             behind it.</span></div>
-        <div class="dn-line"><span class="k">The madrasah</span>
-          <span class="v">Teaching the children of the community, as it has since
+        <div class="dn-line"><span class="k" data-i18n="dn.goes.madrasah.k">The madrasah</span>
+          <span class="v" data-i18n="dn.goes.madrasah.v">Teaching the children of the community, as it has since
             1967. Fees do not cover it.</span></div>
-        <div class="dn-line"><span class="k">Jan&#257;zah and burial</span>
-          <span class="v">The mortuary, the ghusl facilities and the help given to
+        <div class="dn-line"><span class="k" data-i18n="dn.goes.janazah.k">Jan&#257;zah and burial</span>
+          <span class="v" data-i18n="dn.goes.janazah.v">The mortuary, the ghusl facilities and the help given to
             families at the hardest time. The masjid does not charge for this.</span></div>
-        <div class="dn-line"><span class="k">Repairs and upkeep</span>
-          <span class="v">A building used this heavily needs work done on it, and
+        <div class="dn-line"><span class="k" data-i18n="dn.goes.repairs.k">Repairs and upkeep</span>
+          <span class="v" data-i18n="dn.goes.repairs.v">A building used this heavily needs work done on it, and
             most of it is not the sort anybody notices until it fails.</span></div>
-        <div class="dn-line"><span class="k">The food bank and outreach</span>
-          <span class="v">Serving people in Bolton who need it, Muslim and
+        <div class="dn-line"><span class="k" data-i18n="dn.goes.foodbank.k">The food bank and outreach</span>
+          <span class="v" data-i18n="dn.goes.foodbank.v">Serving people in Bolton who need it, Muslim and
             non-Muslim alike.</span></div>
         </div>
       </div>
@@ -4901,32 +4957,32 @@ window.TAIYABAH_PUBLIC = {
         <div class="dn-main" id="dn-give">
           <div class="dn-main-head">
             <div>
-              <div class="eyebrow">Give online</div>
-              <h2>How would you like to give?</h2>
+              <div class="eyebrow" data-i18n="dn.eyebrow2">Give online</div>
+              <h2 data-i18n="dn.h2">How would you like to give?</h2>
             </div>
             <span class="dn-secure">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
-              Secure &middot; Apple &amp; Google Pay</span>
+              <span data-i18n="dn.secure">Secure &middot; Apple &amp; Google Pay</span></span>
           </div>
           <div class="dn-body">
             <div class="dn-row">
-              <div class="dn-lab">What it is for</div>
+              <div class="dn-lab" data-i18n="dn.lab.purpose">What it is for</div>
               <div class="dn-pills" id="dn-purpose" role="group" aria-label="What the donation is for"></div>
               <p class="dn-hint" id="dn-purpose-hint"></p>
-              <p class="dn-hint dn-zakat"><strong>Zak&#257;t is not taken here.</strong>
-                It has its own categories &mdash; please ring the office on
+              <p class="dn-hint dn-zakat"><strong data-i18n="dn.zakat.strong">Zak&#257;t is not taken here.</strong>
+                <span data-i18n="dn.zakat.rest">It has its own categories &mdash; please ring the office on</span>
                 <a href="tel:01204535997">01204&nbsp;535&nbsp;997</a>.</p>
             </div>
             <div class="dn-row">
-              <div class="dn-lab">How often</div>
+              <div class="dn-lab" data-i18n="dn.lab.freq">How often</div>
               <div class="dn-pills" id="dn-freq" role="group" aria-label="How often"></div>
               <p class="dn-hint" id="dn-freq-hint"></p>
             </div>
             <div class="dn-row">
-              <div class="dn-lab">Amount</div>
+              <div class="dn-lab" data-i18n="dn.lab.amount">Amount</div>
               <div class="dn-pills dn-amts" id="dn-amounts" role="group" aria-label="Amount"></div>
             </div>
-            <p class="dn-ga-note" id="dn-ga-note" hidden>
+            <p class="dn-ga-note" id="dn-ga-note" hidden data-i18n="dn.gaid">
             <strong>Gift Aid:</strong> if you are a UK taxpayer, tick <b>Yes</b> on the
             payment page and the masjid reclaims <b>25p for every &pound;1</b> at no cost
             to you. You will need to give your name and home address there.</p>
@@ -4935,26 +4991,26 @@ window.TAIYABAH_PUBLIC = {
               <span class="dc-main" id="dn-go-main">Continue</span>
               <span class="dc-sub" id="dn-go-sub">Card &middot; Apple Pay &middot; Google Pay</span>
             </a>
-            <div class="dn-soon" id="dn-soon" hidden>
+            <div class="dn-soon" id="dn-soon" hidden data-i18n="dn.soon">
               <strong>Card giving from this page opens shortly.</strong> The masjid&rsquo;s
               donation pages are being set up. In the meantime a bank transfer below
               reaches the masjid in full, or you can give at the office.
             </div>
-            <p class="dc-note" id="dn-card-note" hidden>Opens the masjid&rsquo;s secure
+            <p class="dc-note" id="dn-card-note" hidden data-i18n="dn.cardnote">Opens the masjid&rsquo;s secure
               donation page. Card payments carry a small processing fee &mdash; a bank
               transfer below reaches the masjid in full, if that suits you better.</p>
           </div>
         </div>
 
         <div class="dn-bank">
-          <div class="nb-give-head"><h4>Or transfer directly</h4><span class="tag">Tap to copy</span></div>
+          <div class="nb-give-head"><h4 data-i18n="bank.h">Or transfer directly</h4><span class="tag" data-i18n="bank.tap">Tap to copy</span></div>
           <div class="bank-card">
-            <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied">Copied</span></button>
-            <button class="bk" data-copy="HSBC"><span class="bk-k">Bank</span><span class="bk-v">HSBC</span><span class="copied">Copied</span></button>
-            <button class="bk" data-copy="40-04-15"><span class="bk-k">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied">Copied</span></button>
-            <button class="bk" data-copy="02320258"><span class="bk-k">Account number</span><span class="bk-v tnum">02320258</span><span class="copied">Copied</span></button>
+            <button class="bk" data-copy="Bolton Central Islamic Society (BCIS)"><span class="bk-k" data-i18n="bank.name">Account name</span><span class="bk-v">Bolton Central Islamic Society (BCIS)</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+            <button class="bk" data-copy="HSBC"><span class="bk-k" data-i18n="bank.bank">Bank</span><span class="bk-v">HSBC</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+            <button class="bk" data-copy="40-04-15"><span class="bk-k" data-i18n="bank.sort">Sort code</span><span class="bk-v tnum">40-04-15</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
+            <button class="bk" data-copy="02320258"><span class="bk-k" data-i18n="bank.acc">Account number</span><span class="bk-v tnum">02320258</span><span class="copied" data-i18n="bank.copied">Copied</span></button>
           </div>
-          <p class="dc-note">Please use your surname as the reference. If you are a UK
+          <p class="dc-note" data-i18n="dn.transfernote">Please use your surname as the reference. If you are a UK
             taxpayer and want the masjid to claim Gift Aid on a transfer, ring the
             office &mdash; a declaration has to be held for it.</p>
         </div>
@@ -4962,19 +5018,19 @@ window.TAIYABAH_PUBLIC = {
 
       <div class="dn-nb">
         <div>
-          <div class="eyebrow">The new building</div>
-          <h4>The appeal is still running</h4>
-          <p>The masjid is being rebuilt in phases, and that appeal has its own page
+          <div class="eyebrow" data-i18n="dn.nb.eyebrow">The new building</div>
+          <h4 data-i18n="dn.nb.h">The appeal is still running</h4>
+          <p data-i18n="dn.nb.p">The masjid is being rebuilt in phases, and that appeal has its own page
             with the figures, what each phase pays for, and where it has got to.
             Giving there is counted towards the build rather than the running of
             the masjid.</p>
         </div>
-        <a class="btn btn-gold" data-nav="newbuild" data-scroll-to="give">See the appeal</a>
+        <a class="btn btn-gold" data-nav="newbuild" data-scroll-to="give" data-i18n="dn.nb.cta">See the appeal</a>
       </div>
 
       <div class="cs-cta" style="margin-top:32px;">
-        <a class="btn btn-gold" data-nav="contact">Contact the office</a>
-        <a class="btn btn-ghost-light" data-nav="newbuild">The new build</a>
+        <a class="btn btn-gold" data-nav="contact" data-i18n="dn.contact">Contact the office</a>
+        <a class="btn btn-ghost-light" data-nav="newbuild" data-i18n="dn.nb.cta2">The new build</a>
       </div>
     </div>
   </section>
@@ -7947,6 +8003,231 @@ window.TAIYABAH_PUBLIC = {
   })();
 
   /* ---------------------------------------------------------------------------
+     LANGUAGE — English, Urdu, Gujarati, on the donate and new-build pages only.
+
+     Flagged in an agency review as the biggest conversion gap for a
+     congregation that isn't all English-first, scoped to these two pages
+     because they're where that gap costs the masjid money.
+
+     THE URDU AND GUJARATI BELOW ARE DRAFTED BY CLAUDE FROM ITS OWN LANGUAGE
+     KNOWLEDGE, NOT BY A NATIVE SPEAKER OR TRANSLATOR. Functional and live,
+     but it needs someone from the community to read it before this is
+     treated as finished — particularly the Gift Aid and bank-transfer
+     wording, where a subtly wrong word matters more than it does in
+     ordinary prose. The one exception made deliberately the other way: the
+     Gift Aid DECLARATION ITSELF (ga-decl, in the New Build page) is left in
+     English on purpose, see the comment at ga-block — it's HMRC's exact
+     wording and the donor answers it in English on Stripe's checkout
+     regardless of what's chosen here.
+
+     NOT TRANSLATED AT ALL: the New Build page's appeal-status card and
+     journey timeline (#nb-appeal, #nb-timeline). Both are overwritten at
+     runtime from site_content by nbLoad(), below — the office edits those
+     figures without a developer. Translating them properly needs a
+     language column on site_content and an nbLoad() that reads it; that's
+     a database change, scoped out of tonight's page-text pass.
+
+     "Donate £10" and "£10 عطیہ کریں" put the verb in different places —
+     Urdu and Gujarati both prefer it at the end of the sentence, which a
+     prefix-plus-amount template can't give them. dn.go.donate below reads
+     naturally enough on its own; it is the one place this file's approach
+     to translation shows its seams, and worth a native speaker's opinion
+     on whether to restructure the button text entirely rather than patch it.
+  --------------------------------------------------------------------------- */
+  (function(){
+    var LANGS = ['en','ur','gu'];
+    var DIR = { en:'ltr', ur:'rtl', gu:'ltr' };
+
+    var STR = {
+      'dn.eyebrow':        { en:'Support the masjid', ur:'مسجد کی مدد کریں', gu:'મસ્જિદને મદદ કરો' },
+      'dn.h1':             { en:'Give to Taiyabah Masjid', ur:'طیبہ مسجد میں عطیہ دیں', gu:'તૈયબાહ મસ્જિદને દાન આપો' },
+      'dn.intro':          { en:'Every prayer held here, every child taught, every janāzah carried out rests on what the community gives. This page is for the masjid itself — its upkeep, its running, and the work it does in Bolton.',
+                              ur:'یہاں ہونے والی ہر نماز، ہر بچے کی تعلیم اور ہر جنازہ، سب کمیونٹی کے عطیات پر منحصر ہے۔ یہ صفحہ خود مسجد کے لیے ہے — اس کی دیکھ بھال، اس کا نظم و نسق، اور بولٹن میں اس کا کام۔',
+                              gu:'અહીં થતી દરેક નમાઝ, દરેક બાળકનું શિક્ષણ અને દરેક જનાઝા, એ બધું સમુદાયના દાન પર નિર્ભર છે. આ પાનું ખુદ મસ્જિદ માટે છે — તેની જાળવણી, તેનું સંચાલન, અને બોલ્ટનમાં તેનું કાર્ય.' },
+      'dn.goes-h':         { en:'Where your giving goes', ur:'آپ کا عطیہ کہاں خرچ ہوتا ہے', gu:'તમારું દાન ક્યાં વપરાય છે' },
+      'dn.goes.doors.k':   { en:'Keeping the doors open', ur:'دروازے کھلے رکھنا', gu:'દરવાજા ખુલ્લા રાખવા' },
+      'dn.goes.doors.v':   { en:'Heating, lighting, water and insurance. The masjid is open for five prayers a day, every day of the year, and that is the bill behind it.',
+                              ur:'حرارت، روشنی، پانی اور بیمہ۔ مسجد سال کے ہر دن پانچ وقت کی نماز کے لیے کھلی رہتی ہے، اور یہی اس کے پیچھے کا خرچ ہے۔',
+                              gu:'ગરમી, લાઇટ, પાણી અને વીમો. મસ્જિદ વર્ષના દરેક દિવસે પાંચ વખતની નમાઝ માટે ખુલ્લી રહે છે, અને આ જ તેની પાછળનો ખર્ચ છે.' },
+      'dn.goes.madrasah.k':{ en:'The madrasah', ur:'مدرسہ', gu:'મદરેસા' },
+      'dn.goes.madrasah.v':{ en:'Teaching the children of the community, as it has since 1967. Fees do not cover it.',
+                              ur:'1967 سے اب تک کمیونٹی کے بچوں کو تعلیم دینا۔ فیس اس کا خرچ پورا نہیں کرتی۔',
+                              gu:'1967થી આજ સુધી સમુદાયના બાળકોને શિક્ષણ આપવું. ફી તેનો ખર્ચ પૂરો કરતી નથી.' },
+      'dn.goes.janazah.k': { en:'Janāzah and burial', ur:'جنازہ اور تدفین', gu:'જનાઝા અને દફનવિધિ' },
+      'dn.goes.janazah.v': { en:'The mortuary, the ghusl facilities and the help given to families at the hardest time. The masjid does not charge for this.',
+                              ur:'مردہ خانہ، غسل کی سہولیات اور خاندانوں کو مشکل ترین وقت میں دی جانے والی مدد۔ مسجد اس کی کوئی فیس نہیں لیتی۔',
+                              gu:'મૃતદેહ ઘર, ગુસલની સુવિધા અને સૌથી મુશ્કેલ સમયે પરિવારોને આપવામાં આવતી મદદ. મસ્જિદ આના માટે કોઈ ફી લેતી નથી.' },
+      'dn.goes.repairs.k': { en:'Repairs and upkeep', ur:'مرمت اور دیکھ بھال', gu:'સમારકામ અને જાળવણી' },
+      'dn.goes.repairs.v': { en:'A building used this heavily needs work done on it, and most of it is not the sort anybody notices until it fails.',
+                              ur:'اتنی زیادہ استعمال ہونے والی عمارت کو مسلسل کام کی ضرورت ہوتی ہے، اور اس کا زیادہ تر حصہ وہ ہے جس پر خرابی سے پہلے کسی کی نظر نہیں جاتی۔',
+                              gu:'આટલી વધારે વપરાતી ઇમારતને સતત કામની જરૂર પડે છે, અને તેનો મોટાભાગનો ભાગ એવો છે જેના પર બગડે ત્યાં સુધી કોઈનું ધ્યાન જતું નથી.' },
+      'dn.goes.foodbank.k':{ en:'The food bank and outreach', ur:'فوڈ بینک اور رفاہی خدمات', gu:'ફૂડ બેંક અને સેવા કાર્ય' },
+      'dn.goes.foodbank.v':{ en:'Serving people in Bolton who need it, Muslim and non-Muslim alike.',
+                              ur:'بولٹن میں ضرورت مند افراد کی خدمت، مسلم اور غیر مسلم دونوں کی۔',
+                              gu:'બોલ્ટનમાં જરૂરિયાતમંદ લોકોની સેવા, મુસ્લિમ અને બિન-મુસ્લિમ બંનેની.' },
+      'dn.eyebrow2':       { en:'Give online', ur:'آن لائن عطیہ دیں', gu:'ઓનલાઇન દાન આપો' },
+      'dn.h2':             { en:'How would you like to give?', ur:'آپ کس طرح عطیہ دینا چاہیں گے؟', gu:'તમે કેવી રીતે દાન આપવા માંગો છો?' },
+      'dn.secure':         { en:'Secure · Apple &amp; Google Pay', ur:'محفوظ · ایپل اور گوگل پے', gu:'સુરક્ષિત · એપલ અને ગૂગલ પે' },
+      'dn.lab.purpose':    { en:'What it is for', ur:'یہ کس مقصد کے لیے ہے', gu:'આ કયા હેતુ માટે છે' },
+      'dn.zakat.strong':   { en:'Zakāt is not taken here.', ur:'یہاں زکوٰۃ قبول نہیں کی جاتی۔', gu:'અહીં ઝકાત સ્વીકારવામાં આવતી નથી.' },
+      'dn.zakat.rest':     { en:'It has its own categories — please ring the office on', ur:'اس کی اپنی الگ قسمیں ہیں — براہ کرم دفتر کو اس نمبر پر کال کریں', gu:'તેની પોતાની અલગ શ્રેણીઓ છે — કૃપા કરીને ઓફિસને આ નંબર પર કૉલ કરો' },
+      'dn.lab.freq':       { en:'How often', ur:'کتنی بار', gu:'કેટલી વાર' },
+      'dn.lab.amount':     { en:'Amount', ur:'رقم', gu:'રકમ' },
+      'dn.gaid':           { en:'<strong>Gift Aid:</strong> if you are a UK taxpayer, tick <b>Yes</b> on the payment page and the masjid reclaims <b>25p for every £1</b> at no cost to you. You will need to give your name and home address there.',
+                              ur:'<strong>گفٹ ایڈ:</strong> اگر آپ برطانیہ میں ٹیکس دہندہ ہیں تو ادائیگی کے صفحے پر <b>Yes</b> پر نشان لگائیں اور مسجد کو ہر £1 پر <b>25p اضافی</b> بغیر کسی اضافی خرچ کے ملے گا۔ وہاں آپ کو اپنا نام اور گھر کا پتہ دینا ہوگا۔',
+                              gu:'<strong>ગિફ્ટ એઇડ:</strong> જો તમે યુકેમાં ટેક્સ ભરો છો, તો ચુકવણીના પાના પર <b>Yes</b> પર નિશાન કરો અને મસ્જિદને દરેક £1 પર <b>25p વધારાના</b> કોઈ પણ વધારાના ખર્ચ વગર મળશે. ત્યાં તમારે તમારું નામ અને ઘરનું સરનામું આપવું પડશે.' },
+      'dn.soon':           { en:'<strong>Card giving from this page opens shortly.</strong> The masjid’s donation pages are being set up. In the meantime a bank transfer below reaches the masjid in full, or you can give at the office.',
+                              ur:'<strong>اس صفحے سے کارڈ کے ذریعے عطیہ جلد شروع ہوگا۔</strong> مسجد کے عطیہ صفحات تیار کیے جا رہے ہیں۔ اس دوران نیچے دیے گئے بینک ٹرانسفر کے ذریعے پوری رقم مسجد تک پہنچتی ہے، یا آپ دفتر میں جا کر بھی عطیہ دے سکتے ہیں۔',
+                              gu:'<strong>આ પાના પરથી કાર્ડ દ્વારા દાન ટૂંક સમયમાં શરૂ થશે.</strong> મસ્જિદના દાનના પાના તૈયાર થઈ રહ્યા છે. તે દરમિયાન નીચે આપેલ બેંક ટ્રાન્સફર દ્વારા પૂરી રકમ મસ્જિદ સુધી પહોંચે છે, અથવા તમે ઓફિસમાં જઈને પણ દાન આપી શકો છો.' },
+      'dn.cardnote':       { en:'Opens the masjid’s secure donation page. Card payments carry a small processing fee — a bank transfer below reaches the masjid in full, if that suits you better.',
+                              ur:'یہ مسجد کے محفوظ عطیہ صفحے کو کھولتا ہے۔ کارڈ کی ادائیگی پر معمولی پروسیسنگ فیس لگتی ہے — اگر آپ کو زیادہ موزوں لگے تو نیچے دیا گیا بینک ٹرانسفر پوری رقم مسجد تک پہنچاتا ہے۔',
+                              gu:'આ મસ્જિદના સુરક્ષિત દાન પાનાને ખોલે છે. કાર્ડ ચુકવણી પર થોડી પ્રોસેસિંગ ફી લાગે છે — જો તમને વધુ અનુકૂળ લાગે તો નીચે આપેલ બેંક ટ્રાન્સફર પૂરી રકમ મસ્જિદ સુધી પહોંચાડે છે.' },
+      'bank.h':            { en:'Or transfer directly', ur:'یا براہ راست ٹرانسفر کریں', gu:'અથવા સીધું ટ્રાન્સફર કરો' },
+      'bank.tap':          { en:'Tap to copy', ur:'کاپی کرنے کے لیے دبائیں', gu:'કોપી કરવા ટેપ કરો' },
+      'bank.name':         { en:'Account name', ur:'اکاؤنٹ کا نام', gu:'ખાતાનું નામ' },
+      'bank.bank':         { en:'Bank', ur:'بینک', gu:'બેંક' },
+      'bank.sort':         { en:'Sort code', ur:'سورٹ کوڈ', gu:'સોર્ટ કોડ' },
+      'bank.acc':          { en:'Account number', ur:'اکاؤنٹ نمبر', gu:'ખાતા નંબર' },
+      'bank.copied':       { en:'Copied', ur:'کاپی ہو گیا', gu:'કોપી થયું' },
+      'dn.transfernote':   { en:'Please use your surname as the reference. If you are a UK taxpayer and want the masjid to claim Gift Aid on a transfer, ring the office — a declaration has to be held for it.',
+                              ur:'براہ کرم حوالہ کے طور پر اپنا خاندانی نام استعمال کریں۔ اگر آپ برطانیہ میں ٹیکس دہندہ ہیں اور چاہتے ہیں کہ مسجد ٹرانسفر پر گفٹ ایڈ کا دعویٰ کرے تو دفتر کو کال کریں — اس کے لیے ایک اعلامیہ درکار ہوتا ہے۔',
+                              gu:'કૃપા કરીને સંદર્ભ તરીકે તમારી અટક નો ઉપયોગ કરો. જો તમે યુકેમાં ટેક્સ ભરો છો અને ઇચ્છો છો કે મસ્જિદ ટ્રાન્સફર પર ગિફ્ટ એઇડનો દાવો કરે, તો ઓફિસને કૉલ કરો — તેના માટે એક ઘોષણા રાખવી જરૂરી છે.' },
+      'dn.nb.eyebrow':     { en:'The new building', ur:'نئی عمارت', gu:'નવું મકાન' },
+      'dn.nb.h':           { en:'The appeal is still running', ur:'اپیل اب بھی جاری ہے', gu:'અપીલ હજુ ચાલુ છે' },
+      'dn.nb.p':           { en:'The masjid is being rebuilt in phases, and that appeal has its own page with the figures, what each phase pays for, and where it has got to. Giving there is counted towards the build rather than the running of the masjid.',
+                              ur:'مسجد کو مراحل میں دوبارہ تعمیر کیا جا رہا ہے، اور اس اپیل کا اپنا الگ صفحہ ہے جس پر اعداد و شمار، ہر مرحلے کا خرچ، اور اب تک کی پیش رفت دکھائی گئی ہے۔ وہاں دیا گیا عطیہ مسجد کے نظم و نسق کے بجائے تعمیر کے لیے شمار ہوتا ہے۔',
+                              gu:'મસ્જિદનું પુનઃનિર્માણ તબક્કાવાર થઈ રહ્યું છે, અને આ અપીલનું પોતાનું અલગ પાનું છે જેમાં આંકડા, દરેક તબક્કાનો ખર્ચ, અને અત્યાર સુધીની પ્રગતિ દર્શાવેલ છે. ત્યાં આપેલું દાન મસ્જિદના સંચાલનને બદલે બાંધકામ માટે ગણાય છે.' },
+      'dn.nb.cta':         { en:'See the appeal', ur:'اپیل دیکھیں', gu:'અપીલ જુઓ' },
+      'dn.contact':        { en:'Contact the office', ur:'دفتر سے رابطہ کریں', gu:'ઓફિસનો સંપર્ક કરો' },
+      'dn.nb.cta2':        { en:'The new build', ur:'نئی تعمیر', gu:'નવું બાંધકામ' },
+      'nb.eyebrow':        { en:'The New Build', ur:'نئی تعمیر', gu:'નવું બાંધકામ' },
+      'nb.h1':             { en:'Building a lasting home for Taiyabah Masjid.', ur:'طیبہ مسجد کے لیے ایک پائیدار گھر کی تعمیر۔', gu:'તૈયબાહ મસ્જિદ માટે એક ટકાઉ ઘરનું નિર્માણ.' },
+      'nb.intro':          { en:'A purpose-built centre for prayer, learning and community life — designed with the community, funded by the community.',
+                              ur:'نماز، تعلیم اور کمیونٹی زندگی کے لیے خصوصی طور پر تعمیر کیا گیا مرکز — کمیونٹی کے ساتھ مل کر ڈیزائن کیا گیا، کمیونٹی کی مالی معاونت سے۔',
+                              gu:'નમાઝ, શિક્ષણ અને સમુદાય જીવન માટે ખાસ બનાવેલ કેન્દ્ર — સમુદાય સાથે મળીને ડિઝાઇન કરેલ, સમુદાયના ભંડોળથી.' },
+      'nb.hadith.en':      { en:'“Whoever builds a mosque for Allah, Allah will build for him a house like it in Paradise.”',
+                              ur:'“جو شخص اللہ کے لیے مسجد بناتا ہے، اللہ اس کے لیے جنت میں اسی طرح کا گھر بناتا ہے۔”',
+                              gu:'“જે કોઈ અલ્લાહ માટે મસ્જિદ બનાવે છે, અલ્લાહ તેના માટે જન્નતમાં તેના જેવું ઘર બનાવે છે.”' },
+      'nb.plan.tag':       { en:'What’s planned', ur:'کیا منصوبہ بندی کی گئی ہے', gu:'શું આયોજન છે' },
+      'nb.plan.p':         { en:'Plans are in the works to give the community a safe and welcoming space for learning, socialising and conducting ceremonies — and an educational resource for young and old alike.',
+                              ur:'منصوبہ یہ ہے کہ کمیونٹی کو تعلیم، میل جول اور تقریبات کے انعقاد کے لیے ایک محفوظ اور خوش آئند جگہ دی جائے — اور نوجوان و بزرگ سب کے لیے ایک تعلیمی وسیلہ۔',
+                              gu:'યોજના એવી છે કે સમુદાયને શિક્ષણ, મેળાપ અને સમારંભો માટે એક સુરક્ષિત અને આવકારદાયક જગ્યા આપવામાં આવે — અને યુવાન તેમજ વૃદ્ધ બંને માટે એક શૈક્ષણિક સાધન.' },
+      'nb.plan.hall':      { en:'Large prayer hall', ur:'بڑا نماز ہال', gu:'મોટો નમાઝ હોલ' },
+      'nb.plan.ablution':  { en:'Modern ablution areas', ur:'جدید وضو کی جگہیں', gu:'આધુનિક વઝુની જગ્યાઓ' },
+      'nb.plan.kitchen':   { en:'Integrated kitchen', ur:'مربوط کچن', gu:'સંકલિત રસોડું' },
+      'nb.plan.lecture':   { en:'Additional lecture rooms', ur:'اضافی لیکچر کمرے', gu:'વધારાના લેક્ચર રૂમ' },
+      'nb.plan.wifi':      { en:'Wi-Fi &amp; video streaming', ur:'وائی فائی اور ویڈیو اسٹریمنگ', gu:'વાઇ-ફાઇ અને વિડિયો સ્ટ્રીમિંગ' },
+      'nb.plan.edu':       { en:'Educational centre &amp; library', ur:'تعلیمی مرکز اور لائبریری', gu:'શૈક્ષણિક કેન્દ્ર અને લાઇબ્રેરી' },
+      'give.h':            { en:'Give online', ur:'آن لائن عطیہ دیں', gu:'ઓનલાઇન દાન આપો' },
+      'give.apple':        { en:'Apple &amp; Google Pay', ur:'ایپل اور گوگل پے', gu:'એપલ અને ગૂગલ પે' },
+      'ga.h':              { en:'Gift Aid', ur:'گفٹ ایڈ', gu:'ગિફ્ટ એઇડ' },
+      'ga.boost':          { en:'+25p per £1, at no cost to you', ur:'ہر £1 پر +25p، آپ کو کوئی اضافی خرچ نہیں', gu:'દરેક £1 પર +25p, તમારા માટે કોઈ વધારાનો ખર્ચ નહીં' },
+      'ga.lead':           { en:'If you are a UK taxpayer, the masjid can reclaim 25p of tax for every £1 you give. <b>You will be asked on the payment page</b> — choose <b>Yes</b> under Gift Aid, and give your name and home address including postcode. HMRC will not allow the claim without them.',
+                              ur:'اگر آپ برطانیہ میں ٹیکس دہندہ ہیں تو مسجد آپ کے ہر £1 عطیے پر 25p ٹیکس واپس حاصل کر سکتی ہے۔ <b>ادائیگی کے صفحے پر آپ سے پوچھا جائے گا</b> — گفٹ ایڈ کے تحت <b>Yes</b> کا انتخاب کریں، اور اپنا نام اور پوسٹ کوڈ سمیت گھر کا پتہ دیں۔ ان کے بغیر HMRC دعویٰ قبول نہیں کرے گا۔',
+                              gu:'જો તમે યુકેમાં ટેક્સ ભરો છો, તો મસ્જિદ તમારા દરેક £1 ના દાન પર 25p ટેક્સ પાછો મેળવી શકે છે. <b>ચુકવણીના પાના પર તમને પૂછવામાં આવશે</b> — ગિફ્ટ એઇડ હેઠળ <b>Yes</b> પસંદ કરો, અને તમારું નામ અને પોસ્ટકોડ સહિત ઘરનું સરનામું આપો. તે વગર HMRC દાવો સ્વીકારશે નહીં.' },
+      'ga.summary':        { en:'The declaration you are agreeing to', ur:'وہ اعلامیہ جس سے آپ اتفاق کر رہے ہیں', gu:'જે ઘોષણા સાથે તમે સંમત થઈ રહ્યા છો' },
+      'tier.bronze':       { en:'Bronze', ur:'برونز', gu:'બ્રોન્ઝ' },
+      'tier.silver':       { en:'Silver', ur:'سلور', gu:'સિલ્વર' },
+      'tier.gold':         { en:'Gold', ur:'گولڈ', gu:'ગોલ્ડ' },
+      'tier.plat':         { en:'Platinum', ur:'پلاٹینم', gu:'પ્લેટિનમ' },
+      'nb.other':          { en:'Give any other amount', ur:'کوئی اور رقم عطیہ کریں', gu:'કોઈપણ બીજી રકમનું દાન આપો' },
+      'nb.copyall':        { en:'Copy all details', ur:'تمام تفصیلات کاپی کریں', gu:'બધી વિગતો કોપી કરો' },
+      'nb.dnote':          { en:'Bolton Central Islamic Society · Registered charity 1041569. If you are ever unsure about donation details, please confirm them at the masjid office before transferring.',
+                              ur:'Bolton Central Islamic Society · رجسٹرڈ خیراتی ادارہ نمبر 1041569۔ اگر آپ کو عطیہ کی تفصیلات کے بارے میں کبھی بھی شک ہو تو براہ کرم ٹرانسفر کرنے سے پہلے مسجد کے دفتر سے تصدیق کر لیں۔',
+                              gu:'Bolton Central Islamic Society · નોંધાયેલ ચેરિટી નંબર 1041569. જો તમને દાનની વિગતો વિશે ક્યારેય શંકા હોય, તો કૃપા કરીને ટ્રાન્સફર કરતા પહેલા મસ્જિદ ઓફિસમાં ખાતરી કરી લો.' },
+
+      'dn.purpose.general.label': { en:'The masjid', ur:'مسجد', gu:'મસ્જિદ' },
+      'dn.purpose.general.sub':   { en:'general', ur:'عام', gu:'સામાન્ય' },
+      'dn.purpose.general.hint':  { en:'The general fund — upkeep, running costs, and the masjid’s work in Bolton.',
+                                    ur:'عمومی فنڈ — دیکھ بھال، چلانے کے اخراجات، اور بولٹن میں مسجد کا کام۔',
+                                    gu:'સામાન્ય ફંડ — જાળવણી, સંચાલન ખર્ચ, અને બોલ્ટનમાં મસ્જિદનું કાર્ય.' },
+      'dn.purpose.sadaqah.label': { en:'Sadaqah', ur:'صدقہ', gu:'સદકાહ' },
+      'dn.purpose.sadaqah.sub':   { en:'voluntary', ur:'رضاکارانہ', gu:'સ્વૈચ્છિક' },
+      'dn.purpose.sadaqah.hint':  { en:'Voluntary charity, given as and when you wish.', ur:'رضاکارانہ صدقہ، جب اور جتنا آپ چاہیں دیں۔', gu:'સ્વૈચ્છિક દાન, જ્યારે અને જેટલું તમે ઇચ્છો ત્યારે આપો.' },
+      'dn.purpose.lillah.label':  { en:'Lillah', ur:'للہ', gu:'લિલ્લાહ' },
+      'dn.purpose.lillah.sub':    { en:'for Allah', ur:'اللہ کے لیے', gu:'અલ્લાહ માટે' },
+      'dn.purpose.lillah.hint':   { en:'Given purely for the sake of Allah, with nothing expected in return.',
+                                    ur:'خالصتاً اللہ کی رضا کے لیے، بغیر کسی بدلے کی توقع کے۔',
+                                    gu:'કેવળ અલ્લાહની ખુશી માટે, બદલામાં કંઈ પણ અપેક્ષા રાખ્યા વગર.' },
+      'dn.freq.once.label':    { en:'One-off', ur:'ایک بار', gu:'એક વખત' },
+      'dn.freq.once.sub':      { en:'a single gift', ur:'ایک عطیہ', gu:'એક દાન' },
+      'dn.freq.monthly.label': { en:'Monthly', ur:'ماہانہ', gu:'માસિક' },
+      'dn.freq.monthly.sub':   { en:'until you stop', ur:'جب تک آپ روکیں نہ', gu:'તમે બંધ ન કરો ત્યાં સુધી' },
+      'dn.freq.monthly.note':  { en:'Taken once a month from the day you set it up, until you stop it. You can cancel any time from the receipt Stripe emails you.',
+                                 ur:'آپ کے شروع کرنے کے دن سے ماہ میں ایک بار لیا جائے گا، جب تک آپ اسے روک نہ دیں۔ آپ Stripe کی طرف سے بھیجی گئی رسید سے کسی بھی وقت منسوخ کر سکتے ہیں۔',
+                                 gu:'તમે શરૂ કરો તે દિવસથી મહિનામાં એક વખત લેવામાં આવશે, જ્યાં સુધી તમે તેને બંધ ન કરો. તમે Stripe દ્વારા મોકલેલ રસીદ પરથી કોઈપણ સમયે રદ કરી શકો છો.' },
+      'dn.freq.jummah.label':  { en:'Friday Pay', ur:'جمعہ ادائیگی', gu:'શુક્રવાર ચુકવણી' },
+      'dn.freq.jummah.sub':    { en:'Jumuʻah', ur:'جمعہ', gu:'જુમુઆહ' },
+      'dn.freq.jummah.note':   { en:'A weekly gift for Jumuʻah. Stripe takes it every seven days from the day you start, so set it up on a Friday if you would like it to land on one. You can stop it any time.',
+                                 ur:'جمعہ کے لیے ہفتہ وار عطیہ۔ Stripe اسے شروع کرنے کے دن سے ہر سات دن بعد لیتا ہے، اس لیے اگر آپ چاہتے ہیں کہ یہ جمعہ کو ہو تو اسے جمعہ کے دن شروع کریں۔ آپ اسے کسی بھی وقت روک سکتے ہیں۔',
+                                 gu:'જુમુઆહ માટે સાપ્તાહિક દાન. Stripe તેને તમે શરૂ કરો તે દિવસથી દર સાત દિવસે લે છે, તેથી જો તમે ઇચ્છો કે તે શુક્રવારે આવે તો તેને શુક્રવારે શરૂ કરો. તમે તેને કોઈપણ સમયે બંધ કરી શકો છો.' },
+      'dn.amt.other.label':    { en:'Other', ur:'دیگر', gu:'અન્ય' },
+      'dn.amt.other.sub':      { en:'you choose', ur:'آپ کی مرضی', gu:'તમારી પસંદગી' },
+
+      'dn.go.choose':       { en:'Choose your amount', ur:'اپنی رقم منتخب کریں', gu:'તમારી રકમ પસંદ કરો' },
+      'dn.go.donate':       { en:'Donate', ur:'عطیہ کریں', gu:'દાન કરો' },
+      'dn.per.month':       { en:' a month', ur:' ماہانہ', gu:' દર મહિને' },
+      'dn.per.jummah':      { en:' every Friday', ur:' ہر جمعہ', gu:' દર શુક્રવારે' },
+      'dn.go.sub.card':     { en:'Card · Apple Pay · Google Pay', ur:'کارڈ · ایپل پے · گوگل پے', gu:'કાર્ડ · એપલ પે · ગૂગલ પે' },
+      'dn.go.notavailable': { en:'Not available yet', ur:'ابھی دستیاب نہیں', gu:'હજુ ઉપલબ્ધ નથી' },
+      'dn.go.sub.choose':   { en:'Choose another amount, or use the bank details below', ur:'کوئی اور رقم منتخب کریں، یا نیچے دیے گئے بینک تفصیلات استعمال کریں', gu:'બીજી રકમ પસંદ કરો, અથવા નીચે આપેલ બેંક વિગતોનો ઉપયોગ કરો' },
+      'dn.go.sub.usebank':  { en:'Use the bank details below', ur:'نیچے دی گئی بینک تفصیلات استعمال کریں', gu:'નીચે આપેલ બેંક વિગતોનો ઉપયોગ કરો' }
+    };
+
+    function current(){
+      try { return localStorage.getItem('taiyabah-lang') || 'en'; } catch(e){ return 'en'; }
+    }
+
+    function t(key){
+      var row = STR[key];
+      if(!row) return key;
+      var lang = current();
+      return row[lang] != null ? row[lang] : row.en;
+    }
+
+    function apply(code){
+      if(LANGS.indexOf(code) === -1) code = 'en';
+      try { localStorage.setItem('taiyabah-lang', code); } catch(e){}
+
+      var roots = document.querySelectorAll('[data-i18n-root]');
+      for(var i=0; i<roots.length; i++){
+        roots[i].setAttribute('lang', code);
+        roots[i].setAttribute('dir', DIR[code]);
+      }
+
+      var nodes = document.querySelectorAll('[data-i18n]');
+      for(var j=0; j<nodes.length; j++){
+        var key = nodes[j].getAttribute('data-i18n');
+        var row = STR[key];
+        if(row) nodes[j].innerHTML = (row[code] != null ? row[code] : row.en);
+      }
+
+      var btns = document.querySelectorAll('.lang-switch [data-lang]');
+      for(var k=0; k<btns.length; k++){
+        btns[k].setAttribute('aria-pressed', btns[k].getAttribute('data-lang') === code ? 'true' : 'false');
+      }
+
+      if(window.TAIYABAH_DONATE_RENDER) window.TAIYABAH_DONATE_RENDER();
+    }
+
+    function wireSwitchers(){
+      var btns = document.querySelectorAll('.lang-switch [data-lang]');
+      for(var i=0; i<btns.length; i++){
+        btns[i].addEventListener('click', function(){ apply(this.getAttribute('data-lang')); });
+      }
+    }
+
+    window.TAIYABAH_I18N = { apply:apply, current:current, t:t };
+
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ wireSwitchers(); apply(current()); });
+    } else {
+      wireSwitchers();
+      apply(current());
+    }
+  })();
+
+  /* ---------------------------------------------------------------------------
      DONATE — choose what for, how often, how much, then one button.
 
      WHY THE LINKS ARE SHAPED THIS WAY. A Stripe Payment Link carries its own
@@ -7969,22 +8250,27 @@ window.TAIYABAH_PUBLIC = {
      below carry the page.
   --------------------------------------------------------------------------- */
   (function(){
+    //  label/sub/hint are i18n keys, not display text — resolved per language
+    //  at render time by T(), below, so switching language updates these pills
+    //  without rebuilding this array.
     var PURPOSES = [
-      { key:'general', label:'The masjid',  sub:'general',
-        hint:'The general fund — upkeep, running costs, and the masjid’s work in Bolton.' },
-      { key:'sadaqah', label:'Sadaqah',     sub:'voluntary',
-        hint:'Voluntary charity, given as and when you wish.' },
-      { key:'lillah',  label:'Lillah',      sub:'for Allah',
-        hint:'Given purely for the sake of Allah, with nothing expected in return.' }
+      { key:'general', label:'dn.purpose.general.label', sub:'dn.purpose.general.sub',
+        hint:'dn.purpose.general.hint' },
+      { key:'sadaqah', label:'dn.purpose.sadaqah.label', sub:'dn.purpose.sadaqah.sub',
+        hint:'dn.purpose.sadaqah.hint' },
+      { key:'lillah',  label:'dn.purpose.lillah.label',  sub:'dn.purpose.lillah.sub',
+        hint:'dn.purpose.lillah.hint' }
     ];
 
+    //  Amounts are figures, not prose — £5 reads the same in every language
+    //  this page offers, so only 'Other' needs a key.
     var AMOUNTS = [
       { key:'5',   label:'£5'   },
       { key:'10',  label:'£10'  },
       { key:'25',  label:'£25'  },
       { key:'50',  label:'£50'  },
       { key:'100', label:'£100' },
-      { key:'other', label:'Other', sub:'you choose' }
+      { key:'other', label:'dn.amt.other.label', sub:'dn.amt.other.sub' }
     ];
 
     //  PASTE THE STRIPE PAYMENT LINKS HERE. Nothing else needs changing.
@@ -8007,19 +8293,21 @@ window.TAIYABAH_PUBLIC = {
     //  feature is sound. What is not sound is a masjid page promising a day
     //  it cannot deliver, and a donor later noticing. Hence the note.
     var FREQS = [
-      { key:'once',    label:'One-off', sub:'a single gift',
+      { key:'once',    label:'dn.freq.once.label',    sub:'dn.freq.once.sub',
         note:'' },
-      { key:'monthly', label:'Monthly', sub:'until you stop',
-        note:'Taken once a month from the day you set it up, until you stop it. ' +
-             'You can cancel any time from the receipt Stripe emails you.' },
-      { key:'jummah',  label:'Friday Pay', sub:'Jumu\u02bbah',
-        note:'A weekly gift for Jumu\u02bbah. Stripe takes it every seven days ' +
-             'from the day you start, so set it up on a Friday if you would ' +
-             'like it to land on one. You can stop it any time.' }
+      { key:'monthly', label:'dn.freq.monthly.label', sub:'dn.freq.monthly.sub',
+        note:'dn.freq.monthly.note' },
+      { key:'jummah',  label:'dn.freq.jummah.label',  sub:'dn.freq.jummah.sub',
+        note:'dn.freq.jummah.note' }
     ];
 
     var $ = function(id){ return document.getElementById(id); };
     if(!$('dn-purpose')) return;
+
+    //  Falls back to the key itself if TAIYABAH_I18N hasn't loaded yet, or if
+    //  the string passed in isn't a key at all (a plain amount like '£10') —
+    //  both cases are meant to pass through unchanged, not throw.
+    var T = function(key){ return window.TAIYABAH_I18N ? window.TAIYABAH_I18N.t(key) : key; };
 
     var S = { purpose:'general', freq:'once', amount:'25' };
 
@@ -8038,25 +8326,25 @@ window.TAIYABAH_PUBLIC = {
 
     function render(){
       $('dn-purpose').innerHTML = PURPOSES.map(function(p){
-        return pill(p.key, p.label, p.sub, S.purpose === p.key, false);
+        return pill(p.key, T(p.label), p.sub ? T(p.sub) : '', S.purpose === p.key, false);
       }).join('');
       $('dn-freq').innerHTML = FREQS.map(function(f){
-        return pill(f.key, f.label, f.sub, S.freq === f.key, false);
+        return pill(f.key, T(f.label), f.sub ? T(f.sub) : '', S.freq === f.key, false);
       }).join('');
       //  Amounts are greyed, not removed, when that frequency has no link for
       //  them: a grid that changes shape as you switch is a grid people think
       //  they misclicked.
       $('dn-amounts').innerHTML = AMOUNTS.map(function(a){
         var has = !!DONATE_LINKS[S.freq][a.key];
-        return pill(a.key, a.label, a.sub, S.amount === a.key, !has && anyLink());
+        return pill(a.key, T(a.label), a.sub ? T(a.sub) : '', S.amount === a.key, !has && anyLink());
       }).join('');
 
       var p = PURPOSES.filter(function(x){ return x.key === S.purpose; })[0];
-      $('dn-purpose-hint').textContent = p ? p.hint : '';
+      $('dn-purpose-hint').textContent = p ? T(p.hint) : '';
 
       var f = FREQS.filter(function(x){ return x.key === S.freq; })[0];
       var fh = $('dn-freq-hint');
-      fh.textContent = f ? f.note : '';
+      fh.textContent = (f && f.note) ? T(f.note) : '';
       fh.hidden = !(f && f.note);
 
       var href = DONATE_LINKS[S.freq][S.amount] || '';
@@ -8065,8 +8353,8 @@ window.TAIYABAH_PUBLIC = {
       //  What the donor is agreeing to, on the button itself. "Donate £10"
       //  and "Donate £10 every Friday" are different promises and the button
       //  is the last thing read before the card page.
-      var per = S.freq === 'monthly' ? ' a month'
-              : S.freq === 'jummah'  ? ' every Friday' : '';
+      var per = S.freq === 'monthly' ? T('dn.per.month')
+              : S.freq === 'jummah'  ? T('dn.per.jummah') : '';
 
       if(href){
         //  The designation travels with the payment rather than needing its
@@ -8076,18 +8364,22 @@ window.TAIYABAH_PUBLIC = {
                   'client_reference_id=' + encodeURIComponent(S.purpose);
         go.removeAttribute('aria-disabled');
         $('dn-go-main').textContent = S.amount === 'other'
-          ? 'Choose your amount' + per
-          : 'Donate ' + amt.label + per;
-        $('dn-go-sub').textContent = 'Card · Apple Pay · Google Pay';
+          ? T('dn.go.choose') + per
+          : T('dn.go.donate') + ' ' + T(amt.label) + per;
+        $('dn-go-sub').textContent = T('dn.go.sub.card');
       } else {
         go.removeAttribute('href');
         go.setAttribute('aria-disabled', 'true');
-        $('dn-go-main').textContent = 'Not available yet';
+        $('dn-go-main').textContent = T('dn.go.notavailable');
         $('dn-go-sub').textContent = anyLink()
-          ? 'Choose another amount, or use the bank details below'
-          : 'Use the bank details below';
+          ? T('dn.go.sub.choose')
+          : T('dn.go.sub.usebank');
       }
     }
+
+    //  Exposed so the language switcher (above) can re-render these pills
+    //  in the new language without reloading the page.
+    window.TAIYABAH_DONATE_RENDER = render;
 
     function wire(id, field){
       $(id).addEventListener('click', function(e){
