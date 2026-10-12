@@ -191,10 +191,23 @@
       });
     }
 
+    // "Check now" reads as "check everything on this page", not just the
+    // fourteen internal checks — so a click also re-runs External
+    // services. Wired here, on the click handler, rather than inside
+    // run() itself: run() is also what mount() calls for the page's
+    // first load, and external.mount() already owns that first load
+    // independently (see renderApp) — folding the call into run() made
+    // it fire twice on every page open, caught by a click-driven test
+    // asserting exactly one fetch per actual click.
+    function recheckAll() {
+      if (typeof external !== "undefined") external.run();
+      return run();
+    }
+
     var wired = false;
     function mount() {
       if (!wired) {
-        el("hh-recheck").addEventListener("click", run);
+        el("hh-recheck").addEventListener("click", recheckAll);
         wired = true;
       }
       return run();
@@ -288,7 +301,7 @@
 
     function mount() { return run(); }
 
-    return { mount: mount };
+    return { mount: mount, run: run };
   })();
 
   function renderApp(identity) {
