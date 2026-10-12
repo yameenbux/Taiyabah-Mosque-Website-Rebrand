@@ -258,8 +258,8 @@ build-inputs/  base64 sources inlined at build time
 db/            migrations, read-only check scripts, and the SQL test suites
 db/harness/    builds a throwaway local Postgres and runs every suite
 _test/         browser suites — Playwright against the built pages
-supabase/      Edge Functions (notify, invite-user, stripe-webhook) —
-               deployed, not served
+supabase/      Edge Functions (notify, invite-user, stripe-webhook,
+               app-notify, monitoring-status) — deployed, not served
 docs/          setup guides and screenshots — not published
 ```
 

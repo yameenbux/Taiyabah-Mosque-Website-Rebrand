@@ -203,6 +203,94 @@
     return { mount: mount };
   })();
 
+  /* ------------------------------------------------------------------ the
+     EXTERNAL SERVICES MODULE. Sentry and UptimeRobot, read through
+     monitoring-status — a separate function because it holds separate
+     secrets and answers a different question than health_check() ever can:
+     not "what does the database think of itself" but "what does a real
+     visitor's browser see, and is the site reachable at all". Mounted
+     independently of the health module above so one failing never blocks
+     the other — see renderApp. */
+  var external = (function () {
+    "use strict";
+
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function row(ok, name, detail) {
+      return '<div class="hh-row' + (ok ? '' : ' is-fail') + '">' +
+        '<span class="hh-mk" aria-hidden="true">' + (ok ? "✓" : "!") + '</span>' +
+        '<span class="hh-body">' +
+          '<span class="hh-name">' + esc(name) + '</span>' +
+          '<span class="hh-detail">' + esc(detail) + '</span>' +
+        '</span></div>';
+    }
+
+    function renderResult(data) {
+      var rows = [];
+
+      var s = data.sentry || {};
+      if (s.ok) {
+        var n = s.unresolved_24h || 0;
+        rows.push(row(n === 0, "Sentry — browser errors",
+          n === 0
+            ? "No unresolved errors in the last 24 hours."
+            : n + (s.capped ? "+" : "") + " unresolved error" + (n === 1 ? "" : "s") +
+              " in the last 24 hours."));
+      } else {
+        rows.push(row(false, "Sentry — browser errors",
+          s.error === "not configured"
+            ? "Not set up yet — SENTRY_AUTH_TOKEN isn't configured on the server."
+            : "Couldn't check: " + (s.error || "unknown error")));
+      }
+
+      var u = data.uptime || {};
+      if (u.ok) {
+        rows.push(row(u.status === "up", "UptimeRobot — site reachable",
+          u.status === "up" ? "Up."
+            : u.status === "down" ? "Down — needs attention now."
+            : "Status unclear."));
+      } else {
+        rows.push(row(false, "UptimeRobot — site reachable",
+          u.error === "not configured"
+            ? "Not set up yet — UPTIMEROBOT_API_KEY isn't configured on the server."
+            : "Couldn't check: " + (u.error || "unknown error")));
+      }
+
+      el("ext-list").innerHTML = rows.join("");
+    }
+
+    function run() {
+      setError("ext-error", "");
+      return sb.auth.getSession().then(function (s) {
+        var token = s.data && s.data.session && s.data.session.access_token;
+        if (!token) throw new Error("Your session has expired. Sign in again.");
+        return fetch(apiUrl + "/functions/v1/monitoring-status", {
+          method: "POST",
+          headers: { "content-type": "application/json",
+                     apikey: cfg.SUPABASE_ANON_KEY,
+                     Authorization: "Bearer " + token }
+        });
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          var body; try { body = JSON.parse(t); } catch (e) { body = { error: t }; }
+          if (!r.ok) throw new Error(body.error || "Request failed.");
+          return body;
+        });
+      }).then(renderResult).catch(function (err) {
+        setError("ext-error", err && err.message ||
+          "Couldn't reach external services. Try again shortly.");
+      });
+    }
+
+    function mount() { return run(); }
+
+    return { mount: mount };
+  })();
+
   function renderApp(identity) {
     //  THE RAIL. Mounted here and nowhere else: this function runs only
     //  once the page knows who is signed in, so the list of areas can
@@ -244,6 +332,9 @@
     // A panel that fails to load must never take the sign-in shell with it.
     try { health.mount(); } catch (e) {
       if (window.console) console.warn("system health panel unavailable:", e);
+    }
+    try { external.mount(); } catch (e) {
+      if (window.console) console.warn("external services panel unavailable:", e);
     }
   }
 
