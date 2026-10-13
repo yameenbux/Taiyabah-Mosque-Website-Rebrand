@@ -146,6 +146,12 @@
         p.textContent = "All fourteen checks are clean.";
       }
 
+      var kpi = el("kpi-internal");
+      if (kpi) {
+        kpi.textContent = (checks.length - failing.length) + "/" + checks.length;
+        kpi.className = failing.length ? "bad" : "ok";
+      }
+
       var list = el("hh-list");
       list.innerHTML = "";
       if (!checks.length) {
@@ -244,10 +250,12 @@
 
     function renderResult(data) {
       var rows = [];
+      var okCount = 0;
 
       var s = data.sentry || {};
       if (s.ok) {
         var n = s.unresolved_24h || 0;
+        if (n === 0) okCount++;
         rows.push(row(n === 0, "Sentry — browser errors",
           n === 0
             ? "No unresolved errors in the last 24 hours."
@@ -262,6 +270,7 @@
 
       var u = data.uptime || {};
       if (u.ok) {
+        if (u.status === "up") okCount++;
         rows.push(row(u.status === "up", "UptimeRobot — site reachable",
           u.status === "up" ? "Up."
             : u.status === "down" ? "Down — needs attention now."
@@ -274,6 +283,12 @@
       }
 
       el("ext-list").innerHTML = rows.join("");
+
+      var kpi = el("kpi-external");
+      if (kpi) {
+        kpi.textContent = okCount + "/2";
+        kpi.className = okCount < 2 ? "bad" : "ok";
+      }
     }
 
     function run() {
@@ -302,6 +317,58 @@
     function mount() { return run(); }
 
     return { mount: mount, run: run };
+  })();
+
+  /* ------------------------------------------------------------------ the
+     DRAWER. Tapping a tile in either list reads its name and detail
+     straight off the DOM health.renderResult()/external.renderResult()
+     already built — not a second copy of the same text — so the drawer
+     can never say something that disagrees with the tile it was opened
+     from. One delegated listener per list, so it keeps working no matter
+     how many times "Check now" rebuilds the rows underneath it. */
+  var drawer = (function () {
+    "use strict";
+
+    var overlay = el("hh-overlay");
+    if (!overlay) return { mount: function () {} };
+
+    function openFrom(row) {
+      var name = row.querySelector(".hh-name");
+      var detail = row.querySelector(".hh-detail");
+      var bad = (" " + row.className + " ").indexOf(" is-fail ") !== -1;
+      el("hh-drawer-title").textContent = name ? name.textContent : "";
+      el("hh-drawer-detail").textContent = detail ? detail.textContent : "";
+      el("hh-drawer-tag").textContent = bad ? "Fail" : "Pass";
+      el("hh-drawer").className = "hh-drawer" + (bad ? " is-fail" : "");
+      overlay.className = "hh-overlay on";
+    }
+
+    function close() { overlay.className = "hh-overlay"; }
+
+    function findRow(node, list) {
+      while (node && node !== list) {
+        if ((" " + node.className + " ").indexOf(" hh-row ") !== -1) return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function mount() {
+      ["hh-list", "ext-list"].forEach(function (id) {
+        var list = el(id);
+        if (!list) return;
+        list.addEventListener("click", function (e) {
+          var row = findRow(e.target, list);
+          if (row) openFrom(row);
+        });
+      });
+      el("hh-drawer-close").addEventListener("click", close);
+      overlay.addEventListener("click", function (e) {
+        if (e.target === overlay) close();
+      });
+    }
+
+    return { mount: mount };
   })();
 
   function renderApp(identity) {
@@ -348,6 +415,9 @@
     }
     try { external.mount(); } catch (e) {
       if (window.console) console.warn("external services panel unavailable:", e);
+    }
+    try { drawer.mount(); } catch (e) {
+      if (window.console) console.warn("check detail drawer unavailable:", e);
     }
   }
 

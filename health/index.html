@@ -220,30 +220,110 @@
   .hh-toolbar .btn{width:auto;}
   .hh-checked{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums;}
 
-  .hh-list{display:flex;flex-direction:column;gap:9px;}
-  .hh-row{
-    display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);
-    border-radius:11px;padding:12px 14px;background:var(--paper);
+  /*  KPI STRIP. Both numbers are read straight off the same two results
+      health.renderResult() and external.renderResult() already have —
+      "12/14" is checks.length minus failing.length, "1/2" is how many of
+      Sentry+UptimeRobot came back ok. Nothing here is a second source of
+      truth, and there is no third tile for a 30-day uptime percentage or a
+      run-history sparkline: monitoring-status only ever answers for right
+      now, and a graph implying a trend this page cannot see would be a
+      decoration mistaken for a reading. */
+  .hh-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+  .hh-kpi{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 16px;
   }
+  .hh-kpi span{
+    display:block;font-size:.74rem;font-weight:700;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:5px;
+  }
+  .hh-kpi b{
+    font-family:"Fraunces",serif;font-size:1.35rem;font-variant-numeric:tabular-nums;
+    color:var(--ink);
+  }
+  .hh-kpi b.ok{color:var(--success-ink);}
+  .hh-kpi b.bad{color:var(--danger-ink);}
+
+  /*  THE TILE WALL. Same markup health.renderResult() and
+      external.renderResult() have always built — .hh-row > .hh-mk +
+      .hh-body > .hh-name + .hh-detail — only laid out as a grid of compact
+      tiles instead of full-width rows, with .hh-detail still in the DOM
+      (so the drawer below can read it) but not shown at rest. Scan the
+      wall for colour; tap a tile to read its sentence. */
+  .hh-list{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:8px;
+  }
+  .hh-row{
+    display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);
+    border-radius:10px;padding:11px 12px;background:var(--paper);cursor:pointer;
+    opacity:0;animation:hh-tilein .4s ease forwards;transition:transform .15s ease;
+  }
+  .hh-row:hover{transform:translateY(-2px);}
   .hh-row.is-fail{border-color:rgba(180,83,47,.4);background:rgba(180,83,47,.06);}
+  @keyframes hh-tilein{to{opacity:1;}}
+  .hh-row:nth-child(1){animation-delay:.02s;} .hh-row:nth-child(2){animation-delay:.05s;}
+  .hh-row:nth-child(3){animation-delay:.08s;} .hh-row:nth-child(4){animation-delay:.11s;}
+  .hh-row:nth-child(5){animation-delay:.14s;} .hh-row:nth-child(6){animation-delay:.17s;}
+  .hh-row:nth-child(7){animation-delay:.2s;}  .hh-row:nth-child(8){animation-delay:.23s;}
+  .hh-row:nth-child(9){animation-delay:.26s;} .hh-row:nth-child(10){animation-delay:.29s;}
+  .hh-row:nth-child(11){animation-delay:.32s;} .hh-row:nth-child(12){animation-delay:.35s;}
+  .hh-row:nth-child(13){animation-delay:.38s;} .hh-row:nth-child(14){animation-delay:.41s;}
+  .hh-row:nth-child(15){animation-delay:.44s;} .hh-row:nth-child(16){animation-delay:.47s;}
   .hh-mk{
-    flex:0 0 auto;width:22px;height:22px;border-radius:50%;display:grid;
-    place-items:center;font-size:.8rem;font-weight:800;margin-top:1px;
+    flex:0 0 auto;width:19px;height:19px;border-radius:50%;display:grid;
+    place-items:center;font-size:.74rem;font-weight:800;margin-top:1px;
   }
   .hh-row:not(.is-fail) .hh-mk{background:rgba(63,122,70,.15);color:var(--success-ink);}
   .hh-row.is-fail .hh-mk{background:rgba(180,83,47,.16);color:var(--danger-ink);}
   .hh-body{min-width:0;}
-  .hh-name{font-size:.94rem;font-weight:700;color:var(--ink);}
+  .hh-name{font-size:.89rem;font-weight:700;color:var(--ink);line-height:1.3;}
   .hh-row.is-fail .hh-name{color:var(--danger-ink);}
-  .hh-detail{font-size:.9rem;line-height:1.5;color:var(--muted);margin-top:2px;}
+  .hh-detail{display:none;}
 
   .hh-empty{
-    text-align:center;padding:24px 18px;color:var(--muted);font-size:.965rem;
+    grid-column:1/-1;text-align:center;padding:24px 18px;color:var(--muted);font-size:.965rem;
     line-height:1.6;background:var(--paper);border:1px dashed var(--line);border-radius:12px;
   }
   .hh-note{
     font-size:.88rem;line-height:1.6;color:var(--muted);margin-top:18px;
     padding-top:16px;border-top:1px solid var(--line);
+  }
+
+  /*  THE DRAWER. Shown and hidden with a toggled class, never the
+      `hidden` attribute — this page's own .hh-status already shows what
+      happens when a later author rule (display:flex) outranks the
+      browser's default `[hidden]` behaviour on the same element; easier
+      not to reopen that question for something new. */
+  .hh-overlay{
+    position:fixed;inset:0;background:rgba(38,27,34,.45);z-index:50;
+    display:none;align-items:flex-end;justify-content:center;
+  }
+  .hh-overlay.on{display:flex;}
+  @media (min-width:640px){ .hh-overlay{align-items:center;} }
+  .hh-drawer{
+    background:var(--card);width:100%;max-width:480px;border-radius:18px 18px 0 0;
+    padding:22px 22px 28px;box-shadow:0 -10px 40px rgba(0,0,0,.25);
+    transform:translateY(16px);opacity:0;animation:hh-drawerin .22s ease forwards;
+  }
+  @media (min-width:640px){ .hh-drawer{border-radius:16px;} }
+  @keyframes hh-drawerin{to{transform:none;opacity:1;}}
+  .hh-drawer-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .hh-drawer-top b{font-size:1.05rem;font-family:"Fraunces",serif;}
+  .hh-drawer-close{
+    background:none;border:none;color:var(--muted);font-size:1.3rem;cursor:pointer;
+    line-height:1;padding:2px 6px;
+  }
+  .hh-drawer p{font-size:.92rem;color:var(--muted);line-height:1.6;margin:0;}
+  .hh-drawer .tag{
+    display:inline-block;font-size:.72rem;font-weight:800;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:10px;
+    background:rgba(63,122,70,.15);color:var(--success-ink);
+  }
+  .hh-drawer.is-fail .tag{background:rgba(180,83,47,.16);color:var(--danger-ink);}
+
+  @media (prefers-reduced-motion: reduce){
+    .hh-row{opacity:1;animation:none;}
+    .hh-drawer{opacity:1;transform:none;animation:none;}
   }
 </style>
 <style>
@@ -360,6 +440,11 @@
 
       <div class="err" id="hh-error" hidden></div>
 
+      <div class="hh-kpis">
+        <div class="hh-kpi"><span>Internal checks</span><b id="kpi-internal">—</b></div>
+        <div class="hh-kpi"><span>External services</span><b id="kpi-external">—</b></div>
+      </div>
+
       <div class="hh-status" id="hh-status" hidden>
         <span class="hh-dot" aria-hidden="true"></span>
         <div>
@@ -387,6 +472,17 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<div class="hh-overlay" id="hh-overlay">
+  <div class="hh-drawer" id="hh-drawer">
+    <div class="hh-drawer-top">
+      <b id="hh-drawer-title">—</b>
+      <button type="button" class="hh-drawer-close" id="hh-drawer-close" aria-label="Close">&times;</button>
+    </div>
+    <span class="tag" id="hh-drawer-tag">Pass</span>
+    <p id="hh-drawer-detail"></p>
   </div>
 </div>
 
