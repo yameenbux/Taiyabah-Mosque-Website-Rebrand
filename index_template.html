@@ -590,6 +590,15 @@ window.TAIYABAH_PUBLIC = {
   .banner-content h2{font-size:clamp(2rem,4.6vw,3.4rem);color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.9);margin-bottom:16px;}
   .banner-content p{font-size:1.115rem;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 30px;line-height:1.7;text-shadow:0 1px 12px rgba(0,0,0,.6);}
 
+  /* ---------- HOME: RAMADAN BANNER (its own heading, no photo needed) ---------- */
+  .ramadan-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:64px 0;position:relative;overflow:hidden;text-align:center;}
+  .ramadan-promo .girih-mark{position:absolute;top:-30px;right:-30px;width:220px;height:220px;color:rgba(198,162,76,.08);}
+  .ramadan-promo .container{position:relative;z-index:1;max-width:620px;}
+  .rp-ic{width:52px;height:52px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .ramadan-promo .eyebrow{justify-content:center;color:var(--gold-bright);}
+  .ramadan-promo h2{font-family:"Fraunces","Fraunces fallback",serif;font-size:clamp(1.9rem,4vw,2.6rem);color:#fff;margin-bottom:14px;}
+  .ramadan-promo p{font-size:1.05rem;color:rgba(243,239,227,.85);margin-bottom:26px;line-height:1.6;}
+
   /* ---------- HOME: PAGE TEASERS ---------- */
   /* ---------- EXPLORE ROW (5-up icon strip, girih-textured) ---------- */
   .explore-row{background-color:var(--paper);padding:54px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
@@ -1319,7 +1328,7 @@ window.TAIYABAH_PUBLIC = {
   .snap-row:last-of-type{border-bottom:none;}
   .snap-row .k{color:var(--muted);}
   .snap-row .v{font-weight:600;}
-  .snap-note{margin-top:14px;font-size:.907rem;color:var(--muted);line-height:1.5;}
+  .snap-note{margin-top:14px;margin-left:auto;margin-right:auto;font-size:.907rem;color:var(--muted);line-height:1.5;}
 
   .pt-controls{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
   .pt-nav{display:flex;align-items:center;gap:10px;}
@@ -2671,23 +2680,27 @@ window.TAIYABAH_PUBLIC = {
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
 
-        <a href="#" class="glance-card glance-ramadan" data-nav="ramadan">
-          <div class="gd-ic">
-            <!-- Crescent and star, the same two-circle mask as the Food
-                 Bank card above, so the two seasonal/devotional cards in
-                 this row read as one visual family rather than two
-                 different icon styles. -->
-            <svg viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="A crescent moon and star.">
-              <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
-              <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
-              <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
-            </svg>
-          </div>
-          <h3>Ramadan</h3>
-          <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
-          <span class="btn btn-gold" style="align-self:center;">See the countdown →</span>
-        </a>
       </div>
+    </div>
+  </section>
+
+  <section class="ramadan-promo">
+    <svg class="girih-mark" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+    <div class="container">
+      <div class="rp-ic">
+        <!-- Crescent and star, the same two-circle mask used elsewhere on
+             this page, so every seasonal/devotional mark on the site reads
+             as one visual family rather than several different icon styles. -->
+        <svg viewBox="0 0 24 24" width="32" height="32" role="img" aria-label="A crescent moon and star.">
+          <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
+          <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
+          <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
+        </svg>
+      </div>
+      <div class="eyebrow">Ramadan 1448 AH</div>
+      <h2>Ramadan</h2>
+      <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
+      <a class="btn btn-gold" data-nav="ramadan">See the countdown →</a>
     </div>
   </section>
 

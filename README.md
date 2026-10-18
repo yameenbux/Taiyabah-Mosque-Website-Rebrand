@@ -109,6 +109,7 @@ Three surfaces, one sign-in, one database.
 | **`venue/`** | **Hall hire & nikāḥ** — the office's working screen. |
 | **`courses/`** | **Adult classes** — everything about a class in one place: create one, remove one, open or close sign-ups, rename, change how many places there are, and **every word on its page of the website**. Plus the register: who signed up, places left, who is waiting. |
 | **`rates/`** | **Hall hire charges** — the rate card on the hall hire page. The £100 deposit is not editable here and cannot be: it is a fixed Stripe payment link. |
+| **`ramadan-date/`** | **Ramadan date** — the date Ramadan is expected to begin, and the moon-sighting note under it, shown on the public countdown page. |
 | **`giftaid/`** | **Gift Aid** — the rows to send HMRC, and marking them claimed. |
 | **`volunteers/`** | **Food bank volunteers** — who offered, who has been rung. |
 | **`collections/`** | **Charity collections** — chanda requests from outside charities. Flags a paid collector and two charities booked for one day. |
@@ -1183,6 +1184,7 @@ all genuinely new surface area, not a renumbering of what came before.
 | `143_stripe_moved_the_invoice_fields` | Stripe's 2025-03-31.basil API release (and everything after it, including what a new account defaults to) removed fields this project's webhook read from an Invoice object and replaced one of them with a different shape — found and fixed before it reached production data, by reading both the old and new shapes rather than assuming one. |
 | `148_a_shared_stripe_account_is_not_one_payment` | iBeams, which still runs the madrasah's fees, shares this masjid's Stripe account — so every iBeams payment also reaches `stripe-webhook`, which correctly can't match it and was logging it under the same category as someone genuinely misusing one of this codebase's own payment links. Teaches `audit_kind()` to file an iBeams-shaped payment (no Payment Link, no reference — this codebase's own flows are always Payment-Link-based) as `'auto'` instead, counted rather than raised as a problem. |
 | `149_health_watch_also_says_when_it_recovers` | `health_watch()` had only ever emailed on a transition **into** failure — a fix landing was recorded in `admin_audit` and nothing else, so the only way to learn something had been fixed was to remember it had broken and go and check. The guard narrowing it to one direction is removed; `v_changed` above it was already the correct, two-directional gate. |
+| `150_ramadan_countdown` | Adds `check_ramadan()` so `set_site_content()` can accept `key='ramadan'` — the date Ramadan is expected to begin, plus a moon-sighting note under it — and seeds an initial astronomical estimate for the office to confirm or update from the new `ramadan-date/` screen once the sighting is announced. |
 
 **Read-only scripts, safe in the SQL editor:**
 `CHECK_retention.sql` answers what is about to be deleted and whether the jobs
