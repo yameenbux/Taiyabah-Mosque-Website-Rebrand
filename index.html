@@ -599,6 +599,15 @@ window.TAIYABAH_PUBLIC = {
   .banner-content h2{font-size:clamp(2rem,4.6vw,3.4rem);color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.9);margin-bottom:16px;}
   .banner-content p{font-size:1.115rem;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 30px;line-height:1.7;text-shadow:0 1px 12px rgba(0,0,0,.6);}
 
+  /* ---------- HOME: RAMADAN BANNER (its own heading, no photo needed) ---------- */
+  .ramadan-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:64px 0;position:relative;overflow:hidden;text-align:center;}
+  .ramadan-promo .girih-mark{position:absolute;top:-30px;right:-30px;width:220px;height:220px;color:rgba(198,162,76,.08);}
+  .ramadan-promo .container{position:relative;z-index:1;max-width:620px;}
+  .rp-ic{width:52px;height:52px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+  .ramadan-promo .eyebrow{justify-content:center;color:var(--gold-bright);}
+  .ramadan-promo h2{font-family:"Fraunces","Fraunces fallback",serif;font-size:clamp(1.9rem,4vw,2.6rem);color:#fff;margin-bottom:14px;}
+  .ramadan-promo p{font-size:1.05rem;color:rgba(243,239,227,.85);margin-bottom:26px;line-height:1.6;}
+
   /* ---------- HOME: PAGE TEASERS ---------- */
   /* ---------- EXPLORE ROW (5-up icon strip, girih-textured) ---------- */
   .explore-row{background-color:var(--paper);padding:54px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
@@ -1269,6 +1278,20 @@ window.TAIYABAH_PUBLIC = {
   .live-card .lc-time{font-family:"Fraunces","Fraunces fallback",serif;font-size:2.3rem;color:var(--gold-bright);}
   .live-card .lc-count{font-size:.96rem;color:rgba(243,239,227,.72);margin-top:4px;}
   .live-card .lc-note{font-size:.88rem;color:rgba(243,239,227,.78);margin-top:12px;line-height:1.5;}
+
+  /*  THE COUNTDOWN CARD. A single card reads as a stretched, near-empty
+      banner at the .container's full 1280px on a desktop — fine for the
+      prayer page's two-up grid, wrong for one card standing alone. Capped
+      and centred instead, so it stays a poster rather than a strip. */
+  .rm-subsection{max-width:560px;margin-left:auto;margin-right:auto;text-align:center;}
+  .rm-card{text-align:center;}
+  .rm-days{font-family:"Fraunces","Fraunces fallback",serif;font-size:clamp(3.4rem,11vw,5.6rem);
+            color:var(--gold-bright);line-height:1;margin:10px 0 2px;}
+  .rm-days-label{font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(243,239,227,.72);}
+  @media (min-width:900px){
+    .rm-days{font-size:5.6rem;}
+    .rm-card{padding:40px 48px;}
+  }
   .jumuah-flag{display:flex;align-items:center;gap:10px;background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.949rem;color:var(--gold-bright);}
   /* ---------- TAP TARGETS ----------
 
@@ -1314,7 +1337,7 @@ window.TAIYABAH_PUBLIC = {
   .snap-row:last-of-type{border-bottom:none;}
   .snap-row .k{color:var(--muted);}
   .snap-row .v{font-weight:600;}
-  .snap-note{margin-top:14px;font-size:.907rem;color:var(--muted);line-height:1.5;}
+  .snap-note{margin-top:14px;margin-left:auto;margin-right:auto;font-size:.907rem;color:var(--muted);line-height:1.5;}
 
   .pt-controls{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
   .pt-nav{display:flex;align-items:center;gap:10px;}
@@ -2665,7 +2688,28 @@ window.TAIYABAH_PUBLIC = {
           <a class="btn btn-gold" data-nav="donate" style="align-self:center;">Donate Now</a>
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
+
       </div>
+    </div>
+  </section>
+
+  <section class="ramadan-promo">
+    <svg class="girih-mark" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+    <div class="container">
+      <div class="rp-ic">
+        <!-- Crescent and star, the same two-circle mask used elsewhere on
+             this page, so every seasonal/devotional mark on the site reads
+             as one visual family rather than several different icon styles. -->
+        <svg viewBox="0 0 24 24" width="32" height="32" role="img" aria-label="A crescent moon and star.">
+          <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
+          <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
+          <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
+        </svg>
+      </div>
+      <div class="eyebrow">Ramadan 1448 AH</div>
+      <h2>Ramadan</h2>
+      <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
+      <a class="btn btn-gold" data-nav="ramadan">See the countdown →</a>
     </div>
   </section>
 
@@ -3062,6 +3106,48 @@ window.TAIYABAH_PUBLIC = {
         </div>
         <div class="jummah-note" id="jummahNote"></div>
         <p class="pt-note">Always confirm times on the printed board at the masjid, or in the app, before relying on them. Outside 2026, only the app will have current times.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= RAMADAN ================= -->
+<!--
+  THE DATE IS SITE_CONTENT, NOT THIS TEMPLATE. db/150 taught set_site_content()
+  a third key, 'ramadan' — {starts_on, note} — for exactly the same reason
+  028 and 045 moved the new build appeal and the hall hire rates out of here:
+  Ramadan's start is subject to moon sighting, and the one year it matters
+  that this page agree with the masjid is the one year the committee corrects
+  it a day either way. rmLoad() below reads it client-side and recomputes the
+  countdown live; 8 February 2027 here is the astronomical estimate frozen at
+  the last time somebody rebuilt this page, shown until the fetch answers.
+
+  NO SECONDS. The prayer countdown on this site rounds to the minute and
+  refreshes every 30 seconds rather than ticking — a digital stopwatch reads
+  anxious on a measured page, and nobody needs Ramadan to the second. Days
+  is the headline figure; hours and minutes are the one supporting line.
+-->
+<div class="page" data-page="ramadan">
+  <section class="page-masthead">
+    <div class="container">
+      <div class="section-head">
+        <div class="eyebrow">Ramadan 1448 AH</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Countdown to Ramadan</h1>
+        <p>The month the Qur&rsquo;an was sent down &mdash; fasting from first light until sunset, standing in prayer at night, and giving.</p>
+      </div>
+    </div>
+  </section>
+  <section class="page-body">
+    <div class="container">
+      <div class="subsection rm-subsection">
+        <div class="live-card rm-card" id="rmCard" data-starts="2027-02-08" aria-live="polite">
+          <div class="lk">Ramadan is expected to begin</div>
+          <div class="rm-days tnum" id="rmDays">&mdash;</div>
+          <div class="rm-days-label" id="rmDaysLabel">days to go</div>
+          <div class="lc-count" id="rmSub">Working it out&hellip;</div>
+          <div class="lc-note" id="rmDate">8 February 2027</div>
+        </div>
+        <p class="snap-note" id="rmNote">Astronomical estimate &mdash; subject to moon sighting. We will update this page as soon as the committee confirms it.</p>
       </div>
     </div>
   </section>
@@ -9578,6 +9664,108 @@ window.TAIYABAH_PUBLIC = {
       /* The built copy stays on screen. An appeal that is a version behind is
          a great deal better than one that is not there. */
       if(window.console && console.warn) console.warn('new build content:', e.message);
+    });
+  })();
+
+  /* =======================================================================
+     RAMADAN COUNTDOWN
+     The target date lives in site_content (key='ramadan', db/150) for the
+     same reason the appeal figures and the rate card do: it is subject to
+     moon sighting, and a hard-coded date is the one thing guaranteed to be
+     wrong on the one day it matters. renderCountdown() always runs first,
+     against the date baked into data-starts on #rmCard at the last rebuild,
+     so the page never shows a blank card while the fetch is in flight or if
+     it fails; rmLoad() below replaces that date live when Supabase answers,
+     same two-tier shape as nbLoad().
+
+     NO SECONDS. Matches the prayer countdown elsewhere on this site: days is
+     the headline, hours and minutes are the one supporting line, and both
+     refresh every 30 seconds rather than ticking — a stopwatch reads
+     anxious on a page about a month of worship. ========================= */
+  (function(){
+    var card = document.getElementById('rmCard');
+    if(!card) return;
+
+    function render(){
+      var raw = card.dataset.starts;
+      var target = raw ? new Date(raw + 'T00:00:00+00:00') : null;
+      var daysEl   = document.getElementById('rmDays');
+      var labelEl  = document.getElementById('rmDaysLabel');
+      var subEl    = document.getElementById('rmSub');
+      var glanceEl = document.getElementById('glanceRmCount');
+      if(!target || isNaN(target)){
+        daysEl.textContent = '—';
+        labelEl.textContent = '';
+        subEl.textContent = "We'll have a date here as soon as it's confirmed.";
+        return;
+      }
+
+      // Both sides at UK midnight, so this agrees with the date on the
+      // page rather than drifting with the visitor's clock time of day.
+      var now = new Date();
+      var todayUK = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      var diffMs = target - todayUK;
+      var totalMins = Math.round(diffMs / 60000);
+      var days = Math.floor(totalMins / 1440);
+
+      if(days > 0){
+        daysEl.textContent = String(days);
+        labelEl.textContent = days === 1 ? 'day to go' : 'days to go';
+        var hrs = Math.floor((totalMins % 1440) / 60);
+        subEl.textContent = hrs > 0 ? ('and ' + hrs + (hrs === 1 ? ' hour' : ' hours')) : '';
+        if(glanceEl) glanceEl.textContent = days + (days === 1 ? ' day' : ' days') + ' until Ramadan.';
+      } else if(days === 0){
+        daysEl.textContent = 'Today';
+        labelEl.textContent = '';
+        subEl.textContent = 'Ramadan Mubārak.';
+        if(glanceEl) glanceEl.textContent = 'Ramadan begins today.';
+      } else {
+        daysEl.textContent = 'Mubārak';
+        labelEl.textContent = '';
+        subEl.textContent = 'Ramadan is underway.';
+        if(glanceEl) glanceEl.textContent = 'Ramadan Mubārak — the month is underway.';
+      }
+    }
+
+    render();
+    setInterval(render, 30000);
+
+    var cfg = window.TAIYABAH_PUBLIC || {};
+    if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+       String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1) return;
+
+    var base = String(cfg.SUPABASE_URL).trim()
+                 .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+
+    fetch(base + '/rest/v1/site_content?key=eq.ramadan&select=body,updated_at', {
+      headers: {
+        'apikey': cfg.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY
+      }
+    }).then(function(r){
+      if(!r.ok) throw new Error('site_content ' + r.status);
+      return r.json();
+    }).then(function(rows){
+      var row = rows && rows[0];
+      var d = row && row.body;
+      if(!d || !d.starts_on) return;   // leave the built copy alone
+
+      card.dataset.starts = d.starts_on;
+      render();
+
+      var dateEl = document.getElementById('rmDate');
+      var parsed = new Date(d.starts_on + 'T00:00:00+00:00');
+      if(dateEl && !isNaN(parsed)){
+        dateEl.textContent = parsed.toLocaleDateString('en-GB',
+          { day:'numeric', month:'long', year:'numeric', timeZone:'UTC' });
+      }
+
+      var noteEl = document.getElementById('rmNote');
+      if(noteEl && d.note) noteEl.textContent = d.note;
+    }).catch(function(e){
+      // The built copy stays on screen — a countdown a day stale is a great
+      // deal better than a blank card.
+      if(window.console && console.warn) console.warn('ramadan countdown:', e.message);
     });
   })();
 

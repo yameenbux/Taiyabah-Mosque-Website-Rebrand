@@ -101,7 +101,7 @@ EXPECTED = {
               "Adult classes", "Food Bank volunteers", "Gift Aid",
               "Madrasah portal", "Send a notification",
               "Notices", "Hall hire charges", "Prayer timetable",
-              "The new build page", "User access", "System health"],
+              "The new build page", "Ramadan date", "User access", "System health"],
     #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
     #  hall_office and always has; the Admin Centre home drew it for the
     #  office; this rail said admin-only. The office could open the screen
@@ -200,6 +200,7 @@ ADMITS = {
     "access":      ["admin"],                  # app.js:143
     "notices":     ["admin"],                  # db
     "rates":       ["admin"],                  # db
+    "ramadan":     ["admin"],                  # db
     "times":       ["admin"],                  # db
     #  health_check() itself runs verified_admin() and raises 42501 for
     #  anybody else signed in (db/122) — the rail here is a convenience,

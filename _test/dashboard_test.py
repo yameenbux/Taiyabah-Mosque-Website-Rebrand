@@ -275,7 +275,8 @@ with sync_playwright() as p:
     #  removes a door.
     want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
             "../giftaid/", "../portal/", "../app/", "../notices/", "../rates/",
-            "../times/", "../newbuild/", "../access/", "../health/"]
+            "../times/", "../newbuild/", "../access/", "../health/",
+            "../ramadan-date/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
@@ -283,7 +284,7 @@ with sync_playwright() as p:
     for name in ["Hall Hire", "Charity collections", "Adult classes", "Gift Aid",
                  "Food Bank", "Madrasah", "Send a notification", "Notices",
                  "Hall hire charges", "Prayer timetable", "The new build page",
-                 "User access", "System health"]:
+                 "User access", "System health", "Ramadan date"]:
         check(name in joined, "%r is missing from the areas" % name)
 
     # ---------------------------------------------------------------------
