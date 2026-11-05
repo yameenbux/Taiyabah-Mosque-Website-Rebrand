@@ -47,6 +47,14 @@ WHAT THIS GUARDS
         rediscovered a year later by somebody who cannot tell whether it is
         load-bearing.
 
+        A fifth card did land in the row later — Ramadan's countdown,
+        replacing the full-width banner underneath it so the row fills the
+        width instead of leaving a lonely banner beneath it. That is a
+        different card for a different reason than the poster design above,
+        which the masjid rejected specifically because it was notices on the
+        public page. This check still asserts the fifth card is that one
+        and not a notices card in disguise.
+
 Run:  python3 _test/notices_test.py
 """
 from playwright.sync_api import sync_playwright
@@ -264,7 +272,10 @@ with sync_playwright() as p:
               "it out, because the next person cannot tell which it is."
               % (trace, what))
 
-    #  And the at-a-glance row is back to the four cards it has always had.
+    #  And the at-a-glance row holds exactly the five cards it is meant
+    #  to — prayer times, the WhatsApp announcement, the food bank, the
+    #  donate card, and Ramadan's countdown — no sixth card, and no
+    #  notices content smuggled in as one of the five.
     pg = b.new_page(viewport={"width": 1280, "height": 900})
     seen = []
     pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
@@ -276,14 +287,23 @@ with sync_playwright() as p:
         status=200, content_type="application/json", body="[]"))
     pg.goto(BASE, wait_until="load", timeout=45000)
     pg.wait_for_timeout(1500)
-    r = pg.evaluate("""() => ({
-        cards: [...document.querySelectorAll('.glance-grid > .glance-card')]
-                 .filter(c => c.getBoundingClientRect().width > 1).length,
-        heroTop: Math.round(document.querySelector('.hero').getBoundingClientRect().top)
-    })""")
-    check(r["cards"] == 4,
-          "the at-a-glance row has %d cards. It should be back to the four it "
-          "has always had." % r["cards"])
+    r = pg.evaluate("""() => {
+        var cards = [...document.querySelectorAll('.glance-grid > .glance-card')]
+                      .filter(c => c.getBoundingClientRect().width > 1);
+        return {
+          count: cards.length,
+          hasRamadan: cards.some(c => c.classList.contains('glance-ramadan')),
+          hasNotice: cards.some(c => /notice/i.test(c.className)),
+          heroTop: Math.round(document.querySelector('.hero').getBoundingClientRect().top)
+        };
+    }""")
+    check(r["count"] == 5,
+          "the at-a-glance row has %d cards. It should have the five it is "
+          "meant to (prayer, WhatsApp, food bank, donate, Ramadan)." % r["count"])
+    check(r["hasRamadan"], "the fifth card is not the Ramadan countdown tile.")
+    check(not r["hasNotice"],
+          "a card in the at-a-glance row looks like a notice — notices still "
+          "do not belong on the public page.")
     check(r["heroTop"] <= 1,
           "the hero starts %dpx down the page — something is still being drawn "
           "above it." % r["heroTop"])

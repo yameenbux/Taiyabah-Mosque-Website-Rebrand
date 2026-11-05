@@ -599,15 +599,6 @@ window.TAIYABAH_PUBLIC = {
   .banner-content h2{font-size:clamp(2rem,4.6vw,3.4rem);color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.7),0 1px 4px rgba(0,0,0,.9);margin-bottom:16px;}
   .banner-content p{font-size:1.115rem;color:rgba(255,255,255,.92);max-width:46ch;margin:0 auto 30px;line-height:1.7;text-shadow:0 1px 12px rgba(0,0,0,.6);}
 
-  /* ---------- HOME: RAMADAN BANNER (its own heading, no photo needed) ---------- */
-  .ramadan-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:64px 0;position:relative;overflow:hidden;text-align:center;}
-  .ramadan-promo .girih-mark{position:absolute;top:-30px;right:-30px;width:220px;height:220px;color:rgba(198,162,76,.08);}
-  .ramadan-promo .container{position:relative;z-index:1;max-width:620px;}
-  .rp-ic{width:52px;height:52px;border-radius:50%;background:rgba(198,162,76,.13);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
-  .ramadan-promo .eyebrow{justify-content:center;color:var(--gold-bright);}
-  .ramadan-promo h2{font-family:"Fraunces","Fraunces fallback",serif;font-size:clamp(1.9rem,4vw,2.6rem);color:#fff;margin-bottom:14px;}
-  .ramadan-promo p{font-size:1.05rem;color:rgba(243,239,227,.85);margin-bottom:26px;line-height:1.6;}
-
   /* ---------- HOME: PAGE TEASERS ---------- */
   /* ---------- EXPLORE ROW (5-up icon strip, girih-textured) ---------- */
   .explore-row{background-color:var(--paper);padding:54px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
@@ -733,6 +724,16 @@ window.TAIYABAH_PUBLIC = {
   .glance-donate .btn{padding:9px 20px;font-size:.943rem;}
   .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.853rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
   .glance-donate .gd-policy svg{flex-shrink:0;}
+  /*  RAMADAN GLANCE CARD. Sits on the light card background (unlike
+      .glance-donate's solid plum fill), so its own icon-badge and type
+      colours need their own rule rather than inheriting .glance-donate's —
+      .gd-ic carries no styling of its own outside that scope. */
+  .glance-ramadan{align-items:center;text-align:center;justify-content:center;border-color:rgba(198,162,76,.35);}
+  .glance-ramadan .gd-ic{width:34px;height:34px;border-radius:50%;background:rgba(198,162,76,.14);color:var(--gold-ink);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
+  .glance-ramadan .gd-ic svg{width:16px;height:16px;}
+  .glance-ramadan h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.042rem;margin-bottom:6px;color:var(--ink);}
+  .glance-ramadan p{font-size:.92rem;color:var(--muted);line-height:1.45;margin-bottom:11px;max-width:26ch;}
+  .glance-ramadan .btn{padding:9px 20px;font-size:.943rem;}
 
   /* ---- App promo (home page) ---- */
   .app-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:80px 0;position:relative;overflow:hidden;}
@@ -1292,6 +1293,45 @@ window.TAIYABAH_PUBLIC = {
     .rm-days{font-size:5.6rem;}
     .rm-card{padding:40px 48px;}
   }
+
+  /* ---------- RAMADAN PAGE: stat hero + topic row ----------
+     Replaces the single narrow card that used to float alone in a sea of
+     empty margin. The big day count stays the headline (tnum, no seconds —
+     same reasoning as the prayer countdown: a stopwatch reads anxious on a
+     page about worship), but the hero now fills the width the way every
+     other dark masthead on this site does, and the supporting facts
+     (taraweeh, bayaan, i'tikaf, zakat al-fitr, parking, the two du'as) sit
+     in a row of cards below instead of a stack of lonely full-width
+     subsections. */
+  .rm-hero{background:linear-gradient(180deg,var(--brand-900),var(--brand-800));color:#F3EFE3;padding:64px 0 48px;position:relative;overflow:hidden;text-align:center;}
+  .rm-hero .girih-mark{position:absolute;opacity:.1;color:var(--gold);}
+  .rm-hero .girih-mark.tr{top:-40px;right:-60px;width:260px;height:260px;}
+  .rm-hero .girih-mark.bl{top:auto;bottom:-70px;left:-70px;transform:rotate(18deg);width:220px;height:220px;}
+  .rm-hero .container{position:relative;z-index:1;}
+  .rm-hero .eyebrow{justify-content:center;}
+  .rm-hero h1{color:#fff;font-size:clamp(1.9rem,3.6vw,2.6rem);margin:12px 0 10px;}
+  .rm-lead{max-width:48ch;margin:0 auto 32px;color:rgba(243,239,227,.78);font-size:1.02rem;line-height:1.6;}
+  .rm-sub{font-size:1.02rem;color:rgba(243,239,227,.8);margin-top:6px;min-height:1.5em;}
+  .rm-date-row{display:inline-flex;align-items:baseline;gap:8px;margin-top:28px;padding-top:22px;border-top:1px solid rgba(243,239,227,.16);}
+  .rm-date-label{font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(243,239,227,.55);}
+  .rm-date-value{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.15rem;color:#fff;}
+  .rm-pill{display:block;margin:20px auto 0;max-width:46ch;background:rgba(220,187,99,.12);border:1px solid rgba(220,187,99,.3);color:var(--gold-bright);padding:10px 20px;border-radius:999px;font-size:.88rem;}
+
+  .rm-row-section{padding:48px 0 8px;}
+  .rm-row-head{margin-bottom:20px;}
+  .rm-topics{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  @media (max-width:980px){.rm-topics{grid-template-columns:repeat(2,1fr);}}
+  .rm-topic{display:flex;flex-direction:column;gap:8px;}
+  .rm-topic .ic{width:36px;height:36px;border-radius:50%;background:rgba(198,162,76,.14);color:var(--gold-ink);display:flex;align-items:center;justify-content:center;}
+  .rm-topic h3{font-size:1rem;margin-bottom:2px;}
+  .rm-topic p{font-size:.88rem;line-height:1.5;color:var(--muted);margin-bottom:0;}
+  .rm-topic p + p{margin-top:8px;}
+  .rm-topic .more{font-size:.8rem;color:var(--gold-ink);font-weight:600;margin-top:auto;padding-top:8px;}
+
+  .rm-dua-section{padding:44px 0 6px;}
+  .rm-dua-pair{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+  @media (max-width:760px){.rm-dua-pair{grid-template-columns:1fr;gap:28px;}}
+
   .jumuah-flag{display:flex;align-items:center;gap:10px;background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.35);border-radius:12px;padding:10px 14px;margin-top:14px;font-size:.949rem;color:var(--gold-bright);}
   /* ---------- TAP TARGETS ----------
 
@@ -2691,27 +2731,23 @@ window.TAIYABAH_PUBLIC = {
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
 
-      </div>
-    </div>
-  </section>
+        <a href="#" class="glance-card glance-ramadan" data-nav="ramadan">
+          <div class="gd-ic">
+            <!-- Crescent and star, the same two-circle mask used elsewhere on
+                 this page, so every seasonal/devotional mark on the site reads
+                 as one visual family rather than several different icon styles. -->
+            <svg viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="A crescent moon and star.">
+              <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
+              <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
+              <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
+            </svg>
+          </div>
+          <h3>Ramadan</h3>
+          <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
+          <span class="btn btn-gold" style="align-self:center;">See the countdown →</span>
+        </a>
 
-  <section class="ramadan-promo">
-    <svg class="girih-mark" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
-    <div class="container">
-      <div class="rp-ic">
-        <!-- Crescent and star, the same two-circle mask used elsewhere on
-             this page, so every seasonal/devotional mark on the site reads
-             as one visual family rather than several different icon styles. -->
-        <svg viewBox="0 0 24 24" width="32" height="32" role="img" aria-label="A crescent moon and star.">
-          <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
-          <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
-          <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
-        </svg>
       </div>
-      <div class="eyebrow">Ramadan 1448 AH</div>
-      <h2>Ramadan</h2>
-      <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
-      <a class="btn btn-gold" data-nav="ramadan">See the countdown →</a>
     </div>
   </section>
 
@@ -3130,88 +3166,90 @@ window.TAIYABAH_PUBLIC = {
   is the headline figure; hours and minutes are the one supporting line.
 -->
 <div class="page" data-page="ramadan">
-  <section class="page-masthead">
+  <!--  THIS CONTENT MIRRORS THE APP'S "Ramadan" SHEET (index.html id="ramadan"
+        in the Taiyabah-Mosque-App repo), not a fresh draft — same facts, same
+        wording, so office staff only ever correct one copy in their heads.
+        Drafted by Claude from its own language knowledge, not a native
+        speaker; worth a community read-through before treated as finished,
+        particularly the two du'as and the parking wording (same flag the
+        app's own lang/src/28-ramadan.json carries). -->
+  <section class="rm-hero">
+    <svg class="girih-mark tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+    <svg class="girih-mark bl" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
     <div class="container">
-      <div class="section-head">
-        <div class="eyebrow">Ramadan 1448 AH</div>
-        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Countdown to Ramadan</h1>
-        <p>The month the Qur&rsquo;an was sent down &mdash; fasting from first light until sunset, standing in prayer at night, and giving.</p>
+      <div class="eyebrow">Ramadan 1448 AH</div>
+      <h1>Countdown to Ramadan</h1>
+      <p class="rm-lead">The month the Qur&rsquo;an was sent down &mdash; fasting from first light until sunset, standing in prayer at night, and giving.</p>
+
+      <div class="rm-card" id="rmCard" data-starts="2027-02-08" aria-live="polite">
+        <div class="rm-days tnum" id="rmDays">&mdash;</div>
+        <div class="rm-days-label" id="rmDaysLabel">days to go</div>
+        <div class="rm-sub" id="rmSub">Working it out&hellip;</div>
+
+        <div class="rm-date-row">
+          <span class="rm-date-label">Expected date</span>
+          <span class="rm-date-value" id="rmDate">8 February 2027</span>
+        </div>
+      </div>
+      <p class="rm-pill" id="rmNote">Astronomical estimate &mdash; subject to moon sighting. We will update this page as soon as the committee confirms it.</p>
+    </div>
+  </section>
+
+  <section class="page-body rm-row-section">
+    <div class="container">
+      <div class="subhead rm-row-head"><h3 style="font-size:1.3rem;">What&rsquo;s happening this Ramadan</h3><span class="rule"></span></div>
+      <div class="rm-topics">
+        <div class="card rm-topic">
+          <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+          <h3>Taraweeh</h3>
+          <p>Twenty rak&rsquo;ahs each night, led by five. Mufti Faiyaz leads the first four, four students lead the rest.</p>
+          <p>One juz is read nightly, so the Qur&rsquo;an is completed by the month&rsquo;s end.</p>
+        </div>
+
+        <div class="card rm-topic">
+          <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.1V12l3.4 2"/></svg></div>
+          <h3>Bayaan</h3>
+          <p>Two talks a day, one after Asr and one after Isha. Changes are announced in the app.</p>
+        </div>
+
+        <div class="card rm-topic">
+          <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+          <h3>I&rsquo;tikaf</h3>
+          <p>Staying in the masjid for the last ten nights, brothers only. Places are limited.</p>
+          <a class="more" data-nav="getapp">Book in the app &rarr;</a>
+        </div>
+
+        <div class="card rm-topic">
+          <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-4.35-10-9.3C.5 8.1 2.1 4.5 5.6 4c2-.3 3.7.6 4.9 2.3.4.5 1.1 2.1 1.5 2.1s1.1-1.6 1.5-2.1C14.7 4.6 16.4 3.7 18.4 4c3.5.5 5.1 4.1 3.6 7.7C19 16.65 12 21 12 21z"/></svg></div>
+          <h3>Zakat al-Fitr</h3>
+          <p>Due per person in the household, before the Eid prayer.</p>
+        </div>
+
+        <div class="card rm-topic">
+          <div class="ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h16l-1.5 10.5a2 2 0 01-2 1.5H7.5a2 2 0 01-2-1.5L4 9z"/><path d="M8 9V7a4 4 0 018 0v2"/></svg></div>
+          <h3>Parking</h3>
+          <p>The masjid car park is on Draycott Street &mdash; please use it first. When full, park with consideration for our neighbours and take care pulling out onto the main road.</p>
+        </div>
       </div>
     </div>
   </section>
-  <section class="page-body">
+
+  <section class="page-body rm-dua-section">
     <div class="container">
-      <div class="subsection rm-subsection">
-        <div class="live-card rm-card" id="rmCard" data-starts="2027-02-08" aria-live="polite">
-          <div class="lk">Ramadan is expected to begin</div>
-          <div class="rm-days tnum" id="rmDays">&mdash;</div>
-          <div class="rm-days-label" id="rmDaysLabel">days to go</div>
-          <div class="lc-count" id="rmSub">Working it out&hellip;</div>
-          <div class="lc-note" id="rmDate">8 February 2027</div>
+      <div class="rm-dua-pair">
+        <div class="hadith-block">
+          <p class="h-ar arabic" lang="ar" dir="rtl">اللَّهُمَّ أَهْلِلْهُ عَلَيْنَا بِالْيُمْنِ وَالإِيمَانِ وَالسَّلاَمَةِ وَالإِسْلاَمِ رَبِّي وَرَبُّكَ اللَّهُ</p>
+          <p class="h-en">&ldquo;O Allah, bring it over us with blessing and faith, with safety and with Islam. My Lord and your Lord is Allah.&rdquo;</p>
+          <p class="h-src">On sighting the new moon &middot; Jāmiʿ al-Tirmidhī</p>
         </div>
-        <p class="snap-note" id="rmNote">Astronomical estimate &mdash; subject to moon sighting. We will update this page as soon as the committee confirms it.</p>
-      </div>
-
-      <!--  THIS CONTENT MIRRORS THE APP'S "Ramadan" SHEET (index.html id="ramadan"
-            in the Taiyabah-Mosque-App repo), not a fresh draft — same facts, same
-            wording, so office staff only ever correct one copy in their heads.
-            Drafted by Claude from its own language knowledge, not a native
-            speaker; worth a community read-through before treated as finished,
-            particularly the two du'as and the parking wording (same flag the
-            app's own lang/src/28-ramadan.json carries). -->
-
-      <div class="hadith-block">
-        <p class="h-ar arabic" lang="ar" dir="rtl">اللَّهُمَّ أَهْلِلْهُ عَلَيْنَا بِالْيُمْنِ وَالإِيمَانِ وَالسَّلاَمَةِ وَالإِسْلاَمِ رَبِّي وَرَبُّكَ اللَّهُ</p>
-        <p class="h-en">&ldquo;O Allah, bring it over us with blessing and faith, with safety and with Islam. My Lord and your Lord is Allah.&rdquo;</p>
-        <p class="h-src">On sighting the new moon &middot; Jāmiʿ al-Tirmidhī</p>
-      </div>
-
-      <div class="subsection">
-        <div class="subhead"><span class="idx">01</span><h3>Taraweeh</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>Twenty rak&rsquo;ahs each night, led by five. Mufti Faiyaz, the Imam of the masjid, leads the first four rak&rsquo;ahs, and four students of the masjid lead the rest.</p>
-          <p>The four students are confirmed around a month before Ramadan begins. One juz of the Qur&rsquo;an is read each night, so the whole Qur&rsquo;an is completed in taraweeh by the end of the month.</p>
+        <div class="hadith-block">
+          <p class="h-ar arabic" lang="ar" dir="rtl">اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي</p>
+          <p class="h-en">&ldquo;O Allah, You are most forgiving, and You love to forgive, so forgive me.&rdquo;</p>
+          <p class="h-src">On Laylat al-Qadr &middot; Sunan Ibn Mājah</p>
         </div>
       </div>
 
-      <div class="subsection">
-        <div class="subhead"><span class="idx">02</span><h3>Bayaan</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>Two talks a day, one after Asr and one after Isha.</p>
-          <p>Changes are announced in the app.</p>
-        </div>
-      </div>
-
-      <div class="subsection">
-        <div class="subhead"><span class="idx">03</span><h3>I&rsquo;tikaf</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>Staying in the masjid for the last ten nights of Ramadan, brothers only.</p>
-          <p>Places are limited, so booking is asked for &mdash; book your place in the <a data-nav="getapp">app</a>.</p>
-        </div>
-      </div>
-
-      <div class="subsection">
-        <div class="subhead"><span class="idx">04</span><h3>Zakat al-Fitr</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>Due per person in the household, before the Eid prayer.</p>
-        </div>
-      </div>
-
-      <div class="subsection">
-        <div class="subhead"><span class="idx">05</span><h3>Parking</h3><span class="rule"></span></div>
-        <div class="card">
-          <p>The masjid car park is on Draycott Street. Please use it first.</p>
-          <p>When it is full, park with consideration for our neighbours and the wider community &mdash; never across a driveway. The masjid sits on a main road, so take care pulling out, and keep hold of children.</p>
-        </div>
-      </div>
-
-      <div class="hadith-block">
-        <p class="h-ar arabic" lang="ar" dir="rtl">اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي</p>
-        <p class="h-en">&ldquo;O Allah, You are most forgiving, and You love to forgive, so forgive me.&rdquo;</p>
-        <p class="h-src">On Laylat al-Qadr &middot; Sunan Ibn Mājah</p>
-      </div>
-
-      <p class="snap-note">Dates follow the masjid&rsquo;s own timetable and the sighting of the moon, so the first night can move by a day.</p>
+      <p class="snap-note" style="text-align:center;margin-top:30px;">Dates follow the masjid&rsquo;s own timetable and the sighting of the moon, so the first night can move by a day.</p>
     </div>
   </section>
 </div>
