@@ -724,16 +724,6 @@ window.TAIYABAH_PUBLIC = {
   .glance-donate .btn{padding:9px 20px;font-size:.943rem;}
   .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.853rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
   .glance-donate .gd-policy svg{flex-shrink:0;}
-  /*  RAMADAN GLANCE CARD. Sits on the light card background (unlike
-      .glance-donate's solid plum fill), so its own icon-badge and type
-      colours need their own rule rather than inheriting .glance-donate's —
-      .gd-ic carries no styling of its own outside that scope. */
-  .glance-ramadan{align-items:center;text-align:center;justify-content:center;border-color:rgba(198,162,76,.35);}
-  .glance-ramadan .gd-ic{width:34px;height:34px;border-radius:50%;background:rgba(198,162,76,.14);color:var(--gold-ink);display:flex;align-items:center;justify-content:center;margin:0 auto 9px;}
-  .glance-ramadan .gd-ic svg{width:16px;height:16px;}
-  .glance-ramadan h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.042rem;margin-bottom:6px;color:var(--ink);}
-  .glance-ramadan p{font-size:.92rem;color:var(--muted);line-height:1.45;margin-bottom:11px;max-width:26ch;}
-  .glance-ramadan .btn{padding:9px 20px;font-size:.943rem;}
 
   /* ---- App promo (home page) ---- */
   .app-promo{background:linear-gradient(180deg,var(--brand-900),#22071a);color:#F3EFE3;padding:80px 0;position:relative;overflow:hidden;}
@@ -2730,22 +2720,6 @@ window.TAIYABAH_PUBLIC = {
           <a class="btn btn-gold" data-nav="donate" style="align-self:center;">Donate Now</a>
           <span class="gd-policy"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg> Registered charity 1041569</span>
         </div>
-
-        <a href="#" class="glance-card glance-ramadan" data-nav="ramadan">
-          <div class="gd-ic">
-            <!-- Crescent and star, the same two-circle mask used elsewhere on
-                 this page, so every seasonal/devotional mark on the site reads
-                 as one visual family rather than several different icon styles. -->
-            <svg viewBox="0 0 24 24" width="24" height="24" role="img" aria-label="A crescent moon and star.">
-              <mask id="rmCrescentMask"><rect width="24" height="24" fill="#000"/><circle cx="11" cy="12.3" r="7.4" fill="#fff"/><circle cx="13.6" cy="9.6" r="6.1" fill="#000"/></mask>
-              <circle cx="11" cy="12.3" r="7.4" fill="currentColor" mask="url(#rmCrescentMask)"/>
-              <polygon fill="currentColor" points="18.3,13.6 19.2,15.9 21.6,16 19.7,17.4 20.4,19.7 18.3,18.4 16.2,19.7 16.9,17.4 15,16 17.4,15.9"/>
-            </svg>
-          </div>
-          <h3>Ramadan</h3>
-          <p id="glanceRmCount">The month of fasting, qiyām and giving.</p>
-          <span class="btn btn-gold" style="align-self:center;">See the countdown →</span>
-        </a>
 
       </div>
     </div>
