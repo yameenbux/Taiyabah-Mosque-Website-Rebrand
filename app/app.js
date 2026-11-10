@@ -1062,7 +1062,7 @@
     if (window.AdminShell) {
       AdminShell.mount({
         current: 'appsend',
-        title:   'Send an update',
+        title:   'Notifications & notices',
         roles:   identity.roles || [],
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""

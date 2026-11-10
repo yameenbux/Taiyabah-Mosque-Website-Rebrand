@@ -283,7 +283,7 @@ with sync_playwright() as p:
     joined = " ".join(areas)
     for name in ["Hall Hire", "Charity collections", "Adult classes", "Donations",
                  "Take a payment",
-                 "Food Bank", "Madrasah", "Send an update", "Notices",
+                 "Food Bank", "Madrasah", "Notifications & notices", "Notices",
                  "Hall hire charges", "Prayer timetable", "The new build page",
                  "User access", "System health", "Ramadan date"]:
         check(name in joined, "%r is missing from the areas" % name)
@@ -469,7 +469,7 @@ with sync_playwright() as p:
     #  the database rather than in their own app.js, so the rail is the only
     #  thing standing between the office and a screen full of red text.
     for locked in ("Notices", "Hall hire charges", "Prayer timetable",
-                   "The new build page", "Send an update"):
+                   "The new build page", "Notifications & notices"):
         check(locked not in areas,
               "an office account was offered %r, which the database will "
               "refuse them: %r" % (locked, areas))
