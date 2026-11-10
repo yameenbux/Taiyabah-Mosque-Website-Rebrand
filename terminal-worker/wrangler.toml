@@ -1,0 +1,17 @@
+name = "taiyabah-terminal"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+# Not secrets — the same two values already shipped to every browser in
+# admin/supabase.js. This Worker uses them only to ask Supabase "is this
+# caller an administrator who has completed two-step", via verified_admin().
+SUPABASE_URL = "https://phenbhmobxwyvdeshvqw.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_mOPuQKVP8WCTlBF2Qa1DVw_r_Tra5OO"
+
+# /take-payment/ is the only page allowed to call this Worker from a
+# browser. A request from any other origin gets no CORS headers back.
+ALLOWED_ORIGIN = "https://taiyabahwebsite.ysbdesigns.uk"
+
+# Secrets are NOT set here. Add with:
+#   npx wrangler secret put STRIPE_SECRET_KEY

@@ -180,9 +180,12 @@
         what: "Read a question somebody sent in confidence, and answer it - your reply is emailed to them" }
     ]},
     { label: "Money", areas: [
-      { key: "giftaid",     href: "giftaid/",     icon: "heart",  name: "Gift Aid",
+      { key: "giftaid",     href: "giftaid/",     icon: "heart",  name: "Donations",
         needs: ["admin"],
-        what: "Copy the rows for HMRC, then mark them claimed" }
+        what: "See what's coming in, then copy the Gift Aid rows for HMRC and mark them claimed" },
+      { key: "takepayment", href: "take-payment/", icon: "pound",  name: "Take a payment",
+        needs: ["admin"],
+        what: "Connect the card reader and take an in-person donation, branded as the masjid's own" }
     ]},
     { label: "The madrasah", areas: [
       { key: "madrasah",    href: "portal/",      icon: "people", name: "Madrasah portal",

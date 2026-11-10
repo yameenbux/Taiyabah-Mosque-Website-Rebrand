@@ -400,7 +400,7 @@ def run():
               any(x.startswith("Messages") and not x.endswith("soon") for x in names), joined)
         for staff in ("Pupils", "Families", "Classes", "Staff", "Fees", "Register",
                       "Admissions", "Today", "Homework", "Safeguarding",
-                      "Admin Centre", "Gift Aid", "Hall"):
+                      "Admin Centre", "Donations", "Take a payment", "Hall"):
             check("a parent's rail never shows '%s', not even greyed out" % staff,
                   staff.lower() not in joined.lower(), joined)
         soon = pg.evaluate("""() => Array.prototype.map.call(

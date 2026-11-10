@@ -101,6 +101,283 @@
   }
 
   /* =========================================================================
+     THE DASHBOARD — what has come in, before the Gift Aid claim below it.
+
+     No donor name or address is read or rendered anywhere in this module.
+     That stays entirely inside the giftaid module further down, which is
+     the one place this page shows who gave what.
+     ======================================================================= */
+  var donations = (function () {
+    var mounted = false;
+
+    function canSee(identity) {
+      return identity.roles.indexOf("admin") !== -1;
+    }
+
+    function esc(v) {
+      return String(v == null ? "" : v)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function money(p) {
+      return (Number(p || 0) / 100).toFixed(2);
+    }
+
+    // Parse as parts, not Date(string) — a bare "YYYY-MM-DD" is read as UTC
+    // and can show the wrong day to anyone west of Greenwich. Same fix as
+    // venue/app.js's longDate().
+    function shortDate(iso) {
+      var p = String(iso).split("-");
+      var d = new Date(+p[0], +p[1] - 1, +p[2]);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    }
+
+    function renderSummary(s) {
+      el("dn-sum").innerHTML =
+        '<div class="big"><span class="k">Total collected</span><span class="n">&pound;' +
+          money(s.total_collected_p) + '</span></div>' +
+        '<div><span class="k">Donations</span><span class="n">' + s.donations_count + '</span></div>' +
+        '<div><span class="k">Average donation</span><span class="n">&pound;' +
+          money(s.average_donation_p) + '</span></div>';
+
+      var bits = [];
+      if (s.recurring_monthly_count > 0)
+        bits.push('<b>' + s.recurring_monthly_count + '</b> monthly giver' +
+          (s.recurring_monthly_count === 1 ? "" : "s") + ' &middot; &pound;' +
+          money(s.recurring_monthly_last_p) + ' a month between them');
+      if (s.recurring_weekly_count > 0)
+        bits.push('<b>' + s.recurring_weekly_count + '</b> weekly giver' +
+          (s.recurring_weekly_count === 1 ? "" : "s") + ' &middot; &pound;' +
+          money(s.recurring_weekly_last_p) + ' a week between them');
+      el("dn-recur").innerHTML = bits.length ? bits.map(function (b) { return "<div>" + b + "</div>"; }).join("")
+                                             : '<div>No standing gift has been charged in the last 40 days.</div>';
+    }
+
+    function renderChart(days) {
+      var max = days.reduce(function (m, d) { return Math.max(m, Number(d.total_p || 0)); }, 0);
+      el("dn-chart").innerHTML = days.map(function (d) {
+        var p = Number(d.total_p || 0);
+        var pct = max > 0 ? Math.max(Math.round((p / max) * 100), p > 0 ? 6 : 0) : 0;
+        var title = shortDate(d.day) + ": £" + money(p) +
+                    (d.donations_count ? " (" + d.donations_count + ")" : "");
+        return '<div class="bar' + (p > 0 ? ' has' : '') + '" style="height:' + pct + '%" title="' +
+               esc(title) + '"></div>';
+      }).join("");
+      if (days.length) {
+        el("dn-chart-foot").innerHTML =
+          "<span>" + esc(shortDate(days[0].day)) + "</span><span>" +
+          esc(shortDate(days[days.length - 1].day)) + "</span>";
+      }
+    }
+
+    function renderPurpose(rows) {
+      if (!rows.length) {
+        el("dn-purpose").innerHTML = '<p class="ga-empty">Nothing collected yet.</p>';
+        return;
+      }
+      var max = rows.reduce(function (m, r) { return Math.max(m, Number(r.total_p || 0)); }, 0);
+      el("dn-purpose").innerHTML = rows.map(function (r) {
+        var pct = max > 0 ? Math.max(Math.round((Number(r.total_p || 0) / max) * 100), 2) : 0;
+        return '<div class="row">' +
+          '<span class="label">' + esc(r.purpose) + '</span>' +
+          '<span class="track"><i style="width:' + pct + '%"></i></span>' +
+          '<span class="amt">&pound;' + money(r.total_p) + '</span>' +
+          '</div>';
+      }).join("");
+    }
+
+    function renderRecent(rows) {
+      if (!rows.length) {
+        el("dn-recent").innerHTML = '<p class="ga-empty">Nothing collected yet.</p>';
+        return;
+      }
+      el("dn-recent").innerHTML =
+        '<table class="dn-table"><thead><tr>' +
+        ["Reference", "Date", "Fund", "Amount", "Gift Aid", "Frequency", "Source"]
+          .map(function (h) { return "<th>" + h + "</th>"; }).join("") +
+        '</tr></thead><tbody>' +
+        rows.map(function (r) {
+          return "<tr>" +
+            "<td>" + esc(r.reference) + "</td>" +
+            "<td>" + esc(shortDate(String(r.paid_at).slice(0, 10))) + "</td>" +
+            "<td>" + esc(r.purpose || "unspecified") + "</td>" +
+            "<td>&pound;" + esc(money(r.amount_p)) + "</td>" +
+            "<td>" + (r.gift_aid ? "Yes" : "&mdash;") + "</td>" +
+            "<td>" + esc(r.frequency || "one-off") + "</td>" +
+            "<td>" + (r.source === "in_person" ? "In person" : "Online") + "</td>" +
+            "</tr>";
+        }).join("") +
+        "</tbody></table>";
+    }
+
+    function renderSource(rows) {
+      if (!rows.length) {
+        el("dn-source").innerHTML = '<p class="ga-empty">Nothing collected yet.</p>';
+        return;
+      }
+      var LABEL = { online: "Online", in_person: "In person (card machine)", cash: "Cash" };
+      var max = rows.reduce(function (m, r) { return Math.max(m, Number(r.total_p || 0)); }, 0);
+      el("dn-source").innerHTML = rows.map(function (r) {
+        var pct = max > 0 ? Math.max(Math.round((Number(r.total_p || 0) / max) * 100), 2) : 0;
+        return '<div class="row">' +
+          '<span class="label">' + esc(LABEL[r.source] || r.source) + '</span>' +
+          '<span class="track"><i style="width:' + pct + '%"></i></span>' +
+          '<span class="amt">&pound;' + money(r.total_p) + '</span>' +
+          '</div>';
+      }).join("");
+    }
+
+    function renderRecurring(rows) {
+      if (!rows.length) {
+        el("dn-recur-list").innerHTML = '<p class="ga-empty">No standing gifts recorded yet.</p>';
+        return;
+      }
+      el("dn-recur-list").innerHTML =
+        '<table class="dn-table"><thead><tr>' +
+        ["Reference", "Fund", "Frequency", "Gift Aid", "Last amount",
+         "Times charged", "Total raised", "Last charged"]
+          .map(function (h) { return "<th>" + h + "</th>"; }).join("") +
+        '</tr></thead><tbody>' +
+        rows.map(function (r) {
+          return "<tr>" +
+            "<td>" + esc(r.reference) + "</td>" +
+            "<td>" + esc(r.purpose || "unspecified") + "</td>" +
+            "<td>" + esc(r.frequency || "one-off") + "</td>" +
+            "<td>" + (r.gift_aid ? "Yes" : "&mdash;") + "</td>" +
+            "<td>&pound;" + money(r.last_amount_p) + "</td>" +
+            "<td>" + r.charges_count + "</td>" +
+            "<td>&pound;" + money(r.total_collected_p) + "</td>" +
+            "<td>" + esc(shortDate(String(r.last_paid_at).slice(0, 10))) + "</td>" +
+            "</tr>";
+        }).join("") +
+        "</tbody></table>";
+    }
+
+    function load() {
+      return Promise.all([
+        sb.rpc("donations_summary_v2"),
+        sb.rpc("donations_daily", { p_days: 28 }),
+        sb.rpc("donations_by_purpose"),
+        sb.rpc("donations_recent_v2", { p_limit: 15 }),
+        sb.rpc("donations_by_source"),
+        sb.rpc("donations_recurring_donors")
+      ]).then(function (out) {
+        var errs = out.filter(function (o) { return o.error; });
+        if (errs.length) throw new Error(errs[0].error.message);
+        var summary = (out[0].data && out[0].data[0]) || {
+          total_collected_p: 0, donations_count: 0, average_donation_p: 0,
+          recurring_monthly_count: 0, recurring_monthly_last_p: 0,
+          recurring_weekly_count: 0, recurring_weekly_last_p: 0
+        };
+        renderSummary(summary);
+        renderChart(out[1].data || []);
+        renderPurpose(out[2].data || []);
+        renderRecent(out[3].data || []);
+        renderSource(out[4].data || []);
+        renderRecurring(out[5].data || []);
+      });
+    }
+
+    // --- log a cash donation ---------------------------------------------
+    function sayCash(msg, isError) {
+      var box = el("dn-cash-error");
+      if (!msg) { box.hidden = true; return; }
+      box.textContent = msg;
+      box.hidden = false;
+      box.style.borderColor = isError ? "" : "var(--success)";
+    }
+
+    function resetCashForm() {
+      el("dn-cash-form").reset();
+      el("dn-cash-donor").className = "dn-cash-donor";
+      sayCash("");
+    }
+
+    function wireCashForm() {
+      var openBtn   = el("dn-cash-open");
+      var cancelBtn = el("dn-cash-cancel");
+      var form      = el("dn-cash-form");
+      var gaBox     = el("dn-cash-ga");
+      var dateInput = el("dn-cash-date");
+      var today     = new Date().toISOString().slice(0, 10);
+      dateInput.max = today;
+
+      openBtn.addEventListener("click", function () {
+        dateInput.value = today;
+        form.hidden = false;
+        openBtn.parentNode.hidden = true;
+        el("dn-cash-amount").focus();
+      });
+
+      cancelBtn.addEventListener("click", function () {
+        resetCashForm();
+        form.hidden = true;
+        openBtn.parentNode.hidden = false;
+      });
+
+      gaBox.addEventListener("change", function () {
+        el("dn-cash-donor").className = "dn-cash-donor" + (gaBox.checked ? " show" : "");
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var amount = parseFloat(el("dn-cash-amount").value);
+        if (!amount || amount <= 0) {
+          sayCash("Enter an amount greater than £0.", true);
+          return;
+        }
+        var giftAid = gaBox.checked;
+        var btn = el("dn-cash-submit");
+        sayCash("");
+        busy(btn, true);
+
+        sb.rpc("record_cash_donation", {
+          p_amount_p: Math.round(amount * 100),
+          p_purpose: el("dn-cash-purpose").value || null,
+          p_gift_aid: giftAid,
+          p_name: giftAid ? el("dn-cash-name").value : null,
+          p_address: giftAid ? el("dn-cash-address").value : null,
+          p_postcode: giftAid ? el("dn-cash-postcode").value : null,
+          p_collected_on: dateInput.value || null
+        }).then(function (out) {
+          if (out.error) throw new Error(out.error.message);
+          resetCashForm();
+          form.hidden = true;
+          openBtn.parentNode.hidden = false;
+          sayCash("Logged " + out.data.reference + ".");
+          return load();
+        }).catch(function (err) {
+          sayCash("Couldn't save that — " + err.message + ". Nothing was recorded.", true);
+        }).finally(function () {
+          busy(btn, false, "Save cash donation");
+        });
+      });
+    }
+
+    function mount(identity) {
+      if (mounted) return;
+      mounted = true;
+
+      if (!canSee(identity)) {
+        el("app-noaccess").hidden = false;
+        return;
+      }
+      el("donations-panel").hidden = false;
+      wireCashForm();
+
+      load().catch(function (e) {
+        var box = el("dn-error");
+        box.textContent = "Couldn't read the donations dashboard — " + e.message;
+        box.hidden = false;
+      });
+    }
+
+    return { mount: mount };
+  })();
+
+  /* =========================================================================
      THE CLAIM
      ======================================================================= */
   var giftaid = (function () {
@@ -382,7 +659,7 @@
     if (window.AdminShell) {
       AdminShell.mount({
         current: 'giftaid',
-        title:   'Gift Aid',
+        title:   'Donations',
         roles:   identity.roles || [],
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""
@@ -413,6 +690,9 @@
     show("view-app");
 
     // A panel that fails to load must never take the sign-in shell with it.
+    try { donations.mount(identity); } catch (e) {
+      if (window.console) console.warn("donations dashboard unavailable:", e);
+    }
     try { giftaid.mount(identity); } catch (e) {
       if (window.console) console.warn("gift aid panel unavailable:", e);
     }
