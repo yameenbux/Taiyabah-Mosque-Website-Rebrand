@@ -201,16 +201,21 @@
         in this whole portal. It reaches every phone in the congregation, at
         whatever hour it is sent, and it cannot be recalled. Filing it in with
         "change the hall hire prices" would be filing it by subject when the
-        thing that matters about it is the consequence. */
+        thing that matters about it is the consequence.
+
+        9 November 2026: this is also now where a NEW website notice gets
+        written, when it goes with a push — one form, one button, both
+        destinations. Notices/ below still owns everything that already
+        exists there. */
     { label: "The app", areas: [
-      { key: "appsend",     href: "app/",         icon: "bell",   name: "Send a notification",
+      { key: "appsend",     href: "app/",         icon: "bell",   name: "Send an update",
         needs: ["admin"],
-        what: "Send an alert to everybody's phone, and see what has already gone out" }
+        what: "Push an alert to the app, publish a notice on the website, or both from one form" }
     ]},
     { label: "Change what the website says", areas: [
       { key: "notices",     href: "notices/",     icon: "notice", name: "Notices",
         needs: ["admin"],
-        what: "Write a notice, change one, or take it down" },
+        what: "Change the wording on a live notice, take one down, or write one without sending a push" },
       { key: "rates",       href: "rates/",       icon: "tag",    name: "Hall hire charges",
         needs: ["admin"],
         what: "Change what the hall costs. The deposit is fixed and is not set here" },

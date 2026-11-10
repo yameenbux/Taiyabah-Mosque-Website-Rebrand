@@ -100,7 +100,7 @@ SCREENS = {
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
               "Adult classes", "Food Bank volunteers", "Donations", "Take a payment",
-              "Madrasah portal", "Send a notification",
+              "Madrasah portal", "Send an update",
               "Notices", "Hall hire charges", "Prayer timetable",
               "The new build page", "Ramadan date", "User access", "System health"],
     #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
