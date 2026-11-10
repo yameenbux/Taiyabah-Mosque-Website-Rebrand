@@ -126,7 +126,7 @@ with sync_playwright() as p:
         pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
             status=status, content_type="application/json",
             body=json.dumps(rows) if status == 200 else "no"))
-        for stub in ("**/rest/v1/notices_live*", "**/rest/v1/site_content*"):
+        for stub in ("**/rest/v1/rpc/notices_live", "**/rest/v1/site_content*"):
             pg.route(stub, lambda r: r.fulfill(
                 status=200, content_type="application/json", body="[]"))
         pg.goto(BASE, wait_until="load", timeout=45000)

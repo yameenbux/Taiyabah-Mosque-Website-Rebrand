@@ -31,21 +31,28 @@ WHAT THIS GUARDS
         exact trap caught the timetable screen: the check was there, it read
         correctly, and it would have passed with the rule removed.
 
-  *  4  NOTHING REACHES THE PUBLIC WEBSITE, and that is the current
-        decision rather than an omission.
+  *  4  NOTICES NOW REACH THE PUBLIC WEBSITE — as of 10 November 2026, and
+        only after three earlier attempts at this exact thing were rejected
+        by the masjid first: a fifth card squeezed into the at-a-glance row,
+        a text band above the hero, and an earlier version of this same
+        "section under the glance row" idea. This one was placed by being
+        shown directly where it should sit on the live page, rather than
+        guessed at a fourth time, and it reads notices_live(p_masjid) — the
+        function from db/140, not the view of the same name from db/040,
+        because a live check while building this found the view already
+        broken: sole_masjid() now raises the moment a second masjid exists,
+        which it does.
 
-        Three designs were built and all three were rejected by the masjid:
-        a section of its own under the at-a-glance row, a fifth card in that
-        row showing the poster, and a band above the hero showing every
-        notice as text. The work is not lost — the editor, the database, the
-        poster uploads and the validation are all still here — but the
-        website shows none of it until somebody decides how it should look.
-
-        So this checks the public page stays CLEAN. A half-removed feature
-        that leaves a fetch running, an empty section in the markup, or a
-        stylesheet full of rules for nothing is the sort of thing that gets
-        rediscovered a year later by somebody who cannot tell whether it is
-        load-bearing.
+        This checks two things that must both keep being true: the two
+        REJECTED placements (the events band, the glance-row poster card)
+        stay fully gone — a half-removed feature that leaves a fetch
+        running, an empty section in the markup, or a stylesheet full of
+        rules for nothing is the sort of thing that gets rediscovered a
+        year later by somebody who cannot tell whether it is load-bearing —
+        and the ACCEPTED one actually works: it calls the function (never
+        the broken view), names the masjid, renders what comes back, and
+        fails SILENT rather than loud when there is nothing to show or the
+        call itself fails.
 
 Run:  python3 _test/notices_test.py
 """
@@ -239,13 +246,14 @@ with sync_playwright() as p:
     check(errs == [], "the editor threw: %s" % errs[:2])
     pg.close()
 
-    # ============================================ nothing on the public page
+    # ================================== the three rejected designs stay gone
     #
     #  Read from the BUILT page, because that is what a visitor gets, and the
     #  whole risk here is a fragment left behind in a file nobody re-reads.
+    #  `notices_live` itself is deliberately NOT on this list any more — see
+    #  the section below, where the website genuinely does call it now.
     built = open("index.html", encoding="utf-8").read()
     for trace, what in [
-        ("notices_live",  "a request to the notices view"),
         ("eventsRow",     "the events band markup"),
         ("eventsList",    "the events band's list"),
         ("ev-item",       "the events band's stylesheet"),
@@ -258,28 +266,32 @@ with sync_playwright() as p:
         ("glance-notice", "the poster card's stylesheet"),
     ]:
         check(trace not in built,
-              "%r is still in the built page — %s. Notices are edited in the "
-              "portal and shown nowhere on the website at the moment; a "
-              "half-removed feature is worse than either keeping it or taking "
-              "it out, because the next person cannot tell which it is."
-              % (trace, what))
+              "%r is still in the built page — %s. Two of the three earlier "
+              "placements for notices on the homepage were rejected and "
+              "meant to be fully removed; a half-removed feature is worse "
+              "than either keeping it or taking it out, because the next "
+              "person cannot tell which it is." % (trace, what))
 
-    #  And the at-a-glance row is back to the four cards it has always had.
+    #  And the at-a-glance row is still the four cards it has always had —
+    #  the fourth placement tried (a fifth card squeezed in here) is also
+    #  one of the rejected ones, and notices now live in their own section
+    #  below this row rather than inside it.
     pg = b.new_page(viewport={"width": 1280, "height": 900})
     seen = []
     pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
-    pg.on("request", lambda r: seen.append("requested notices_live")
-          if "notices_live" in r.url else None)
     pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
         status=200, content_type="application/json", body="[]"))
     pg.route("**/rest/v1/site_content*", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    pg.route("**/rest/v1/rpc/notices_live", lambda r: r.fulfill(
         status=200, content_type="application/json", body="[]"))
     pg.goto(BASE, wait_until="load", timeout=45000)
     pg.wait_for_timeout(1500)
     r = pg.evaluate("""() => ({
         cards: [...document.querySelectorAll('.glance-grid > .glance-card')]
                  .filter(c => c.getBoundingClientRect().width > 1).length,
-        heroTop: Math.round(document.querySelector('.hero').getBoundingClientRect().top)
+        heroTop: Math.round(document.querySelector('.hero').getBoundingClientRect().top),
+        noticesHidden: document.getElementById('notices-row').hidden
     })""")
     check(r["cards"] == 4,
           "the at-a-glance row has %d cards. It should be back to the four it "
@@ -287,13 +299,106 @@ with sync_playwright() as p:
     check(r["heroTop"] <= 1,
           "the hero starts %dpx down the page — something is still being drawn "
           "above it." % r["heroTop"])
-    check(seen == [], "the home page threw, or still asks for notices: %s" % seen[:2])
+    check(r["noticesHidden"] is True,
+          "the notices section is not hidden when notices_live(p_masjid) answers "
+          "with an empty list — an empty band is exactly the half-broken state "
+          "this page is not supposed to show.")
+    check(seen == [], "the home page threw: %s" % seen[:2])
+    pg.close()
+
+    # ========================================== notices ON the public page
+    #
+    #  10 November 2026. The fourth placement — shown directly, on the live
+    #  site, rather than guessed at a fourth time — reads
+    #  notices_live(p_masjid), NOT the view of the same name: a live check
+    #  while building this found the view already broken (sole_masjid()
+    #  raising now that a second masjid exists), which is also why this is
+    #  POSTed to /rest/v1/rpc/notices_live rather than GET to
+    #  /rest/v1/notices_live.
+    pg = b.new_page(viewport={"width": 1280, "height": 900})
+    seen = []
+    pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
+    pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    pg.route("**/rest/v1/site_content*", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    sample = [
+        {"id": "n1", "created_at": "2026-11-08T13:29:52+00:00",
+         "topic": "janazah", "title": "Test notice",
+         "body": "Janāzah Salāh will be after Zuhr at 1pm.",
+         "image_url": None, "image_w": None, "image_h": None,
+         "event_at": None},
+    ]
+    seen_body = []
+
+    def serve_notices(route):
+        seen_body.append(route.request.post_data)
+        route.fulfill(status=200, content_type="application/json",
+                      body=json.dumps(sample))
+
+    pg.route("**/rest/v1/rpc/notices_live", serve_notices)
+    pg.goto(BASE, wait_until="load", timeout=45000)
+    pg.wait_for_timeout(1500)
+
+    check(len(seen_body) == 1, "the homepage did not call notices_live() exactly "
+          "once: %r" % seen_body)
+    if seen_body:
+        check(json.loads(seen_body[0] or "{}").get("p_masjid") == "taiyabah",
+              "notices_live() was called without naming the masjid: %r — the "
+              "view this replaced broke for exactly that reason the day a "
+              "second masjid started existing." % seen_body[0])
+
+    r = pg.evaluate("""() => {
+        var section = document.getElementById('notices-row');
+        var item = document.querySelector('.notice-item');
+        return {
+            hidden: section.hidden,
+            count: document.querySelectorAll('.notice-item').length,
+            title: item && item.querySelector('.notice-title').textContent,
+            topic: item && item.querySelector('.notice-topic').textContent,
+            cards: [...document.querySelectorAll('.glance-grid > .glance-card')]
+                     .filter(c => c.getBoundingClientRect().width > 1).length,
+        };
+    }""")
+    check(r["hidden"] is False,
+          "the notices section stayed hidden with a real notice to show")
+    check(r["count"] == 1, "expected 1 notice rendered, found %d" % r["count"])
+    check(r["title"] == "Test notice",
+          "the rendered title is %r, expected the fixture's own" % r["title"])
+    check(r["topic"] == "Janāzah",
+          "the topic chip reads %r — TOPIC_LABEL in the homepage's own script "
+          "has drifted from app/app.js's" % r["topic"])
+    check(r["cards"] == 4,
+          "a live notice changed the at-a-glance row's card count to %d — the "
+          "two sections must stay independent" % r["cards"])
+    check(seen == [], "the home page threw while showing a real notice: %s" % seen[:2])
+    pg.close()
+
+    #  And a failed call is a hidden section, never an error the visitor sees
+    #  or a console an administrator has to go looking in.
+    pg = b.new_page(viewport={"width": 1280, "height": 900})
+    seen = []
+    pg.on("pageerror", lambda e: seen.append(str(e)[:140]))
+    pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    pg.route("**/rest/v1/site_content*", lambda r: r.fulfill(
+        status=200, content_type="application/json", body="[]"))
+    pg.route("**/rest/v1/rpc/notices_live", lambda r: r.fulfill(
+        status=500, content_type="application/json", body='{"message":"boom"}'))
+    pg.goto(BASE, wait_until="load", timeout=45000)
+    pg.wait_for_timeout(1500)
+    hidden = pg.evaluate("document.getElementById('notices-row').hidden")
+    check(hidden is True,
+          "a 500 from notices_live() left the section visible — it must fail "
+          "silently, the same as the appeal figures do on a failed fetch")
+    check(seen == [], "a failed notices_live() call reached the visitor as a "
+          "thrown error: %s" % seen[:2])
     pg.close()
 
     b.close()
 
-print("\n" + ("ALL PASS — %d good cases, %d bad, %d topics, and the public "
-              "page shows nothing" % (len(GOOD), len(BAD), len(TOPICS))
+print("\n" + ("ALL PASS — %d good cases, %d bad, %d topics, and notices now "
+              "show on the homepage" % (len(GOOD), len(BAD), len(TOPICS))
               if not fails
               else "FAILURES (%d):\n  " % len(fails) + "\n  ".join(fails[:20])))
 sys.exit(1 if fails else 0)
