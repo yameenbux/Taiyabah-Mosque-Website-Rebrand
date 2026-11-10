@@ -314,7 +314,7 @@ with sync_playwright() as p:
         pg.route("**/rest/v1/rpc/courses_public", lambda r: r.fulfill(
             status=status, content_type="application/json",
             body=json.dumps(rows) if status == 200 else "no"))
-        pg.route("**/rest/v1/notices_live*", lambda r: r.fulfill(
+        pg.route("**/rest/v1/rpc/notices_live", lambda r: r.fulfill(
             status=200, content_type="application/json", body="[]"))
         pg.goto(BASE, wait_until="load", timeout=45000)
         pg.wait_for_timeout(1500)
