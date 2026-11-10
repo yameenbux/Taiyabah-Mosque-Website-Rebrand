@@ -208,7 +208,7 @@
         destinations. Notices/ below still owns everything that already
         exists there. */
     { label: "The app", areas: [
-      { key: "appsend",     href: "app/",         icon: "bell",   name: "Send an update",
+      { key: "appsend",     href: "app/",         icon: "bell",   name: "Notifications & notices",
         needs: ["admin"],
         what: "Push an alert to the app, publish a notice on the website, or both from one form" }
     ]},
