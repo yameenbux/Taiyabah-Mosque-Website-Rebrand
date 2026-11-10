@@ -137,32 +137,47 @@
   var sending = (function () {
     "use strict";
 
-    /*  THE FIVE AUDIENCES ARE THE FIVE THE APP HAS SWITCHES FOR.
+    /*  SEVEN TOPICS, EACH NAMING WHICH OF THE TWO DESTINATIONS IT HAS.
 
-        Not six, and not four. These are TOPICS in
-        supabase/functions/app-notify/index.ts, which are in turn the Worker's
-        own list, and they are also the five in the check constraint added by
-        051. A sixth offered here is refused by Postgres before anything is
-        sent, and one missing here is a switch people have turned on in the app
-        that nobody at the masjid can reach.
+        This screen used to offer only the five the app's own push switches
+        cover — janazah, jamaah, announcements, events, kahf, the check
+        constraint in 051 and the Worker's own TOPICS list in
+        supabase/functions/app-notify/index.ts. notices/ separately offered
+        six — the same four plus ramadan and madrasah, never jamaah — because
+        a website notice and a push notification are different systems with
+        different audiences: nobody's phone has a switch for "ramadan" or
+        "madrasah" yet, and a reminder before Jamaa'ah has no website notice
+        to go with it.
 
-        THEY ARE NOT THE NOTICES TOPICS, and the difference is real:
-        `jamaah` is a push audience with no notice behind it, and `ramadan`
-        and `madrasah` are notice topics the app has no switch for. Two
-        overlapping lists, written down as two, because pretending they are
-        one is how something gets filed under a heading nobody subscribed to. */
-    var TOPICS = ["janazah", "jamaah", "announcements", "events", "kahf"];
-    var TOPIC_LABEL = {
-      janazah:       "Janāzah",
-      jamaah:        "Jamāʿah reminders",
-      announcements: "Announcements",
-      events:        "Events & talks",
-      kahf:          "Sūrah al-Kahf"
-    };
+        Two screens asking the same question with different answers is how
+        the committee ended up filling in the same message twice. So there is
+        one list now, and each topic says which of "push" and "notice" it
+        actually reaches — `push` must still agree with
+        supabase/functions/app-notify/index.ts's TOPICS and 051's check
+        constraint; `notice` must still agree with
+        notice_topic_is_one_we_show. A topic offered here that either refuses
+        is dead the moment somebody picks it; one of theirs missing here is a
+        destination nobody at the masjid can reach. */
+    var TOPICS = [
+      { key: "announcements", label: "Announcements",     push: true,  notice: true },
+      { key: "events",        label: "Events & talks",    push: true,  notice: true },
+      { key: "janazah",       label: "Janāzah",           push: true,  notice: true },
+      { key: "kahf",          label: "Sūrah al-Kahf",     push: true,  notice: true },
+      { key: "jamaah",        label: "Jamāʿah reminders", push: true,  notice: false },
+      { key: "ramadan",       label: "Ramadan",           push: false, notice: true },
+      { key: "madrasah",      label: "Madrasah",          push: false, notice: true }
+    ];
+    var TOPIC_LABEL = {};
+    var TOPIC_BY_KEY = {};
+    TOPICS.forEach(function (t) { TOPIC_LABEL[t.key] = t.label; TOPIC_BY_KEY[t.key] = t; });
 
-    var TITLE_MAX = 70;     // app_notification_has_a_heading, and the Worker
-    var BODY_MAX  = 2000;   // what /api/notice will take
+    var TITLE_MAX = 70;     // app_notification_has_a_heading, the Worker, and notice_has_a_short_heading
+    var BODY_MAX  = 2000;   // what /api/notice and save_notice() will both take
     var PUSH_MAX  = 220;    // what /api/send will take, with nothing kept
+
+    //  042: the website's picture bucket is public, capped at 5 MB, and
+    //  accepts the same three kinds the push poster does.
+    var BUCKET = "notices";
 
     /*  Five megabytes, checked here as well as at the far end, because a
         person who has just waited ninety seconds for a twelve-megabyte
@@ -171,11 +186,15 @@
     var MAX_BYTES  = 5 * 1024 * 1024;
     var FILE_KINDS = { "image/jpeg": "JPEG", "image/png": "PNG", "image/webp": "WebP" };
 
-    //  The chosen poster, as a data URL with its real pixel size beside it.
-    //  Held here rather than in a hidden input: a 4 MB data URL in the DOM is
-    //  a 4 MB string the browser re-reads on every keystroke.
-    var poster = null;      // { data, w, h, bytes }
-    var rows   = [];        // the last list read
+    //  The chosen poster, as a data URL with its real pixel size beside it,
+    //  AND the original File — the data URL goes to the app exactly as
+    //  before; the File is what gets uploaded to the website's own picture
+    //  bucket if this is published there too. Held here rather than in a
+    //  hidden input: a 4 MB data URL in the DOM is a 4 MB string the browser
+    //  re-reads on every keystroke.
+    var poster = null;      // { data, w, h, bytes, file }
+    var rows   = [];        // the last list of pushes read
+    var webRows = [];       // the last list of website notices read
     var wired  = false;     // wire() is safe to call twice; binding twice is not
 
     function esc(v) {
@@ -248,10 +267,10 @@
     }
 
     // --- reading the form -----------------------------------------------------
-    function chosenTopic() {
+    function currentTopic() {
       var picked = document.querySelector('input[name="ap-topic"]:checked');
-      var value  = picked ? picked.value : "";
-      return TOPICS.indexOf(value) === -1 ? "announcements" : value;
+      var t = picked ? TOPIC_BY_KEY[picked.value] : null;
+      return t || TOPIC_BY_KEY.announcements;
     }
 
     function keepOn() {
@@ -259,17 +278,30 @@
       return !!(box && box.checked);
     }
 
-    /*  THE MESSAGE LIMIT DEPENDS ON THE TICK-BOX, and this is the one thing on
-        this screen a person would never guess.
+    //  `.disabled` is read as well as `.checked`: syncDestinations() disables
+    //  and unchecks whichever switch the current topic has no channel for,
+    //  but a box a test flips by hand without going through that function
+    //  should not be trusted either — a topic with no push channel must never
+    //  be read as "pushing" just because something left the box ticked.
+    function pushOn()    { var b = el("ap-push");    return !!(b && b.checked && !b.disabled); }
+    function publishOn() { var b = el("ap-publish"); return !!(b && b.checked && !b.disabled); }
 
-        A kept notice goes to /api/notice, which writes a row the app's Notices
-        tab can show and takes two thousand characters. An unkept one goes to
-        /api/send, which leaves nothing behind and takes two hundred and
-        twenty. Both limits are the far end's, not ours — a message over the
-        limit is refused there, after the person has pressed a button that
-        cannot be taken back if it had worked. So it is counted down here,
-        with the reason on the counter rather than in a comment. */
-    function bodyLimit() { return keepOn() ? BODY_MAX : PUSH_MAX; }
+    /*  THE MESSAGE LIMIT IS THE STRICTEST OF WHEREVER IT IS ACTUALLY GOING.
+
+        A kept push, or anything published on the website, goes through
+        save_notice() or /api/notice — both take two thousand characters. An
+        unkept push with nowhere else to go takes two hundred and twenty,
+        /api/send's own limit. Sending to more than one destination at once
+        means the smallest limit among them applies to all of them, or a
+        message could pass validation for one and be refused by the other
+        after the person has already pressed a button that cannot be taken
+        back if the push half had worked. So the limit is computed from
+        whichever switches are actually on, not guessed at once and reused. */
+    function activeLimit() {
+      var limit = BODY_MAX;
+      if (pushOn() && !keepOn()) limit = Math.min(limit, PUSH_MAX);
+      return limit;
+    }
 
     function countdown(boxId, value, limit) {
       var box = el(boxId);
@@ -289,21 +321,55 @@
       var box   = el("ap-body-count");
       if (!box) return;
       var value = trim(el("ap-body").value);
-      var limit = bodyLimit();
+      var limit = activeLimit();
       var left  = limit - value.length;
-      var kept  = keepOn();
+      var tight = limit === PUSH_MAX;
 
       if (left >= 0) {
         box.textContent = left + " characters left." +
-          (kept ? "" : " Nothing is being kept, so the limit is " + PUSH_MAX + ".");
+          (tight ? " Nothing is being kept and this isn't going on the website, so the limit is " + PUSH_MAX + "." : "");
       } else {
         box.textContent = (-left) + " characters too many — the limit is " +
           limit + "." +
-          (kept ? ""
-                : " Tick “keep this on the app's Notices tab” above and you have " +
-                  BODY_MAX + ".");
+          (tight ? " Tick “also keep this on the app's Notices tab” above, " +
+                   "or publish it on the website, and you have " + BODY_MAX + "."
+                 : "");
       }
       box.classList.toggle("is-over", left < 0);
+    }
+
+    /*  WHICH OF THE TWO SWITCHES A TOPIC ACTUALLY OFFERS.
+
+        Run whenever the topic changes — never on every keystroke, or
+        somebody unticking a switch by hand while writing the message would
+        have it silently reset under them. Disabling rather than hiding: a
+        switch that is simply not there for some topics is a shape that
+        changes as you click through them, which reads as a misclick. */
+    function syncDestinations() {
+      var t = currentTopic();
+      var push = el("ap-push"), pub = el("ap-publish");
+      push.disabled = !t.push;
+      pub.disabled  = !t.notice;
+      el("ap-push-row").classList.toggle("is-off", !t.push);
+      el("ap-publish-row").classList.toggle("is-off", !t.notice);
+      el("ap-push-why").textContent = t.push
+        ? "A notification on the phone of everybody who has that topic switched on."
+        : "There is no push channel for this topic yet, so this is website-only.";
+      el("ap-publish-why").textContent = t.notice
+        ? "A notice on the front page, live the moment you confirm — editable or removable afterwards from Notices."
+        : "There is no website-notice equivalent for this topic, so this is push-only.";
+    }
+
+    //  Switching topic resets both switches to "on if this topic reaches
+    //  it" — a bigger decision than a keystroke, and the one moment a reset
+    //  reads as help rather than the screen fighting a choice just made.
+    function onTopicChange() {
+      var t = currentTopic();
+      el("ap-push").checked    = t.push;
+      el("ap-publish").checked = t.notice;
+      syncDestinations();
+      refresh();
+      closeConfirm(true);
     }
 
     function drawLock() {
@@ -321,15 +387,32 @@
     function refresh() {
       var title = trim(el("ap-title").value);
       var body  = trim(el("ap-body").value);
+      var push  = pushOn();
+      var pub   = publishOn();
 
       countdown("ap-title-count", title, TITLE_MAX);
       messageCount();
       drawLock();
+      showPoster();  // re-checks whether a chosen poster should still force "keep"
+
+      //  "Also keep this on the Notices tab" only means anything once there
+      //  is a push to keep a copy of. With push off it is a tick-box about a
+      //  destination that isn't happening, so it is taken off the page rather
+      //  than left there disabled and unexplained.
+      el("ap-keep-row").hidden = !push;
+
+      //  The expiry date is the website's own idea — /api/send has no notion
+      //  of a notice coming off anything — so it only makes sense once
+      //  publishing is actually on.
+      el("ap-expires-row").hidden  = !pub;
+      el("ap-expires-hint").hidden = !pub;
 
       //  A heading with no message is a notification that says nothing when
       //  somebody opens it, and a message with no heading has nothing to show
-      //  on a locked phone. The far end refuses both.
-      el("ap-send").disabled = !(title && body);
+      //  on a locked phone — the far end refuses both. And with BOTH
+      //  destinations off, pressing send would do nothing at all, which is a
+      //  different failure from an empty message and needs its own check.
+      el("ap-send").disabled = !(title && body) || !(push || pub);
     }
 
     // --- the poster -----------------------------------------------------------
@@ -349,14 +432,22 @@
         poster.w + " × " + poster.h + " pixels · " + fileSize(poster.bytes);
       wrap.hidden = false;
 
-      /*  A POSTER FORCES "KEEP AS A NOTICE" ON, and it is said out loud rather
-          than done quietly. /api/send has nowhere to put a picture; only a
-          notice has. Silently ticking a box somebody had deliberately unticked
-          is how a screen loses somebody's trust — so it is ticked, held, and
-          the reason is printed underneath. */
-      keep.checked  = true;
-      keep.disabled = true;
-      el("ap-pic-forced").hidden = false;
+      /*  A POSTER FORCES "KEEP AS A NOTICE" ON, BUT ONLY WHEN PUSH IS ACTUALLY
+          ON. /api/send has nowhere to put a picture; only a kept push notice
+          has. That reason has nothing to do with the website side — save_notice()
+          always has a place for a picture — so forcing this when push is off
+          would be enforcing a rule for a destination that isn't even in play.
+          Said out loud rather than done quietly either way: silently ticking a
+          box somebody had deliberately unticked is how a screen loses somebody's
+          trust. */
+      if (pushOn()) {
+        keep.checked  = true;
+        keep.disabled = true;
+        el("ap-pic-forced").hidden = false;
+      } else {
+        keep.disabled = false;
+        el("ap-pic-forced").hidden = true;
+      }
     }
 
     function clearPoster() {
@@ -409,7 +500,7 @@
             return;
           }
           poster = { data: data, w: img.naturalWidth, h: img.naturalHeight,
-                     bytes: file.size };
+                     bytes: file.size, file: file };
           showPoster();
           refresh();
           closeConfirm(true);
@@ -440,25 +531,49 @@
                "on it — they will set off for the masjid. Read the name, the " +
                "time and the place once more. Nothing can call it back, and a " +
                "correction is a second notification to everybody who had the " +
-               "first."
+               "first.",
+      //  Publish-only has none of the above: nothing reaches a phone, and
+      //  anything wrong with it is one more RPC call away from being fixed.
+      //  Saying so is not a technicality — it is the whole reason this screen
+      //  can afford to ask "send this now?" in a calmer voice than the push
+      //  wording above.
+      publishOnly: "This goes on the website's front page the moment you " +
+                   "confirm it. Nothing is sent to anybody's phone. You can " +
+                   "edit the wording, take it down, or delete it afterwards " +
+                   "from Notices — none of that is true of the push half " +
+                   "above, so read it carefully anyway, but a mistake here is " +
+                   "not the same kind of mistake."
     };
 
+    //  Three shapes, because "both", "push only" and "publish only" are each
+    //  a different sentence rather than the same one with words removed.
+    function destinationSummary(push, pub) {
+      if (push && pub)  return "Pushed to the app, and published on the website.";
+      if (push)         return "Pushed to the app. Not published on the website.";
+      if (pub)          return "Published on the website. Not pushed to the app.";
+      return "Nowhere — tick at least one of the two switches above.";
+    }
+
     function openConfirm() {
-      var topic = chosenTopic();
+      var t     = currentTopic();
       var title = trim(el("ap-title").value);
       var body  = trim(el("ap-body").value);
+      var push  = pushOn();
+      var pub   = publishOn();
 
-      if (!title || !body) return;            // belt and braces; Send is disabled too
+      if (!title || !body || !(push || pub)) return;  // belt and braces; Send is disabled too
 
       //  Refused here rather than at the far end, where the person has already
       //  committed to something irreversible and is then told it did not work.
-      if (body.length > bodyLimit()) {
+      var limit = activeLimit();
+      if (body.length > limit) {
         note("ap-error", "That message is " + body.length + " characters, and " +
-          (keepOn()
+          (limit === BODY_MAX
             ? "the limit is " + BODY_MAX + "."
-            : "without keeping it on the Notices tab the limit is " + PUSH_MAX +
-              ". Either shorten it, or tick “keep this on the app's Notices " +
-              "tab” — a kept notice can be up to " + BODY_MAX + "."));
+            : "without keeping it on the Notices tab, or publishing it on the " +
+              "website, the limit is " + PUSH_MAX + ". Either shorten it, tick " +
+              "“also keep this on the app's Notices tab”, or publish it on the " +
+              "website — either way you have " + BODY_MAX + "."));
         bringIntoView("ap-error");
         return;
       }
@@ -467,18 +582,29 @@
       el("ap-changed").hidden = true;
 
       var panel = el("ap-confirm");
-      panel.classList.toggle("is-grave", topic === "janazah");
-      el("ap-confirm-h").textContent = topic === "janazah"
+      var grave = push && t.key === "janazah";
+      panel.classList.toggle("is-grave", grave);
+      el("ap-confirm-h").textContent = grave
         ? "Send this janāzah announcement now?"
         : "Send this now?";
-      el("ap-confirm-p").textContent = topic === "janazah" ? WORDS.janazah : WORDS.normal;
+      el("ap-confirm-p").textContent = grave ? WORDS.janazah
+        : (push ? WORDS.normal : WORDS.publishOnly);
 
-      el("ap-confirm-aud").textContent   = TOPIC_LABEL[topic] || topic;
+      el("ap-confirm-dest").textContent = destinationSummary(push, pub);
+
+      //  The push-specific rows mean nothing once push is off, so they leave
+      //  the panel entirely rather than show "—" beside a question nobody
+      //  asked.
+      el("ap-confirm-aud-row").hidden  = !push;
+      el("ap-confirm-keep-row").hidden = !push;
+      if (push) {
+        el("ap-confirm-aud").textContent  = t.label;
+        el("ap-confirm-keep").textContent = keepOn()
+          ? "It stays on the app's Notices tab after the notification is swiped away."
+          : "Nothing is kept. Once somebody swipes the notification away, it is gone.";
+      }
       el("ap-confirm-title").textContent = title;
       el("ap-confirm-body").textContent  = body;
-      el("ap-confirm-keep").textContent  = keepOn()
-        ? "It stays on the app's Notices tab after the notification is swiped away."
-        : "Nothing is kept. Once somebody swipes the notification away, it is gone.";
 
       panel.hidden = false;
       panel.scrollIntoView({ block: "nearest" });
@@ -512,27 +638,18 @@
           nobody chose for it. The audience is left alone — it is a deliberate
           choice, it is shown again in the confirmation, and there is no harm
           in it being remembered. */
-      el("ap-title").value    = "";
-      el("ap-body").value     = "";
-      el("ap-event-at").value = "";
+      el("ap-title").value      = "";
+      el("ap-body").value       = "";
+      el("ap-event-at").value   = "";
+      el("ap-expires-at").value = "";
       clearPoster();
       refresh();
     }
 
-    function send() {
-      var topic = chosenTopic();
-      var title = trim(el("ap-title").value);
-      var body  = trim(el("ap-body").value);
-      var btn   = el("ap-go");
-
-      busy(btn, true, "Send it");
-      note("ap-error", ""); note("ap-ok", "");
-
-      /*  The caller's own token, deliberately. app-notify writes the record
-          with it BEFORE it sends anything, so the row names the person who
-          pressed the button and nothing downstream can change that. It is also
-          the permission check — a caller who is not a two-step administrator
-          is refused there and nothing goes out. */
+    /*  THE PUSH HALF — unchanged in shape and semantics from before this
+        screen could also publish; only lifted out of send() so the two
+        destinations can run side by side and be reported on separately. */
+    function doPush(t, title, body) {
       return sb.auth.getSession().then(function (s) {
         var token = s.data && s.data.session && s.data.session.access_token;
         if (!token) throw new Error("Your session has expired, so nothing was " +
@@ -543,7 +660,7 @@
                      apikey: cfg.SUPABASE_ANON_KEY,
                      Authorization: "Bearer " + token },
           body: JSON.stringify({
-            topic:          topic,
+            topic:          t.key,
             title:          title,
             body:           body,
             keep_as_notice: keepOn(),
@@ -554,68 +671,177 @@
           })
         });
       }).then(function (r) {
-        return r.text().then(function (t) {
+        return r.text().then(function (txt) {
           var out;
-          try { out = JSON.parse(t); } catch (e) { out = { error: t.slice(0, 300) }; }
-          return { status: r.status, out: out || {} };
+          try { out = JSON.parse(txt); } catch (e) { out = { error: txt.slice(0, 300) }; }
+          return out || {};
         });
-      }).then(function (res) {
-        var out = res.out;
+      });
+    }
 
-        /*  ok:false IS NOT A SENT NOTIFICATION, whatever else came back with
-            it. The Worker answers 200 with sent:{sent:false} when the notice
-            was saved and OneSignal refused it, and app-notify reports that
-            faithfully as ok:false. Saying "sent" here about a saved notice
-            nobody received would be the exact failure this screen exists to
-            end — and the person would find out a day later, from somebody
-            asking why they were not told. */
-        if (out.ok !== true) {
-          note("ap-error",
-            "Nothing was sent. Nobody's phone has received anything. The reason " +
-            "given was: " +
-            (asSentence(out.error) || "none, which usually means the app sender " +
-                                      "could not be reached at all.") +
-            (out.id ? " There is a row in the list below showing the attempt." : "") +
-            " Read that list before you try again, in case an earlier attempt " +
-            "did go out.");
-          bringIntoView("ap-error");
-          //  The list is reloaded even on a failure: app_notification_start()
-          //  writes its row before anything is sent, so the attempt is there.
-          return loadList();
+    //  The extension matters only for the filename the bucket stores it
+    //  under — getPublicUrl() hands back whatever that name is, and the
+    //  browser never looks at it to decide how to decode the picture.
+    var UPLOAD_EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+
+    /*  THE WEBSITE HALF. A poster, if there is one, is uploaded to the same
+        public bucket notices/ uses — not reconstructed from the data URL
+        app-notify gets, the original File that choosePoster() stashed on
+        `poster.file` for exactly this. save_notice() always writes a row;
+        set_notice_published() is what actually puts it in front of a
+        visitor, called straight after because the committee asked for ONE
+        button, not a draft somebody has to remember to go and publish. */
+    function doPublish(t, title, body) {
+      var upload = Promise.resolve(null);
+
+      if (poster && poster.file) {
+        var ext  = UPLOAD_EXT[poster.file.type] || "jpg";
+        var name = String(Date.now()) + "-" +
+                   Math.random().toString(36).slice(2, 8) + "." + ext;
+        upload = sb.storage.from(BUCKET).upload(name, poster.file, {
+          contentType: poster.file.type, upsert: false
+        }).then(function (res) {
+          if (res.error) throw new Error("The poster could not be uploaded: " +
+                                         res.error.message);
+          var pub = sb.storage.from(BUCKET).getPublicUrl(name);
+          var url = pub && pub.data && pub.data.publicUrl;
+          if (!url) throw new Error("The poster uploaded but the masjid's store " +
+                                    "gave no web address for it.");
+          return url;
+        });
+      }
+
+      return upload.then(function (imageUrl) {
+        var p = {
+          topic:      t.key,
+          title:      title,
+          body:       body,
+          image_url:  imageUrl || "",
+          image_w:    imageUrl ? poster.w : null,
+          image_h:    imageUrl ? poster.h : null,
+          event_at:   toStamp(el("ap-event-at").value),
+          expires_at: toStamp(el("ap-expires-at").value)
+        };
+        return sb.rpc("save_notice", { p: p });
+      }).then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        var id = (res.data || {}).id;
+        if (!id) throw new Error("The notice saved but did not say which one it was, " +
+                                 "so it could not be published automatically.");
+        return sb.rpc("set_notice_published", { p_id: id, p_published: true })
+          .then(function (pubRes) {
+            if (pubRes.error) throw new Error("It saved, but could not be published: " +
+                                              pubRes.error.message +
+                                              " It is sitting as a draft in Notices.");
+            return { ok: true };
+          });
+      }).catch(function (e) {
+        return { ok: false, error: e.message || String(e) };
+      });
+    }
+
+    function send() {
+      var t     = currentTopic();
+      var title = trim(el("ap-title").value);
+      var body  = trim(el("ap-body").value);
+      var push  = pushOn();
+      var pub   = publishOn();
+      var btn   = el("ap-go");
+
+      busy(btn, true, "Send it");
+      note("ap-error", ""); note("ap-ok", "");
+
+      var jobs = {};
+      /*  The caller's own token, deliberately. app-notify writes the record
+          with it BEFORE it sends anything, so the row names the person who
+          pressed the button and nothing downstream can change that. It is
+          also the permission check — a caller who is not a two-step
+          administrator is refused there and nothing goes out. save_notice()
+          and set_notice_published() carry the same check inside Postgres, so
+          neither half needs its own guard here. */
+      if (push) jobs.push    = doPush(t, title, body);
+      if (pub)  jobs.publish = doPublish(t, title, body);
+
+      return Promise.all([
+        jobs.push    || Promise.resolve(null),
+        jobs.publish || Promise.resolve(null)
+      ]).then(function (res) {
+        var pushOut = res[0];
+        var pubOut  = res[1];
+        var lines   = [];
+        var anyFailed = false;
+
+        if (push) {
+          /*  ok:false IS NOT A SENT NOTIFICATION, whatever else came back
+              with it. The Worker answers 200 with sent:{sent:false} when the
+              notice was saved and OneSignal refused it, and app-notify
+              reports that faithfully as ok:false. Saying "sent" here about a
+              saved notice nobody received would be the exact failure this
+              screen exists to end. */
+          if (!pushOut || pushOut.ok !== true) {
+            anyFailed = true;
+            lines.push("NOT pushed to the app. Nobody's phone has received " +
+              "anything. The reason given was: " +
+              (asSentence(pushOut && pushOut.error) ||
+               "none, which usually means the app sender could not be reached at all.") +
+              ((pushOut && pushOut.id) ? " There is a row in the push list below showing the attempt." : ""));
+          } else {
+            var reached = typeof pushOut.recipients === "number"
+              ? "reached " + pushOut.recipients + " phone" + (pushOut.recipients === 1 ? "" : "s")
+              : "the app did not say how many phones it reached";
+            var kept = pushOut.kept_as_notice
+              ? " It is on the app's Notices tab as well."
+              : " Nothing was kept — once it is swiped away it is gone.";
+            var missing = pushOut.recorded === false
+              ? " It went out, but could not be written into the push list below — " +
+                "so that list is not complete, and somebody should be told before " +
+                "anything else is sent."
+              : "";
+            lines.push("Pushed to " + (pushOut.topic_label || t.label) + ". It " +
+                       reached + "." + kept + missing);
+          }
         }
 
-        var reached = typeof out.recipients === "number"
-          ? "It reached " + out.recipients + " phone" + (out.recipients === 1 ? "" : "s") + "."
-          : "The app did not say how many phones it reached.";
-        var kept = out.kept_as_notice
-          ? " It is on the app's Notices tab as well, so somebody who swipes it away can still find it."
-          : " Nothing was kept — once it is swiped away it is gone.";
-        /*  `recorded` false means the send HAPPENED and the record of it did
-            not. Said plainly, because the list below is the thing everybody is
-            about to trust, and a send missing from it is how the same
-            notification goes out twice. */
-        var missing = out.recorded === false
-          ? " It went out, but it could not be written into the list below — so " +
-            "the list is not complete, and somebody should be told before " +
-            "anything else is sent."
-          : "";
+        if (pub) {
+          if (!pubOut || pubOut.ok !== true) {
+            anyFailed = true;
+            lines.push("NOT published on the website: " +
+              (asSentence(pubOut && pubOut.error) || "an unknown error."));
+          } else {
+            lines.push("Published on the website — live on the front page now.");
+          }
+        }
 
-        note("ap-ok", "Sent to " + (out.topic_label || TOPIC_LABEL[topic] || topic) +
-                      ". " + reached + kept + missing);
-        bringIntoView("ap-ok");
-        clearAfterSend();
-        return loadList();
+        var message = lines.join(" ");
+        if (anyFailed) {
+          note("ap-error", message);
+          bringIntoView("ap-error");
+        } else {
+          note("ap-ok", message);
+          bringIntoView("ap-ok");
+          clearAfterSend();
+        }
+
+        //  Reloaded regardless of outcome: app_notification_start() writes its
+        //  row before anything is sent, so a failed push still has a row to
+        //  show, and a half-success on the website side still belongs in
+        //  that list.
+        return Promise.all([
+          push ? loadList() : Promise.resolve(),
+          pub  ? loadWebsiteList() : Promise.resolve()
+        ]);
       }).catch(function (e) {
-        /*  A network failure here is genuinely ambiguous: the request may have
-            arrived and the answer may have been lost on the way back. Telling
-            somebody "it failed" would invite them to send a janāzah notice to
-            a congregation that already has it, so this says what is actually
-            known. */
-        note("ap-error", "The answer never came back, so this screen cannot tell " +
-          "you whether it was sent. " + asSentence(e.message || String(e)) +
-          " Look at the list below before you try again — if it is there, it has gone.");
+        /*  Reaching here means something outside doPush/doPublish's own
+            catches broke — both of those already turn their failures into
+            {ok:false}, so this is a genuine surprise, not an expected
+            rejection. */
+        note("ap-error", "Something went wrong that this screen did not expect. " +
+          asSentence(e.message || String(e)) +
+          " Look at the lists below before you try again — if something is " +
+          "there, it has gone.");
         bringIntoView("ap-error");
-        return loadList().catch(function () { /* already complaining */ });
+        return Promise.all([loadList(), loadWebsiteList()])
+          .catch(function () { /* already complaining */ });
       }).finally(function () {
         busy(btn, false, "Send it");
         closeConfirm();
@@ -690,12 +916,60 @@
       });
     }
 
+    // --- what's on the website now ---------------------------------------
+    /*  Read-only, deliberately. Editing, taking down or deleting a notice is
+        Notices' own job, with its own undo-nothing warnings about public
+        buckets and its own tests — re-implementing any of that here, for a
+        screen whose point is sending something new, is exactly the kind of
+        duplicated logic that got the two screens out of step in the first
+        place. This reuses notices_list() and the same .ap-item markup the
+        push history already draws with. */
+    function drawWebsite(list) {
+      var box = el("ap-website-list");
+      if (!box) return;
+      var live = list.filter(function (n) { return n.on_the_website; });
+      if (!live.length) {
+        box.innerHTML = "<p class=\"ap-empty\">Nothing is currently published " +
+          "on the website.</p>";
+        return;
+      }
+      box.innerHTML = live.map(function (n) {
+        return '<div class="ap-item is-sent">' +
+          '<div class="ap-top">' +
+            '<span class="ap-chip">' + esc(TOPIC_LABEL[n.topic] || n.topic) + "</span>" +
+            '<span class="ap-head">' + esc(n.title || "(no heading)") + "</span>" +
+          "</div>" +
+          '<div class="ap-when">' +
+            (n.event_at ? esc(readable(n.event_at))
+                        : "Added " + esc(readable(n.created_at))) +
+            (n.expires_at ? " · comes off " + esc(readable(n.expires_at)) : "") +
+          "</div>" +
+        "</div>";
+      }).join("");
+    }
+
+    function loadWebsiteList() {
+      return sb.rpc("notices_list").then(function (res) {
+        if (res.error) throw new Error(res.error.message);
+        webRows = Array.isArray(res.data) ? res.data : [];
+        drawWebsite(webRows);
+      }).catch(function (e) {
+        var box = el("ap-website-list");
+        if (box) box.innerHTML = "<p class=\"ap-empty\">This list could not be " +
+          "read.</p>";
+        //  Deliberately not bringIntoView'd and not an ap-error: this list
+        //  failing to load says nothing about whether a send just worked, and
+        //  stealing the error box from that message would be the wrong thing
+        //  to be alarmed about.
+      });
+    }
+
     // --- wiring ---------------------------------------------------------------
     function wireForm() {
-      if (wired) { refresh(); return true; }
+      if (wired) { syncDestinations(); refresh(); return true; }
       wired = true;
 
-      ["ap-title", "ap-body", "ap-event-at"].forEach(function (id) {
+      ["ap-title", "ap-body", "ap-event-at", "ap-expires-at"].forEach(function (id) {
         var node = el(id);
         if (!node) return;
         node.addEventListener("input", function () { refresh(); closeConfirm(true); });
@@ -705,16 +979,19 @@
       Array.prototype.forEach.call(
         document.querySelectorAll('input[name="ap-topic"]'),
         function (radio) {
-          radio.addEventListener("change", function () { refresh(); closeConfirm(true); });
+          radio.addEventListener("change", onTopicChange);
         });
 
-      el("ap-keep").addEventListener("change", function () {
-        //  The message limit changes with this tick-box, so the counter has to
-        //  be recomputed the moment it moves — not when the next key is
-        //  pressed, by which time somebody has already been told the wrong
-        //  number.
-        refresh();
-        closeConfirm(true);
+      ["ap-keep", "ap-push", "ap-publish"].forEach(function (id) {
+        el(id).addEventListener("change", function () {
+          //  The message limit, which destinations' rows show, and whether a
+          //  poster is forced to be kept all change with these tick-boxes, so
+          //  all of it has to be recomputed the moment one moves — not when
+          //  the next key is pressed, by which time somebody has already been
+          //  told the wrong thing.
+          refresh();
+          closeConfirm(true);
+        });
       });
 
       el("ap-file").addEventListener("change", function () {
@@ -735,15 +1012,19 @@
       });
       el("ap-go").addEventListener("click", send);
 
+      syncDestinations();
       refresh();
       return true;
     }
 
     function mount(identity) {
       wireForm();
-      return loadList().catch(function () {
-        //  loadList has already put the reason on the screen.
-      });
+      return Promise.all([
+        loadList().catch(function () {
+          //  loadList has already put the reason on the screen.
+        }),
+        loadWebsiteList()
+      ]);
     }
 
     return { mount: mount, _wire: wireForm, _labels: TOPIC_LABEL, _topics: TOPICS };
@@ -781,7 +1062,7 @@
     if (window.AdminShell) {
       AdminShell.mount({
         current: 'appsend',
-        title:   'Send to the app',
+        title:   'Send an update',
         roles:   identity.roles || [],
         name:    (identity.profile && identity.profile.full_name) || "",
         email:   (identity.user && identity.user.email) || ""

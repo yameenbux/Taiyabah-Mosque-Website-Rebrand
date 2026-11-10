@@ -165,18 +165,52 @@ if os.path.exists(FN):
               "app-notify's notification topics are %r, expected %r"
               % (sorted(got), sorted(PUSH_TOPICS)))
 
-#  The screen's radio buttons.
+#  The screen's radio buttons — and, since 9 November, its TOPICS table.
+#
+#  The App screen used to offer only PUSH_TOPICS, because it only ever sent
+#  a push. It now ALSO offers a website notice from the same form, so its
+#  radio list is the UNION of both vocabularies — and app/app.js's own
+#  TOPICS array is what actually says, per topic, which of the two
+#  destinations it reaches (syncDestinations() disables whichever switch a
+#  topic's `push`/`notice` flag refuses). A radio shown with neither flag
+#  true would be a button that does nothing at all; one flagged for a
+#  destination that is not in PUSH_TOPICS/NOTICE_TOPICS would be a topic the
+#  database refuses the moment it is pressed.
 if os.path.exists("app/index.html"):
     html = read("app/index.html")
     shown = set(re.findall(r'name="ap-topic"[^>]*value="([a-z]+)"', html))
     if not shown:
         shown = set(re.findall(r'value="([a-z]+)"[^>]*name="ap-topic"', html))
-    check(shown == PUSH_TOPICS,
-          "the App screen offers %r as audiences, expected %r. An option the "
-          "sender cannot accept is a button that fails after somebody has "
-          "committed to sending." % (sorted(shown), sorted(PUSH_TOPICS)))
+    check(shown == (PUSH_TOPICS | NOTICE_TOPICS),
+          "the App screen offers %r as audiences, expected the union of both "
+          "vocabularies, %r. A topic shown here that neither list recognises "
+          "is a button that fails after somebody has committed to sending; "
+          "one of theirs missing here is a destination nobody at the masjid "
+          "can reach." % (sorted(shown), sorted(PUSH_TOPICS | NOTICE_TOPICS)))
 else:
     check(False, "app/index.html is missing")
+
+#  app.js's own flags must agree with the same two vocabularies — not just
+#  with whatever the radios happen to list.
+AJ = "app/app.js"
+if os.path.exists(AJ):
+    aj = read(AJ)
+    entries = re.findall(
+        r'key:\s*"([a-z]+)".*?push:\s*(true|false),\s*notice:\s*(true|false)', aj)
+    check(entries, "app.js's TOPICS array could not be read — has its shape changed?")
+    if entries:
+        pushable = set(k for k, p, n in entries if p == "true")
+        noticeable = set(k for k, p, n in entries if n == "true")
+        check(pushable == PUSH_TOPICS,
+              "app.js flags %r as push-capable, expected %r. A topic flagged "
+              "push here that the database (051) does not allow fails the "
+              "moment it is sent; one of 051's missing here is never offered "
+              "at all." % (sorted(pushable), sorted(PUSH_TOPICS)))
+        check(noticeable == NOTICE_TOPICS,
+              "app.js flags %r as notice-capable, expected %r — see 041's "
+              "notice_topic_is_one_we_show." % (sorted(noticeable), sorted(NOTICE_TOPICS)))
+else:
+    check(False, "%s is missing" % AJ)
 
 #  051's CHECK constraint, read out of the migration.
 mig = "db/051_a_push_has_a_sender.sql"
