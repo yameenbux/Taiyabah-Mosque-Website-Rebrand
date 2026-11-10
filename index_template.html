@@ -716,61 +716,26 @@ window.TAIYABAH_PUBLIC = {
   .glance-donate .gd-policy{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:9px;font-size:.853rem;font-weight:600;letter-spacing:.02em;color:var(--gold-bright);}
   .glance-donate .gd-policy svg{flex-shrink:0;}
 
-  /* ---------- HOME: NOTICES ----------
-     10 November 2026. Three earlier placements for a notices section here
-     were built and rejected: a fifth card squeezed into .glance-grid above,
-     a text band above the hero, and an earlier version of this same "under
-     the glance row" idea. This one was placed by being shown exactly where
-     on the live homepage it should sit. Full container width, not another
-     small square: one notice to a row, exactly as wide as the row above it,
-     never shrunk to fit alongside the four cards it sits beneath.
+  /* ---------- HOME: NOTICES, AS POSTERS IN THE GLANCE ROW ----------
+     10 November 2026. Two earlier attempts at a notices section here were
+     built and rejected, and a third — this same idea, done as a separate
+     full-width section under the row below — was tried and corrected
+     straight after, from a look at the live page: the ask was the poster
+     only, nothing else, sitting IN the row above as one more card, not a
+     second row of its own.
 
-     HIDDEN BY DEFAULT, NOT SPACE-RESERVED. An earlier, unrelated attempt at
-     an "events band" reserved a remembered height with sessionStorage to
-     stop the page jumping once JavaScript answered — that machinery is
-     gone, and _test/notices_test.py checks it stays gone. This is simpler
-     on purpose: the section starts hidden, the fetch below un-hides it
-     only once a notice has actually been read, and a page with no live
-     notices never draws an empty band. The small shift this can cause
-     happens well after the fold, beneath four cards a visitor is already
-     reading — the trade this project would not accept above the hero is a
-     different trade down here. */
-  .notices-row{background:var(--paper);padding:0 0 68px;}
-  .notices-head{margin-bottom:16px;}
-  .notices-head h2{font-size:1.4rem;}
-  .notices-list{display:flex;flex-direction:column;gap:14px;}
-  .notice-item{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:20px 22px;display:flex;gap:18px;align-items:flex-start;
-  }
-  .notice-pic{
-    width:104px;height:104px;object-fit:cover;border-radius:10px;
-    border:1px solid var(--line);flex-shrink:0;background:#fff;
-  }
-  .notice-body{min-width:0;flex:1;}
-  .notice-topic{
-    display:inline-block;font-size:.8rem;font-weight:800;letter-spacing:.09em;
-    text-transform:uppercase;padding:3px 10px;border-radius:999px;
-    background:rgba(94,22,56,.10);color:#5E1638;margin-bottom:8px;
-  }
-  .notice-title{font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:1.13rem;margin-bottom:5px;overflow-wrap:anywhere;}
-  /*  CLAMPED TO FOUR LINES. A notice's body is typed by a committee member
-      with no limit worth enforcing here (save_notice() already caps it at
-      2000 characters) — but a flyer forwarded from WhatsApp can run to a
-      dozen paragraphs, and showing all of it made one test notice occupy
-      most of a screen's height, which is the opposite of what a visitor
-      scanning the homepage wants. The poster, where there is one, already
-      carries the full text; this is a scan line, not the announcement
-      itself. */
-  .notice-text{
-    font-size:.96rem;line-height:1.55;color:var(--ink);margin-bottom:7px;
-    overflow-wrap:anywhere;white-space:pre-wrap;
-    display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
-  }
-  .notice-when{font-size:.86rem;color:var(--muted);}
-  @media (max-width:640px){
-    .notice-item{flex-direction:column;}
-    .notice-pic{width:100%;height:auto;max-height:220px;}
+     So this adds plain .glance-card elements to the SAME #glanceGrid as
+     Prayer Times, Announcements, Food Bank and Donate — no new section, no
+     heading, no title or body text under the picture, nothing to clamp.
+     .glance-grid's own `repeat(auto-fit,minmax(210px,1fr))` is what keeps
+     the four original cards their usual size: an extra card past however
+     many fit a row simply wraps onto the next one at the SAME width,
+     rather than the existing four being squeezed to make room. A notice
+     with no poster is skipped outright — there is nothing this card is
+     allowed to show instead. */
+  .glance-notice-live{padding:0;overflow:hidden;}
+  .glance-notice-live img{
+    width:100%;height:100%;min-height:180px;object-fit:cover;display:block;
   }
 
   /* ---- App promo (home page) ---- */
@@ -2700,7 +2665,7 @@ window.TAIYABAH_PUBLIC = {
 
   <section class="glance-row">
     <div class="container">
-      <div class="glance-grid">
+      <div class="glance-grid" id="glanceGrid">
         <div class="glance-card">
           <div class="glance-head-stack">
             <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg> Prayer Times</span>
@@ -2770,18 +2735,6 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
       </div>
-    </div>
-  </section>
-
-  <!--  Hidden until JavaScript finds at least one live notice to put in it —
-        see the comment beside .notices-row in the stylesheet above for why
-        this is not space-reserved the way the appeal figures below are. -->
-  <section class="notices-row" id="notices-row" hidden>
-    <div class="container">
-      <div class="notices-head">
-        <h2>Notices</h2>
-      </div>
-      <div class="notices-list" id="notices-list"></div>
     </div>
   </section>
 
@@ -9438,36 +9391,36 @@ window.TAIYABAH_PUBLIC = {
   })();
 
   /* =======================================================================
-     NOTICES ON THE HOMEPAGE
+     NOTICES ON THE HOMEPAGE, AS POSTER CARDS IN THE GLANCE ROW
 
      public.notices_live(p_masjid text) (db/140), NOT the view of the same
      name. The view (db/040) reads `masjid_id = sole_masjid()`, which 140's
      own header called "a dated fuse: sole_masjid() raises the day a second
      masjid exists" — and a live check on 10 November 2026, while building
-     this section, found that day had already arrived: the VIEW now answers
-     every GET with a 22023 refusing to guess which masjid. The function
-     takes the slug and still works; this calls that, not the view, for
-     exactly the reason 140 gave for wanting the view's one remaining
-     consumer (the phone app) moved across. Returns the same nine fields —
-     id, created_at, topic, title, body, image_url, image_w, image_h,
-     event_at — already filtered to published and not expired, with
-     `published` and `expires_at` themselves left out on purpose. Nothing on
-     this page read either form until now; see the comment beside
-     .notices-row in the stylesheet for the placements that were tried and
-     rejected first.
+     this, found that day had already arrived: the VIEW now answers every
+     GET with a 22023 refusing to guess which masjid. The function takes
+     the slug and still works; this calls that, not the view, for exactly
+     the reason 140 gave for wanting the view's one remaining consumer (the
+     phone app) moved across.
 
-     NOT PROGRESSIVE ENHANCEMENT, unlike the appeal above. The appeal is a
+     POSTER ONLY, NOTHING ELSE — the ask, verified against the live page
+     rather than guessed. A notice with no image_url is skipped outright:
+     there is no "show it anyway" for a card whose entire point is the
+     picture. Appended straight into #glanceGrid, the SAME grid Prayer
+     Times, Announcements, Food Bank and Donate already sit in — not a
+     section of its own — so an extra card wraps onto the next row at the
+     grid's own width rather than squeezing the original four.
+
+     NOT PROGRESSIVE ENHANCEMENT, unlike the appeal below. The appeal is a
      slow-moving figure worth baking into the build so a visitor with
      JavaScript off still sees last month's total; a notice is sent because
-     something changed TODAY, and a built copy of it would be exactly as
-     stale as the thing it exists to announce. So the section stays hidden,
-     and genuinely empty, until this answers — no fallback text, because
-     there is no honest fallback for "a janāzah may have been announced
-     since the last build" other than not guessing. */
+     something changed TODAY, and a built copy would be exactly as stale as
+     the thing it exists to announce. So nothing is added until this
+     answers — no fallback, because there is no honest fallback for "a
+     poster may have gone up since the last build" other than not guessing. */
   (function(){
-    var section = document.getElementById('notices-row');
-    var list    = document.getElementById('notices-list');
-    if(!section || !list) return;
+    var grid = document.getElementById('glanceGrid');
+    if(!grid) return;
 
     var cfg = window.TAIYABAH_PUBLIC || {};
     if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
@@ -9475,26 +9428,6 @@ window.TAIYABAH_PUBLIC = {
 
     var base = String(cfg.SUPABASE_URL).trim()
                  .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
-
-    //  Matches app/app.js's TOPIC_LABEL exactly where the two overlap; a
-    //  topic notices_live can hold that is not in this map still shows,
-    //  under its own raw name, rather than disappearing.
-    var TOPIC_LABEL = {
-      announcements: 'Announcements', events: 'Events & talks',
-      janazah: 'Janāzah', kahf: 'Sūrah al-Kahf',
-      ramadan: 'Ramadan', madrasah: 'Madrasah'
-    };
-
-    function readable(iso){
-      var d = new Date(iso);
-      if(isNaN(d.getTime())) return '';
-      try {
-        return d.toLocaleString('en-GB', {
-          weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      } catch(e){ return d.toISOString().slice(0,16).replace('T',' '); }
-    }
 
     fetch(base + '/rest/v1/rpc/notices_live', {
       method: 'POST',
@@ -9508,59 +9441,31 @@ window.TAIYABAH_PUBLIC = {
       if(!r.ok) throw new Error('notices_live ' + r.status);
       return r.json();
     }).then(function(rows){
-      if(!Array.isArray(rows) || !rows.length) return;  // stays hidden
+      if(!Array.isArray(rows)) return;
 
-      //  The function orders newest-first by event date or send date but
-      //  applies no limit of its own, so the cap is this page's to set.
-      rows = rows.slice(0, 8);
+      //  The function orders newest-first but applies no limit of its own,
+      //  and a notice with no poster is not a candidate at all.
+      var withPoster = rows.filter(function(n){ return !!n.image_url; }).slice(0, 4);
 
-      rows.forEach(function(n){
-        var item = document.createElement('div');
-        item.className = 'notice-item';
+      withPoster.forEach(function(n){
+        var card = document.createElement('div');
+        card.className = 'glance-card glance-notice-live';
 
-        if(n.image_url){
-          var img = document.createElement('img');
-          img.className = 'notice-pic';
-          img.src = n.image_url;
-          img.alt = '';                 // decorative beside its own title/body
-          img.loading = 'lazy';
-          item.appendChild(img);
-        }
+        var img = document.createElement('img');
+        img.src = n.image_url;
+        //  Not decorative — it is the only content this card carries — so it
+        //  gets a real alt even though no visible text sits beside it.
+        img.alt = n.title ? String(n.title) : 'A notice from the masjid';
+        img.loading = 'lazy';
+        card.appendChild(img);
 
-        var body = document.createElement('div');
-        body.className = 'notice-body';
-
-        var topic = document.createElement('span');
-        topic.className = 'notice-topic';
-        topic.textContent = TOPIC_LABEL[n.topic] || n.topic || 'Notice';
-        body.appendChild(topic);
-
-        var title = document.createElement('div');
-        title.className = 'notice-title';
-        title.textContent = n.title || '';   // textContent: this text is typed
-        body.appendChild(title);             // by a human into a form
-
-        if(n.body){
-          var text = document.createElement('div');
-          text.className = 'notice-text';
-          text.textContent = n.body;
-          body.appendChild(text);
-        }
-
-        var when = document.createElement('div');
-        when.className = 'notice-when';
-        when.textContent = readable(n.event_at || n.created_at);
-        body.appendChild(when);
-
-        item.appendChild(body);
-        list.appendChild(item);
+        grid.appendChild(card);
       });
-
-      section.hidden = false;
     }).catch(function(e){
-      //  Stays hidden on a failure. A visitor not seeing a notice is a
-      //  missed update; a visitor seeing a notices band that silently never
-      //  works is a broken page they have no reason to attribute to Wi-Fi.
+      //  Nothing is added on a failure. A visitor not seeing a notice is a
+      //  missed update; a broken card sitting in the middle of the row they
+      //  already trust is worse, and they have no reason to attribute it to
+      //  Wi-Fi rather than to the website.
       if(window.console && console.warn) console.warn('notices_live:', e.message);
     });
   })();
