@@ -286,6 +286,29 @@
     function pushOn()    { var b = el("ap-push");    return !!(b && b.checked && !b.disabled); }
     function publishOn() { var b = el("ap-publish"); return !!(b && b.checked && !b.disabled); }
 
+    /*  WHETHER THE WEBSITE GETS A NOTICE REGARDLESS OF WHAT THE PUBLISH
+        SWITCH SAYS.
+
+        A kept push does not only keep a copy in the app's own history — it
+        calls publish_notice() (the Worker's /api/notice, wired up long
+        before this screen existed) which writes straight into the SAME
+        public.notices table this screen's own "publish" switch also
+        writes to, immediately live. Treating "publish" as a second,
+        independent switch produced two rows for one notice the moment
+        both were ticked, which is the DEFAULT state for every topic that
+        offers both — discovered from a real duplicate on the live site.
+        There is no way to keep a push without it reaching the website; the
+        only honest thing the publish switch can do once that is true is
+        say so, not offer a choice that was already made upstream. */
+    function pushAlreadyPublishes() { return pushOn() && keepOn(); }
+
+    //  What actually ends up on the website, whether that is because the
+    //  publish switch is genuinely on or because pushAlreadyPublishes()
+    //  made it happen regardless. publishOn() alone reads false once the
+    //  switch is disabled-and-forced, which would make this screen report
+    //  "not published" about something that, in fact, was.
+    function effectivePublish() { return publishOn() || pushAlreadyPublishes(); }
+
     /*  THE MESSAGE LIMIT IS THE STRICTEST OF WHEREVER IT IS ACTUALLY GOING.
 
         A kept push, or anything published on the website, goes through
@@ -347,14 +370,37 @@
         changes as you click through them, which reads as a misclick. */
     function syncDestinations() {
       var t = currentTopic();
-      var push = el("ap-push"), pub = el("ap-publish");
+      var push = el("ap-push");
       push.disabled = !t.push;
-      pub.disabled  = !t.notice;
       el("ap-push-row").classList.toggle("is-off", !t.push);
-      el("ap-publish-row").classList.toggle("is-off", !t.notice);
       el("ap-push-why").textContent = t.push
         ? "A notification on the phone of everybody who has that topic switched on."
         : "There is no push channel for this topic yet, so this is website-only.";
+      syncPublishSwitch();
+    }
+
+    /*  THE PUBLISH SWITCH'S STATE HAS THREE CAUSES, not one: the topic may
+        offer no website channel at all (disabled, same as syncDestinations()
+        handles "push" above); the push side may already be forcing it
+        (disabled the other way — see pushAlreadyPublishes()); or it may
+        genuinely be the person's own choice. Separated from
+        syncDestinations() so it can also be re-run on every keystroke, from
+        refresh() — pushAlreadyPublishes() depends on the "keep" tick-box,
+        which changes without the topic ever changing. */
+    function syncPublishSwitch() {
+      var pub = el("ap-publish");
+      if (pushAlreadyPublishes()) {
+        pub.checked  = true;
+        pub.disabled = true;
+        el("ap-publish-row").classList.remove("is-off");
+        el("ap-publish-why").textContent = "A kept push is always put on the " +
+          "website too — that happens whether or not this is ticked, so " +
+          "there is nothing left here to switch off.";
+        return;
+      }
+      var t = currentTopic();
+      pub.disabled = !t.notice;
+      el("ap-publish-row").classList.toggle("is-off", !t.notice);
       el("ap-publish-why").textContent = t.notice
         ? "A notice on the front page, live the moment you confirm — editable or removable afterwards from Notices."
         : "There is no website-notice equivalent for this topic, so this is push-only.";
@@ -387,13 +433,17 @@
     function refresh() {
       var title = trim(el("ap-title").value);
       var body  = trim(el("ap-body").value);
-      var push  = pushOn();
-      var pub   = publishOn();
+
+      showPoster();         // may force "keep" on, which can change the next line
+      syncPublishSwitch();  // re-checks whether "keep" now forces "publish" too
+
+      var push = pushOn();
+      var auto = pushAlreadyPublishes();
+      var pub  = publishOn() || auto;
 
       countdown("ap-title-count", title, TITLE_MAX);
       messageCount();
       drawLock();
-      showPoster();  // re-checks whether a chosen poster should still force "keep"
 
       //  "Also keep this on the Notices tab" only means anything once there
       //  is a push to keep a copy of. With push off it is a tick-box about a
@@ -401,11 +451,13 @@
       //  than left there disabled and unexplained.
       el("ap-keep-row").hidden = !push;
 
-      //  The expiry date is the website's own idea — /api/send has no notion
-      //  of a notice coming off anything — so it only makes sense once
-      //  publishing is actually on.
-      el("ap-expires-row").hidden  = !pub;
-      el("ap-expires-hint").hidden = !pub;
+      //  The expiry field is THIS SCREEN'S OWN publish call's setting, and
+      //  that call never runs when the push side is already publishing (see
+      //  send()) — publish_notice() picks its own expiry instead, from the
+      //  event date. Showing a field that would silently be ignored is worse
+      //  than not showing it.
+      el("ap-expires-row").hidden  = !pub || auto;
+      el("ap-expires-hint").hidden = !pub || auto;
 
       //  A heading with no message is a notification that says nothing when
       //  somebody opens it, and a message with no heading has nothing to show
@@ -559,7 +611,7 @@
       var title = trim(el("ap-title").value);
       var body  = trim(el("ap-body").value);
       var push  = pushOn();
-      var pub   = publishOn();
+      var pub   = effectivePublish();
 
       if (!title || !body || !(push || pub)) return;  // belt and braces; Send is disabled too
 
@@ -600,7 +652,8 @@
       if (push) {
         el("ap-confirm-aud").textContent  = t.label;
         el("ap-confirm-keep").textContent = keepOn()
-          ? "It stays on the app's Notices tab after the notification is swiped away."
+          ? "It stays on the app's Notices tab after the notification is swiped away, " +
+            "and is published on the website at the same time — that part is not optional."
           : "Nothing is kept. Once somebody swipes the notification away, it is gone.";
       }
       el("ap-confirm-title").textContent = title;
@@ -745,7 +798,8 @@
       var title = trim(el("ap-title").value);
       var body  = trim(el("ap-body").value);
       var push  = pushOn();
-      var pub   = publishOn();
+      var auto  = pushAlreadyPublishes();
+      var pub   = publishOn() || auto;
       var btn   = el("ap-go");
 
       busy(btn, true, "Send it");
@@ -758,9 +812,16 @@
           also the permission check — a caller who is not a two-step
           administrator is refused there and nothing goes out. save_notice()
           and set_notice_published() carry the same check inside Postgres, so
-          neither half needs its own guard here. */
+          neither half needs its own guard here.
+
+          doPublish() DOES NOT RUN WHEN `auto` IS TRUE. A kept push already
+          calls publish_notice() through the SAME code path the push itself
+          uses — see pushAlreadyPublishes() — and calling save_notice() as
+          well would write the same notice twice. This is the fix for a real
+          duplicate found on the live site: two rows, a fraction of a second
+          apart, one from each call. */
       if (push) jobs.push    = doPush(t, title, body);
-      if (pub)  jobs.publish = doPublish(t, title, body);
+      if (pub && !auto) jobs.publish = doPublish(t, title, body);
 
       return Promise.all([
         jobs.push    || Promise.resolve(null),
@@ -803,7 +864,25 @@
         }
 
         if (pub) {
-          if (!pubOut || pubOut.ok !== true) {
+          if (auto) {
+            /*  There was no separate doPublish() call to read a result from
+                — the website row comes from the SAME /api/notice call the
+                push used. pushOut.notice_id says whether THAT call actually
+                saved a row, which is a different question from pushOut.ok
+                (whether OneSignal delivered it): the Worker writes the
+                notice before it ever attempts the send, so a 0-phones push
+                can still have published successfully, and a push that never
+                reached the Worker at all cannot have. */
+            if (pushOut && pushOut.notice_id) {
+              lines.push("Published on the website — live on the front page " +
+                "now, as part of the kept push above.");
+            } else {
+              anyFailed = true;
+              lines.push("NOT published on the website: the push above never " +
+                "got as far as saving a notice, so there was nothing to put on " +
+                "the website either.");
+            }
+          } else if (!pubOut || pubOut.ok !== true) {
             anyFailed = true;
             lines.push("NOT published on the website: " +
               (asSentence(pubOut && pubOut.error) || "an unknown error."));
