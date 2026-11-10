@@ -1,9 +1,17 @@
-"""/giftaid/ — getting an HMRC claim out of the database.
+"""/giftaid/ — the Donations dashboard, and getting an HMRC claim out of the
+database.
 
-Built 12 September 2026. Until this page there was exactly one way to extract a
-Gift Aid claim: run SQL in the Supabase editor. A masjid treasurer will not do
-that, so the claim would not get made and every carefully recorded declaration
-would have been for nothing.
+Built 12 September 2026 as a Gift Aid claim screen only. Until then there was
+exactly one way to extract a claim: run SQL in the Supabase editor. A masjid
+treasurer will not do that, so the claim would not get made and every
+carefully recorded declaration would have been for nothing.
+
+Grew a Donations dashboard above it on 8 November 2026, covering one-off and
+recurring gifts together, with purpose and recent-donation breakdowns — but
+NO donor name or address anywhere in that part of the page. That stays
+entirely inside the Gift Aid panel this file already tested, which section 06A
+below now checks explicitly: a dashboard built to be seen by more eyes than
+"the treasurer alone" must not quietly widen what those eyes can read.
 
 THE ASSERTIONS THAT MATTER ARE 03 AND 04.
 
@@ -84,6 +92,46 @@ STUB = r"""
       amount_p:2000, declaration_version:"2026-09-12" }
   ];
 
+  // The dashboard's own fixtures. Deliberately different numbers from
+  // DB.claim above, so a test checking one panel's text cannot pass by
+  // accident against the other panel's.
+  DB.summary = [{ total_collected_p:245000, donations_count:11, average_donation_p:22273,
+                  recurring_monthly_count:2, recurring_monthly_last_p:1500,
+                  recurring_weekly_count:1,  recurring_weekly_last_p:500 }];
+  DB.daily = [
+    { day:"2026-11-06", total_p:5000,  donations_count:1 },
+    { day:"2026-11-07", total_p:0,     donations_count:0 },
+    { day:"2026-11-08", total_p:10000, donations_count:2 }
+  ];
+  DB.byPurpose = [
+    { purpose:"general", total_p:80000, donations_count:4 },
+    { purpose:"sadaqah", total_p:53000, donations_count:3 }
+  ];
+  DB.bySource = [
+    { source:"online",    total_p:200000, donations_count:9 },
+    { source:"in_person", total_p:45000,  donations_count:2 },
+    { source:"cash",      total_p:7500,   donations_count:1 }
+  ];
+  // One row per standing gift, not per donor — NO donor name or address, the
+  // same rule section 00A's leak check already enforces for the rest of this
+  // panel. Two funds, one Gift Aid and one not, so both render paths are hit.
+  DB.recurring = [
+    { reference:"DN-26-0041", frequency:"monthly", purpose:"general", gift_aid:true,
+      last_amount_p:1500, total_collected_p:4500, charges_count:3,
+      first_paid_at:"2026-09-08T09:00:00Z", last_paid_at:"2026-11-08T09:00:00Z" },
+    { reference:"DN-26-0009", frequency:"weekly", purpose:"sadaqah", gift_aid:false,
+      last_amount_p:500, total_collected_p:6000, charges_count:12,
+      first_paid_at:"2026-08-07T09:00:00Z", last_paid_at:"2026-11-07T09:00:00Z" }
+  ];
+  DB.recent = [
+    { reference:"DN-26-0010", paid_at:"2026-11-08T10:00:00Z", purpose:"general",
+      amount_p:5000, gift_aid:true,  frequency:null,    source:"online" },
+    { reference:"DN-26-0009", paid_at:"2026-11-07T09:00:00Z", purpose:"sadaqah",
+      amount_p:1500, gift_aid:false, frequency:"monthly", source:"online" },
+    { reference:"DN-26-0008", paid_at:"2026-11-07T08:00:00Z", purpose:null,
+      amount_p:500,  gift_aid:false, frequency:null,    source:"in_person" }
+  ];
+
   function copy(v){ return JSON.parse(JSON.stringify(v)); }
 
   function makeQ(table) {
@@ -120,10 +168,20 @@ STUB = r"""
     rpc:function(name, args){
       DB.rpcs.push({ name:name, args:copy(args || {}) });
       if (name === "gift_aid_to_claim") return Promise.resolve({ data:copy(DB.claim), error:null });
+      if (name === "donations_summary_v2") return Promise.resolve({ data:copy(DB.summary),   error:null });
+      if (name === "donations_daily")      return Promise.resolve({ data:copy(DB.daily),     error:null });
+      if (name === "donations_by_purpose") return Promise.resolve({ data:copy(DB.byPurpose), error:null });
+      if (name === "donations_by_source")  return Promise.resolve({ data:copy(DB.bySource),  error:null });
+      if (name === "donations_recent_v2")  return Promise.resolve({ data:copy(DB.recent),    error:null });
+      if (name === "donations_recurring_donors") return Promise.resolve({ data:copy(DB.recurring), error:null });
       if (name === "mark_gift_aid_claimed") {
         var refs = (args || {}).p_references || [];
         DB.claim = DB.claim.filter(function (r) { return refs.indexOf(r.reference) === -1; });
         return Promise.resolve({ data:refs.length, error:null });
+      }
+      if (name === "record_cash_donation") {
+        return Promise.resolve({ data:{ reference:"DN-26-0200", status:"paid",
+          gift_aid:!!(args||{}).p_gift_aid, already_recorded:false }, error:null });
       }
       return Promise.resolve({ data:null, error:null });
     }
@@ -161,6 +219,161 @@ with sync_playwright() as p:
     names = [c["name"] for c in pg.evaluate("window.__DB.rpcs")]
     check("gift_aid_to_claim" in names,
           "the page never asked the database for anything: %r" % names)
+
+    # =====================================================================
+    #  00A. THE DONATIONS DASHBOARD — built 8 November 2026
+    # =====================================================================
+    check(pg.eval_on_selector("#donations-panel", "e=>!e.hidden"),
+          "the donations dashboard is hidden from an administrator")
+    for rpc in ["donations_summary_v2", "donations_daily", "donations_by_purpose",
+                "donations_by_source", "donations_recent_v2", "donations_recurring_donors"]:
+        check(rpc in names, "the dashboard never called %s" % rpc)
+
+    dn_sum = pg.inner_text("#dn-sum")
+    check("£2450.00" in dn_sum, "total collected is wrong or missing: %r" % dn_sum)
+    check("11" in dn_sum, "the donations count is wrong or missing: %r" % dn_sum)
+    check("£222.73" in dn_sum, "the average donation is wrong or missing: %r" % dn_sum)
+
+    dn_recur = pg.inner_text("#dn-recur")
+    check("2" in dn_recur and "monthly" in dn_recur and "£15.00" in dn_recur,
+          "the monthly givers are not summarised: %r" % dn_recur)
+    check("1" in dn_recur and "weekly" in dn_recur and "£5.00" in dn_recur,
+          "the weekly givers are not summarised: %r" % dn_recur)
+
+    bars = pg.query_selector_all("#dn-chart .bar")
+    check(len(bars) == 3, "expected one chart bar per day, got %d" % len(bars))
+    has_bars = pg.query_selector_all("#dn-chart .bar.has")
+    check(len(has_bars) == 2, "the empty day is drawn as though something came in")
+
+    # Lower-cased for the comparison, not the display: .dn-purpose .label is
+    # CSS text-transform:capitalize, which is what inner_text reports back —
+    # "General", not "general" — even though the markup itself is lower case.
+    dn_purpose = pg.inner_text("#dn-purpose").lower()
+    check("general" in dn_purpose and "£800.00" in dn_purpose,
+          "the general fund's total is wrong or missing: %r" % dn_purpose)
+    check("sadaqah" in dn_purpose and "£530.00" in dn_purpose,
+          "sadaqah's total is wrong or missing: %r" % dn_purpose)
+
+    dn_heads = pg.eval_on_selector_all("#dn-recent th", "els=>els.map(e=>e.textContent.trim())")
+    check(dn_heads == ["Reference", "Date", "Fund", "Amount", "Gift Aid", "Frequency", "Source"],
+          "the recent-donations table has the wrong columns: %r" % dn_heads)
+    dn_rows = pg.query_selector_all("#dn-recent tbody tr")
+    check(len(dn_rows) == 3, "not every recent donation is listed: %d rows" % len(dn_rows))
+    dn_recent_text = pg.inner_text("#dn-recent")
+    check("DN-26-0010" in dn_recent_text and "£50.00" in dn_recent_text,
+          "the gift-aided one-off donation is not shown right: %r" % dn_recent_text)
+    check("DN-26-0009" in dn_recent_text and "monthly" in dn_recent_text,
+          "the recurring donation's frequency is not shown: %r" % dn_recent_text)
+    check("DN-26-0008" in dn_recent_text and "In person" in dn_recent_text,
+          "the card-machine donation's source is not shown: %r" % dn_recent_text)
+    check(dn_recent_text.count("Online") == 2,
+          "the two online donations should both read 'Online': %r" % dn_recent_text)
+
+    # "Collected by source" — the other half of "collected by fund".
+    dn_source = pg.inner_text("#dn-source")
+    check("Online" in dn_source and "£2000.00" in dn_source,
+          "the online total is wrong or missing: %r" % dn_source)
+    check("In person" in dn_source and "£450.00" in dn_source,
+          "the in-person total is wrong or missing: %r" % dn_source)
+    check("Cash" in dn_source and "£75.00" in dn_source,
+          "the cash total is wrong or missing, or labelled something other than 'Cash': %r" % dn_source)
+
+    # "Recurring gifts" — one row per standing gift, not per donor. Built
+    # 9 November 2026 alongside cash logging.
+    dn_recur_heads = pg.eval_on_selector_all(
+        "#dn-recur-list th", "els=>els.map(e=>e.textContent.trim())")
+    check(dn_recur_heads == ["Reference", "Fund", "Frequency", "Gift Aid", "Last amount",
+                             "Times charged", "Total raised", "Last charged"],
+          "the recurring-gifts table has the wrong columns: %r" % dn_recur_heads)
+    dn_recur_rows = pg.query_selector_all("#dn-recur-list tbody tr")
+    check(len(dn_recur_rows) == 2, "not every standing gift is listed: %d rows" % len(dn_recur_rows))
+    dn_recur_text = pg.inner_text("#dn-recur-list")
+    check("DN-26-0041" in dn_recur_text and "monthly" in dn_recur_text and "£45.00" in dn_recur_text,
+          "the monthly standing gift is not shown right: %r" % dn_recur_text)
+    check("DN-26-0009" in dn_recur_text and "weekly" in dn_recur_text and "£60.00" in dn_recur_text,
+          "the weekly standing gift is not shown right: %r" % dn_recur_text)
+    check(dn_recur_text.count("Yes") == 1,
+          "exactly one of the two standing gifts is Gift Aid: %r" % dn_recur_text)
+
+    # THE ASSERTION THAT MATTERS MOST ON THIS PANEL: a dashboard built to be
+    # glanced at more often than the Gift Aid claim must not have quietly
+    # widened who can see a donor's name. None of DB.claim's donors — the
+    # very thing the Gift Aid panel exists to protect — may appear anywhere
+    # inside the dashboard's own markup.
+    dn_all_text = pg.inner_text("#donations-panel")
+    for donor in ["Imran Ali", "Yusuf Patel", "Sara Bi", "Bilal Khan", "Astley Street", "BL1 8HD"]:
+        check(donor not in dn_all_text,
+              "a Gift Aid donor's details leaked into the donations dashboard: %r found" % donor)
+
+    # =====================================================================
+    #  00B. LOGGING A CASH DONATION — built 9 November 2026
+    # =====================================================================
+    check(pg.is_hidden("#dn-cash-form"), "the cash-logging form is open before anyone asked for it")
+    rpcs_before_open = len(pg.evaluate("window.__DB.rpcs"))
+
+    pg.click("#dn-cash-open")
+    pg.wait_for_timeout(150)
+    check(not pg.is_hidden("#dn-cash-form"), "clicking 'Log a cash donation' did not open the form")
+    check(pg.is_hidden("#dn-cash-donor"),
+          "the Gift Aid name/address fields are showing before the box is ticked")
+
+    # A non-Gift-Aid cash gift: no name, no address, no postcode sent at all —
+    # same discipline as the card machine, just because this one COULD carry
+    # Gift Aid does not mean every cash gift does.
+    pg.fill("#dn-cash-amount", "20.00")
+    pg.select_option("#dn-cash-purpose", "sadaqah")
+    pg.click("#dn-cash-submit")
+    pg.wait_for_timeout(400)
+
+    cash_calls = [c for c in pg.evaluate("window.__DB.rpcs") if c["name"] == "record_cash_donation"]
+    check(len(cash_calls) == 1, "logging the cash donation did not reach the database")
+    if cash_calls:
+        args = cash_calls[0]["args"]
+        check(args.get("p_amount_p") == 2000,
+              "£20.00 was not converted to 2000 pence: %r" % args.get("p_amount_p"))
+        check(args.get("p_purpose") == "sadaqah", "the fund was not sent: %r" % args.get("p_purpose"))
+        check(args.get("p_gift_aid") is False, "Gift Aid was sent true when the box was never ticked")
+        check(args.get("p_name") is None and args.get("p_address") is None and args.get("p_postcode") is None,
+              "donor details were sent for a gift nobody declared Gift Aid on: %r" % args)
+
+    check(pg.is_hidden("#dn-cash-form"), "the form did not close after a successful save")
+    # Saving reloads the whole dashboard, so the treasurer sees the new total
+    # without having to refresh the page by hand.
+    check(len(pg.evaluate("window.__DB.rpcs")) > rpcs_before_open + 1,
+          "the dashboard was not reloaded after the cash donation was saved")
+
+    # A Gift Aid cash gift: the donor fields must appear, and must be sent.
+    pg.click("#dn-cash-open")
+    pg.wait_for_timeout(150)
+    pg.fill("#dn-cash-amount", "15.00")
+    pg.check("#dn-cash-ga")
+    check(not pg.is_hidden("#dn-cash-donor"),
+          "ticking Gift Aid did not reveal the name/address/postcode fields")
+    pg.fill("#dn-cash-name", "Test Donor")
+    pg.fill("#dn-cash-address", "1 Example Street, Bolton")
+    pg.fill("#dn-cash-postcode", "bl1 1aa")
+    pg.click("#dn-cash-submit")
+    pg.wait_for_timeout(400)
+
+    cash_calls = [c for c in pg.evaluate("window.__DB.rpcs") if c["name"] == "record_cash_donation"]
+    check(len(cash_calls) == 2, "the second cash donation did not reach the database")
+    if len(cash_calls) == 2:
+        args = cash_calls[1]["args"]
+        check(args.get("p_gift_aid") is True, "Gift Aid was not sent true after the box was ticked")
+        check(args.get("p_name") == "Test Donor", "the donor's name was not sent: %r" % args.get("p_name"))
+        check(args.get("p_postcode") == "bl1 1aa",
+              "the postcode was not sent as typed (uppercasing is the database's job): %r" % args.get("p_postcode"))
+
+    # An empty/zero amount must be refused before it ever reaches the database.
+    pg.click("#dn-cash-open")
+    pg.wait_for_timeout(150)
+    rpcs_before_bad = len(pg.evaluate("window.__DB.rpcs"))
+    pg.click("#dn-cash-submit")
+    pg.wait_for_timeout(200)
+    check(len(pg.evaluate("window.__DB.rpcs")) == rpcs_before_bad,
+          "a blank cash-donation form reached the database instead of being refused on the page")
+    check(not pg.is_hidden("#dn-cash-error"), "a blank amount was accepted with no warning shown")
+    pg.click("#dn-cash-cancel")
 
     # =====================================================================
     #  01. WHAT IS WAITING, IN MONEY
@@ -279,6 +492,8 @@ with sync_playwright() as p:
     pg2.wait_for_timeout(1400)
     check(pg2.eval_on_selector("#ga-panel", "e=>e.hidden"),
           "HALL OFFICE STAFF CAN SEE DONORS' NAMES AND ADDRESSES")
+    check(pg2.eval_on_selector("#donations-panel", "e=>e.hidden"),
+          "hall office staff can see the donations dashboard")
     check(not pg2.is_hidden("#app-noaccess"),
           "a non-administrator is shown nothing at all, with no explanation")
     check(errs2 == [], "uncaught exceptions on the non-admin page: %s" % errs2)

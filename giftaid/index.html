@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<title>Gift Aid — Taiyabah Masjid</title>
+<title>Donations — Taiyabah Masjid</title>
 <link rel="preload" href="../fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../admin/fonts.css">
@@ -384,15 +384,88 @@
   .ga-how li{margin-bottom:7px;}
   .ga-note{font-size:.931rem;color:var(--muted);margin-top:9px;}
   .ga-list{overflow-x:auto;}
-  .ga-table{width:100%;border-collapse:collapse;font-size:.949rem;min-width:720px;}
-  .ga-table th{
+  .ga-table, .dn-table{width:100%;border-collapse:collapse;font-size:.949rem;min-width:720px;}
+  .ga-table th, .dn-table th{
     text-align:left;font-size:.84rem;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;
   }
-  .ga-table td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .ga-table td, .dn-table td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
   .ga-table tr.bad td{background:rgba(176,58,46,.07);}
   .ga-table .miss{color:var(--danger-ink);font-weight:700;}
   .ga-empty{padding:26px 4px;color:var(--muted);font-size:1.003rem;}
+</style>
+<style>
+  [hidden]{display:none !important;}
+  /* ---------- DONATIONS DASHBOARD ----------------------------------------
+     Built 8 November 2026, so the treasurer has a reason to open this page
+     more than once a month. No donor name or address appears anywhere in
+     here — that stays inside the Gift Aid section below, behind its own
+     warning. */
+  .dn-sum{
+    display:flex;gap:22px;flex-wrap:wrap;align-items:baseline;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:15px 18px;margin-bottom:14px;
+  }
+  .dn-sum .n{font-family:"Fraunces",Georgia,serif;font-size:1.5rem;font-weight:700;color:var(--brand-900);}
+  .dn-sum .k{font-size:.867rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:block;}
+  .dn-sum .big .n{color:var(--success-ink);}
+
+  .dn-recur{
+    display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;
+    font-size:.92rem;color:var(--muted);
+  }
+  .dn-recur b{color:var(--ink);}
+  .dn-recur-note{font-size:.86rem;color:var(--muted);margin:-10px 0 16px;}
+
+  .dn-chart-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;}
+  .dn-chart-head h3{font-size:1.02rem;color:var(--brand-900);}
+  .dn-chart-head span{font-size:.877rem;color:var(--muted);}
+  /* Deliberately plain, the same idea as .cr-bar elsewhere in this admin
+     area: a shape to glance at, not a measurement anybody should read a
+     number off a bar for. The number is in the tooltip-free title attribute
+     and, for the days that matter, in the recent-donations table below. */
+  .dn-chart{display:flex;align-items:flex-end;gap:3px;height:84px;margin-bottom:6px;}
+  .dn-chart .bar{flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:3px;align-self:flex-end;}
+  .dn-chart .bar.has{background:var(--gold);}
+  .dn-chart-foot{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);margin-bottom:20px;}
+
+  .dn-purpose{display:flex;flex-direction:column;gap:9px;margin-bottom:20px;}
+  .dn-purpose .row{display:flex;align-items:center;gap:11px;}
+  .dn-purpose .label{width:92px;font-size:.9rem;color:var(--ink);text-transform:capitalize;flex-shrink:0;}
+  .dn-purpose .track{flex:1;height:8px;border-radius:999px;background:var(--line);overflow:hidden;}
+  .dn-purpose .track i{display:block;height:100%;background:var(--brand-800);border-radius:999px;}
+  .dn-purpose .amt{font-size:.88rem;color:var(--muted);width:90px;text-align:right;flex-shrink:0;}
+  /* dn-source reuses dn-purpose's bars but its own labels are already
+     properly cased in JS ("In person (card machine)") and too long for the
+     fund column's 92px — widening and turning capitalize off stops the CSS
+     fighting the text it is given. */
+  .dn-source .label{width:200px;text-transform:none;}
+
+  .dn-divider{border:none;border-top:1px solid var(--line);margin:26px 0;}
+
+  /* ---- cash donation form ---- */
+  .dn-cash-toggle{margin-bottom:16px;}
+  .dn-cash-form{
+    border:1px solid var(--line);border-radius:12px;background:var(--paper);
+    padding:16px 17px;margin-bottom:16px;display:flex;flex-direction:column;gap:13px;
+  }
+  .dn-cash-form .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:520px){ .dn-cash-form .grid{grid-template-columns:1fr;} }
+  .dn-cash-form label{font-size:.84rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:5px;}
+  .dn-cash-form input[type=number],.dn-cash-form input[type=date],.dn-cash-form input[type=text],.dn-cash-form select{
+    font-family:inherit;font-size:.98rem;color:var(--ink);background:#fff;
+    border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;
+  }
+  .dn-cash-form input:focus,.dn-cash-form select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .dn-cash-ga{display:flex;align-items:center;gap:8px;font-size:.96rem;color:var(--ink);}
+  .dn-cash-ga input{width:16px;height:16px;accent-color:var(--brand-900);}
+  .dn-cash-donor{display:none;flex-direction:column;gap:12px;}
+  .dn-cash-donor.show{display:flex;}
+  .dn-cash-acts{display:flex;gap:9px;flex-wrap:wrap;}
+  .dn-cash-note{font-size:.88rem;color:var(--muted);}
+
+  /* ---- recurring gifts table ---- */
+  .dn-recur-table th:nth-child(5),.dn-recur-table td:nth-child(5){white-space:normal;}
 </style>
 </head>
 <body>
@@ -402,8 +475,8 @@
     <div class="brand-inner">
       <img class="logo" src="../img/masjid-logo.png" alt="Taiyabah Masjid">
       <div class="eyebrow">Taiyabah Masjid</div>
-      <h1>Gift Aid</h1>
-      <p>For the masjid treasurer. Sign in to see the declarations HMRC can be claimed against, download the claim, and mark it as claimed once it has been sent.</p>
+      <h1>Donations</h1>
+      <p>For the masjid treasurer. Sign in to see what has come in — one-off and standing gifts, by fund, day by day — then see the Gift Aid declarations HMRC can be claimed against, download the claim, and mark it as claimed once it has been sent.</p>
       <!-- Administrators only, so this always points at the admin centre.
            There is no lesser role that reaches class sign-ups, and app.js
            does not rewrite this link — unlike /venue/, where hall_office
@@ -493,7 +566,10 @@
     </div>
 
     <!-- signed in -->
-    <div class="card" id="view-app" hidden>
+    <!-- is-wide from the start, unlike rates/ and venue/ which only need it
+         once there is a list to show: this page is never "just a form" once
+         signed in — the Donations dashboard is always there. -->
+    <div class="card is-wide" id="view-app" hidden>
       <div class="who">
         <div class="avatar" aria-hidden="true">✓</div>
         <div class="who-t">
@@ -507,10 +583,95 @@
       <div class="err" id="app-error" hidden></div>
 
       <div class="err" id="app-noaccess" hidden>
-        This account isn&rsquo;t an administrator, so it can&rsquo;t see the Gift Aid
-        records &mdash; they are donors&rsquo; names and home addresses. If you need
-        access, ask the masjid administrator.
+        This account isn&rsquo;t an administrator, so it can&rsquo;t see the Donations
+        dashboard or the Gift Aid records &mdash; the Gift Aid section holds donors&rsquo;
+        names and home addresses. If you need access, ask the masjid administrator.
       </div>
+
+      <section class="bk" id="donations-panel" hidden>
+        <div class="bk-head">
+          <h2>Donations</h2>
+          <span class="bk-sub">What has come in, one-off and standing gifts together. No donor name or address is shown here &mdash; that stays in the Gift Aid section below.</span>
+        </div>
+
+        <div class="err" id="dn-error" hidden></div>
+        <div class="err" id="dn-cash-error" hidden></div>
+
+        <div class="dn-cash-toggle">
+          <button type="button" class="btn btn-ghost" id="dn-cash-open" style="width:auto;">+ Log a cash donation</button>
+        </div>
+        <form class="dn-cash-form" id="dn-cash-form" hidden>
+          <p class="dn-cash-note">For a gift that never touched Stripe &mdash; cash in the box, a cheque, anything handed to the office. It counts toward the totals and fund breakdown below like any other donation.</p>
+          <div class="grid">
+            <div class="field">
+              <label for="dn-cash-amount">Amount (&pound;)</label>
+              <input type="number" id="dn-cash-amount" min="0.01" step="0.01" required placeholder="20.00">
+            </div>
+            <div class="field">
+              <label for="dn-cash-purpose">Fund</label>
+              <select id="dn-cash-purpose">
+                <option value="">Unspecified</option>
+                <option value="general">General</option>
+                <option value="sadaqah">Sadaqah</option>
+                <option value="lillah">Lillah</option>
+                <option value="newbuild">New build</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="dn-cash-date">Date collected</label>
+            <input type="date" id="dn-cash-date">
+          </div>
+          <label class="dn-cash-ga">
+            <input type="checkbox" id="dn-cash-ga">
+            The donor filled in a Gift Aid declaration for this gift
+          </label>
+          <div class="dn-cash-donor" id="dn-cash-donor">
+            <div class="field">
+              <label for="dn-cash-name">Donor's full name</label>
+              <input type="text" id="dn-cash-name" placeholder="As written on the declaration">
+            </div>
+            <div class="field">
+              <label for="dn-cash-address">Donor's home address</label>
+              <input type="text" id="dn-cash-address" placeholder="House number/name and street">
+            </div>
+            <div class="field">
+              <label for="dn-cash-postcode">Postcode</label>
+              <input type="text" id="dn-cash-postcode" placeholder="BL1 1AA">
+            </div>
+          </div>
+          <div class="dn-cash-acts">
+            <button type="submit" class="btn btn-gold" id="dn-cash-submit" style="width:auto;">Save cash donation</button>
+            <button type="button" class="btn btn-ghost" id="dn-cash-cancel" style="width:auto;">Cancel</button>
+          </div>
+        </form>
+
+        <div class="dn-sum" id="dn-sum"></div>
+        <div class="dn-recur" id="dn-recur"></div>
+        <p class="dn-recur-note">&ldquo;Charged in the last 40 days&rdquo;, not &ldquo;active&rdquo; &mdash; this page is never told when somebody cancels a standing gift, so it counts who has actually been charged recently rather than guessing who still intends to be.</p>
+
+        <div class="dn-chart-head">
+          <h3>Daily collections</h3>
+          <span id="dn-chart-range">Last 28 days</span>
+        </div>
+        <div class="dn-chart" id="dn-chart"></div>
+        <div class="dn-chart-foot" id="dn-chart-foot"></div>
+
+        <h3 style="font-size:1.02rem;color:var(--brand-900);margin-bottom:10px;">Collected by fund</h3>
+        <div class="dn-purpose" id="dn-purpose"></div>
+
+        <h3 style="font-size:1.02rem;color:var(--brand-900);margin-bottom:10px;">Collected by source</h3>
+        <div class="dn-purpose dn-source" id="dn-source"></div>
+
+        <h3 style="font-size:1.02rem;color:var(--brand-900);margin-bottom:6px;">Recurring gifts</h3>
+        <p class="dn-recur-note" style="margin-top:0;">One row per standing gift, not per donor &mdash; no name is shown here, same rule as the rest of this section. &ldquo;Last charged&rdquo; is exactly that, not &ldquo;active&rdquo;: this page is never told when somebody cancels a standing instruction.</p>
+        <div class="ga-list" id="dn-recur-list"></div>
+
+        <h3 style="font-size:1.02rem;color:var(--brand-900);margin-bottom:10px;">Recent donations</h3>
+        <div class="ga-list" id="dn-recent"></div>
+      </section>
+
+      <hr class="dn-divider">
 
       <section class="bk" id="ga-panel" hidden>
         <div class="bk-head">

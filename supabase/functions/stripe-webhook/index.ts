@@ -55,7 +55,26 @@
 //  Verifying a signature is a local HMAC and never calls Stripe. Do not add
 //  an sk_live_ "just in case": it can issue refunds and read every customer.
 //
-//  In Stripe, subscribe the endpoint to `checkout.session.completed` only.
+//  In Stripe, subscribe the endpoint to `checkout.session.completed`,
+//  `invoice.paid` AND `payment_intent.succeeded`.
+//
+//  invoice.paid EXISTS BECAUSE checkout.session.completed IS NOT ENOUGH FOR
+//  A STANDING GIFT. "Monthly" and "Friday Pay" on the donate page are
+//  Stripe Payment Links running in SUBSCRIPTION mode — the only way Stripe
+//  does a recurring charge. checkout.session.completed fires once, when the
+//  donor signs up. Every charge after that fires invoice.paid instead, and
+//  until this file nothing here was listening for it: a donor's first £10
+//  a month was recorded, and every £10 after it left no row in `donations`
+//  and no row in `admin_audit` either — Stripe never called this endpoint
+//  for it, so even the safety net never saw it. See db/152.
+//
+//  payment_intent.succeeded EXISTS FOR THE CARD MACHINE, which creates a
+//  PaymentIntent directly with no Checkout Session behind it at all. It is
+//  filtered to payment_method_types containing `card_present` — a web
+//  Checkout payment's own underlying PaymentIntent also fires this event,
+//  and that one is already recorded via checkout.session.completed, so
+//  acting on every payment_intent.succeeded would record every online
+//  donation twice. See db/153.
 // ===========================================================================
 
 import { readGiftAid, donorDetails } from "./giftaid.ts";
@@ -210,6 +229,14 @@ Deno.serve(async (req) => {
   }
 
   // Signed and genuine from here on. Everything below answers 200.
+  if (event.type === "invoice.paid") {
+    return await handleInvoicePaid(masjid, event.data.object as Stripe.Invoice);
+  }
+
+  if (event.type === "payment_intent.succeeded") {
+    return await handlePaymentIntentSucceeded(masjid, event.data.object as Stripe.PaymentIntent);
+  }
+
   if (event.type !== "checkout.session.completed") {
     return new Response(JSON.stringify({ ignored: event.type }), {
       status: 200, headers: { "content-type": "application/json" },
@@ -299,6 +326,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // mode is "subscription" for Monthly and Friday Pay, "payment" for a
+    // one-off gift. The subscription id is what lets a later invoice.paid
+    // find its way back to this row — see db/152.
+    const subscriptionId = session.mode === "subscription"
+      ? (session.subscription as string) ?? null
+      : null;
+
     const { data, error } = await db.rpc("record_public_donation", {
       /* From the verified signature, never from the payload. */
       p_masjid: masjid,
@@ -309,6 +343,7 @@ Deno.serve(async (req) => {
       p_name: who.name,
       p_address: who.address,
       p_postcode: who.postcode,
+      p_subscription_id: subscriptionId,
     });
 
     if (error) {
@@ -409,6 +444,138 @@ Deno.serve(async (req) => {
     status: 200, headers: { "content-type": "application/json" },
   });
 });
+
+/* Stripe's own interval, translated into the two words the donate page uses.
+ * Anything else (day, year — nothing this codebase sells) is left null and
+ * audited rather than guessed at, exactly like an unrecognised purpose. */
+function donationFrequency(invoice: Stripe.Invoice): string | null {
+  // Cast rather than typed: the exact shape of a line item's price varies by
+  // Stripe API version, and this only ever reads one optional field from it.
+  const line = (invoice.lines?.data?.[0] as Record<string, unknown>) ?? {};
+  const price = (line.price as Record<string, unknown>) ?? {};
+  const recurring = (price.recurring as Record<string, unknown>) ?? {};
+  const interval = recurring.interval as string | undefined;
+  if (interval === "month") return "monthly";
+  if (interval === "week") return "weekly";
+  return null;
+}
+
+/* invoice.paid — every charge on a standing gift AFTER the first.
+ *
+ * billing_reason tells the two cases apart:
+ *   subscription_create   the FIRST invoice. Paid in the same moment as
+ *                          checkout.session.completed, which already
+ *                          recorded this charge as a donation — so this
+ *                          event is used only to learn the interval (the
+ *                          Checkout Session itself never carries it) and
+ *                          patch it onto that row.
+ *   subscription_cycle    a renewal. Recorded as a new donation, inheriting
+ *                          purpose, Gift Aid and the donor's declaration
+ *                          from the sign-up row.
+ * Anything else is audited rather than acted on — see db/152 for why an
+ * unrecognised reason is not treated as "probably fine". */
+async function handleInvoicePaid(masjid: string, invoice: Stripe.Invoice): Promise<Response> {
+  const subscriptionId = (invoice.subscription as string) ?? null;
+  const invoiceId = invoice.id;
+  const amount = invoice.amount_paid ?? null;
+  const reason = invoice.billing_reason ?? null;
+
+  if (!subscriptionId) {
+    // An invoice with no subscription is not a recurring gift at all — the
+    // masjid's Stripe account is shared with iBeams, which has its own
+    // billing and no reason to know this codebase's conventions.
+    return new Response(JSON.stringify({ ok: true, note: "no subscription" }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
+
+  const frequency = donationFrequency(invoice);
+  if (!frequency) {
+    console.error(`stripe-webhook: invoice ${invoiceId} on subscription ${subscriptionId} ` +
+                  `has an interval this codebase does not sell`);
+  }
+
+  if (reason === "subscription_create") {
+    const { error } = await db.rpc("record_subscription_frequency", {
+      p_masjid: masjid,
+      p_subscription_id: subscriptionId,
+      p_frequency: frequency,
+    });
+    if (error) {
+      console.error(`stripe-webhook: record_subscription_frequency failed for ${subscriptionId} —`, error.message);
+    }
+    return new Response(JSON.stringify({ ok: true, note: "sign-up interval recorded" }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
+
+  if (reason === "subscription_cycle") {
+    const { data, error } = await db.rpc("record_subscription_charge", {
+      p_masjid: masjid,
+      p_subscription_id: subscriptionId,
+      p_invoice_id: invoiceId,
+      p_amount_p: amount,
+      p_frequency: frequency,
+    });
+    if (error) {
+      // 500 so Stripe retries — a renewal charge is exactly the kind of
+      // money this file exists to stop going unrecorded.
+      console.error(`stripe-webhook: record_subscription_charge failed for ${invoiceId} —`, error.message);
+      return new Response("Could not record the recurring charge", { status: 500 });
+    }
+    console.log(`stripe-webhook: recurring charge ${invoiceId} on ${subscriptionId} -> ${data?.status}`);
+    return new Response(JSON.stringify({ ok: true, result: data }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
+
+  console.error(`stripe-webhook: invoice ${invoiceId} on ${subscriptionId} has billing_reason "${reason}"`);
+  const audited = await auditPayment(masjid, "donation_subscription_other_billing_reason", {
+    subscription: subscriptionId, invoice: invoiceId, amount_pence: amount, billing_reason: reason,
+  });
+  return new Response(JSON.stringify({ ok: true, note: "unrecognised billing reason", audited }), {
+    status: 200, headers: { "content-type": "application/json" },
+  });
+}
+
+/* payment_intent.succeeded — the card machine, and ALSO every online
+ * Checkout payment, because a Checkout Session has an underlying
+ * PaymentIntent that fires this same event. The two are told apart by
+ * payment_method_types: a web Checkout payment is never `card_present`, and
+ * nothing else on this account creates a `card_present` PaymentIntent — see
+ * db/153 and terminal-worker's own README for the rest of this decision. */
+async function handlePaymentIntentSucceeded(masjid: string, pi: Stripe.PaymentIntent): Promise<Response> {
+  const types = (pi.payment_method_types as string[]) ?? [];
+  if (types.indexOf("card_present") === -1) {
+    // An online Checkout payment's own PaymentIntent (already recorded via
+    // checkout.session.completed), or something on this shared Stripe
+    // account that is not a donation at all. Either way, not ours to record
+    // a second time.
+    return new Response(JSON.stringify({ ok: true, note: "not card_present" }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
+
+  const purpose = typeof pi.metadata?.purpose === "string" ? pi.metadata.purpose : null;
+
+  const { data, error } = await db.rpc("record_card_machine_donation", {
+    p_masjid: masjid,
+    p_payment_intent_id: pi.id,
+    p_amount_p: pi.amount_received ?? pi.amount ?? null,
+    p_purpose: purpose,
+  });
+
+  if (error) {
+    console.error(`stripe-webhook: record_card_machine_donation failed for ${pi.id} —`, error.message);
+    return new Response("Could not record the card-machine donation", { status: 500 });
+  }
+
+  console.log(`stripe-webhook: card-machine donation ${pi.id} -> ${data?.status}` +
+              (data?.already_recorded ? " (already recorded)" : ""));
+  return new Response(JSON.stringify({ ok: true, result: data }), {
+    status: 200, headers: { "content-type": "application/json" },
+  });
+}
 
 /* Handing off to the notify function. Deliberately best-effort: the payment is
    already recorded by the time this runs, and that is the part that matters.

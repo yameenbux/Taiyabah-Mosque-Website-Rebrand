@@ -1,0 +1,12 @@
+{
+  "name": "taiyabah-terminal",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

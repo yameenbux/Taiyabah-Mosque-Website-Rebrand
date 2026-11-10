@@ -84,6 +84,7 @@ def check(ok, why):
 #  folder -> the key it should mark as "you are here"
 SCREENS = {
     "venue": "venue", "courses": "courses", "giftaid": "giftaid",
+    "take-payment": "takepayment",
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
@@ -98,7 +99,7 @@ SCREENS = {
 #  self-consistent.
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
-              "Adult classes", "Food Bank volunteers", "Gift Aid",
+              "Adult classes", "Food Bank volunteers", "Donations", "Take a payment",
               "Madrasah portal", "Send a notification",
               "Notices", "Hall hire charges", "Prayer timetable",
               "The new build page", "Ramadan date", "User access", "System health"],
@@ -195,6 +196,7 @@ ADMITS = {
     "courses":     ["admin"],                  # app.js:134
     "volunteers":  ["admin", "hall_office"],   # app.js:130
     "giftaid":     ["admin"],                  # app.js:117
+    "takepayment": ["admin"],                  # take-payment/app.js canSee()
     "madrasah":    ["admin", "teacher"],       # portal/app.js:212 and :357
     "newbuild":    ["admin"],                  # app.js:138
     "access":      ["admin"],                  # app.js:143

@@ -274,14 +274,15 @@ with sync_playwright() as p:
     #  list is drawn from ROLES now, so a payload that omits a key no longer
     #  removes a door.
     want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
-            "../giftaid/", "../portal/", "../app/", "../notices/", "../rates/",
+            "../giftaid/", "../take-payment/", "../portal/", "../app/", "../notices/", "../rates/",
             "../times/", "../newbuild/", "../access/", "../health/",
             "../ramadan-date/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
     joined = " ".join(areas)
-    for name in ["Hall Hire", "Charity collections", "Adult classes", "Gift Aid",
+    for name in ["Hall Hire", "Charity collections", "Adult classes", "Donations",
+                 "Take a payment",
                  "Food Bank", "Madrasah", "Send a notification", "Notices",
                  "Hall hire charges", "Prayer timetable", "The new build page",
                  "User access", "System health", "Ramadan date"]:
@@ -445,12 +446,15 @@ with sync_playwright() as p:
     # =====================================================================
     #  5. AN OFFICE ACCOUNT
     #
-    #  Gift Aid is donors' names and home addresses. The database already
-    #  withholds it; this checks the page does not invent a card for it.
+    #  Donations (the Gift Aid screen underneath it) is donors' names and
+    #  home addresses. The database already withholds it; this checks the
+    #  page does not invent a card for it.
     # =====================================================================
     pg, errs = open_page(b, OFFICE, ["hall_office"])
     areas = " ".join(pg.eval_on_selector_all(".area", "els => els.map(e => e.innerText)"))
-    check("Gift Aid" not in areas, "AN OFFICE ACCOUNT WAS DRAWN GIFT AID: %r" % areas)
+    check("Donations" not in areas, "AN OFFICE ACCOUNT WAS DRAWN DONATIONS: %r" % areas)
+    check("Take a payment" not in areas,
+          "AN OFFICE ACCOUNT WAS DRAWN THE CARD READER: %r" % areas)
     check("Adult classes" not in areas, "an office account was drawn adult classes")
     check("Madrasah" not in areas, "an office account was drawn the madrasah portal")
     check("User access" not in areas,
