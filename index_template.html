@@ -1306,7 +1306,13 @@ window.TAIYABAH_PUBLIC = {
      (taraweeh, bayaan, i'tikaf, zakat al-fitr, parking, the two du'as) sit
      in a row of cards below instead of a stack of lonely full-width
      subsections. */
-  .rm-hero{background:linear-gradient(180deg,var(--brand-900),var(--brand-800));color:#F3EFE3;padding:64px 0 48px;position:relative;overflow:hidden;text-align:center;}
+  /*  150px, not the 64px this shipped with. The fixed header (header{position:fixed})
+      takes itself out of document flow, so every hero on the site carries its own
+      top clearance instead — .page-masthead uses the same 150px base, bumped to
+      172px once the topnav row joins it at min-width:1080px (see that media query).
+      .rm-hero was never given either number, so its heading rendered partly behind
+      the header the moment the page was wide enough to show the topnav row. */
+  .rm-hero{background:linear-gradient(180deg,var(--brand-900),var(--brand-800));color:#F3EFE3;padding:150px 0 48px;position:relative;overflow:hidden;text-align:center;}
   .rm-hero .girih-mark{position:absolute;opacity:.1;color:var(--gold);}
   .rm-hero .girih-mark.tr{top:-40px;right:-60px;width:260px;height:260px;}
   .rm-hero .girih-mark.bl{top:auto;bottom:-70px;left:-70px;transform:rotate(18deg);width:220px;height:220px;}
@@ -2490,6 +2496,7 @@ window.TAIYABAH_PUBLIC = {
     .svc-hero-banner{padding-top:172px;}
     .newbuild-page-hero{padding-top:172px;}
     .app-page-body{padding-top:172px;}
+    .rm-hero{padding-top:172px;}
     .subsection{scroll-margin-top:150px;}
   }
 </style>
