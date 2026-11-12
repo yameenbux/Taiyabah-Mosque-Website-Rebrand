@@ -649,6 +649,52 @@
       </div>
     </div>
 
+    <!-- MFA: verify. Same markup and IDs as health/index.html's — see this
+         page's app.js header for why the admin centre needs this now too. -->
+    <div class="card" id="view-mfa" hidden>
+      <h2>Two-step verification</h2>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+      <div class="err" id="mfa-error" hidden></div>
+      <form id="mfa-form" novalidate>
+        <div class="field">
+          <label for="mfa-code">Verification code</label>
+          <input type="text" id="mfa-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="mfa-submit">Verify</button>
+      </form>
+      <p class="note">Codes refresh every 30 seconds. If yours keeps failing, check your phone's clock is set automatically.</p>
+    </div>
+
+    <!-- MFA: enrol -->
+    <div class="card" id="view-enrol" hidden>
+      <h2>Set up two-step verification</h2>
+      <p class="sub">This account can see other people's bookings, applications and records, so it needs a second factor before you can continue.</p>
+      <div class="err" id="enrol-error" hidden></div>
+
+      <ul class="steps">
+        <li>Install an authenticator app — Google Authenticator, Microsoft Authenticator or Authy.</li>
+        <li>Scan the square below with it.</li>
+        <li>Enter the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="enrol-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="enrol-secret"></div>
+      </div>
+      <p class="sub" style="margin:0 0 4px;font-size:.931rem;">Can't scan it? Type the code above into your app by hand.</p>
+
+      <form id="enrol-form" novalidate>
+        <div class="field">
+          <label for="enrol-code">Code from your app</label>
+          <input type="text" id="enrol-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="enrol-submit">Confirm and finish setup</button>
+      </form>
+      <p class="note">Keep the app installed — you'll need it every time you sign in.</p>
+    </div>
+
     <!-- ================= THE DASHBOARD =================================
          Was a list of five links in a 420px card. It is now the page an
          administrator lands on. Everything below is filled by app.js from

@@ -2,23 +2,27 @@
    Taiyabah Masjid — masjid administration
    Bolton Central Islamic Society · Registered charity 1041569
 
-   A signpost, and nothing more.
+   What this page does: reads who is signed in, asks for the authenticator
+   code if this session has not passed two-step yet, reads their roles from
+   user_roles, and — depending what it finds — lists the areas they can open
+   or shows them the office's own dashboard (admin_dashboard()).
 
-   What this page does: reads who is signed in, reads their roles from
-   user_roles, and — if they hold `admin` — lists the areas they can open.
+   THIS USED TO BE "A SIGNPOST, AND NOTHING MORE," AND THE CODE ASKED FOR NO
+   CODE ON THAT BASIS — "each portal asks when it is opened; that is where the
+   real boundary lives, not here." True while this page held no data. It no
+   longer holds no data: admin_dashboard() puts names, hall bookings, course
+   signups and the daily log straight on this screen. The database still
+   refuses all of it to a session that has not passed two-step
+   (verified_admin()/verified_office(), migration 011), but refusing it is not
+   the same as not showing it — the dashboard chrome drew anyway, with the
+   refusal rendered as a red "couldn't load" banner and a full list of area
+   tiles sitting right below it. Click one and THAT page asks for the code —
+   so the office was being asked for two-step on the second click of every
+   session, after already seeing a page that looked broken. This page now
+   does what its own old comment said it didn't need to: it is the first
+   place that asks, same pattern as every page it links to.
 
-   What this page deliberately does NOT do:
-
-     - It holds no data. It reads no booking, no application, no child's
-       record. If someone got past every check here, they would see a list of
-       links and nothing else.
-
-     - It does not ask for an authenticator code. The account area has no
-       two-step step, on purpose: making somebody set up an authenticator to
-       buy a jar of honey loses the sale. Each portal asks for the code when
-       it is opened, and — from migration 011 — the database refuses to hand
-       over anything sensitive to a session that has not passed it. That is
-       where the real boundary lives, not here.
+   What this page still deliberately does NOT do:
 
      - It does not decide anything from what the browser says. The role comes
        from user_roles under RLS. A customer asking that table gets nothing
@@ -35,7 +39,8 @@
   var cfg = window.TAIYABAH_CONFIG || {};
   var el  = function (id) { return document.getElementById(id); };
 
-  var VIEWS = ["view-loading", "view-signedout", "view-noaccess", "view-list"];
+  var VIEWS = ["view-loading", "view-signedout", "view-noaccess",
+               "view-mfa", "view-enrol", "view-list"];
   function setError(id, message) {
     var box = el(id);
     if (!box) return;
@@ -49,6 +54,12 @@
       var n = el(v);
       if (n) n.hidden = v !== view;
     });
+  }
+
+  function busy(button, isBusy, idleLabel) {
+    if (!button) return;
+    button.disabled = isBusy;
+    if (idleLabel) button.textContent = isBusy ? "Please wait…" : idleLabel;
   }
 
   // The list of areas used to live here as a hard-coded array. It does not
@@ -120,6 +131,146 @@
     if (why) el("no-why").textContent = why;
     show("view-noaccess");
   }
+
+  /* =========================================================================
+     TWO-STEP. Copied from health/app.js's working pattern rather than
+     invented fresh — this is the same flow every other admin screen already
+     runs, just arriving here first now instead of last. See the file header
+     for why this page needs it at all. */
+  var pending = { factorId: null, challengeId: null };
+
+  function afterVerified() {
+    return loadIdentity().then(function (identity) {
+      // Administrators AND hall office. This used to be admin only, which
+      // made sense when the page was a list of areas that only admins could
+      // open — but the office has had its own portal since September, and
+      // admin_dashboard() already decides per role what comes back. Keeping
+      // the gate at admin-only would mean the office signing in, being told
+      // it has no access, and then reaching /venue/ perfectly well by typing
+      // the address.
+      //
+      // This is not a widening of what anybody can SEE: every area still
+      // checks again, at aal2, on the way in, and the database withholds
+      // Gift Aid and the staff figures from an office session regardless of
+      // what this page asks for.
+      //  db/132 adds `imam`, and it is the only role here with NOWHERE ELSE
+      //  TO GO. An administrator or the office can reach /venue/ by typing the
+      //  address; a teacher has /portal/. The imams' inbox hangs off this page
+      //  and this page only, so leaving it out of this list would mean giving
+      //  somebody a role and a "you have no access here" card.
+      var mayEnter = identity.roles.indexOf("admin") !== -1 ||
+                     identity.roles.indexOf("hall_office") !== -1 ||
+                     identity.roles.indexOf("imam") !== -1;
+      if (!mayEnter) { noAccess(identity); return; }
+      renderList(identity);
+    });
+  }
+
+  function startChallenge() {
+    return sb.auth.mfa.listFactors().then(function (res) {
+      var totp = ((res.data || {}).totp) || [];
+      if (!totp.length) return startEnrolment();
+      pending.factorId = totp[0].id;
+      return sb.auth.mfa.challenge({ factorId: pending.factorId }).then(function (c) {
+        if (c.error) throw c.error;
+        pending.challengeId = c.data.id;
+        setError("mfa-error", "");
+        el("mfa-code").value = "";
+        show("view-mfa");
+        el("mfa-code").focus();
+      });
+    });
+  }
+
+  function startEnrolment() {
+    return sb.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: "Authenticator " + new Date().toISOString().slice(0, 10)
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      pending.factorId = res.data.id;
+      el("enrol-qr").src = res.data.totp.qr_code;
+      el("enrol-secret").textContent = res.data.totp.secret;
+      setError("enrol-error", "");
+      el("enrol-code").value = "";
+      show("view-enrol");
+      el("enrol-code").focus();
+    });
+  }
+
+  // The gate every arrival passes through. Checked BEFORE loadIdentity() or
+  // admin_dashboard() run at all, so the dashboard's own data never draws —
+  // not even behind a red error banner — ahead of two-step being satisfied.
+  function requireTwoStep() {
+    return sb.auth.mfa.getAuthenticatorAssuranceLevel().then(function (res) {
+      if (res.error) throw new Error("Couldn't check two-step status: " + res.error.message);
+      var data = res.data || {};
+      if (data.nextLevel === "aal2" && data.nextLevel !== data.currentLevel) {
+        return startChallenge();
+      }
+      return sb.auth.mfa.listFactors().then(function (list) {
+        if (list.error) throw new Error("Couldn't list authenticators: " + list.error.message);
+        var verified = ((list.data || {}).totp) || [];
+        if (verified.length === 0) return startEnrolment();
+        return afterVerified();
+      });
+    });
+  }
+
+  el("mfa-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = el("mfa-submit");
+    setError("mfa-error", "");
+    busy(btn, true);
+
+    sb.auth.mfa.verify({
+      factorId: pending.factorId,
+      challengeId: pending.challengeId,
+      code: el("mfa-code").value.trim()
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return afterVerified();
+    }).catch(function (err) {
+      setError("mfa-error", err.message || "That code wasn't accepted. Codes expire after 30 seconds.");
+      sb.auth.mfa.challenge({ factorId: pending.factorId }).then(function (c) {
+        if (c.data) pending.challengeId = c.data.id;
+      });
+    }).finally(function () {
+      busy(btn, false, "Verify");
+      el("mfa-code").value = "";
+    });
+  });
+
+  el("enrol-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = el("enrol-submit");
+    setError("enrol-error", "");
+    busy(btn, true);
+
+    sb.auth.mfa.challenge({ factorId: pending.factorId }).then(function (c) {
+      if (c.error) throw c.error;
+      return sb.auth.mfa.verify({
+        factorId: pending.factorId,
+        challengeId: c.data.id,
+        code: el("enrol-code").value.trim()
+      });
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      return afterVerified();
+    }).catch(function (err) {
+      setError("enrol-error", err.message || "That code wasn't accepted. Please try the next one.");
+    }).finally(function () {
+      busy(btn, false, "Confirm and finish setup");
+      el("enrol-code").value = "";
+    });
+  });
+
+  ["mfa-code", "enrol-code"].forEach(function (id) {
+    var n = el(id);
+    if (n) n.addEventListener("input", function (e) {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    });
+  });
 
   /* =========================================================================
      THE DASHBOARD
@@ -572,8 +723,12 @@
       if (res.error) throw res.error;
       var d = res.data || {};
       if (d.allowed === false) {
+        // Two-step is already satisfied by the time this runs (requireTwoStep()
+        // ran first) — so this is a real refusal, not the everyday "hasn't
+        // entered a code yet" case it used to cover. Most likely the role this
+        // account held a moment ago has since been changed.
         throw new Error("This account is not allowed to see the admin centre. " +
-                        "If you have just set up two-step, sign out and back in.");
+                        "If your access has just changed, sign out and back in.");
       }
       setError("dash-error", "");
       drawDashboard(identity, d);
@@ -600,34 +755,12 @@
   }
 
   // --- on arrival -----------------------------------------------------------
+  // requireTwoStep() is the gate: see the file header for why it runs before
+  // loadIdentity() or admin_dashboard(), not after.
   sb.auth.getSession().then(function (res) {
     var session = res.data && res.data.session;
     if (!session || !session.user) { show("view-signedout"); return; }
-
-    return loadIdentity().then(function (identity) {
-      // Administrators AND hall office. This used to be admin only, which
-      // made sense when the page was a list of areas that only admins could
-      // open — but the office has had its own portal since September, and
-      // admin_dashboard() already decides per role what comes back. Keeping
-      // the gate at admin-only would mean the office signing in, being told
-      // it has no access, and then reaching /venue/ perfectly well by typing
-      // the address.
-      //
-      // This is not a widening of what anybody can SEE: every area still
-      // checks again, at aal2, on the way in, and the database withholds
-      // Gift Aid and the staff figures from an office session regardless of
-      // what this page asks for.
-      //  db/132 adds `imam`, and it is the only role here with NOWHERE ELSE
-      //  TO GO. An administrator or the office can reach /venue/ by typing the
-      //  address; a teacher has /portal/. The imams' inbox hangs off this page
-      //  and this page only, so leaving it out of this list would mean giving
-      //  somebody a role and a "you have no access here" card.
-      var mayEnter = identity.roles.indexOf("admin") !== -1 ||
-                     identity.roles.indexOf("hall_office") !== -1 ||
-                     identity.roles.indexOf("imam") !== -1;
-      if (!mayEnter) { noAccess(identity); return; }
-      renderList(identity);
-    });
+    return requireTwoStep();
   }).catch(function (err) {
     if (window.console) console.warn("portals:", err && err.message);
     noAccess(null,
