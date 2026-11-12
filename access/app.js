@@ -158,20 +158,20 @@
     // Roles in plain English. Nobody in a masjid office should have to know
     // what "hall_office" means to work out who can do what.
     var SAYS = {
-      admin:       "Everything",
+      admin:       "Global Admin",
       hall_office: "Hall bookings and nikāḥ",
       madrasah:    "Madrasah",
-      //  db/132. Reads "Imams' questions" rather than "Imam", because the row
-      //  describes what somebody can reach and not what they are - and because
-      //  "Imam" beside "Everything" would read as the smaller of the two,
-      //  which is the one thing it is not.
-      imam:        "Imams' questions",
+      //  db/132.
+      imam:        "Imam Role",
       //  KEPT, though nothing grants it any more. Until 18 September the
       //  "Madrasah" tick box wrote `teacher`, and if any account anywhere
       //  still holds it this list is what stops that row rendering the raw
       //  word at somebody in the office. It is never offered; it is only
-      //  ever read back.
-      teacher:     "Madrasah (old)",
+      //  ever read back. Deliberately NOT plain "Madrasah" - that is the
+      //  office role two lines up, which sees every child and family;
+      //  `teacher` only ever saw the classes that one person taught, and
+      //  the two must not read the same on a tile or in this filter.
+      teacher:     "Madrasah (Teacher)",
       parent:      "Parent"
     };
 

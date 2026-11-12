@@ -274,12 +274,12 @@ with sync_playwright() as p:
     #  three roles plus "All staff", never a role nobody on this page holds.
     opts = pg.eval_on_selector_all(
         "#acc-role-filter option", "els => els.map(e => e.textContent)")
-    check(opts == ["All staff", "Everything", "Hall bookings and nikāḥ", "Madrasah"],
+    check(opts == ["All staff", "Global Admin", "Hall bookings and nikāḥ", "Madrasah"],
           "the role filter offered the wrong options: %r" % opts)
 
     pg.select_option("#acc-role-filter", "admin")
     n = len(pg.query_selector_all("#acc-list .acc-tile"))
-    check(n == 3, "filtering to Everything should leave the three admins, drew %d" % n)
+    check(n == 3, "filtering to Global Admin should leave the three admins, drew %d" % n)
     names = pg.eval_on_selector_all("#acc-list .t-name", "els => els.map(e => e.textContent)")
     check("A Teacher" not in " ".join(names),
           "the madrasah account is still shown while filtered to admins only")
@@ -335,7 +335,7 @@ with sync_playwright() as p:
           "a raw role name is on screen — nobody in a masjid office should "
           "have to know what hall_office means: %r" % joined[:300])
     check("Hall bookings and nik" in joined, "the office role is not named in plain English")
-    check("Everything" in joined, "the admin role is not named in plain English")
+    check("Global Admin" in joined, "the admin role is not named in plain English")
     check("Madrasah" in joined, "the madrasah role is not named in plain English")
     check("No authenticator" in joined, "the account without two-step is not flagged")
     check("Two-step on" in joined, "accounts with two-step are not marked")
