@@ -267,6 +267,34 @@ with sync_playwright() as p:
           "the tiles are not buttons, so they cannot be reached from a keyboard: %r" % tags)
 
     # =====================================================================
+    #  14. THE ROLE FILTER, SO ADMINS AND TEACHERS DO NOT READ AS ONE LIST
+    # =====================================================================
+    #  STAFF holds three admins, one hall_office and one madrasah account -
+    #  five tiles, three roles. The dropdown should offer exactly those
+    #  three roles plus "All staff", never a role nobody on this page holds.
+    opts = pg.eval_on_selector_all(
+        "#acc-role-filter option", "els => els.map(e => e.textContent)")
+    check(opts == ["All staff", "Everything", "Hall bookings and nikāḥ", "Madrasah"],
+          "the role filter offered the wrong options: %r" % opts)
+
+    pg.select_option("#acc-role-filter", "admin")
+    n = len(pg.query_selector_all("#acc-list .acc-tile"))
+    check(n == 3, "filtering to Everything should leave the three admins, drew %d" % n)
+    names = pg.eval_on_selector_all("#acc-list .t-name", "els => els.map(e => e.textContent)")
+    check("A Teacher" not in " ".join(names),
+          "the madrasah account is still shown while filtered to admins only")
+
+    pg.select_option("#acc-role-filter", "madrasah")
+    n = len(pg.query_selector_all("#acc-list .acc-tile"))
+    check(n == 1, "filtering to Madrasah should leave the one teacher, drew %d" % n)
+
+    #  Back to "All staff" is a real option, not just the dropdown's own
+    #  default on reload - picking it explicitly must also show everyone.
+    pg.select_option("#acc-role-filter", "")
+    n = len(pg.query_selector_all("#acc-list .acc-tile"))
+    check(n == 5, "choosing All staff again should show every tile, drew %d" % n)
+
+    # =====================================================================
     #  11. IT TAKES THE WHOLE PAGE, AND KEEPS A WAY BACK
     # =====================================================================
     check(pg.evaluate("document.querySelector('.shell').classList.contains('wide-mode')"),
