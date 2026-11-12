@@ -140,6 +140,11 @@
     // the new answer instead of leaving it showing what was true a moment ago.
     var openId = null;
 
+    // "" means everyone. Held here, not read fresh off the <select> each
+    // render, so a reload triggered by load() (after every change) keeps
+    // showing whichever group was open rather than snapping back to "All".
+    var roleFilter = "";
+
     function canSee(identity) { return identity.roles.indexOf("admin") !== -1; }
 
     function esc(v) {
@@ -260,12 +265,49 @@
        announces. Everything that can be DONE to somebody lives on their own
        page — a grid of tiles each carrying a Suspend button is a grid of
        things to press by accident. */
+    // ROLE_ORDER fixes the dropdown's order so it reads the same every time
+    // rather than however staff_list() happened to sort that page's roles —
+    // "Everything" first because that is the group the office asked to tell
+    // apart from the rest, "Madrasah (old)" last because nothing grants it
+    // any more (see SAYS above) and a filter for it should read as the
+    // leftover category it is.
+    var ROLE_ORDER = ["admin", "hall_office", "madrasah", "imam", "teacher"];
+
+    /* The dropdown only ever offers a role somebody on THIS page actually
+       holds — an empty "Imams' questions" filter is a dead end, not a useful
+       choice, at a masjid that has not granted it to anyone yet. */
+    function renderRoleFilter(staff) {
+      var sel = el("acc-role-filter");
+      if (!sel) return;
+      var present = {};
+      staff.forEach(function (p) {
+        (p.roles || []).forEach(function (r) { if (r !== "parent") present[r] = true; });
+      });
+      var prev = roleFilter;
+      sel.innerHTML = '<option value="">All staff</option>' +
+        ROLE_ORDER.filter(function (r) { return present[r]; }).map(function (r) {
+          return '<option value="' + esc(r) + '">' + esc(SAYS[r] || r) + "</option>";
+        }).join("");
+      // The role just filtered on can stop existing (its last holder was
+      // edited away) while this dropdown is still open on it. Falling back
+      // to "All staff" beats a <select> showing a value it no longer offers.
+      sel.value = present[prev] ? prev : "";
+      roleFilter = sel.value;
+    }
+
     function renderPeople() {
       var box = el("acc-list");
       if (!box) return;
       var staff = staffOnly();
+      renderRoleFilter(staff);
+      if (roleFilter) {
+        staff = staff.filter(function (p) {
+          return (p.roles || []).indexOf(roleFilter) !== -1;
+        });
+      }
       if (!staff.length) {
-        box.innerHTML = '<div class="acc-empty">No staff accounts yet.</div>';
+        box.innerHTML = '<div class="acc-empty">' +
+          (roleFilter ? "Nobody has that role." : "No staff accounts yet.") + "</div>";
         return;
       }
 
@@ -493,6 +535,14 @@
     function wire() {
       if (mounted) return;
       mounted = true;
+
+      // Purely client-side: the dropdown changes which tiles are DRAWN from
+      // data already on the page, not what is asked of the database, so
+      // this re-renders rather than reloading.
+      el("acc-role-filter").addEventListener("change", function (e) {
+        roleFilter = e.target.value;
+        renderPeople();
+      });
 
       el("acc-invite-open").addEventListener("click", function () {
         el("acc-invite").hidden = false;

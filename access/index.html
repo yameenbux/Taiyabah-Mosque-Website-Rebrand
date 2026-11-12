@@ -375,6 +375,16 @@
     padding:14px 16px;margin-bottom:14px;font-size:.96rem;line-height:1.6;
   }
   .dash-lab{font-size:.84rem;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:22px 0 11px;}
+  /*  acc-filter-row carries the "Accounts" label and the role dropdown on
+      one line, so separating admins from teachers (or any other role) is
+      one click rather than a second screen. */
+  .acc-filter-row{display:flex;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;gap:10px;margin:22px 0 11px;}
+  .acc-filter-row .dash-lab{margin:0;}
+  .acc-filter-row select{background:var(--paper);border:1px solid var(--line);
+    border-radius:8px;padding:7px 11px;font-family:inherit;font-size:.9rem;
+    color:var(--ink);}
+  .acc-filter-row select:focus{outline:2px solid var(--gold-bright);outline-offset:1px;border-color:var(--gold-bright);}
   .inv{border:1px solid var(--gold);border-radius:12px;background:rgba(198,162,76,.06);padding:18px 20px;margin-bottom:18px;}
   .inv h3{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:1.115rem;color:var(--brand-900);margin-bottom:14px;}
   .inv-role{display:flex;gap:11px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
@@ -888,7 +898,13 @@
         <div class="dash-lab" id="acc-pending-lab" hidden>Waiting to be accepted</div>
         <div class="bk-list" id="acc-pending"></div>
 
-        <div class="dash-lab">Accounts</div>
+        <div class="acc-filter-row">
+          <div class="dash-lab">Accounts</div>
+          <!-- Options are written by renderRoleFilter() in access/app.js,
+               not here: it only ever offers a role somebody on this page
+               actually holds. -->
+          <select id="acc-role-filter" aria-label="Show only"></select>
+        </div>
         <div class="acc-grid" id="acc-list"></div>
       </div>
 

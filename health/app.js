@@ -143,7 +143,11 @@
         p.textContent = "Needs a developer, not the office.";
       } else {
         h.textContent = "Everything is passing";
-        p.textContent = "All fourteen checks are clean.";
+        // Not a fixed count: db/155 drops compatibility_shims from this
+        // list entirely once a signed-in masjid's own admin is asking (it
+        // has no honest per-masjid phrasing), so the real count varies by
+        // who is looking, not just by how many checks happen to be wired up.
+        p.textContent = "All " + checks.length + " check" + (checks.length === 1 ? "" : "s") + " are clean.";
       }
 
       var kpi = el("kpi-internal");
