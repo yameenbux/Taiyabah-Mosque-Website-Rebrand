@@ -201,8 +201,11 @@
       //  nav.js, MadrasahNav would be missing and the rail would quietly fall
       //  back to the SITE list — Gift Aid and Hall Hire in a madrasah screen,
       //  with no error anywhere. A missing rail is obvious; a wrong one is not.
+      //  A screen that wants the SITE rail (Membership) must not wait for
+      //  MadrasahNav, which it never loads — it would wait for ever.
+      var wantsMadrasahRail = screen.rail !== "site";
       if (document.readyState === "loading" &&
-          !(window.AdminShell && window.MadrasahNav)) {
+          !(window.AdminShell && (!wantsMadrasahRail || window.MadrasahNav))) {
         document.addEventListener("DOMContentLoaded", function () {
           renderApp(identity);
         }, { once: true });
@@ -214,8 +217,15 @@
           depth:    screen.depth,
           current:  screen.key,
           title:    screen.title,
-          area:     'Madrasah',
-          sections: (window.MadrasahNav || {}).SECTIONS,
+          //  WHICH BUILDING THIS SCREEN IS IN. Both were hard-coded to the
+          //  madrasah, because for the first eight screens that was the only
+          //  answer. Membership is a MASJID matter — it sits in the Admin
+          //  Centre beside Donations and Hall Hire, not inside the madrasah —
+          //  so it asks for the site rail and names its own area. The
+          //  defaults are the old values, so the eight Fees screens are
+          //  unchanged by this and say nothing about it.
+          area:     screen.area || 'Madrasah',
+          sections: wantsMadrasahRail ? (window.MadrasahNav || {}).SECTIONS : undefined,
           roles:    identity.roles || [],
           name:     (identity.profile && identity.profile.full_name) || "",
           email:    (identity.user && identity.user.email) || ""
@@ -488,4 +498,13 @@
   }
 
   window.FeesGate = { start: start, pounds: pounds, pence: pence };
+
+  /*  THE NAME IS HISTORICAL. This stopped being "the Fees gate" the moment
+      Membership used it: it is the portal's one sign-in flow, and the whole
+      argument at the top of this file is that there should only ever be one.
+      Exposed under a second name so that a screen which is not about madrasah
+      fees does not have to pretend it is. The file itself should move to
+      admin/ next time tools/build_fees_screens.py is opened — it belongs
+      beside shell.js and supabase.js, not three folders down. */
+  window.PortalGate = window.FeesGate;
 })();

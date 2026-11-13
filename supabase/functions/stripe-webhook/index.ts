@@ -5,6 +5,7 @@
 //  ONE ENDPOINT, THREE KINDS OF PAYMENT, decided by client_reference_id:
 //      HH-26-0001   hall hire deposit -> mark_deposit_paid()
 //      NK-26-0001   nikāḥ fee         -> mark_nikah_fee_paid()
+//      MF-26-0042   masjid membership -> mark_membership_fee_paid()
 //      DN-…         a donation with a reference already made
 //      general|sadaqah|lillah|newbuild
 //                   a donation from the DONATE PAGE -> record_public_donation()
@@ -370,6 +371,14 @@ Deno.serve(async (req) => {
     "HH-": { rpc: "mark_deposit_paid",     state: "deposit_status", what: "hall deposit" },
     "NK-": { rpc: "mark_nikah_fee_paid",   state: "fee_status",     what: "nikāḥ fee" },
     "DN-": { rpc: "record_donation_paid",  state: "status",         what: "donation" },
+    /*  MF- IS NOT LIKE THE OTHERS. A hall deposit and a nikāḥ fee each pay
+        one named thing, so the reference is the whole instruction. A
+        membership payment can cover one year or five, and the amount cannot
+        tell them apart — £100 is this year for one member and a single year
+        of arrears for another. The years travel in the session's metadata,
+        put there by the Worker from the quote it priced, and are passed
+        through below. */
+    "MF-": { rpc: "mark_membership_fee_paid", state: "ok",           what: "membership fee" },
   };
   const kind = KINDS[reference.slice(0, 3).toUpperCase()];
 
@@ -398,6 +407,24 @@ Deno.serve(async (req) => {
     p_session_id: sessionId,
     p_amount_p: amount,
   };
+
+  if (kind.rpc === "mark_membership_fee_paid") {
+    const meta = (session.metadata ?? {}) as Record<string, string>;
+    args = {
+      ...args,
+      /*  Which years this money is for. Empty is survivable — the function
+          falls back to the year in the reference and says so — but it should
+          never happen, because the Worker always sets it. */
+      p_years: meta.years ?? "",
+      /*  THE ADDRESS THE REGISTER DOES NOT HAVE. Stripe collects one in order
+          to send its own receipt; almost no member on the register has one
+          recorded, which is exactly why the Ramadan reminder cannot reach
+          anybody today. mark_membership_fee_paid() writes it back, and only
+          into a blank — it never overwrites an address the office was given
+          deliberately. */
+      p_email: session.customer_details?.email ?? null,
+    };
+  }
 
   if (kind.rpc === "record_donation_paid") {
     const ga = readGiftAid(session.custom_fields as never);
@@ -432,11 +459,41 @@ Deno.serve(async (req) => {
     return new Response("Could not record the payment", { status: 500 });
   }
 
+  /*  A FUNCTION THAT RETURNS {ok: false} HAS NOT RECORDED THE PAYMENT.
+      mark_membership_fee_paid() answers rather than raising when it cannot
+      find the member or cannot read the reference, deliberately: raising
+      makes Stripe retry, and a retry will not conjure a member who is not on
+      the register. But the money HAS been taken, so this cannot be allowed
+      to fall through the success path below and be logged as a membership
+      fee that landed. It is audited instead, which is the same place
+      record_unmatched_payment() puts everything else nobody can match. */
+  if (data && data.ok === false) {
+    console.error(`stripe-webhook: ${kind.what} ${reference} was NOT recorded — ${data.reason}`);
+    const audited = await auditPayment(masjid, "payment_could_not_be_matched", {
+      session: sessionId,
+      reference,
+      kind: kind.what,
+      reason: data.reason,
+      amount_pence: amount,
+      email: session.customer_details?.email ?? null,
+    });
+    return new Response(JSON.stringify({ ok: true, note: data.reason, audited }), {
+      status: 200, headers: { "content-type": "application/json" },
+    });
+  }
+
   console.log(`stripe-webhook: ${kind.what} ${reference} -> ${data?.[kind.state]}` +
               (data?.already_recorded ? " (already recorded)" : "") +
+              (data?.already ? " (already recorded)" : "") +
               (data?.duplicate_payment ? " (DUPLICATE — needs refunding)" : ""));
 
-  if (!data?.already_recorded && kind.rpc !== "record_donation_paid") {
+  /*  notify() is written around the hall/nikāḥ shapes and the membership
+      receipt is Stripe's own, sent to the address it collected at the
+      checkout — so there is nothing for the office to be told here that the
+      audit row does not already carry. */
+  if (!data?.already_recorded && !data?.already
+      && kind.rpc !== "record_donation_paid"
+      && kind.rpc !== "mark_membership_fee_paid") {
     await notify(reference, kind, data, session);
   }
 
