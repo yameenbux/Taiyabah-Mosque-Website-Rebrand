@@ -20,7 +20,7 @@
 -- ask for through the form, and the office must stay free to record an
 -- agreed 7:30am in preferred_time when it has spoken to somebody.
 --
--- NOT YET APPLIED to production.
+-- APPLIED to production on 13 November 2026.
 
 begin;
 

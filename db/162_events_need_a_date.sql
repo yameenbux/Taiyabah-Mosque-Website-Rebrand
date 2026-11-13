@@ -25,11 +25,25 @@
 -- once the office has dated the backlog. Until then the Events screen groups
 -- undated posters under "Date to be confirmed" rather than hiding them.
 --
+-- WHAT IS STILL UNDATED, as applied on 13 November 2026. Three rows carry
+-- topic='events' with no event_at, and none of them is published, so none
+-- reaches a phone:
+--   * two test posts, titled "... - TEST" and "Test";
+--   * "Nurturing Our Hearts and Homes", a ladies' programme EVERY THURSDAY.
+-- The last one is the interesting case and the reason VALIDATE is not run
+-- here: a weekly programme has no single event_at, and giving it one would
+-- put it on the calendar once and be wrong every other week. A recurring
+-- event needs a shape this table does not have. Dating it to silence the
+-- constraint would be the wrong fix.
+--
+-- The one published event, the Marriage Masterclass, was dated from its own
+-- body and poster — both say "Sunday, 22 November 2026, 11:00 AM".
+--
 -- The topic vocabulary is the one the masjid already uses and the one the
 -- notification switches already name: jamaah, janazah, announcements, events,
 -- kahf. Only 'events' reaches the calendar, so only 'events' is constrained.
 --
--- NOT YET APPLIED to production.
+-- APPLIED to production on 13 November 2026.
 
 begin;
 
