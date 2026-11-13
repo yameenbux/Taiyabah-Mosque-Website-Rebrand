@@ -1948,6 +1948,16 @@ window.TAIYABAH_PUBLIC = {
   .nk-slot.is-sel{background:var(--brand-900);border-color:var(--brand-900);color:#F3EFE3;}
   .nk-slot.is-sel .t{color:rgba(243,239,227,.72);}
   .nk-slot.is-wide{grid-column:1/-1;}
+  /* The time field spans the whole grid: it is one control, not a pill in a
+     row of pills, and a native time wheel needs the width on a phone. */
+  .nk-timewrap{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    border:1px solid var(--line);border-radius:11px;padding:10px 12px;background:var(--paper);}
+  .nk-timelab{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted);}
+  .nk-timein{font-family:inherit;font-size:1.25rem;font-variant-numeric:tabular-nums;
+    color:var(--ink);background:transparent;border:0;padding:4px 2px;min-width:7.5em;}
+  .nk-timein:focus{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px;}
+  .nk-timein:disabled{opacity:.4;}
   /* a day inside the two-week notice period reads as unavailable rather than
      simply absent, so nobody wonders why the calendar starts where it does */
   .hh-day.is-tooSoon{opacity:.5;text-decoration:line-through;}
@@ -9009,12 +9019,8 @@ window.TAIYABAH_PUBLIC = {
     //  Fajr was dropped in September 2026: nobody holds a nikāḥ at first
     //  light. The DATABASE still accepts 'after_fajr' on purpose, so the
     //  requests already recorded with it stay valid and still display.
-    var PRAYER_SLOTS = [
-      { key:'after_zuhr',    label:'After Zuhr',    col:7  },
-      { key:'after_asr',     label:'After Asr',     col:9  },
-      { key:'after_maghrib', label:'After Maghrib', col:10 },
-      { key:'after_isha',    label:'After Isha',    col:12 }
-    ];
+    var TIME_MIN = '08:00', TIME_MAX = '22:00', TIME_STEP = 900;
+
     //  ONE list, used by the form builder, the validator and the payload.
     //  Three separate copies of "who the five people are" is three places for
     //  a role to be spelled differently, and only the database would notice.
@@ -9049,9 +9055,6 @@ window.TAIYABAH_PUBLIC = {
             .join('') + '</select>';
     }
 
-    var SATURDAY_SLOT = { key:'saturday_11', label:'Saturday, 11:00am',
-                          note:'before a wedding meal' };
-
     var grid = document.getElementById('nkGrid');
     if(!grid) return;
     var $ = function(id){ return document.getElementById(id); };
@@ -9074,17 +9077,8 @@ window.TAIYABAH_PUBLIC = {
     var last  = new Date(today); last.setDate(last.getDate() + HORIZON_DAYS);
     var view  = new Date(first.getFullYear(), first.getMonth(), 1);
 
-    var S = { a:null, slot:null, flex:false };
+    var S = { a:null, time:null, flex:false };
 
-    // The masjid's own timetable, already on the page for the prayer times.
-    // It holds 2026 only, so a date beyond it gets the prayer name without a
-    // time rather than an invented one.
-    function jamaah(dateISO, col){
-      var p = dateISO.split('-');
-      if (+p[0] !== TT_YEAR || typeof TIMETABLE === 'undefined') return null;
-      var row = TIMETABLE.find(function(r){ return r[0] === +p[1] && r[1] === +p[2]; });
-      return row ? row[col] : null;
-    }
     function isSaturday(dateISO){ return parse(dateISO).getDay() === 6; }
 
     function renderMonth(){
@@ -9121,48 +9115,53 @@ window.TAIYABAH_PUBLIC = {
       grid.innerHTML = html;
     }
 
-    function slotLabel(key){
-      if(key === SATURDAY_SLOT.key) return SATURDAY_SLOT.label;
-      var s = PRAYER_SLOTS.filter(function(x){ return x.key === key; })[0];
-      return s ? s.label : key;
-    }
-
+    //  A real <input type="time">: every phone gives its own native wheel
+    //  and nothing here has to reimplement one. min/max/step are advisory in
+    //  some browsers, so timeOK() checks the value again before it is sent
+    //  and db/161 checks it a third time on arrival.
     function renderSlots(){
-      var html = '', d = S.a;
-      PRAYER_SLOTS.forEach(function(s){
-        var at = d ? jamaah(d, s.col) : null;
-        html += '<button type="button" class="nk-slot' +
-                (S.slot === s.key ? ' is-sel' : '') + '" data-t="' + s.key + '">' +
-                '<span class="p">' + s.label + '</span>' +
-                (at ? '<span class="t">' + at + '</span>' : '') + '</button>';
-      });
-      if(d && isSaturday(d)){
-        html += '<button type="button" class="nk-slot is-wide' +
-                (S.slot === SATURDAY_SLOT.key ? ' is-sel' : '') +
-                '" data-t="' + SATURDAY_SLOT.key + '">' +
-                '<span class="p">' + SATURDAY_SLOT.label + '</span>' +
-                '<span class="t">' + SATURDAY_SLOT.note + '</span></button>';
-      }
+      var html =
+        '<div class="nk-timewrap">' +
+          '<label class="nk-timelab" for="nkTime">Time</label>' +
+          '<input type="time" id="nkTime" class="nk-timein"' +
+            ' min="' + TIME_MIN + '" max="' + TIME_MAX + '" step="' + TIME_STEP + '"' +
+            ' value="' + esc(S.time || '') + '"' + (S.flex ? ' disabled' : '') + '>' +
+        '</div>';
       html += '<button type="button" class="nk-slot is-wide' + (S.flex ? ' is-sel' : '') +
-              '" data-t="flex"><span class="p">I’m flexible</span>' +
+              '" data-t="flex"><span class="p">I\u2019m flexible</span>' +
               '<span class="t">the masjid can suggest a time</span></button>';
       $('nkSlots').innerHTML = html;
+    }
+
+    //  '14:30' -> '2:30pm', the way the rest of the site writes a time.
+    function pretty12(hhmm){
+      var p = String(hhmm || '').split(':'), h = +p[0], m = p[1];
+      if(isNaN(h)) return '';
+      var ap = h < 12 ? 'am' : 'pm'; h = h % 12; if(h === 0) h = 12;
+      return h + ':' + m + ap;
+    }
+
+    //  The same gate as db/161 and the app: inside the window, on the quarter.
+    function timeOK(hhmm){
+      if(!/^([01][0-9]|2[0-3]):[0-5][0-9]$/.test(hhmm || '')) return false;
+      if(hhmm < TIME_MIN || hhmm > TIME_MAX) return false;
+      return (+hhmm.split(':')[1]) % 15 === 0;
     }
 
     function renderPanel(){
       $('nkV1').textContent = S.a ? pretty(S.a) : 'Not chosen';
       $('nkV1').classList.toggle('empty', !S.a);
-      var at = (S.slot && S.a) ? jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) : null;
       $('nkVT').textContent = S.flex ? 'Flexible'
-        : (S.slot ? slotLabel(S.slot) + (at ? ' · ' + at : '') : 'Not chosen');
-      $('nkVT').classList.toggle('empty', !S.flex && !S.slot);
-      $('nkTimeLab').textContent = S.a
-        ? 'Which prayer on ' + pretty(S.a) + '?'
-        : 'A nikāḥ is usually held straight after a congregational prayer';
+        : (S.time ? pretty12(S.time) : 'Not chosen');
+      $('nkVT').classList.toggle('empty', !S.flex && !S.time);
+      //  No date in this label any more. A wall-clock time means the same
+      //  thing on the first choice and on the alternative, which is exactly
+      //  why it replaced the prayer.
+      $('nkTimeLab').textContent = 'What time would suit you?';
       renderAction();
     }
 
-    function ready(){ return !!S.a && (S.flex || !!S.slot); }
+    function ready(){ return !!S.a && (S.flex || timeOK(S.time)); }
 
     function renderAction(){
       var host = $('nkAction');
@@ -9301,7 +9300,9 @@ window.TAIYABAH_PUBLIC = {
         $('nkProblems').classList.remove('on');
         var bad = [];
         if(!S.a) bad.push('Choose a date on the calendar.');
-        if(!S.flex && !S.slot) bad.push('Choose a prayer, or say you are flexible.');
+        if(!S.flex && !S.time) bad.push('Choose a time, or say you are flexible.');
+        else if(!S.flex && !timeOK(S.time))
+          bad.push('Choose a time between 8:00am and 10:00pm, on the quarter hour.');
 
         //  THE FIVE PEOPLE. Checked here so somebody sees a sentence, and
         //  again in Postgres because a browser can be edited.
@@ -9369,10 +9370,8 @@ window.TAIYABAH_PUBLIC = {
           body: JSON.stringify({ payload:{
             masjid: cfg.MASJID,
             preferred_date: S.a,
-            slot: S.flex ? 'flexible' : S.slot,
-            preferred_time: (S.flex || !S.slot) ? '' :
-              (jamaah(S.a, (PRAYER_SLOTS.filter(function(x){ return x.key === S.slot; })[0] || {}).col) ||
-               (S.slot === 'saturday_11' ? '11:00' : '')),
+            slot: S.flex ? 'flexible' : 'specific',
+            preferred_time: S.flex ? '' : S.time,
             time_flexible: S.flex,
             guests_estimate: v('nkGuests'),
             contact_name: v('nkName'), contact_role: v('nkRole'),
@@ -9425,21 +9424,30 @@ window.TAIYABAH_PUBLIC = {
       var b = e.target.closest('.hh-day'); if(!b || b.disabled) return;
       var k = b.dataset.d;
       S.a = (S.a === k) ? null : k;
-      if(S.slot === SATURDAY_SLOT.key && S.a && !isSaturday(S.a)) S.slot = null;
       renderMonth(); renderSlots(); renderPanel();
     });
 
     $('nkSlots').addEventListener('click', function(e){
       var b = e.target.closest('.nk-slot'); if(!b) return;
-      if(b.dataset.t === 'flex'){ S.flex = !S.flex; if(S.flex) S.slot = null; }
-      else { S.flex = false; S.slot = (S.slot === b.dataset.t) ? null : b.dataset.t; }
+      if(b.dataset.t !== 'flex') return;
+      S.flex = !S.flex; if(S.flex) S.time = null;
       renderSlots(); renderPanel();
+    });
+
+    //  'change', not 'input': re-rendering on every keystroke inside a time
+    //  field makes the summary flicker through half-typed hours. The input
+    //  itself is never re-rendered here, so focus stays where it was.
+    $('nkSlots').addEventListener('change', function(e){
+      if(!e.target || e.target.id !== 'nkTime') return;
+      S.time = e.target.value || null;
+      if(S.time) S.flex = false;
+      renderPanel();
     });
 
     $('nkPrev').addEventListener('click', function(){ view.setMonth(view.getMonth()-1); renderMonth(); });
     $('nkNext').addEventListener('click', function(){ view.setMonth(view.getMonth()+1); renderMonth(); });
     $('nkClear').addEventListener('click', function(){
-      S = { a:null, slot:null, flex:false };
+      S = { a:null, time:null, flex:false };
       $('nkAction').innerHTML = '';
       renderMonth(); renderSlots(); renderPanel();
     });

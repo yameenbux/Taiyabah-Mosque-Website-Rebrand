@@ -10,8 +10,12 @@ nikah_people). What it guards is the page:
 
   *  1  one date, not two. The 1st/2nd choice toggle is gone, and so is any
         way of picking a second date by accident
-  *  2  no Fajr. Nobody holds a nikāḥ at first light, and the slot that said
-        they might has gone
+  *  2  THE TIME IS A CLOCK TIME, NOT A PRAYER. It was five prayer chips with
+        the jamāʿah time printed under each, and that time came from the
+        FIRST of the two dates a family may offer — so it was wrong for
+        anyone the office booked on the second. No prayer name is offered
+        here now, and the control is a real <input type="time"> held to the
+        masjid's window on the quarter hour
   *  3  the form does not appear until a date AND a time are chosen — the
         thirty-odd fields below are not something to drop on somebody who has
         not picked a day yet
@@ -106,13 +110,22 @@ def pick_date(pg):
     pg.wait_for_timeout(350)
 
 
-def pick_zuhr(pg):
-    for sl in pg.query_selector_all('[data-page="svc-marriage"] .nk-slot'):
-        if "Zuhr" in sl.text_content():
-            sl.click()
-            pg.wait_for_timeout(450)
-            return
-    raise AssertionError("no Zuhr slot to choose")
+def pick_time(pg, hhmm="14:30"):
+    """Set the time field the way a person would, and let the page react.
+
+    fill() alone does not fire `change` on every browser, and the page
+    listens for `change` rather than `input` so the summary does not
+    flicker through half-typed hours — so the event is dispatched here
+    explicitly. Without it this helper would silently set a value the page
+    never hears about, and every assertion after it would be testing a form
+    that had not been told anything.
+    """
+    sel = '[data-page="svc-marriage"] #nkTime'
+    el = pg.query_selector(sel)
+    assert el is not None, "there is no time field to set"
+    pg.fill(sel, hhmm)
+    pg.dispatch_event(sel, "change")
+    pg.wait_for_timeout(450)
 
 
 def fill_everything(pg, ages=None):
@@ -154,14 +167,33 @@ with sync_playwright() as p:
     # =====================================================================
     #  2. NO FAJR
     #
-    #  Asserted on the rendered SLOTS, not on the source: the slots are built
-    #  from an array and redrawn on every click, and the word "Fajr" appears
-    #  all over this page for the prayer timetable.
+    #  Asserted on what is RENDERED, not on the source: the control is built
+    #  from a string and redrawn, and every prayer name appears all over this
+    #  page for the timetable, so the source would match on the wrong thing.
     # =====================================================================
     pick_date(pg)
     slots = pg.text_content('[data-page="svc-marriage"] #nkSlots')
-    check("Fajr" not in slots, "Fajr is still offered as a nikāḥ time: %r" % slots)
-    check("Zuhr" in slots, "the slots did not render at all: %r" % slots)
+    for prayer in ["Fajr", "Zuhr", "Asr", "Maghrib", "Isha"]:
+        check(prayer not in slots,
+              "%s is still offered as a nikāḥ time: %r" % (prayer, slots))
+    check("flexible" in slots.lower(),
+          "the time control did not render at all: %r" % slots)
+
+    field = pg.query_selector('[data-page="svc-marriage"] #nkTime')
+    check(field is not None, "there is no time field on the form")
+    if field:
+        check(field.get_attribute("type") == "time",
+              "the time control is not a real <input type=time>, so phones "
+              "will not give their own wheel: %r" % field.get_attribute("type"))
+        #  The window has to match db/161 and native/src/nikah-time.js. Three
+        #  places enforce it, so a change to one that misses the others shows
+        #  up here rather than as a form that passes and then throws.
+        check(field.get_attribute("min") == "08:00",
+              "the earliest time is not 08:00: %r" % field.get_attribute("min"))
+        check(field.get_attribute("max") == "22:00",
+              "the latest time is not 22:00: %r" % field.get_attribute("max"))
+        check(field.get_attribute("step") == "900",
+              "the step is not a quarter hour: %r" % field.get_attribute("step"))
 
     # =====================================================================
     #  3. THE FORM WAITS FOR A DATE AND A TIME
@@ -169,9 +201,9 @@ with sync_playwright() as p:
     check(pg.query_selector("#nkForm") is None,
           "the whole form appeared before a time was chosen — that is thirty "
           "fields dropped on somebody who has not picked a day yet")
-    pick_zuhr(pg)
+    pick_time(pg, "14:30")
     check(pg.query_selector("#nkForm") is not None,
-          "the form never appeared after a date and a prayer were chosen")
+          "the form never appeared after a date and a time were chosen")
 
     # =====================================================================
     #  4. FIVE PEOPLE, NUMBERED, WITH THE SIX FIELDS
@@ -275,12 +307,23 @@ with sync_playwright() as p:
         #  The one thing that must NOT travel.
         check("privacy_accepted" in sent and sent["privacy_accepted"] is True,
               "the declaration was not recorded with the request")
+        #  THE TIME, AS THE DATABASE WILL RECEIVE IT. db/161 accepts
+        #  slot='specific' only with an HH:MM preferred_time, so a page that
+        #  sent the old shape would be refused on arrival with the family
+        #  watching.
+        check(sent.get("slot") == "specific",
+              "the slot sent was %r, not 'specific'" % sent.get("slot"))
+        check(sent.get("preferred_time") == "14:30",
+              "the chosen time did not reach the payload: %r"
+              % sent.get("preferred_time"))
+        check(sent.get("time_flexible") is False,
+              "a chosen time was sent as flexible: %r" % sent.get("time_flexible"))
 
     # =====================================================================
     #  9. A BAD POSTCODE IS CAUGHT HERE, NOT ONLY IN POSTGRES
     # =====================================================================
     pg2, errs2 = open_page(b)
-    pick_date(pg2); pick_zuhr(pg2)
+    pick_date(pg2); pick_time(pg2)
     fill_everything(pg2)
     pg2.fill("#nkW2Post", "07700900123")
     pg2.click("#nkSubmit")
