@@ -84,7 +84,7 @@ def check(ok, why):
 #  folder -> the key it should mark as "you are here"
 SCREENS = {
     "venue": "venue", "courses": "courses", "giftaid": "giftaid",
-    "take-payment": "takepayment",
+    "take-payment": "takepayment", "members": "members",
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
@@ -100,6 +100,12 @@ SCREENS = {
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
               "Adult classes", "Food Bank volunteers", "Donations", "Take a payment",
+              #  MEMBERSHIP, added 13 November 2026 with members/. It is in
+              #  Money rather than the madrasah because the register is the
+              #  masjid's own, and it is admin-only: members/app.js asks
+              #  PortalGate for the admin panel and every membership_* write
+              #  in Postgres is behind verified_admin().
+              "Membership",
               "Madrasah portal", "Notifications & notices",
               "Notices", "Hall hire charges", "Prayer timetable",
               "The new build page", "Ramadan date", "User access", "System health"],
@@ -197,6 +203,11 @@ ADMITS = {
     "volunteers":  ["admin", "hall_office"],   # app.js:130
     "giftaid":     ["admin"],                  # app.js:117
     "takepayment": ["admin"],                  # take-payment/app.js canSee()
+    #  members/app.js asks PortalGate for the admin panel, and every
+    #  membership_* function that writes anything is behind verified_admin()
+    #  in Postgres (db/159, db/160). The register is the masjid's own, so it
+    #  is in Money rather than the madrasah, and no teacher sees it.
+    "members":     ["admin"],                  # members/app.js PortalGate.start
     "madrasah":    ["admin", "teacher"],       # portal/app.js:212 and :357
     "newbuild":    ["admin"],                  # app.js:138
     "access":      ["admin"],                  # app.js:143
@@ -223,14 +234,39 @@ ADMITS = {
 }
 
 # ---------------------------------------------------------------- 1. wiring
+def screen_js(d, html):
+    """Every script the page loads from this repo, its own app.js first.
+
+    THE MOUNT DOES NOT HAVE TO BE IN app.js ANY MORE. For twelve screens it
+    was, because each carried its own five-hundred-line copy of the sign-in
+    flow. members/ is the first to SHARE one — portal/fees/gate.js, which the
+    eight Fees screens already use and which mounts the rail itself — so
+    looking only at app.js reported a screen with no rail when it has one.
+
+    The check it feeds is unweakened: the mount must still exist, and must
+    still sit inside renderApp(identity) so that no rail is drawn for
+    somebody who has not signed in. It is simply allowed to be in the file
+    that actually does the signing in."""
+    out = [open(f"{d}/app.js", encoding="utf-8").read()]
+    here = os.path.dirname(f"{d}/index.html")
+    for src in re.findall(r'<script[^>]+src="([^"]+)"', html):
+        f = os.path.normpath(os.path.join(here, src))
+        if f.endswith("/app.js") or not os.path.exists(f):
+            continue
+        out.append(open(f, encoding="utf-8").read())
+    return out
+
+
 for d in SCREENS:
     html = open(f"{d}/index.html", encoding="utf-8").read()
     js = open(f"{d}/app.js", encoding="utf-8").read()
+    wiring = screen_js(d, html)
     check("admin/shell.css" in html, "%s/ does not link admin/shell.css" % d)
     check("admin/shell.js" in html, "%s/ does not load admin/shell.js" % d)
-    check("AdminShell.mount" in js,
-          "%s/app.js never calls AdminShell.mount, so the stylesheet loads and "
-          "no rail is ever drawn — which looks exactly like having no rail" % d)
+    check(any("AdminShell.mount" in f for f in wiring),
+          "%s/ never calls AdminShell.mount in its own app.js or in any gate it "
+          "loads, so the stylesheet loads and no rail is ever drawn — which "
+          "looks exactly like having no rail" % d)
     #  Mounted from renderApp, which runs only once identity is known. If it
     #  ever moves somewhere that runs earlier, the rail would be drawn for
     #  somebody who is not signed in.
@@ -243,21 +279,24 @@ for d in SCREENS:
     #  inside renderApp, exactly where it belongs; the test simply could not
     #  see that far. A test that fails when a comment is added is a test that
     #  gets "fixed" by deleting the comment.
-    m = re.search(r"function renderApp\(identity\)\s*\{", js)
-    body = ""
-    if m:
+    mounted_after_signin = False
+    for f in wiring:
+        m = re.search(r"function renderApp\(identity\)\s*\{", f)
+        if not m:
+            continue
         i, depth = m.end(), 1
-        while i < len(js) and depth:
-            if js[i] == "{":
+        while i < len(f) and depth:
+            if f[i] == "{":
                 depth += 1
-            elif js[i] == "}":
+            elif f[i] == "}":
                 depth -= 1
             i += 1
-        body = js[m.end():i]
-    m = m and type("M", (), {"group": lambda self, n: body})()
-    check(m and "AdminShell.mount" in m.group(1),
-          "%s/app.js calls AdminShell.mount from outside renderApp(identity). "
-          "It must mount only after sign-in." % d)
+        if "AdminShell.mount" in f[m.end():i]:
+            mounted_after_signin = True
+            break
+    check(mounted_after_signin,
+          "%s/ calls AdminShell.mount from outside renderApp(identity), in its "
+          "app.js or in the gate it loads. It must mount only after sign-in." % d)
 
 # ------------------------------------------------------- 4. every link real
 shell_js = open("admin/shell.js", encoding="utf-8").read()
@@ -401,6 +440,20 @@ for d in SCREENS:
 #  hooks rather than styles: access/ puts `inv-r` on a checkbox purely so
 #  app.js can find it, and the visible styling comes from `.inv-role input`
 #  on the parent. Those are correct and must not be reported.
+def sheets_for(path, html):
+    """The CSS a screen actually gets: every linked sheet, plus any inline."""
+    css = "".join(re.findall(r"<style>(.*?)</style>", html, re.S))
+    here = os.path.dirname(path)
+    for href in re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', html):
+        f = os.path.normpath(os.path.join(here, href))
+        if os.path.exists(f):
+            css += open(f, encoding="utf-8").read()
+        else:
+            check(False, "%s links %s, which is not there"
+                         % (os.path.relpath(path, ROOT), href))
+    return css
+
+
 SHARED = ""
 for sheet in ("admin/shell.css", "admin/fonts.css"):
     if os.path.exists(sheet):
@@ -409,7 +462,14 @@ for sheet in ("admin/shell.css", "admin/fonts.css"):
 for d in SCREENS:
     html = open(f"{d}/index.html", encoding="utf-8").read()
     js = open(f"{d}/app.js", encoding="utf-8").read()
-    css = "\n".join(re.findall(r"<style>(.*?)</style>", html, re.S)) + SHARED
+    #  THE SCREEN'S OWN SHEETS COUNT TOO. Until members/ no admin screen had
+    #  one — everything came from shell.css or an inline <style> — so this
+    #  read the shared pair and stopped. A page with its own stylesheet then
+    #  had every class in it reported as having no rules behind it, which is
+    #  the opposite of the truth and would have been "fixed" by deleting the
+    #  stylesheet. sheets_for() was already here for exactly this and simply
+    #  was not called.
+    css = sheets_for(f"{d}/index.html", html) + SHARED
     body = html[html.find("<body>"):]
 
     styled = set(re.findall(r"\.([A-Za-z][A-Za-z0-9_-]*)", css))
@@ -671,20 +731,6 @@ with sync_playwright() as p:
 #  writes.
 def defined_classes(css):
     return set(re.findall(r"\.(-?[A-Za-z_][\w-]*)", css))
-
-
-def sheets_for(path, html):
-    """The CSS a screen actually gets: every linked sheet, plus any inline."""
-    css = "".join(re.findall(r"<style>(.*?)</style>", html, re.S))
-    here = os.path.dirname(path)
-    for href in re.findall(r'<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"', html):
-        f = os.path.normpath(os.path.join(here, href))
-        if os.path.exists(f):
-            css += open(f, encoding="utf-8").read()
-        else:
-            check(False, "%s links %s, which is not there"
-                         % (os.path.relpath(path, ROOT), href))
-    return css
 
 
 #  A class may legitimately carry no styling if it is only ever a hook for

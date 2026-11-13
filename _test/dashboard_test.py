@@ -273,10 +273,14 @@ with sync_playwright() as p:
     #  `collections` key, and the BUSY fixture below does not carry one. The
     #  list is drawn from ROLES now, so a payload that omits a key no longer
     #  removes a door.
+    #  `../members/` joined in November 2026 with the masjid's membership
+    #  register — the office's screen for who is a member, which years they
+    #  owe and what has been paid. It sits in the Money group beside
+    #  Donations and Hall hire.
     want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
             "../giftaid/", "../take-payment/", "../portal/", "../app/", "../notices/", "../rates/",
             "../times/", "../newbuild/", "../access/", "../health/",
-            "../ramadan-date/"]
+            "../ramadan-date/", "../members/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))

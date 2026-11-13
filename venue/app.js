@@ -185,11 +185,38 @@
       box.hidden = false;
     }
 
+    //  'specific' is not in here on purpose: the label IS the time the
+    //  family asked for, so slotText() reads preferred_time instead. The
+    //  prayer names stay because requests taken before November 2026 still
+    //  carry them and the office must still be able to read its own queue.
     var SLOT_LABELS = {
       after_fajr: "After Fajr", after_zuhr: "After Zuhr", after_asr: "After Asr",
       after_maghrib: "After Maghrib", after_isha: "After Isha",
       saturday_11: "Saturday 11:00am", flexible: "Flexible — masjid to suggest"
     };
+
+    //  '14:30' -> '2:30pm'.
+    function pretty12(hhmm) {
+      var p = String(hhmm || "").split(":"), h = +p[0], m = p[1];
+      if (isNaN(h) || !m) return "";
+      var ap = h < 12 ? "am" : "pm"; h = h % 12; if (h === 0) h = 12;
+      return h + ":" + m + ap;
+    }
+
+    //  What to show in the "time" column for one request, old shape or new.
+    //  An unknown key falls through to the key itself rather than to an
+    //  empty cell: a blank reads as "no preference", which is a different
+    //  thing and would send the office into the wrong conversation.
+    function slotText(r) {
+      if (!r) return "";
+      if (r.slot === "specific") return pretty12(r.preferred_time) || "(time missing)";
+      var lab = SLOT_LABELS[r.slot];
+      if (!lab) return String(r.slot || "");
+      //  saturday_11 names its own time; appending preferred_time printed
+      //  "Saturday 11:00am · 11:00am".
+      if (r.slot === "flexible" || r.slot === "saturday_11" || !r.preferred_time) return lab;
+      return lab + " · " + pretty12(r.preferred_time);
+    }
 
     // One shape for both kinds, so render() and apply() do not have to care.
     // What was hired. New bookings say how many halls, or kitchen-only, and
@@ -299,8 +326,7 @@
     }
 
     function fromNikah(r) {
-      var when = SLOT_LABELS[r.slot] || r.slot || "";
-      if (r.preferred_time && r.slot !== "flexible") when += " \u00B7 " + r.preferred_time;
+      var when = slotText(r);
       if (r.alternative_date) when += " \u00B7 2nd choice " + longDate(r.alternative_date);
       if (r.guests_estimate) when += " \u00B7 ~" + r.guests_estimate + " guests";
       return {

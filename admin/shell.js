@@ -185,7 +185,15 @@
         what: "See what's coming in, then copy the Gift Aid rows for HMRC and mark them claimed" },
       { key: "takepayment", href: "take-payment/", icon: "pound",  name: "Take a payment",
         needs: ["admin"],
-        what: "Connect the card reader and take an in-person donation, branded as the masjid's own" }
+        what: "Connect the card reader and take an in-person donation, branded as the masjid's own" },
+      /*  MEMBERSHIP IS MONEY, NOT THE MADRASAH. It sits here rather than in
+          portal/ because the register is the masjid's own and the person
+          looking for it is the person who already opens Donations and Hall
+          Hire. It is admin-only, and members/app.js admits the same role —
+          admin_shell_test.py fails if those two ever stop agreeing. */
+      { key: "members",     href: "members/",     icon: "people", name: "Membership",
+        needs: ["admin"],
+        what: "Who is on the register, who has paid this Ramadan, and who is behind" }
     ]},
     { label: "The madrasah", areas: [
       { key: "madrasah",    href: "portal/",      icon: "people", name: "Madrasah portal",

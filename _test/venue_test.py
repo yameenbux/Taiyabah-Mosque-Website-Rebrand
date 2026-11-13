@@ -271,7 +271,13 @@ REASON = "Double booked with a funeral service, trustees agreed"
 reply = ["no"]
 
 with sync_playwright() as p:
-    b = p.chromium.launch()
+    #  nikah_test.py hardcodes this path; here it is used only when it
+    #  exists, so the suite still runs on a machine with Playwright's own
+    #  browsers installed. Without either, this suite could not be run at
+    #  all, which looks exactly like a suite that passes.
+    _exe = "/opt/pw-browsers/chromium"
+    b = (p.chromium.launch(executable_path=_exe) if os.path.exists(_exe)
+         else p.chromium.launch())
     pg = b.new_page(viewport={"width": 1280, "height": 1000})
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.on("console", lambda m: errs.append("console: " + m.text) if m.type == "error" else None)
