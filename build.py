@@ -291,17 +291,26 @@ subs = {
     '{{ICON_B64}}': load('build-inputs/icon_b64.txt'),
     '{{CONTACT_BUILDING_B64}}': image('contact-building'),
     '{{LOGO_B64}}': load('build-inputs/logo_b64.txt'),
-    #  Same crest as {{LOGO_B64}}, recolored from the header/footer's cream
-    #  (right for a dark bar) to brand-800 #4B1136 (right for a card on
-    #  --card/--paper's pale background) — alpha channel copied over from
-    #  the original PNG via ImageMagick, not approximated with a CSS
-    #  filter, so it is the exact brand colour rather than a filter chain's
-    #  guess at it. A single flat colour over transparency quantizes to an
-    #  8-bit palette image at ~2.8 KB rather than the ~10.6 KB truecolor
-    #  PNG the recolor step produces by default — the 8.5 KB difference is
-    #  the whole gap between passing and failing weight_test.py's budget.
-    #  Used on the Food Bank card.
-    '{{LOGO_MAROON_B64}}': load('build-inputs/logo_maroon_b64.txt'),
+    #  The Food Bank card's crest, recolored to gold rather than plum — a
+    #  first attempt recolored {{LOGO_B64}}'s own 339×240 derivative, which
+    #  is already a downscaled, already-quantized copy of the real master,
+    #  and looked it: blurry at the card's display size. This one starts
+    #  from Assets/logo-dark.png, the 780×552 master both {{LOGO_B64}} and
+    #  the app icons are themselves generated from, so the calligraphy's
+    #  curves are still clean going into the recolor.
+    #
+    #  --gold-ink (#7A5D14), not --gold (#C6A24C) — the comment by
+    #  --gold-ink's own definition near the top of this file says exactly
+    #  this: "--gold for gold on plum, --gold-ink for gold on paper or
+    #  card." This card's background is --card, so --gold-ink is the one
+    #  that's actually legible, not just the one that looks gold in an
+    #  editor swatch.
+    #
+    #  Alpha channel copied from the master via ImageMagick, not
+    #  approximated with a CSS filter; quantized to a 4-colour palette PNG
+    #  (keeps a little of the antialiasing a 2-colour version throws away)
+    #  at ~3.6 KB. Used on the Food Bank card.
+    '{{LOGO_GOLD_B64}}': load('build-inputs/logo_gold_b64.txt'),
     '{{QR_B64}}': load('build-inputs/qr_b64.txt'),
     '{{WA_QR_B64}}': load('build-inputs/wa_qr_b64.txt'),
     '{{BANNER_PHOTO_B64}}': image('banner-photo'),

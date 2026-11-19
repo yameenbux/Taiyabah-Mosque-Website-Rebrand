@@ -645,7 +645,6 @@ window.TAIYABAH_PUBLIC = {
       exactly how this project lost an evening to `.cc-yn input` once
       already. */
   .glance-card[hidden]{display:none;}
-  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
   .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
   .glance-title svg{width:14px;height:14px;color:var(--brand-800);flex-shrink:0;}
@@ -1421,7 +1420,6 @@ window.TAIYABAH_PUBLIC = {
   table.pt td{padding:10px 11px;border-bottom:1px solid var(--line);font-size:.96rem;white-space:nowrap;}
   table.pt tr:last-child td{border-bottom:none;}
   table.pt tr.today td{background:rgba(198,162,76,.14);font-weight:700;}
-  .pt-note{margin-top:14px;font-size:.931rem;color:var(--muted);line-height:1.6;}
   .jummah-note{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
   .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:.949rem;}
   .jummah-note .jc b{display:block;font-family:"Fraunces","Fraunces fallback",serif;color:var(--brand-800);margin-bottom:3px;}
@@ -2717,16 +2715,21 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="glance-card glance-foodbank">
-          <div class="glance-head">
-            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg> Taiyabah Food Bank</span>
-          </div>
           <div class="fb-art">
             <!-- The masjid's own crest, not the crescent-and-star it replaces — asked
                  for by name, so the card reads as the masjid's food bank rather than a
-                 generic one. {{LOGO_MAROON_B64}} is {{LOGO_B64}} (the header/footer
-                 crest) recoloured to brand-800 for this card's pale background instead
-                 of the dark bar/footer it was drawn for — see build.py. -->
-            <img class="fb-logo" src="data:image/png;base64,{{LOGO_MAROON_B64}}" alt="Taiyabah Masjid">
+                 generic one. The card's own header text ("Taiyabah Food Bank") is gone
+                 now that the crest carries that on its own; "Food Bank" underneath is
+                 what still needs saying.
+
+                 {{LOGO_GOLD_B64}} is built from Assets/logo-dark.png — the 780×552
+                 MASTER, not the 339×240 derivative {{LOGO_B64}} is baked from — with
+                 its alpha channel recoloured to --gold-ink (gold dark enough to read
+                 on paper/card; see the --gold-ink comment near the top of this file)
+                 rather than --gold itself, which is for gold on plum. Starting from
+                 the master is what keeps the calligraphy's curves clean instead of
+                 blurring an already-small image further; see build.py. -->
+            <img class="fb-logo" src="data:image/png;base64,{{LOGO_GOLD_B64}}" alt="Taiyabah Masjid">
             <div class="fb-logo-label">Food Bank</div>
           </div>
           <span class="fb-soon">Coming soon</span>
@@ -3112,7 +3115,6 @@ window.TAIYABAH_PUBLIC = {
           <div class="snap-row"><span class="k">Asr</span><span class="v" id="s-asr">—</span></div>
           <div class="snap-row"><span class="k">Maghrib</span><span class="v" id="s-maghrib">—</span></div>
           <div class="snap-row"><span class="k">Isha</span><span class="v" id="s-isha">—</span></div>
-          <p class="snap-note">Computed in your browser from the masjid&rsquo;s published timetable (Europe/London time).</p>
         </div>
       </div>
 
@@ -3135,7 +3137,6 @@ window.TAIYABAH_PUBLIC = {
           </table>
         </div>
         <div class="jummah-note" id="jummahNote"></div>
-        <p class="pt-note">Always confirm times on the printed board at the masjid, or in the app, before relying on them. Outside 2026, only the app will have current times.</p>
       </div>
     </div>
   </section>
