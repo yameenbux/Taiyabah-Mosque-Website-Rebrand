@@ -9581,8 +9581,17 @@ window.TAIYABAH_PUBLIC = {
      there is no "show it anyway" for a card whose entire point is the
      picture. Appended straight into #glanceGrid, the SAME grid Prayer
      Times, Announcements, Food Bank and Donate already sit in — not a
-     section of its own — so an extra card wraps onto the next row at the
-     grid's own width rather than squeezing the original four.
+     section of its own.
+
+     THE ROW NEVER GROWS PAST FIVE CARDS, so it never wraps to a second
+     row: the masjid's own ask. Five minus however many static cards are
+     already sitting in #glanceGrid at the moment this runs — four today,
+     so one notice — rather than a bare "1" written down here, which
+     would silently go stale (and quietly let the row wrap again) the day
+     a fifth static card is added above and nobody remembers to come back
+     to this file. notices_live() already orders newest-first, so taking
+     the top N of that is "a new poster replaces the oldest one shown"
+     with no separate replacement logic at all.
 
      NOT PROGRESSIVE ENHANCEMENT, unlike the appeal below. The appeal is a
      slow-moving figure worth baking into the build so a visitor with
@@ -9617,8 +9626,11 @@ window.TAIYABAH_PUBLIC = {
       if(!Array.isArray(rows)) return;
 
       //  The function orders newest-first but applies no limit of its own,
-      //  and a notice with no poster is not a candidate at all.
-      var withPoster = rows.filter(function(n){ return !!n.image_url; }).slice(0, 4);
+      //  and a notice with no poster is not a candidate at all. The row
+      //  holds five cards total, so this takes only as many notices as
+      //  there is room left for beside the static ones already in the grid.
+      var roomLeft = Math.max(0, 5 - grid.children.length);
+      var withPoster = rows.filter(function(n){ return !!n.image_url; }).slice(0, roomLeft);
 
       withPoster.forEach(function(n){
         var card = document.createElement('div');
