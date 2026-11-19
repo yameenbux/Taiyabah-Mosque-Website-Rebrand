@@ -662,7 +662,7 @@ window.TAIYABAH_PUBLIC = {
   .gp-row .gp-times b{font-weight:700;}
   .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -8px;padding:5px 8px;border-radius:7px;border-bottom-color:transparent;}
   .gp-row.is-next .gp-times{color:var(--brand-900);}
-  .gp-foot{margin-top:6px;font-size:.853rem;color:var(--muted);}
+  .gp-date{margin-bottom:8px;font-size:.853rem;color:var(--muted);}
   /*  The only one of the five cards with no justify-content of its own —
       every other variant already centers (.glance-promo, .glance-donate)
       or grows a flexible middle (.fb-art flex:1), so stretching those to
@@ -697,8 +697,9 @@ window.TAIYABAH_PUBLIC = {
      Deliberately NOT a link and deliberately without cursor:pointer. There is
      nothing behind it yet, and a card that looks tappable and goes nowhere
      reads as a broken website rather than as an announcement. */
-  .fb-art{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 4px;min-height:0;}
-  .fb-art svg{width:100%;max-width:230px;height:auto;display:block;}
+  .fb-art{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px 0 4px;min-height:0;}
+  .fb-logo{width:100%;max-width:170px;height:auto;display:block;}
+  .fb-logo-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:1.02rem;letter-spacing:.03em;color:var(--brand-800);}
   .fb-soon{
     align-self:center;display:inline-flex;align-items:center;gap:6px;
     padding:5px 13px;border-radius:999px;background:rgba(198,162,76,.16);
@@ -2694,13 +2695,14 @@ window.TAIYABAH_PUBLIC = {
             <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg> Prayer Times</span>
             <span class="glance-more" data-nav="prayer">View Full Timetable →</span>
           </div>
+          <div class="gp-date" id="gpDate">Loading today&rsquo;s times…</div>
           <div class="gp-table-head"><span>Prayer</span><span class="gp-cols"><span class="gp-col">Begins</span><span class="gp-col">Jam&#703;at</span></span></div>
           <div class="gp-row" id="gpRow-Fajr"><span class="gp-name">Fajr</span><span class="gp-times"><span id="gp-fajr-b">—</span><b id="gp-fajr-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Sunrise"><span class="gp-name">Sunrise</span><span class="gp-times"><span>—</span><b id="gp-sunrise">—</b></span></div>
           <div class="gp-row" id="gpRow-Zuhr"><span class="gp-name">Zuhr</span><span class="gp-times"><span id="gp-zuhr-b">—</span><b id="gp-zuhr-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Asr"><span class="gp-name">Asr</span><span class="gp-times"><span id="gp-asr-b">—</span><b id="gp-asr-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Maghrib"><span class="gp-name">Maghrib</span><span class="gp-times"><span>—</span><b id="gp-maghrib-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Isha"><span class="gp-name">Isha</span><span class="gp-times"><span id="gp-isha-b">—</span><b id="gp-isha-j">—</b></span></div>
-          <div class="gp-foot" id="gpDate">Loading today&rsquo;s times…</div>
         </div>
 
         <div class="glance-card glance-promo glance-wa">
@@ -2719,28 +2721,13 @@ window.TAIYABAH_PUBLIC = {
             <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg> Taiyabah Food Bank</span>
           </div>
           <div class="fb-art">
-            <!-- Crescent and star. Replaced a drawn bag of groceries on 12 September
-                 2026 — the committee wanted something Islamic rather than literal, and
-                 the card's title carries the word "food bank" on its own.
-
-                 The crescent is a filled circle with a second, offset circle masked out
-                 of it. Drawing it as a single path means hand-tuning two arc radii until
-                 the horns look right, and anybody adjusting it later has to do that
-                 again; two circles and a mask can be nudged by changing one number. The
-                 mask id has to stay unique — the whole site is inlined into one file. -->
-            <svg viewBox="0 0 240 150" role="img" aria-label="A crescent moon and star.">
-              <circle cx="120" cy="75" r="58" fill="#C6A24C" opacity=".13"/>
-              <circle cx="120" cy="75" r="49" fill="none" stroke="#C6A24C" stroke-width="1.4" opacity=".45" stroke-dasharray="1 7" stroke-linecap="round"/>
-              <mask id="fbCrescentMask">
-                <rect width="240" height="150" fill="#000"/>
-                <circle cx="116" cy="77" r="33" fill="#fff"/>
-                <circle cx="133" cy="65" r="27.5" fill="#000"/>
-              </mask>
-              <circle cx="116" cy="77" r="33" fill="#4B1136" mask="url(#fbCrescentMask)"/>
-              <g fill="#C6A24C" transform="translate(146,52) scale(.22) translate(-50,-50)">
-                <polygon points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/>
-              </g>
-            </svg>
+            <!-- The masjid's own crest, not the crescent-and-star it replaces — asked
+                 for by name, so the card reads as the masjid's food bank rather than a
+                 generic one. {{LOGO_MAROON_B64}} is {{LOGO_B64}} (the header/footer
+                 crest) recoloured to brand-800 for this card's pale background instead
+                 of the dark bar/footer it was drawn for — see build.py. -->
+            <img class="fb-logo" src="data:image/png;base64,{{LOGO_MAROON_B64}}" alt="Taiyabah Masjid">
+            <div class="fb-logo-label">Food Bank</div>
           </div>
           <span class="fb-soon">Coming soon</span>
           <a class="fb-vol" href="#" data-nav="volunteer">Register as a volunteer
@@ -6175,6 +6162,7 @@ window.TAIYABAH_PUBLIC = {
     dateEl.textContent = dateLabel;
     document.getElementById('gp-fajr-b').textContent = row[3];
     document.getElementById('gp-fajr-j').textContent = row[4];
+    document.getElementById('gp-sunrise').textContent = row[5];
     document.getElementById('gp-zuhr-b').textContent = row[6];
     document.getElementById('gp-zuhr-j').textContent = row[7];
     document.getElementById('gp-asr-b').textContent = row[8];
