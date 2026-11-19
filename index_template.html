@@ -613,9 +613,14 @@ window.TAIYABAH_PUBLIC = {
       object-fit:cover, which is the right answer for a decorative photograph
       and the wrong one for a picture whose entire job is to be read — it
       sliced the sides off, so the speaker's name and half the title were
-      gone. align-self:start lets this card be as tall as the poster needs
-      rather than as tall as the row, which is a card of a different height
-      and a poster somebody can actually read. */
+      gone. This comment described align-self:start as the fix, but the rule
+      itself was never actually written below — the card went on stretching
+      and cropping in production for the next several weeks until a visitor
+      pointed at a screenshot and asked why the poster was cut off.
+      align-self:start on .glance-notice-live is what actually does it:
+      lets this card be as tall as the poster needs rather than as tall as
+      the row, which is a card of a different height and a poster somebody
+      can actually read. */
   /*  [hidden] HAS TO BE SAID OUT LOUD HERE. The browser's own rule is
       [hidden]{display:none}, and .glance-card sets display:flex — an author
       rule beats a user-agent one, so the card stayed in the layout as an
@@ -726,9 +731,9 @@ window.TAIYABAH_PUBLIC = {
      rather than the existing four being squeezed to make room. A notice
      with no poster is skipped outright — there is nothing this card is
      allowed to show instead. */
-  .glance-notice-live{padding:0;overflow:hidden;}
+  .glance-notice-live{padding:0;overflow:hidden;align-self:start;}
   .glance-notice-live img{
-    width:100%;height:100%;min-height:180px;object-fit:cover;display:block;
+    width:100%;height:auto;display:block;
   }
 
   /* ---- App promo (home page) ---- */
