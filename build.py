@@ -307,9 +307,13 @@ subs = {
     #  editor swatch.
     #
     #  Alpha channel copied from the master via ImageMagick, not
-    #  approximated with a CSS filter; quantized to a 4-colour palette PNG
-    #  (keeps a little of the antialiasing a 2-colour version throws away)
-    #  at ~3.6 KB. Used on the Food Bank card.
+    #  approximated with a CSS filter. Rendered at 510px wide — the card
+    #  displays it at max 170px, and 510 is 3x that, so it stays sharp on
+    #  a 3x-DPI phone instead of being upscaled past its own pixels (the
+    #  420px version was blurry on exactly those screens). Quantized to a
+    #  16-colour palette PNG to keep the file small without the banding a
+    #  4-colour palette shows at this larger size, at ~5 KB. Used on the
+    #  Food Bank card.
     '{{LOGO_GOLD_B64}}': load('build-inputs/logo_gold_b64.txt'),
     '{{QR_B64}}': load('build-inputs/qr_b64.txt'),
     '{{WA_QR_B64}}': load('build-inputs/wa_qr_b64.txt'),
