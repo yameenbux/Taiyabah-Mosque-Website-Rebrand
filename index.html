@@ -556,7 +556,15 @@ window.TAIYABAH_PUBLIC = {
       written out one per card — 1fr 1.05fr 1.05fr .85fr — which means the row
       only ever has as many columns as somebody typed. This says "as many as
       fit", so a card added or removed needs no second rule to keep in step. */
-  .glance-grid{display:grid;gap:14px;align-items:stretch;
+  /*  align-items:start, NOT stretch. A grid row's height is set by its
+      tallest item regardless of align-items — align-items only decides how
+      the OTHER items fill that height once it's set — so stretch pulled
+      every shorter card down to match a tall poster, leaving a slab of
+      empty card below "Thu, 19 Nov 2026" or the QR code. start lets each
+      card stop exactly where its own content ends, so four cards sized for
+      their own content sit next to a fifth sized for its own poster,
+      instead of four cards padded out to match a poster's height. */
+  .glance-grid{display:grid;gap:14px;align-items:start;
                grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
 
   /*  A POSTER IS SHOWN WHOLE OR IT IS NOT A POSTER.
@@ -564,14 +572,18 @@ window.TAIYABAH_PUBLIC = {
       object-fit:cover, which is the right answer for a decorative photograph
       and the wrong one for a picture whose entire job is to be read — it
       sliced the sides off, so the speaker's name and half the title were
-      gone. This comment described align-self:start as the fix, but the rule
-      itself was never actually written below — the card went on stretching
-      and cropping in production for the next several weeks until a visitor
-      pointed at a screenshot and asked why the poster was cut off.
-      align-self:start on .glance-notice-live is what actually does it:
-      lets this card be as tall as the poster needs rather than as tall as
-      the row, which is a card of a different height and a poster somebody
-      can actually read. */
+      gone. A comment here once said align-self:start on this one card was
+      the fix, but the rule itself was never actually written — the card
+      went on stretching and cropping in production for weeks until a
+      visitor pointed at a screenshot and asked why the poster was cut off.
+
+      The real fix turned out to be bigger than one card: .glance-grid's
+      align-items:start (below) means NOTHING in this row stretches to match
+      its tallest neighbour any more — a static card now stops exactly
+      where its own content ends, rather than every shorter card being
+      pulled down to the height of whatever happens to be tallest. This
+      card keeping its own height was the symptom that got noticed first,
+      not a rule peculiar to it. */
   /*  [hidden] HAS TO BE SAID OUT LOUD HERE. The browser's own rule is
       [hidden]{display:none}, and .glance-card sets display:flex — an author
       rule beats a user-agent one, so the card stayed in the layout as an
@@ -680,7 +692,7 @@ window.TAIYABAH_PUBLIC = {
      rather than the existing four being squeezed to make room. A notice
      with no poster is skipped outright — there is nothing this card is
      allowed to show instead. */
-  .glance-notice-live{padding:0;overflow:hidden;align-self:start;}
+  .glance-notice-live{padding:0;overflow:hidden;}
   .glance-notice-live img{
     width:100%;height:auto;display:block;
   }
