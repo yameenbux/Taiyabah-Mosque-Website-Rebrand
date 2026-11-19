@@ -494,13 +494,6 @@ window.TAIYABAH_PUBLIC = {
   .hero h1 em{font-style:normal;color:var(--gold-bright);}
   .hero p.lead{font-size:1.115rem;color:rgba(243,239,227,.78);max-width:46ch;line-height:1.75;margin-bottom:32px;}
   .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:36px;}
-  .hero-chip{
-    display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);
-    border:1px solid rgba(198,162,76,.3);border-radius:999px;padding:8px 18px 8px 8px;font-size:.96rem;
-  }
-  .hero-chip .dot{width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.16);display:flex;align-items:center;justify-content:center;font-size:.931rem;}
-  .hero-chip b{color:var(--gold-bright);font-weight:700;}
-  .hero-chip span{color:rgba(243,239,227,.7);}
   .hero-feat-card{
     margin-top:30px;background:rgba(18,4,12,.6);border:1px solid rgba(198,162,76,.3);border-radius:var(--radius);
     padding:22px 24px;max-width:380px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
@@ -2608,10 +2601,6 @@ window.TAIYABAH_PUBLIC = {
           <div class="hero-cta">
             <a class="btn btn-gold" data-nav="prayer">Prayer times</a>
             <a class="btn btn-ghost-dark btn-live" href="https://taiyabahmbolton.radioca.st/;" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span> Listen Live</a>
-          </div>
-          <div class="hero-chip">
-            <span class="dot">🕌</span>
-            <span><b id="chipName">Next Jamā&#703;ah</b> <span id="chipDetail">— loading…</span></span>
           </div>
         </div>
         <div class="hero-feat-card">
@@ -6160,19 +6149,6 @@ window.TAIYABAH_PUBLIC = {
     return { next, dayLabel, diff, today };
   }
 
-  function renderChip(){
-    const r = computeNext();
-    const nameEl = document.getElementById('chipName');
-    const detailEl = document.getElementById('chipDetail');
-    if(!r){ nameEl.textContent = 'Prayer Times'; detailEl.textContent = '— open the app for live times'; return; }
-    const hh = String(Math.floor(r.next.mins/60)).padStart(2,'0');
-    const mm = String(r.next.mins%60).padStart(2,'0');
-    const hrs = Math.floor(r.diff/60), mins = r.diff%60;
-    const countStr = hrs>0 ? `${hrs}h ${mins}m` : `${mins}m`;
-    nameEl.textContent = r.next.key + (r.dayLabel==='tomorrow' ? ' (tomorrow)' : '');
-    detailEl.textContent = `— ${hh}:${mm}, in ${countStr}`;
-  }
-
   function renderHeaderBar(){
     const r = computeNext();
     const nameEl = document.getElementById('huChipName');
@@ -6332,7 +6308,7 @@ window.TAIYABAH_PUBLIC = {
   document.getElementById('pt-print').addEventListener('click', () => window.print());
 
   function paintTimetable(){
-    renderChip(); renderLive(); renderSnapshot(); renderGlance();
+    renderLive(); renderSnapshot(); renderGlance();
     renderMonth(); renderHeaderBar();
   }
 
@@ -6340,7 +6316,7 @@ window.TAIYABAH_PUBLIC = {
   //  times are on screen before any network call is even started. Nothing
   //  below can make the visitor wait.
   paintTimetable();
-  setInterval(() => { renderChip(); renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
+  setInterval(() => { renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
 
   /* ---------------- A NEWER TIMETABLE, IF THERE IS ONE ----------------
 
