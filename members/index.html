@@ -256,6 +256,37 @@
             </div>
           </div>
 
+          <!-- THE OLD ACCOUNTS. The masjid's QuickBooks history for this member,
+               every transaction type, imported read-only. It is shown here so the
+               office can see a member's past without it being read as membership
+               fees owed — the membership balance above is computed only from the
+               masjid's own membership years and payments, never from this. -->
+          <div class="fx-bk" id="mb-legacy-bk" hidden>
+            <h3>Past transactions <span class="mb-tag">from the old accounts</span></h3>
+            <p class="fx-sub">The masjid&rsquo;s old QuickBooks history for this member &mdash;
+               every kind of invoice and payment, not only membership. Kept for reference,
+               and <strong>not</strong> counted in the membership balance above.</p>
+            <div class="mb-figs2">
+              <div class="fx-fig"><span class="n" id="mb-legacy-inv">&mdash;</span>
+                <span class="k">Invoiced, all types</span></div>
+              <div class="fx-fig"><span class="n" id="mb-legacy-paid">&mdash;</span>
+                <span class="k">Paid, all types</span></div>
+            </div>
+            <div class="mb-tw">
+              <table class="fx-t" id="mb-legacy">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="num">Amount</th>
+                    <th scope="col">Note</th>
+                  </tr>
+                </thead>
+                <tbody id="mb-legacy-rows"></tbody>
+              </table>
+            </div>
+          </div>
+
           <!-- RECORDING A PAYMENT IS TWO TAPS, because most of the fee still
                arrives as cash across four weeks of Ramadan, and a form that
                takes six fields does not get used — the paper sheet gets used

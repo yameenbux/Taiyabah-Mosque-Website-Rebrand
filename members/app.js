@@ -238,6 +238,43 @@
 
     drawYears(m);
     fillYearPickers(m);
+    loadLegacy(m.id);
+  }
+
+  /*  THE OLD ACCOUNTS. A read-only history from the masjid's former QuickBooks
+      ledger — every transaction type, not only membership — so the office can
+      see a member's past on their record. It is deliberately a separate call
+      and a separate, labelled block: nothing here feeds the membership balance,
+      which is computed only from the masjid's own years and payments. The call
+      is allowed to fail quietly, because the history is a bonus and must never
+      stop the record itself from opening. */
+  function loadLegacy(id) {
+    var bk = el("mb-legacy-bk");
+    if (bk) bk.hidden = true;
+    rpc("membership_legacy", { p_member: id }).then(function (d) {
+      drawLegacy(d);
+    })["catch"](function () { if (bk) bk.hidden = true; });
+  }
+
+  function drawLegacy(d) {
+    var rows = (d && d.rows) || [];
+    var bk = el("mb-legacy-bk");
+    if (!rows.length) { if (bk) bk.hidden = true; return; }
+    el("mb-legacy-inv").textContent = pounds(d.invoiced_p || 0);
+    el("mb-legacy-paid").textContent = pounds(d.paid_p || 0);
+    el("mb-legacy-rows").innerHTML = rows.map(function (r) {
+      var amt = (r.amount_p === null || r.amount_p === undefined) ? "—" : pounds(r.amount_p);
+      /*  A payment is money in — the same green the rest of the screen uses for
+          "paid". Everything else (invoices and the rest) stays plain. */
+      var isPay = String(r.type || "").toLowerCase().indexOf("payment") === 0;
+      return '<tr>'
+        + '<td class="ref">' + esc(when(r.date)) + '</td>'
+        + '<td>' + esc(r.type || "—") + '</td>'
+        + '<td class="num' + (isPay ? " cr" : "") + '">' + esc(amt) + '</td>'
+        + '<td>' + esc(r.memo || "—") + '</td>'
+        + '</tr>';
+    }).join("");
+    if (bk) bk.hidden = false;
   }
 
   function drawYears(m) {

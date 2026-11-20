@@ -117,3 +117,13 @@
 .btn-danger{ background:var(--danger); border-color:var(--danger); color:#fff; }
 .btn-danger:hover{ filter:brightness(.94); }
 .btn-danger:focus-visible{ outline:2px solid var(--danger); outline-offset:2px; }
+
+/*  THE OLD ACCOUNTS block. A pill on the heading and the two summary figures,
+    both saying plainly that this is history, not the membership balance. The
+    table itself reuses .fx-t and scrolls inside .mb-tw like every other. */
+.mb-tag{ font-size:.66rem; letter-spacing:.05em; text-transform:uppercase;
+         color:var(--muted); font-weight:700; border:1px solid var(--line);
+         border-radius:99px; padding:2px 9px; margin-left:8px; white-space:nowrap;
+         vertical-align:middle; }
+.mb-figs2{ display:flex; flex-wrap:wrap; gap:12px; margin:0 0 14px; }
+.mb-figs2 .fx-fig{ flex:1 1 150px; }
