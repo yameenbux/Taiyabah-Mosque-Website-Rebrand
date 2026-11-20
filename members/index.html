@@ -165,6 +165,7 @@
           <div class="fx-head-a">
             <button type="button" class="btn btn-ghost" id="mb-csv">Download this list</button>
             <button type="button" class="btn btn-ghost" id="mb-backup">Full backup</button>
+            <button type="button" class="btn btn-ghost" id="mb-raise-open">Raise the year&rsquo;s charge</button>
             <button type="button" class="btn btn-gold" id="mb-add">+ Add member</button>
           </div>
         </div>
@@ -411,6 +412,38 @@
                 <button type="submit" class="btn btn-gold" id="me-save">Save member</button>
               </div>
             </form>
+          </div>
+        </div>
+
+        <!-- ================= RAISE THE YEAR'S CHARGE ================= -->
+        <!-- THE ONE ALL-MEMBERS ACTION. It writes a year's charge onto every
+             member's record at once, so it has its own screen and its own
+             confirmation. It is idempotent — members already charged for the
+             year are left untouched — so running it again only catches anyone
+             added since, and can never double-charge. -->
+        <div id="mb-raise" hidden>
+          <p class="mb-crumb"><button type="button" class="mb-link" id="mb-raise-back">&larr; Back to the register</button></p>
+          <div class="fx-bk">
+            <h3>Raise the year&rsquo;s membership charge</h3>
+            <p class="fx-sub">This puts one year&rsquo;s charge on <strong>every member&rsquo;s</strong>
+               record at once. After it, a member shows as owing until they pay, and settled
+               once they have &mdash; and stays settled until the next year is raised. It is safe
+               to run again: anyone already charged for that year is left exactly as they are,
+               so it simply catches members added since.</p>
+            <form class="fx-form" id="mb-raise-form" novalidate>
+              <label class="fx-fld">
+                <span>Year</span>
+                <input type="number" id="mr-year" inputmode="numeric" step="1">
+              </label>
+              <label class="fx-fld">
+                <span>Fee for the year</span>
+                <input type="text" id="mr-fee" inputmode="decimal" placeholder="100.00">
+              </label>
+              <div class="wide">
+                <button type="submit" class="btn btn-gold" id="mr-go">Raise the charge for everyone</button>
+              </div>
+            </form>
+            <p class="fx-note" id="mr-hint">The fee is set for this year before the charge is raised. Members already charged keep the fee they were first given.</p>
           </div>
         </div>
 

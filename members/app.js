@@ -191,6 +191,7 @@
       drawMember(m);
       el("mb-list").hidden = true;
       el("mb-edit").hidden = true;
+      el("mb-raise").hidden = true;
       el("mb-one").hidden = false;
       el("mb-title").textContent = "A member's record";
       el("mb-sub").textContent =
@@ -205,6 +206,7 @@
     state.editReturn = null;
     el("mb-one").hidden = true;
     el("mb-edit").hidden = true;
+    el("mb-raise").hidden = true;
     el("mb-list").hidden = false;
     el("mb-title").textContent = "The register";
     el("mb-sub").textContent =
@@ -483,6 +485,7 @@
     el("me-note").value     = m ? (m.note || "") : "";
     el("mb-list").hidden = true;
     el("mb-one").hidden  = true;
+    el("mb-raise").hidden = true;
     el("mb-edit").hidden = false;
     el("mb-title").textContent = m ? "Edit member details" : "Add a member";
     el("mb-sub").textContent = m
@@ -558,6 +561,58 @@
   }
 
   /* ======================================================================
+     RAISE THE YEAR'S CHARGE — the one action that touches every member.
+
+     This is how a new year begins: the office sets the fee and raises the
+     charge, and every member's record then says what they owe for that year.
+     membership_raise_year() is idempotent, so this is safe to run twice; the
+     confirmation and the "made" count it returns are what keep it honest.
+     ====================================================================== */
+
+  function openRaise() {
+    clearNotes();
+    el("mr-year").value = state.year || new Date().getFullYear();
+    el("mr-fee").value = "";
+    el("mb-list").hidden = true;
+    el("mb-one").hidden  = true;
+    el("mb-edit").hidden = true;
+    el("mb-raise").hidden = false;
+    el("mb-title").textContent = "Raise the year’s charge";
+    el("mb-sub").textContent = "Put a year’s membership charge on every member at once.";
+    window.scrollTo(0, 0);
+  }
+
+  function raiseYear(e) {
+    e.preventDefault();
+    clearNotes();
+    var year = parseInt(el("mr-year").value, 10);
+    if (!year || year < 2000 || year > 2100) { say("fx-error", "Enter the year to raise, e.g. 2027."); return; }
+    var fee = pence(el("mr-fee").value);
+    if (!fee || fee <= 0) { say("fx-error", "Enter the fee for the year, e.g. 100.00."); return; }
+    if (!window.confirm("Raise the " + year + " membership charge of " + pounds(fee)
+          + " for every member who is not already charged for " + year + "?\n\n"
+          + "Members already charged for " + year + " are left as they are.")) return;
+    var btn = el("mr-go");
+    btn.disabled = true;
+    /*  Set the fee first (an upsert — it only changes what NEW charges use),
+        then raise. Both are verified_admin-gated and audited in Postgres. */
+    rpc("membership_set_rate", { p_year: year, p_fee_p: fee, p_note: null })
+      .then(function () {
+        return rpc("membership_raise_year", { p_year: year });
+      })
+      .then(function (res) {
+        var made = (res && res.made) || 0;
+        el("mb-raise").hidden = true;
+        backToList();
+        say("fx-ok", made === 0
+          ? ("Every member was already charged for " + year + " — nothing to add.")
+          : ("Raised the " + year + " charge of " + pounds(fee) + " for " + made
+             + (made === 1 ? " member." : " members.")));
+      })["catch"](function (err) { say("fx-error", err.message); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  /* ======================================================================
      WIRING
      ====================================================================== */
 
@@ -594,6 +649,11 @@
     el("mb-edit-form").addEventListener("submit", saveMember);
     el("mb-leave").addEventListener("click", removeMember);
     el("mb-delete").addEventListener("click", deleteMember);
+
+    /*  Raise the year's charge — the one all-members action. */
+    el("mb-raise-open").addEventListener("click", openRaise);
+    el("mb-raise-back").addEventListener("click", backToList);
+    el("mb-raise-form").addEventListener("submit", raiseYear);
 
     var tabs = document.querySelectorAll(".mb-tab");
     Array.prototype.forEach.call(tabs, function (t) {
