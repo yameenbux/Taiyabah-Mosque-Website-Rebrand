@@ -100,3 +100,20 @@
             color:var(--muted); white-space:nowrap; }
 .mb-rowact:hover{ background:rgba(94,24,68,.05); color:var(--ink); }
 .mb-rowact:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+/*  THE RIGHT-HAND SIDE OF A MEMBER'S HEADER. The reference number sits above
+    the Edit button so the two line up on the right and wrap together onto a
+    phone rather than fighting for the same row. */
+.mb-who-a{ display:flex; flex-direction:column; align-items:flex-end; gap:8px; }
+.mb-edit-btn{ white-space:nowrap; }
+
+/*  REMOVING A MEMBER lives in its own block at the foot of the record, apart
+    from everything that is used every day, because it is the one thing here
+    that takes something away. "Mark as left" is the ordinary button; the hard
+    delete wears the danger colour and is spaced apart so it is never the one a
+    thumb reaches for by accident. */
+.mb-danger{ border-color:var(--danger); }
+.mb-danger-a{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.btn-danger{ background:var(--danger); border-color:var(--danger); color:#fff; }
+.btn-danger:hover{ filter:brightness(.94); }
+.btn-danger:focus-visible{ outline:2px solid var(--danger); outline-offset:2px; }

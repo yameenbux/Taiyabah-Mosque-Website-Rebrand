@@ -163,7 +163,9 @@
                of them has paid.</p>
           </div>
           <div class="fx-head-a">
-            <button type="button" class="btn btn-ghost" id="mb-csv">Download for Excel</button>
+            <button type="button" class="btn btn-ghost" id="mb-csv">Download this list</button>
+            <button type="button" class="btn btn-ghost" id="mb-backup">Full backup</button>
+            <button type="button" class="btn btn-gold" id="mb-add">+ Add member</button>
           </div>
         </div>
 
@@ -224,7 +226,10 @@
                 <h3 id="mb-name">&mdash;</h3>
                 <p class="mb-meta" id="mb-meta">&mdash;</p>
               </div>
-              <div class="mb-ref" id="mb-ref">&mdash;</div>
+              <div class="mb-who-a">
+                <div class="mb-ref" id="mb-ref">&mdash;</div>
+                <button type="button" class="btn btn-ghost mb-edit-btn" id="mb-edit-open">Edit details</button>
+              </div>
             </div>
             <dl class="mb-dl" id="mb-details"></dl>
           </div>
@@ -309,6 +314,70 @@
               </label>
               <div class="wide">
                 <button type="submit" class="btn btn-ghost" id="mb-waive-go">Set it aside</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- REMOVING A MEMBER. "Mark as left" is the ordinary case: someone
+               has moved away or passed on, and their payment history stays as
+               the charity's own record. A hard delete is only for an entry
+               typed in by mistake, and the database refuses it the moment a
+               single payment has ever been recorded against the person. -->
+          <div class="fx-bk mb-danger">
+            <h3>Remove this member</h3>
+            <p class="fx-sub">If someone has left the masjid, mark them as left &mdash;
+               their record and payment history stay. Deleting is only for an entry
+               added by mistake, and it is refused once anything has been paid.</p>
+            <div class="mb-danger-a">
+              <button type="button" class="btn btn-ghost" id="mb-leave">Mark as left</button>
+              <button type="button" class="btn btn-danger" id="mb-delete">Delete a mistake</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ================= ADD / EDIT A MEMBER ================= -->
+        <div id="mb-edit" hidden>
+          <p class="mb-crumb"><button type="button" class="mb-link" id="mb-edit-back">&larr; Cancel</button></p>
+          <div class="fx-bk">
+            <h3 id="mb-edit-h">Add a member</h3>
+            <p class="fx-sub">A name is all that is needed to start. The office can fill in
+               the rest now or later, and paying online fills in a missing email on its own.</p>
+            <form class="fx-form" id="mb-edit-form" novalidate>
+              <label class="fx-fld wide">
+                <span>Full name</span>
+                <input type="text" id="me-name" autocomplete="off" required>
+              </label>
+              <label class="fx-fld">
+                <span>House number <em>(optional)</em></span>
+                <input type="text" id="me-house" autocomplete="off">
+              </label>
+              <label class="fx-fld">
+                <span>Postcode <em>(optional)</em></span>
+                <input type="text" id="me-postcode" autocomplete="off">
+              </label>
+              <label class="fx-fld wide">
+                <span>Address <em>(optional)</em></span>
+                <input type="text" id="me-address" autocomplete="off">
+              </label>
+              <label class="fx-fld">
+                <span>Telephone <em>(optional)</em></span>
+                <input type="text" id="me-tel" inputmode="tel" autocomplete="off">
+              </label>
+              <label class="fx-fld">
+                <span>Email <em>(optional)</em></span>
+                <input type="email" id="me-email" autocomplete="off">
+              </label>
+              <label class="fx-fld">
+                <span>Member since <em>(optional)</em></span>
+                <input type="date" id="me-since">
+              </label>
+              <label class="fx-fld wide">
+                <span>Note <em>(optional)</em></span>
+                <input type="text" id="me-note" autocomplete="off"
+                       placeholder="e.g. Member, or Life member">
+              </label>
+              <div class="wide">
+                <button type="submit" class="btn btn-gold" id="me-save">Save member</button>
               </div>
             </form>
           </div>

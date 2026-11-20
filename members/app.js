@@ -34,7 +34,9 @@
     search: "",
     year: null,
     rows: [],
-    member: null           // the open record, or null for the list
+    member: null,          // the open record, or null for the list
+    editing: null,         // {id,ref_no} when amending, null when adding
+    editReturn: null       // member id to return to on cancel, or null for the list
   };
 
   function esc(s) {
@@ -188,6 +190,7 @@
       state.member = m;
       drawMember(m);
       el("mb-list").hidden = true;
+      el("mb-edit").hidden = true;
       el("mb-one").hidden = false;
       el("mb-title").textContent = "A member's record";
       el("mb-sub").textContent =
@@ -198,7 +201,10 @@
 
   function backToList() {
     state.member = null;
+    state.editing = null;
+    state.editReturn = null;
     el("mb-one").hidden = true;
+    el("mb-edit").hidden = true;
     el("mb-list").hidden = false;
     el("mb-title").textContent = "The register";
     el("mb-sub").textContent =
@@ -339,6 +345,29 @@
   /*  The office asked for Excel on every other money screen, so it is here
       too. Names and figures only — the same columns the table shows, and so
       the same absence of addresses. */
+  /*  One serializer for both exports. The leading ﻿ is a BOM so Excel
+      opens the file as UTF-8 rather than mangling a postcode or an accented
+      name. Every cell is quoted and inner quotes doubled, so a comma or a
+      line break inside an address cannot shift the columns. */
+  function downloadRows(lines, name) {
+    var csv = lines.map(function (row) {
+      return row.map(function (c) {
+        return '"' + String(c === null || c === undefined ? "" : c).replace(/"/g, '""') + '"';
+      }).join(",");
+    }).join("\r\n");
+    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name + ".csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
+  /*  The list export: names and figures only, the same columns the table
+      shows, and so the same absence of addresses. For sending round, not for
+      keeping. */
   function downloadCsv() {
     if (!state.rows.length) { say("fx-error", "There is nothing to download."); return; }
     var head = ["Member", "Reference", String(state.year), "All years owed",
@@ -353,19 +382,142 @@
         r.last_paid_on || ""
       ]);
     });
-    var csv = lines.map(function (row) {
-      return row.map(function (c) {
-        return '"' + String(c === null || c === undefined ? "" : c).replace(/"/g, '""') + '"';
-      }).join(",");
-    }).join("\r\n");
-    var blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "membership-" + state.year + "-" + state.filter + ".csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
+    downloadRows(lines, "membership-" + state.year + "-" + state.filter);
+  }
+
+  /*  THE FULL BACKUP. membership_export() is the whole register with every
+      column, addresses included, so the masjid is never locked out of its own
+      data by this system. It is verified_admin() gated and audited in
+      Postgres, so a figure fetched here records who took it. This is the
+      Excel backup the committee asked for; the Sheet is no longer the source
+      of truth, so this is what replaces it. */
+  function fullBackup() {
+    clearNotes();
+    var btn = el("mb-backup");
+    btn.disabled = true;
+    rpc("membership_export").then(function (d) {
+      var rows = d.rows || [];
+      if (!rows.length) { say("fx-error", "There is nothing to back up yet."); return; }
+      var head = ["Ref", "Reference", "Name", "House", "Address", "Postcode",
+                  "Telephone", "Email", "Member since", "Left on", "Status",
+                  "Fee " + d.year, "Paid " + d.year, "Owed in total",
+                  "Years owing", "Note"];
+      var lines = [head];
+      rows.forEach(function (r) {
+        lines.push([
+          r.ref_no, r.reference, r.name, r.house_no, r.address_line, r.postcode,
+          r.telephone, r.email, r.member_since, r.left_on, r.status,
+          (Number(r.this_year_fee_p) / 100).toFixed(2),
+          (Number(r.this_year_paid_p) / 100).toFixed(2),
+          (Number(r.arrears_p) / 100).toFixed(2),
+          r.years_owing, r.note
+        ]);
+      });
+      downloadRows(lines, "taiyabah-membership-backup-" + String(new Date().getFullYear()));
+      say("fx-ok", "Backed up " + d.count + " members, every column, to an Excel file.");
+    })["catch"](function (err) { say("fx-error", err.message); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  /* ======================================================================
+     ADD, AMEND AND REMOVE A MEMBER
+
+     The register was an Excel sheet anyone could edit; now it is in Postgres
+     behind verified_admin(), so the office needs these four doors in the
+     screen or it has lost something the sheet gave it. Every one of them is
+     gated and audited in the database — this screen only gathers the fields.
+     ====================================================================== */
+
+  /*  openEdit(null) is "add"; openEdit(member) is "amend". Amend passes the
+      member's own ref_no, which is what membership_upsert_member keys on, so
+      it updates in place rather than minting a new number. */
+  function openEdit(m) {
+    clearNotes();
+    state.editing = m ? { id: m.id, ref_no: m.ref_no } : null;
+    state.editReturn = m ? m.id : null;
+    el("mb-edit-h").textContent = m ? "Edit member details" : "Add a member";
+    el("me-name").value     = m ? (m.name || "") : "";
+    el("me-house").value    = m ? (m.house_no || "") : "";
+    el("me-postcode").value = m ? (m.postcode || "") : "";
+    el("me-address").value  = m ? (m.address_line || "") : "";
+    el("me-tel").value      = m ? (m.telephone || "") : "";
+    el("me-email").value    = m ? (m.email || "") : "";
+    el("me-since").value    = m && m.member_since ? String(m.member_since).slice(0, 10) : "";
+    el("me-note").value     = m ? (m.note || "") : "";
+    el("mb-list").hidden = true;
+    el("mb-one").hidden  = true;
+    el("mb-edit").hidden = false;
+    el("mb-title").textContent = m ? "Edit member details" : "Add a member";
+    el("mb-sub").textContent = m
+      ? "Change what the masjid holds about this member."
+      : "Put a new member on the register. Only a name is required.";
+    window.scrollTo(0, 0);
+  }
+
+  function editBack() {
+    el("mb-edit").hidden = true;
+    if (state.editReturn) { openMember(state.editReturn); }
+    else { backToList(); }
+  }
+
+  function saveMember(e) {
+    e.preventDefault();
+    clearNotes();
+    /*  Collapse whitespace here too, so what the office sees saved matches
+        what Postgres stores — the function does the same on its side. */
+    var name = el("me-name").value.replace(/\s+/g, " ").replace(/^ | $/g, "");
+    if (name.length < 2) { say("fx-error", "A member needs a name."); return; }
+    var btn = el("me-save");
+    btn.disabled = true;
+    var args = {
+      p_full_name:    name,
+      p_house_no:     el("me-house").value || null,
+      p_address_line: el("me-address").value || null,
+      p_postcode:     el("me-postcode").value || null,
+      p_telephone:    el("me-tel").value || null,
+      p_email:        el("me-email").value || null,
+      p_member_since: el("me-since").value || null,
+      p_note:         el("me-note").value || null
+    };
+    if (state.editing) { args.p_ref_no = state.editing.ref_no; }
+    rpc("membership_upsert_member", args).then(function (res) {
+      state.editing = null;
+      state.editReturn = null;
+      el("mb-edit").hidden = true;
+      /*  Land on the member's own record, so whoever just added them sees the
+          record they created and can take the first payment on the spot. */
+      if (res && res.id) { return openMember(res.id); }
+      return backToList();
+    })["catch"](function (err) { say("fx-error", err.message); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  /*  Mark as left: the ordinary case. The record and its payment history
+      stay — membership_mark_left() only sets left_on — so the charity keeps
+      its own account of who paid what. */
+  function removeMember() {
+    if (!state.member) return;
+    if (!window.confirm("Mark " + state.member.name
+          + " as having left the masjid? Their record and payment history stay on file.")) return;
+    clearNotes();
+    rpc("membership_mark_left", { p_member: state.member.id }).then(function () {
+      return backToList();
+    })["catch"](function (err) { say("fx-error", err.message); });
+  }
+
+  /*  Delete: only for an entry typed in by mistake. membership_delete_member()
+      refuses the moment a single payment has ever been recorded against the
+      person and sends back a sentence saying to mark them as left instead, so
+      the guard is in Postgres, not in this confirm box. */
+  function deleteMember() {
+    if (!state.member) return;
+    if (!window.confirm("Delete " + state.member.name
+          + " from the register for good? This is only for an entry added by mistake, "
+          + "and it cannot be undone.")) return;
+    clearNotes();
+    rpc("membership_delete_member", { p_member: state.member.id }).then(function () {
+      return backToList();
+    })["catch"](function (err) { say("fx-error", err.message); });
   }
 
   /* ======================================================================
@@ -393,6 +545,18 @@
     el("mb-pay-form").addEventListener("submit", recordPayment);
     el("mb-waive-form").addEventListener("submit", waiveYear);
     el("mb-csv").addEventListener("click", downloadCsv);
+
+    /*  Add / amend / remove / full backup — the four doors the register lost
+        when it left the Excel sheet. */
+    el("mb-add").addEventListener("click", function () { openEdit(null); });
+    el("mb-backup").addEventListener("click", fullBackup);
+    el("mb-edit-open").addEventListener("click", function () {
+      if (state.member) openEdit(state.member);
+    });
+    el("mb-edit-back").addEventListener("click", editBack);
+    el("mb-edit-form").addEventListener("submit", saveMember);
+    el("mb-leave").addEventListener("click", removeMember);
+    el("mb-delete").addEventListener("click", deleteMember);
 
     var tabs = document.querySelectorAll(".mb-tab");
     Array.prototype.forEach.call(tabs, function (t) {
