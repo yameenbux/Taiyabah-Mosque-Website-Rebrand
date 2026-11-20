@@ -24,6 +24,7 @@ export type Kind =
   | "refund_due"
   | "nikah_requested"
   | "nikah_fee_paid"
+  | "membership_paid"
   | "charity_requested"
   | "admission_requested"
   | "course_registered"
@@ -57,6 +58,13 @@ export interface Event {
   slot?: string | null;           // nikāḥ prayer slot
   reason?: string | null;         // why a refund is owed
   portal?: string | null;         // link to the right portal page
+
+  // A masjid membership payment receipt, sent to the member who paid. The
+  // member's own name and the figures for the year they paid for — there is
+  // nothing here about anyone else, the same rule as a hall booking.
+  year?: number | null;           // the membership year this payment is for
+  paid_in_full?: boolean | null;  // is the year now settled in full
+  outstanding_p?: number | null;  // what is left on the year after this payment
 
   // A charity collection (chanda). The trustee's name and number are NOT
   // here, and there is deliberately no field for them: the office rings the
@@ -1322,6 +1330,39 @@ export function publicMessage(e: Event): Message | null {
         rows,
         "Keep this email — the office will ask for the reference. If you change " +
         "your mind, ring 01204 535 997. There is no obligation at all."),
+    };
+  }
+
+  if (e.kind === "membership_paid") {
+    const year = esc(String(e.year ?? ""));
+    const rows: [string, string][] = [
+      ["Member", `<strong>${esc(e.name ?? "")}</strong>`],
+      ["Membership year", `<strong>${year}</strong>`],
+      ["Amount paid", `<strong>${esc(money(e.amount_p) || "")}</strong>`],
+      ["Status", e.paid_in_full
+        ? `<strong>Paid in full for ${year}</strong>`
+        : `${esc(money(e.outstanding_p) || "£0.00")} still to pay for ${year}`],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(`Your ${e.year ?? ""} masjid membership payment - ${ref}`),
+      html: shell(
+        "Thank you for your membership",
+        e.paid_in_full
+          ? `Jaz&#257;k All&#257;hu khayran. Your <strong>${year}</strong> masjid membership is now <strong>paid in full</strong>.`
+          : `Jaz&#257;k All&#257;hu khayran. We have received your payment towards your <strong>${year}</strong> masjid membership.`,
+        rows,
+        "Keep this email for your records &mdash; it is your receipt. Bolton Central " +
+        "Islamic Society, registered charity 1041569. Any questions, ring the office " +
+        "on 01204&nbsp;535&nbsp;997."),
+      text: plain(
+        "Thank you for your membership",
+        e.paid_in_full
+          ? `Jazak Allahu khayran. Your ${e.year ?? ""} masjid membership is now paid in full.`
+          : `Jazak Allahu khayran. We have received your payment towards your ${e.year ?? ""} masjid membership.`,
+        rows,
+        "Keep this email for your records — it is your receipt. Bolton Central " +
+        "Islamic Society, registered charity 1041569. Questions: 01204 535 997."),
     };
   }
 
