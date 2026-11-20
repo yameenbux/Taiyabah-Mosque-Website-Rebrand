@@ -1,0 +1,12 @@
+-- 165 — drop the retired flat members table.
+--
+-- The first membership lock-down used public.members: one row per person with a
+-- hand-written `balance` column. The canonical schema (db/157–160) replaced it —
+-- masjid_members is the register, and a balance is COMPUTED by membership_state()
+-- from charges and payments, never stored. The login was re-pointed at
+-- masjid_members (db/164), the old table's rows were cleared, and nothing read it
+-- any longer: no incoming foreign keys, no views, no function body referencing it
+-- (the one "members" match in madrasah_today_dbs is the English "members of
+-- staff", not this table). Keeping an empty shell that once held a second,
+-- disagreeing balance is a trap for the next person, so it is removed.
+drop table if exists public.members;

@@ -96,10 +96,15 @@ All four write/export functions were observed to **refuse with `42501 "Not
 allowed"`** when the caller is not a verified admin — the guard was seen to
 fire, not merely assumed.
 
+## Done since
+
+- **The empty `public.members` shell is dropped** (`db/165`). It held no rows,
+  had no incoming foreign keys, no view and no function referencing it, so an
+  empty table that once carried a second, disagreeing balance is gone rather
+  than left as a trap.
+
 ## Still owed
 
-- **Drop the empty `public.members` shell** in the Supabase SQL editor (the MCP
-  tooling hangs on `DROP`). It holds no rows and nothing reads it.
 - **The Sheet is now a backup, not the source.** The office takes a _Full
   backup_ CSV from the screen; the Google Sheet is kept only as a belt-and-braces
   copy and is no longer written back to.
