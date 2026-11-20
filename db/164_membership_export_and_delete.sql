@@ -1,4 +1,4 @@
--- 163 — two office actions the register needs: a full export for backup, and a
+-- 164 — two office actions the register needs: a full export for backup, and a
 -- true delete for a mistaken entry (distinct from "mark as left", which keeps
 -- a real member's payment history). Both verified_admin-gated, both audited.
 

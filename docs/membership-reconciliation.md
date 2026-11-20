@@ -41,7 +41,7 @@ register would lose its authority for good.
   household picker rather than assuming one email is one person.
 - **The fee schedule was set, not guessed:** £80 for 2021–2023, £100 for
   2024–2026, in `membership_rates`.
-- **The login now matches on `email_norm`** (`db/164`) — a normalised, indexed,
+- **The login now matches on `email_norm`** (`db/165`) — a normalised, indexed,
   case- and space-insensitive copy of the email — so a match is exact and an
   underscore in an address is never read as a SQL wildcard.
 
@@ -98,7 +98,7 @@ fire, not merely assumed.
 
 ## Done since
 
-- **The empty `public.members` shell is dropped** (`db/165`). It held no rows,
+- **The empty `public.members` shell is dropped** (`db/166`). It held no rows,
   had no incoming foreign keys, no view and no function referencing it, so an
   empty table that once carried a second, disagreeing balance is gone rather
   than left as a trap.
