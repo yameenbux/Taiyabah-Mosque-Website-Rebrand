@@ -1,4 +1,4 @@
--- 170 — sole_masjid() counts only LIVE masjids.
+-- 171 — sole_masjid() counts only LIVE masjids.
 --
 -- WHY. The multi-masjid migration made sole_masjid() refuse when the masjids
 -- table holds more than one row, so that a caller which does not name its masjid

@@ -1,4 +1,4 @@
--- 171 — request_nikah_date() sets masjid_id.
+-- 172 — request_nikah_date() sets masjid_id.
 --
 -- WHY. The multi-masjid change added a NOT NULL masjid_id to nikah_requests,
 -- nikah_people and admin_audit, and the sibling request functions (hall, imam,
@@ -12,7 +12,7 @@
 -- on every build, since the column became NOT NULL.
 --
 -- The fix mirrors the working functions: resolve v_masjid at the top (which, via
--- db/170, is the sole live masjid when the caller passes no slug) and set it on
+-- db/171, is the sole live masjid when the caller passes no slug) and set it on
 -- the nikah_requests, nikah_people and admin_audit inserts. The duplicate-request
 -- check is scoped to the masjid too. Nothing else about the function changes.
 --

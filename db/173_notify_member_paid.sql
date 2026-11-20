@@ -1,4 +1,4 @@
--- 172 — email the member a receipt when a membership payment is recorded.
+-- 173 — email the member a receipt when a membership payment is recorded.
 --
 -- WHY. A member paid their fee — by card in the app, or at the counter where the
 -- office enters it — and was told nothing by email. The hall deposit and the
