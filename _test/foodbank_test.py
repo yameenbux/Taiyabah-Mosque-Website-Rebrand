@@ -54,8 +54,14 @@ with sync_playwright() as p:
     check(pg.is_visible(".glance-foodbank"), "the Food Bank card is not on the home page")
     txt = re.sub(r"\s+", " ", pg.eval_on_selector(".glance-foodbank", "e => e.innerText"))
 
-    check("Taiyabah Food Bank" in txt.title() or "TAIYABAH FOOD BANK" in txt.upper(),
-          "the card does not carry the name: %r" % txt)
+    # The masjid's name is on the logo now, not in a text header — it lives in
+    # the <img>'s alt text, which innerText does not include.
+    logo_alt = pg.eval_on_selector(
+        ".glance-foodbank .fb-art img", "e => e ? (e.getAttribute('alt') || '') : ''") or ""
+    check("taiyabah" in logo_alt.lower(),
+          "the card's logo has no alt text naming the masjid: %r" % logo_alt)
+    check("food bank" in txt.lower(),
+          "the card does not say Food Bank: %r" % txt)
     check("Coming soon" in txt.title() or "COMING SOON" in txt.upper(),
           "the card does not say Coming soon: %r" % txt)
 
@@ -142,36 +148,28 @@ with sync_playwright() as p:
     pg.wait_for_timeout(400)
 
     # =====================================================================
-    #  4. THE DRAWING
+    #  4. THE LOGO
     #
-    #  Inline SVG, not an image file: it has to survive being inlined into a
-    #  single-file build, and it has to be described for a screen reader.
+    #  A base64 <img>, not inline SVG, since 12 November 2026 — it has to
+    #  survive being inlined into a single-file build, and it has to be
+    #  described for a screen reader.
     # =====================================================================
-    art = pg.query_selector(".glance-foodbank .fb-art svg")
-    check(art is not None, "the card has no illustration")
+    art = pg.query_selector(".glance-foodbank .fb-art img")
+    check(art is not None, "the card has no logo image")
     if art is not None:
         box = art.bounding_box()
-        check(box and box["width"] > 120 and box["height"] > 80,
-              "the illustration is barely drawn: %r" % box)
-        check((art.get_attribute("aria-label") or "").strip() != "",
-              "the illustration has no aria-label, so a screen reader reads nothing")
+        check(box and box["width"] > 60 and box["height"] > 40,
+              "the logo is barely drawn: %r" % box)
+        check((art.get_attribute("alt") or "").strip() != "",
+              "the logo has no alt text, so a screen reader reads nothing")
 
-    #  The crescent is a circle with a second circle masked out of it. If the
-    #  mask ever stops resolving — a renamed id, a duplicate id somewhere else
-    #  on the 650KB single-file build, a build step that rewrites ids — the
-    #  browser draws the circle UNMASKED. No error, no warning: the moon
-    #  silently becomes a plum dot, and the only way anyone finds out is by
-    #  looking at the home page.
-    check(pg.evaluate("""() => {
-        const c = document.querySelector('.glance-foodbank .fb-art svg circle[mask]');
-        if (!c) return false;
-        const m = (c.getAttribute('mask') || '').match(/url\\(#([^)]+)\\)/);
-        if (!m) return false;
-        const els = document.querySelectorAll('[id="' + m[1] + '"]');
-        return els.length === 1 && els[0].tagName.toLowerCase() === 'mask';
-    }"""),
-        "THE CRESCENT'S MASK DOES NOT RESOLVE — the moon renders as a solid "
-        "plum circle and nothing errors")
+        #  If the base64 payload is ever truncated or corrupted — a bad copy,
+        #  a build step that mangles the string — the <img> fails to decode.
+        #  No error, no warning: the logo silently becomes nothing, and the
+        #  only way anyone finds out is by looking at the home page.
+        check(pg.evaluate("el => el.naturalWidth > 0", art),
+              "THE LOGO DID NOT DECODE — a broken image renders as nothing "
+              "and nothing errors")
 
     # Dead CSS is how a file rots. The Quick Links rules went with the card.
     css = open("index.html", encoding="utf-8").read()

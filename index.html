@@ -494,13 +494,6 @@ window.TAIYABAH_PUBLIC = {
   .hero h1 em{font-style:normal;color:var(--gold-bright);}
   .hero p.lead{font-size:1.115rem;color:rgba(243,239,227,.78);max-width:46ch;line-height:1.75;margin-bottom:32px;}
   .hero-cta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:36px;}
-  .hero-chip{
-    display:inline-flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);
-    border:1px solid rgba(198,162,76,.3);border-radius:999px;padding:8px 18px 8px 8px;font-size:.96rem;
-  }
-  .hero-chip .dot{width:30px;height:30px;border-radius:50%;background:rgba(198,162,76,.16);display:flex;align-items:center;justify-content:center;font-size:.931rem;}
-  .hero-chip b{color:var(--gold-bright);font-weight:700;}
-  .hero-chip span{color:rgba(243,239,227,.7);}
   .hero-feat-card{
     margin-top:30px;background:rgba(18,4,12,.6);border:1px solid rgba(198,162,76,.3);border-radius:var(--radius);
     padding:22px 24px;max-width:380px;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
@@ -563,17 +556,29 @@ window.TAIYABAH_PUBLIC = {
       written out one per card — 1fr 1.05fr 1.05fr .85fr — which means the row
       only ever has as many columns as somebody typed. This says "as many as
       fit", so a card added or removed needs no second rule to keep in step. */
+  /*  align-items:stretch, ON PURPOSE, AGAIN. This sat as align-items:start
+      for one commit — every card stopping at its own content's height
+      instead of stretching to the row's tallest, which fixed a real bug
+      (see below) but, done at the grid level, also made the four static
+      cards four different heights next to each other. The masjid's ask
+      was never "don't stretch" — it was "don't stretch AND leave a
+      visible gap of dead card below the content." stretch is what makes
+      five cards in a row read as one row rather than five accidentally
+      adjacent boxes; the fix for the gap belongs on whichever card shows
+      it, not on whether the row's cards match each other's height. */
   .glance-grid{display:grid;gap:14px;align-items:stretch;
                grid-template-columns:repeat(auto-fit,minmax(210px,1fr));}
 
   /*  A POSTER IS SHOWN WHOLE OR IT IS NOT A POSTER.
-      The first version stretched it to the height of the row with
-      object-fit:cover, which is the right answer for a decorative photograph
-      and the wrong one for a picture whose entire job is to be read — it
-      sliced the sides off, so the speaker's name and half the title were
-      gone. align-self:start lets this card be as tall as the poster needs
-      rather than as tall as the row, which is a card of a different height
-      and a poster somebody can actually read. */
+      The first version stretched the IMAGE to the card's height with
+      object-fit:cover, which is the right answer for a decorative
+      photograph and the wrong one for a picture whose entire job is to be
+      read — it sliced the sides off, so the speaker's name and half the
+      title were gone. The image is width:100%;height:auto below, sized by
+      its own aspect ratio regardless of how tall align-items:stretch makes
+      the CARD around it; .glance-notice-live's justify-content:center
+      splits whatever gap that leaves evenly above and below the poster
+      instead of dumping it all below as a strip of plain card background. */
   /*  [hidden] HAS TO BE SAID OUT LOUD HERE. The browser's own rule is
       [hidden]{display:none}, and .glance-card sets display:flex — an author
       rule beats a user-agent one, so the card stayed in the layout as an
@@ -591,7 +596,6 @@ window.TAIYABAH_PUBLIC = {
       exactly how this project lost an evening to `.cc-yn input` once
       already. */
   .glance-card[hidden]{display:none;}
-  .glance-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;}
   .glance-head-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .glance-title{display:flex;align-items:center;gap:7px;font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:.931rem;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
   .glance-title svg{width:14px;height:14px;color:var(--brand-800);flex-shrink:0;}
@@ -608,13 +612,21 @@ window.TAIYABAH_PUBLIC = {
   .gp-row .gp-times b{font-weight:700;}
   .gp-row.is-next{background:rgba(198,162,76,.16);margin:0 -8px;padding:5px 8px;border-radius:7px;border-bottom-color:transparent;}
   .gp-row.is-next .gp-times{color:var(--brand-900);}
-  .gp-foot{margin-top:6px;font-size:.853rem;color:var(--muted);}
+  .gp-date{margin-bottom:8px;font-size:.853rem;color:var(--muted);}
+  /*  The only one of the five cards with no justify-content of its own —
+      every other variant already centers (.glance-promo, .glance-donate)
+      or grows a flexible middle (.fb-art flex:1), so stretching those to
+      match the row's tallest card already looked intentional. This one's
+      head-stack+table+date block just sat at the top with the rest of the
+      stretched card showing as plain background below "Thu, 19 Nov 2026" —
+      the exact gap the masjid pointed at. Centering the whole block is the
+      same move .glance-promo and .glance-donate already made. */
+  .glance-prayer{justify-content:center;}
   .glance-promo{background:linear-gradient(165deg,var(--gold-bright),var(--gold));color:var(--brand-900);border:none;align-items:center;text-align:center;justify-content:center;}
   .glance-promo .gp-notmiss{display:inline-flex;align-items:center;background:var(--danger);color:#fff;font-size:.825rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px;margin-bottom:9px;}
   .glance-promo .fc-eyebrow{font-size:.833rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;opacity:.75;}
   .glance-promo h3{font-family:"Fraunces","Fraunces fallback",serif;font-size:1.094rem;line-height:1.25;margin:5px 0 4px;}
   .glance-promo .gp-when{font-size:.867rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8;margin-bottom:7px;}
-  .glance-promo p{font-size:.907rem;line-height:1.4;opacity:.85;margin-bottom:11px;max-width:30ch;}
   .glance-promo .btn{background:var(--brand-900);color:#F3EFE3;padding:9px 20px;font-size:.943rem;}
   .glance-promo .gp-where{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:.88rem;font-weight:600;opacity:.9;}
   .glance-promo .gp-live{margin-top:3px;font-size:.838rem;opacity:.75;}
@@ -635,9 +647,9 @@ window.TAIYABAH_PUBLIC = {
      Deliberately NOT a link and deliberately without cursor:pointer. There is
      nothing behind it yet, and a card that looks tappable and goes nowhere
      reads as a broken website rather than as an announcement. */
-  .fb-art{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0 4px;min-height:0;}
-  .fb-art svg{width:100%;max-width:230px;height:auto;display:block;}
-  .fb-copy{font-size:.926rem;color:var(--muted);line-height:1.5;text-align:center;margin:0 auto 12px;max-width:30ch;}
+  .fb-art{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px 0 4px;min-height:0;}
+  .fb-logo{width:100%;max-width:170px;height:auto;display:block;}
+  .fb-logo-label{font-family:"Fraunces","Fraunces fallback",serif;font-weight:700;font-size:1.02rem;letter-spacing:.03em;color:var(--brand-800);}
   .fb-soon{
     align-self:center;display:inline-flex;align-items:center;gap:6px;
     padding:5px 13px;border-radius:999px;background:rgba(198,162,76,.16);
@@ -684,9 +696,9 @@ window.TAIYABAH_PUBLIC = {
      rather than the existing four being squeezed to make room. A notice
      with no poster is skipped outright — there is nothing this card is
      allowed to show instead. */
-  .glance-notice-live{padding:0;overflow:hidden;}
+  .glance-notice-live{padding:0;overflow:hidden;justify-content:center;}
   .glance-notice-live img{
-    width:100%;height:100%;min-height:180px;object-fit:cover;display:block;
+    width:100%;height:auto;display:block;
   }
 
   /* ---- App promo (home page) ---- */
@@ -1359,7 +1371,6 @@ window.TAIYABAH_PUBLIC = {
   table.pt td{padding:10px 11px;border-bottom:1px solid var(--line);font-size:.96rem;white-space:nowrap;}
   table.pt tr:last-child td{border-bottom:none;}
   table.pt tr.today td{background:rgba(198,162,76,.14);font-weight:700;}
-  .pt-note{margin-top:14px;font-size:.931rem;color:var(--muted);line-height:1.6;}
   .jummah-note{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;}
   .jummah-note .jc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 15px;font-size:.949rem;}
   .jummah-note .jc b{display:block;font-family:"Fraunces","Fraunces fallback",serif;color:var(--brand-800);margin-bottom:3px;}
@@ -2602,17 +2613,12 @@ window.TAIYABAH_PUBLIC = {
     <div class="container">
       <div class="hero-grid">
         <div>
-          <div class="salam"><span class="ar arabic" lang="ar" dir="rtl">السَّلَامُ عَلَيْكُمْ</span><span class="tr">As-salāmu ʿalaykum</span></div>
+          <div class="salam"><span class="ar arabic" lang="ar" dir="rtl">السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ وَبَرَكَاتُهُ</span></div>
           <div class="eyebrow">Bolton Central Islamic Society &middot; Charity 1041569</div>
           <h1>A home for <em>faith</em>, learning &amp; community since 1967.</h1>
-          <p class="lead">Taiyabah Masjid has served Bolton's Muslim community for over 55 years. This site is the front door — prayer times, the new build appeal, and how to reach us. For day-to-day use, the free app is faster.</p>
           <div class="hero-cta">
             <a class="btn btn-gold" data-nav="prayer">Prayer times</a>
             <a class="btn btn-ghost-dark btn-live" href="https://taiyabahmbolton.radioca.st/;" target="_blank" rel="noopener"><span class="live-dot" aria-hidden="true"></span> Listen Live</a>
-          </div>
-          <div class="hero-chip">
-            <span class="dot">🕌</span>
-            <span><b id="chipName">Next Jamā&#703;ah</b> <span id="chipDetail">— loading…</span></span>
           </div>
         </div>
         <div class="hero-feat-card">
@@ -2633,25 +2639,25 @@ window.TAIYABAH_PUBLIC = {
   <section class="glance-row">
     <div class="container">
       <div class="glance-grid" id="glanceGrid">
-        <div class="glance-card">
+        <div class="glance-card glance-prayer">
           <div class="glance-head-stack">
             <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg> Prayer Times</span>
             <span class="glance-more" data-nav="prayer">View Full Timetable →</span>
           </div>
+          <div class="gp-date" id="gpDate">Loading today&rsquo;s times…</div>
           <div class="gp-table-head"><span>Prayer</span><span class="gp-cols"><span class="gp-col">Begins</span><span class="gp-col">Jam&#703;at</span></span></div>
           <div class="gp-row" id="gpRow-Fajr"><span class="gp-name">Fajr</span><span class="gp-times"><span id="gp-fajr-b">—</span><b id="gp-fajr-j">—</b></span></div>
+          <div class="gp-row" id="gpRow-Sunrise"><span class="gp-name">Sunrise</span><span class="gp-times"><span>—</span><b id="gp-sunrise">—</b></span></div>
           <div class="gp-row" id="gpRow-Zuhr"><span class="gp-name">Zuhr</span><span class="gp-times"><span id="gp-zuhr-b">—</span><b id="gp-zuhr-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Asr"><span class="gp-name">Asr</span><span class="gp-times"><span id="gp-asr-b">—</span><b id="gp-asr-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Maghrib"><span class="gp-name">Maghrib</span><span class="gp-times"><span>—</span><b id="gp-maghrib-j">—</b></span></div>
           <div class="gp-row" id="gpRow-Isha"><span class="gp-name">Isha</span><span class="gp-times"><span id="gp-isha-b">—</span><b id="gp-isha-j">—</b></span></div>
-          <div class="gp-foot" id="gpDate">Loading today&rsquo;s times…</div>
         </div>
 
         <div class="glance-card glance-promo glance-wa">
           <span class="gp-notmiss"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38a9.9 9.9 0 004.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91C21.95 6.45 17.5 2 12.04 2zm0 18.15h-.01a8.2 8.2 0 01-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.38c0-4.54 3.7-8.23 8.25-8.23a8.23 8.23 0 018.24 8.24c0 4.54-3.7 8.23-8.24 8.23zm4.52-6.16c-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.13-.16.24-.64.8-.78.97-.15.16-.29.18-.53.06-.25-.13-1.05-.39-1.99-1.23-.74-.66-1.23-1.47-1.38-1.71-.14-.25-.01-.38.11-.5.11-.11.25-.29.37-.44.13-.15.17-.25.25-.41.09-.17.04-.31-.02-.43-.06-.13-.56-1.35-.77-1.84-.2-.48-.4-.42-.55-.43h-.47c-.16 0-.43.06-.65.31-.22.24-.85.83-.85 2.03s.87 2.35.99 2.51c.12.17 1.71 2.62 4.15 3.67.58.25 1.03.4 1.39.51.58.19 1.11.16 1.53.1.47-.07 1.47-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.17-.47-.29z"/></svg> Announcements</span>
           <div class="fc-eyebrow">Stay updated</div>
           <h3>Join the masjid WhatsApp group</h3>
-          <p>Prayer time changes, janāzah notices and community announcements, straight to your phone.</p>
           <a class="gp-qr" href="https://chat.whatsapp.com/GUU82kvhjNmCXNksk5iRwm" target="_blank" rel="noopener">
             <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAnYAAAJ2CAIAAABdNliuAAALvElEQVR42u3dyxHjVBiEUUxpSSbEQPQTA5mwvyQwjFWUrtv933MCsK2H9ZVW/Vpr/QYAPO13pwAAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAODXrpYf+tcff7pab/345+/Hz2f2M3fcIdlvz153R5T6ds+6779DvMUCQA2JBQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgHgTNe8Q2pZYLjP8kbquu848/N+545vb1nF8azzrPMWCwASCwASCwBILABILABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAH3KdfPDZVYfsSsaOHZWWzzz5rtvxO7PXfd5Z8qzzFgsASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAPzE5RTwa/O2bk5ehrnv/rGffN3BWywASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAHyIpR3eyK7NtGzd7NhmaVmGyf7OHXfIvN0kvMUCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAkC9o5d27Gk8e5aymyctmzwt1+i+eWtI8+46zzpvsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAUG/g0s6OLZGTz5J1lEmfed+89Z55TwbPOm+xACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILAAgsQAgsQBwkJqlnezeyzzZbZaWY7dk8iybPJ513mIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAYD/6Zp3SDuWN1qOKCt7Pq2juOs+/2S4/5nznkvZe6nlLHmLBQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgGAx9Qs7WRXMrKfuePbW67RfdlrtMPJ377jrsvK/ot3XM2T93O8xQKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAgMQCQEDN0k52gSG7zZJdtNjx7S0bR9lrNO9/1MJ6z/f/zpY72VssAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwA8pmZpp2X7YscRtWxK7NjTyO78ZI89ez6zKy73v/3kFZeW/RxvsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAwANeay1n4a3sRkd2HaVlyaRlRyW7S8P3X6N5d8i8jSNvsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAEFCztJNdhslqOaKWLZGTN3l2nM/sv/jkM2/bylssAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILAAcpGZp576WFZeseUsmtlmc+c+fpZYFm3lPxZb1Hm+xACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILADwmGveIbUsMOw4oh2LFtnVkR1ajsh+zpl3XfYzs9eoZanMWywASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAAS81lrHHnx2zSO7jtKykjFv76Xlus+7RtkjOvn/Pm/9zFssAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILAAEDFzambdokT1LLasjO5y8EHLy/6hll8bWjbdYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAkFgAkFgAkFgCQWACQWAA4yMClnRYtSyZZ2SOyo5K65+07nXk1593z3mIBQGIBQGIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAOAx17xDalnzaNkSmbd5Mm+PqGWfpGVxJXuWTn6CeYsFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQD+02utVfFDWzZP5q24tKyO8P13cstn+r9Puu7eYgFgIIkFAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAeBM17xD2rHAkN3oyP7OlqvZsqNibSb179jxO7NH1PJ/P3kvy1ssAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwA8ZuDSTssqzo4jmrfm0bK4YpPn+4+o5f603uMtFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAJBYA+InXWstZeMt6T+osZc9ny97LvOvesiEz799x8h3iLRYAakgsAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwBnuk4++OyOSnZ5Y4fsWWpZxZm3SzPv39GynzPvadOyn+MtFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAAmqWdrL7JC3rKNnzuePb5y1vWHFxPr/5GTLvLHmLBQCJBQAkFgAkFgAkFgCQWACQWACQWABAYgFAYgFAYgEAiQUAiQWAIV5rrYofmt1m2fHt89Z7dpzPFi17L/OWi+atNrU8GbJPxZar6S0WACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAUBiAQCJBQCJBQCJBQAec5188C2rDtlvn3eWdiyZzFsIaXHyhkz2Ts5+prdYADiaxAKAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAcKbXWqvih7bsVGR3P7K/M3vddxx7dj8nu08y74iydwhnPsG8xQKAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAwGNqlnZ4lvWeZ4/Ihsz3/87sdlD233Hy/91bLABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwADHG1/NCWJZOsk7cvsvs5lmGe/faW39lyJ5/8j/MWCwADSSwASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILAGe65h3SvLWZHbsfO7YvWo6o5RrtWB3Jbp7Mu+tOfoKdvJ/jLRYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFACQWAAJea62KH7pjqyG7vDFvp6JlySR7jcA9/8nf6S0WAAaSWACQWACQWACQWABAYgFAYgFAYgEAiQUAiQUAiQUAJBYAJBYAznQ5BTxlx/ZFy8pQy5nPLlZl75DsndxyRPZzvMUCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAsCXsrTDG9kdlZaFkB3m7b20rOK0rM3MW8WZt6zlLRYAJBYAJBYAJBYAkFgAkFgAkFgAQGIBQGIBQGIBAIkFAIkFAIkFAB5z9NJOy1bDDjsWLVp2VHZ8e3aX5v7vbNmlmfffbLmX8BYLABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwBfauDSjk2JO05esNnx7dnzmT1L89Z7dtwh2efSyati3mIBQGIBAIkFAIkFAIkFACQWACQWACQWAJBYAJBYAJBYAEBiAUBiAWCI11rLWQAAb7EAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwASCwASCwBILABILABILAAgsQAgsQAgsQCAxAKAxAKAxAIAEgsAEgsAEgsASCwASCwASCwAILEAILEAILEAgMQCgMQCgMQCABILABILABILAEgsAEgsAEgsACCxACCxACCxAIDEAoDEAoDEAgASCwCf9i+mR9EUr6JXagAAAABJRU5ErkJggg==" width="630" height="630" alt="QR code that opens the Taiyabah Masjid WhatsApp group">
           </a>
@@ -2660,26 +2666,11 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="glance-card glance-foodbank">
-          <div class="glance-head">
-            <span class="glance-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 9h17.6l-1.9 10.2a2 2 0 01-2 1.8H7.1a2 2 0 01-2-1.8L3.2 9z"/><path d="M8.4 9l2.9-5.2M15.6 9l-2.9-5.2"/></svg> Taiyabah Food Bank</span>
-          </div>
           <div class="fb-art">
             
-            <svg viewBox="0 0 240 150" role="img" aria-label="A crescent moon and star.">
-              <circle cx="120" cy="75" r="58" fill="#C6A24C" opacity=".13"/>
-              <circle cx="120" cy="75" r="49" fill="none" stroke="#C6A24C" stroke-width="1.4" opacity=".45" stroke-dasharray="1 7" stroke-linecap="round"/>
-              <mask id="fbCrescentMask">
-                <rect width="240" height="150" fill="#000"/>
-                <circle cx="116" cy="77" r="33" fill="#fff"/>
-                <circle cx="133" cy="65" r="27.5" fill="#000"/>
-              </mask>
-              <circle cx="116" cy="77" r="33" fill="#4B1136" mask="url(#fbCrescentMask)"/>
-              <g fill="#C6A24C" transform="translate(146,52) scale(.22) translate(-50,-50)">
-                <polygon points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/>
-              </g>
-            </svg>
+            <img class="fb-logo" src="data:image/png;base64,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" alt="Taiyabah Masjid">
+            <div class="fb-logo-label">Food Bank</div>
           </div>
-          <p class="fb-copy">A new service for families across Bolton who need a little help. Details to follow, insh&#0257;&#702;All&#0257;h.</p>
           <span class="fb-soon">Coming soon</span>
           <a class="fb-vol" href="#" data-nav="volunteer">Register as a volunteer
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
@@ -3003,7 +2994,6 @@ window.TAIYABAH_PUBLIC = {
           <div class="snap-row"><span class="k">Asr</span><span class="v" id="s-asr">—</span></div>
           <div class="snap-row"><span class="k">Maghrib</span><span class="v" id="s-maghrib">—</span></div>
           <div class="snap-row"><span class="k">Isha</span><span class="v" id="s-isha">—</span></div>
-          <p class="snap-note">Computed in your browser from the masjid&rsquo;s published timetable (Europe/London time).</p>
         </div>
       </div>
 
@@ -3026,7 +3016,6 @@ window.TAIYABAH_PUBLIC = {
           </table>
         </div>
         <div class="jummah-note" id="jummahNote"></div>
-        <p class="pt-note">Always confirm times on the printed board at the masjid, or in the app, before relying on them. Outside 2026, only the app will have current times.</p>
       </div>
     </div>
   </section>
@@ -6161,19 +6150,6 @@ window.TAIYABAH_PUBLIC = {
     return { next, dayLabel, diff, today };
   }
 
-  function renderChip(){
-    const r = computeNext();
-    const nameEl = document.getElementById('chipName');
-    const detailEl = document.getElementById('chipDetail');
-    if(!r){ nameEl.textContent = 'Prayer Times'; detailEl.textContent = '— open the app for live times'; return; }
-    const hh = String(Math.floor(r.next.mins/60)).padStart(2,'0');
-    const mm = String(r.next.mins%60).padStart(2,'0');
-    const hrs = Math.floor(r.diff/60), mins = r.diff%60;
-    const countStr = hrs>0 ? `${hrs}h ${mins}m` : `${mins}m`;
-    nameEl.textContent = r.next.key + (r.dayLabel==='tomorrow' ? ' (tomorrow)' : '');
-    detailEl.textContent = `— ${hh}:${mm}, in ${countStr}`;
-  }
-
   function renderHeaderBar(){
     const r = computeNext();
     const nameEl = document.getElementById('huChipName');
@@ -6289,6 +6265,7 @@ window.TAIYABAH_PUBLIC = {
     dateEl.textContent = dateLabel;
     document.getElementById('gp-fajr-b').textContent = row[3];
     document.getElementById('gp-fajr-j').textContent = row[4];
+    document.getElementById('gp-sunrise').textContent = row[5];
     document.getElementById('gp-zuhr-b').textContent = row[6];
     document.getElementById('gp-zuhr-j').textContent = row[7];
     document.getElementById('gp-asr-b').textContent = row[8];
@@ -6333,7 +6310,7 @@ window.TAIYABAH_PUBLIC = {
   document.getElementById('pt-print').addEventListener('click', () => window.print());
 
   function paintTimetable(){
-    renderChip(); renderLive(); renderSnapshot(); renderGlance();
+    renderLive(); renderSnapshot(); renderGlance();
     renderMonth(); renderHeaderBar();
   }
 
@@ -6341,7 +6318,7 @@ window.TAIYABAH_PUBLIC = {
   //  times are on screen before any network call is even started. Nothing
   //  below can make the visitor wait.
   paintTimetable();
-  setInterval(() => { renderChip(); renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
+  setInterval(() => { renderLive(); renderHeaderBar(); renderGlance(); }, 30000);
 
   /* ---------------- A NEWER TIMETABLE, IF THERE IS ONE ----------------
 
@@ -9606,8 +9583,17 @@ window.TAIYABAH_PUBLIC = {
      there is no "show it anyway" for a card whose entire point is the
      picture. Appended straight into #glanceGrid, the SAME grid Prayer
      Times, Announcements, Food Bank and Donate already sit in — not a
-     section of its own — so an extra card wraps onto the next row at the
-     grid's own width rather than squeezing the original four.
+     section of its own.
+
+     THE ROW NEVER GROWS PAST FIVE CARDS, so it never wraps to a second
+     row: the masjid's own ask. Five minus however many static cards are
+     already sitting in #glanceGrid at the moment this runs — four today,
+     so one notice — rather than a bare "1" written down here, which
+     would silently go stale (and quietly let the row wrap again) the day
+     a fifth static card is added above and nobody remembers to come back
+     to this file. notices_live() already orders newest-first, so taking
+     the top N of that is "a new poster replaces the oldest one shown"
+     with no separate replacement logic at all.
 
      NOT PROGRESSIVE ENHANCEMENT, unlike the appeal below. The appeal is a
      slow-moving figure worth baking into the build so a visitor with
@@ -9642,8 +9628,11 @@ window.TAIYABAH_PUBLIC = {
       if(!Array.isArray(rows)) return;
 
       //  The function orders newest-first but applies no limit of its own,
-      //  and a notice with no poster is not a candidate at all.
-      var withPoster = rows.filter(function(n){ return !!n.image_url; }).slice(0, 4);
+      //  and a notice with no poster is not a candidate at all. The row
+      //  holds five cards total, so this takes only as many notices as
+      //  there is room left for beside the static ones already in the grid.
+      var roomLeft = Math.max(0, 5 - grid.children.length);
+      var withPoster = rows.filter(function(n){ return !!n.image_url; }).slice(0, roomLeft);
 
       withPoster.forEach(function(n){
         var card = document.createElement('div');
