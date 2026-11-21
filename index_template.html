@@ -239,6 +239,34 @@ window.TAIYABAH_PUBLIC = {
     --measure:60ch;
     --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
   }
+  /* ===========================================================================
+     COMING SOON LOCK SCREEN — the domain/DNS switchover placeholder.
+
+     Covers the whole public site until 1 Jan 2027 (the masjid's own chosen
+     launch date), compared against each VISITOR'S OWN clock — the countdown
+     and the unlock are the same comparison, so there is no moment where the
+     numbers read zero and the real site still hasn't appeared. Remove this
+     whole block, the #comingSoon markup and its script below, once the
+     real site should stay up regardless of the date.
+
+     The mark is the eight-point girih star the site already draws inline
+     elsewhere on the page, not the header's raster crest — the budget here
+     is 200 KB gzipped with well under 4 KB of headroom, and a second copy
+     of that base64 image pushed the page 8 KB over it.
+  ------------------------------------------------------------------------- */
+  .coming-soon{position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;background:linear-gradient(160deg,var(--brand-900),var(--brand-800));overflow:hidden;}
+  .coming-soon .girih-mark{position:absolute;width:240px;height:240px;color:var(--gold);opacity:.07;pointer-events:none;}
+  .coming-soon .girih-mark.tr{top:-50px;right:-50px;}
+  .coming-soon .girih-mark.bl{bottom:-50px;left:-50px;}
+  .cs-crest{position:relative;width:40px;height:40px;color:var(--gold-bright);margin-bottom:18px;}
+  .cs-eyebrow{position:relative;color:var(--gold-bright);text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:700;margin-bottom:8px;}
+  .coming-soon h1{position:relative;color:#F3EFE3;font-size:clamp(1.9rem,6vw,3.2rem);max-width:17ch;margin-bottom:14px;}
+  .cs-sub{position:relative;color:rgba(243,239,227,.78);max-width:46ch;font-size:1.04rem;line-height:1.65;margin-bottom:34px;}
+  .cs-countdown{position:relative;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+  .cs-unit{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:14px 16px;min-width:72px;}
+  .cs-num{display:block;font-family:"Fraunces","Fraunces fallback",serif;font-size:clamp(1.5rem,5vw,2.3rem);font-weight:700;color:var(--gold-bright);line-height:1;font-variant-numeric:tabular-nums;}
+  .cs-label{display:block;margin-top:6px;font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(243,239,227,.6);}
+  html.cs-locked,html.cs-locked body{overflow:hidden;height:100%;}
   *{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;background:var(--brand-900);}
   body{
@@ -2528,6 +2556,43 @@ window.TAIYABAH_PUBLIC = {
 </head>
 <body>
 <a href="#main" class="skip-link">Skip to content</a>
+
+<!-- ===================== COMING SOON LOCK SCREEN =====================
+     Domain/DNS switchover placeholder. Delete this whole block (the div
+     and its script) plus the "COMING SOON LOCK SCREEN" CSS above once the
+     real site should stay up regardless of the date — there is no other
+     switch to flip. See the CSS comment for why the launch date is
+     compared against each visitor's own clock rather than a server date. -->
+<div class="coming-soon" id="comingSoon" role="region" aria-label="New website launching 1 January 2027">
+  <svg class="girih-mark tr" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <svg class="girih-mark bl" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <svg class="cs-crest" viewBox="0 0 100 100" aria-hidden="true"><polygon fill="currentColor" points="50,2 57.3,32.4 83.9,16.1 67.6,42.7 98,50 67.6,57.3 83.9,83.9 57.3,67.6 50,98 42.7,67.6 16.1,83.9 32.4,57.3 2,50 32.4,42.7 16.1,16.1 42.7,32.4"/></svg>
+  <div class="cs-eyebrow">Taiyabah Masjid</div>
+  <h1>New Rebrand Coming Soon</h1>
+  <p class="cs-sub">We're putting the finishing touches on the new Taiyabah Masjid website. It launches 1 January 2027.</p>
+  <div class="cs-countdown" id="csCountdown" aria-hidden="true">
+    <div class="cs-unit"><span class="cs-num" id="csD">00</span><span class="cs-label">Days</span></div>
+    <div class="cs-unit"><span class="cs-num" id="csH">00</span><span class="cs-label">Hours</span></div>
+    <div class="cs-unit"><span class="cs-num" id="csM">00</span><span class="cs-label">Minutes</span></div>
+    <div class="cs-unit"><span class="cs-num" id="csS">00</span><span class="cs-label">Seconds</span></div>
+  </div>
+</div>
+<script>
+/* Decided here, before <header>/<main>/<footer> even exist in the DOM yet,
+   so a visitor loading the page on or after launch day never sees the lock
+   screen flash up first. The rest — the ticking numbers, and hiding the
+   real page from assistive tech while it's covered — waits until the end
+   of <body>, where those elements are actually there to find. */
+(function(){
+  var box = document.getElementById('comingSoon');
+  if(!box) return;
+  if(Date.now() >= new Date(2027, 0, 1, 0, 0, 0).getTime()){
+    box.parentNode.removeChild(box);
+  } else {
+    document.documentElement.classList.add('cs-locked');
+  }
+})();
+</script>
 
 <header id="siteHeader">
   <div class="bar">
@@ -9749,6 +9814,49 @@ window.TAIYABAH_PUBLIC = {
       window.location.href = 'mailto:info@taiyabahmasjid.com?subject=' + subject + '&body=' + body;
     });
   }
+
+  /* ---------------- Coming soon lock screen: the ticking half -----------
+     The early script right after <body> already decided whether the lock
+     screen should be up at all. This half only runs if it is: it ticks the
+     countdown, and — since the lock screen is meant to be EVERYTHING a
+     visitor can reach, not just everything they can see — it takes the
+     real page out of the accessibility tree and out of the tab order with
+     `inert`, same as `aria-hidden` would but also stopping a screen reader
+     or keyboard user tabbing into content that is, for everyone else,
+     covered by an opaque full-screen panel. Put off until here, rather
+     than the early script, because <header>/<main>/<footer> do not exist
+     yet the moment that one runs. */
+  (function(){
+    var box = document.getElementById('comingSoon');
+    if(!box) return; // already removed — launch day, or date already passed
+
+    var TARGET = new Date(2027, 0, 1, 0, 0, 0).getTime();
+    var hidden = [document.getElementById('siteHeader'), document.getElementById('main'),
+                  document.querySelector('footer')].filter(Boolean);
+    hidden.forEach(function(el){ el.setAttribute('inert', ''); el.setAttribute('aria-hidden', 'true'); });
+
+    function unlock(){
+      if(box.parentNode) box.parentNode.removeChild(box);
+      document.documentElement.classList.remove('cs-locked');
+      hidden.forEach(function(el){ el.removeAttribute('inert'); el.removeAttribute('aria-hidden'); });
+    }
+
+    var dEl = document.getElementById('csD'), hEl = document.getElementById('csH'),
+        mEl = document.getElementById('csM'), sEl = document.getElementById('csS');
+    function pad(n){ return n < 10 ? '0' + n : '' + n; }
+
+    var timer = setInterval(tick, 1000);
+    function tick(){
+      var ms = TARGET - Date.now();
+      if(ms <= 0){ clearInterval(timer); unlock(); return; }
+      var totalSec = Math.floor(ms / 1000);
+      dEl.textContent = pad(Math.floor(totalSec / 86400));
+      hEl.textContent = pad(Math.floor((totalSec % 86400) / 3600));
+      mEl.textContent = pad(Math.floor((totalSec % 3600) / 60));
+      sEl.textContent = pad(totalSec % 60);
+    }
+    tick();
+  })();
 </script>
 </body>
 </html>
