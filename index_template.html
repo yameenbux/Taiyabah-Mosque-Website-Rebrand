@@ -1908,6 +1908,7 @@ window.TAIYABAH_PUBLIC = {
   .hp-key.k-ev{background:var(--card);position:relative;}
   .hp-key.k-ev::after{content:"";position:absolute;left:50%;bottom:2px;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold);}
   .hp-key.k-today{border-color:var(--brand-700);box-shadow:0 0 0 1.5px var(--brand-700) inset;}
+  .hp-key.k-kd{border-bottom:2.5px solid var(--brand-700);}
   .hp-months{display:grid;gap:16px;grid-template-columns:1fr;}
   @media(min-width:600px){ .hp-months{grid-template-columns:1fr 1fr;} }
   @media(min-width:980px){ .hp-months{grid-template-columns:repeat(3,1fr);} }
@@ -1921,6 +1922,9 @@ window.TAIYABAH_PUBLIC = {
   .hp-d.is-shut{background:rgba(180,83,47,.16);color:#7C3A20;font-weight:600;}
   .hp-d.is-ev::after{content:"";position:absolute;left:50%;bottom:2px;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--gold);}
   .hp-d.is-today{border-color:var(--brand-700);font-weight:700;}
+  /* Key dates fall on open days, so they take neither the closed wash nor the
+     gold Islamic dot — a brand-coloured underline under the number instead. */
+  .hp-d.is-kd{text-decoration:underline;text-decoration-color:var(--brand-700);text-decoration-thickness:2px;text-underline-offset:2px;font-weight:600;}
   /* A day is a button: tapping it says what is on it in .hp-pick below. The
      ring is a shadow rather than the border, because the border and the gold
      dot ARE the legend — a reader who taps a marked day to ask what it is
@@ -1929,6 +1933,7 @@ window.TAIYABAH_PUBLIC = {
   .hp-pick{margin-top:16px;}
   .hp-pick .ev{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.96rem;color:var(--ink);}
   .hp-pick .ev i{flex-shrink:0;width:9px;height:9px;border-radius:2px;border:1.5px solid var(--gold);}
+  .hp-pick .ev.kd i{border-color:var(--brand-700);}
   .hp-pick .ev .sub{color:var(--muted);}
   .hp-rows{display:grid;gap:0;border-top:1px solid var(--line);margin:4px 0 0;}
   .hp-row{display:grid;gap:2px 16px;padding:12px 0;border-bottom:1px solid var(--line);align-items:baseline;}
@@ -3510,7 +3515,7 @@ window.TAIYABAH_PUBLIC = {
         </div>
 
         <div class="svc-detail-facts">
-          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The madrasah teaches <strong>180 days</strong> this year &mdash; 36 weeks, Monday to Friday, 5pm to 7pm. Hifz students also attend on Saturday mornings. Everything below applies to every class.</p>
+          <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">The madrasah teaches <strong>179 days</strong> this year &mdash; 36 weeks, Monday to Friday, 5pm to 7pm. Hifz students also attend on Saturday mornings. Everything below applies to every class.</p>
 
           <div class="subhead" style="margin-top:26px;"><h3 style="font-size:1.15rem;">The year at a glance</h3><span class="rule"></span></div>
           <div class="hp-legend">
@@ -3518,6 +3523,7 @@ window.TAIYABAH_PUBLIC = {
             <span><i class="hp-key k-shut"></i>Closed</span>
             <span><i class="hp-key k-ev"></i>Islamic date</span>
             <span><i class="hp-key k-today"></i>Today</span>
+            <span><i class="hp-key k-kd"></i>Key date</span>
           </div>
           <div class="hp-months" id="hpMonths"></div>
 
@@ -3533,6 +3539,8 @@ window.TAIYABAH_PUBLIC = {
 
           <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">When the madrasah is closed</h3><span class="rule"></span></div>
           <div class="hp-rows" id="hpClosures"></div>
+          <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">Key dates this year</h3><span class="rule"></span></div>
+          <div class="hp-rows" id="hpKeydates"></div>
           <div class="subhead" style="margin-top:34px;"><h3 style="font-size:1.15rem;">Islamic dates this year</h3><span class="rule"></span></div>
           <div class="hp-rows" id="hpEvents"></div>
           <div class="svc-advisory" style="margin-top:16px;">
@@ -7017,11 +7025,26 @@ window.TAIYABAH_PUBLIC = {
       { name:'Insert Day',        note:'Teachers in — no students', from:'2026-09-01', to:'2026-09-01' },
       { name:'Half Term Break',   note:'',                          from:'2026-10-26', to:'2026-10-30' },
       { name:'End of Term Break', note:'Christmas and New Year',    from:'2026-12-21', to:'2027-01-01' },
-      { name:'Ramadhan Holidays', note:'Ramadhan and Eid al-Fitr',  from:'2027-02-08', to:'2027-03-12' },
+      { name:'Staff Training',    note:'Teachers in — no students', from:'2027-01-04', to:'2027-01-04' },
+      { name:'Ramadhan Holidays', note:'Ramadhan and Eid al-Fitr',  from:'2027-02-08', to:'2027-03-14' },
       { name:'End of Term Break', note:'',                          from:'2027-03-26', to:'2027-04-02' },
       { name:'Eid al-Adha',       note:'Eid holidays',              from:'2027-05-17', to:'2027-05-18' },
       { name:'Summer Half Term',  note:'',                          from:'2027-05-31', to:'2027-06-04' },
-      { name:'End of Year',       note:'Summer holidays',           from:'2027-07-26', to:'2027-09-03' }
+      { name:'End of Year',       note:'Summer holidays',           from:'2027-07-26', to:'2027-09-06' }
+    ];
+
+    /* Key dates — the assessments, parents' evenings and presentation day the
+       madrasah prints beside its closures. Term-time events on days the
+       madrasah is open, so a third list of their own. Edited here once a year
+       alongside the two above. */
+    var KEYDATES = [
+      { name:'Mid-year assessments',    note:'',        from:'2026-12-14', to:'2026-12-18' },
+      { name:"Parents’ Evening",   note:'',        from:'2026-12-18', to:'2026-12-18' },
+      { name:'End-of-year assessments', note:'',        from:'2027-07-05', to:'2027-07-15' },
+      { name:'Hifz assessments',        note:'',        from:'2027-07-14', to:'2027-07-14' },
+      { name:"Parents’ Evening",   note:'',        from:'2027-07-16', to:'2027-07-16' },
+      { name:'Presentation Day',        note:'',        from:'2027-07-23', to:'2027-07-23' },
+      { name:'New year starts',         note:'2027/28', from:'2027-09-07', to:'2027-09-07' }
     ];
 
     var EVENTS = [
@@ -7054,14 +7077,21 @@ window.TAIYABAH_PUBLIC = {
        block below had to search CLOSURES again by name to find the end date,
        which is a lookup that goes wrong the first time two closures are
        called the same thing — "End of Term Break" already appears twice. */
-    var shut = {}, evt = {};
+    var shut = {}, evt = {}, kd = {};
     CLOSURES.forEach(function(c){
       var d = parse(c.from), end = parse(c.to);
       while(d <= end){ shut[iso(d)] = c; d.setDate(d.getDate()+1); }
     });
     EVENTS.forEach(function(e){ (evt[e.on] = evt[e.on] || []).push(e); });
+    KEYDATES.forEach(function(k){
+      var d = parse(k.from), end = parse(k.to);
+      while(d <= end){ var key = iso(d); (kd[key] = kd[key] || []).push(k); d.setDate(d.getDate()+1); }
+    });
     function evtNames(k){
       return (evt[k] || []).map(function(e){ return e.name; }).join(' · ');
+    }
+    function kdNames(k){
+      return (kd[k] || []).map(function(x){ return x.name; }).join(' · ');
     }
 
     var todayISO = iso(new Date());
@@ -7111,6 +7141,7 @@ window.TAIYABAH_PUBLIC = {
         if(wd === 0 || wd === 6) cls += ' is-wknd';
         if(shut[key]){ cls += ' is-shut'; title.push(shut[key].name); }
         if(evt[key]){ cls += ' is-ev'; title.push(evtNames(key) + ' (estimated)'); }
+        if(kd[key]){ cls += ' is-kd'; title.push(kdNames(key)); }
         if(key === todayISO) cls += ' is-today';
         /* A BUTTON, NOT A DIV. The title below has carried this same sentence
            since the planner was written, and a title is a mouse hover — so on
@@ -7172,6 +7203,9 @@ window.TAIYABAH_PUBLIC = {
       pickE.innerHTML = (evt[key] || []).map(function(e){
         return '<span class="ev"><i aria-hidden="true"></i><span><b>' + esc(e.name) +
                '</b> <span class="sub">' + esc(e.sub || '') + '</span></span></span>';
+      }).join('') + (kd[key] || []).map(function(k){
+        return '<span class="ev kd"><i aria-hidden="true"></i><span><b>' + esc(k.name) + '</b>' +
+               (k.note ? ' <span class="sub">' + esc(k.note) + '</span>' : '') + '</span></span>';
       }).join('');
     }
 
@@ -7198,6 +7232,16 @@ window.TAIYABAH_PUBLIC = {
                  n + (n === 1 ? ' day' : ' days'), todayISO > c.to, false);
     });
     document.getElementById('hpClosures').innerHTML = out;
+
+    out = '';
+    KEYDATES.forEach(function(k){
+      var single = k.from === k.to;
+      var n = Math.round((parse(k.to) - parse(k.from)) / 86400000) + 1;
+      out += row(esc(k.name), k.note, pretty(k.from) + (single ? '' : ' – ' + pretty(k.to)),
+                 single ? DOW[parse(k.from).getDay()] : n + (n === 1 ? ' day' : ' days'),
+                 todayISO > k.to, false);
+    });
+    document.getElementById('hpKeydates').innerHTML = out;
 
     out = '';
     EVENTS.forEach(function(e){
