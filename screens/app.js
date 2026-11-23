@@ -124,10 +124,27 @@
     var OCC_KEYS = ["ramadan", "eidFitr", "eidAdha"];
     var SAVE_LABEL = "Save — the TVs pick this up within 20 minutes";
 
-    var doc   = null;   // what is being edited — see blank() for the shape
-    var saved = null;   // what came back from the live file, for Undo
-    var meta  = null;   // when this screen last loaded the file
-    var wired = false;
+    var doc     = null;   // what is being edited — see blank() for the shape
+    var saved   = null;   // what came back from the live file, for Undo
+    var meta    = null;   // when this screen last loaded the file
+    var rawLive = null;   // the full foyer-content.json as last fetched, for the live preview
+    var wired   = false;
+
+    /* -------------------------------------------------------------- the
+       LIVE PREVIEW. Four iframes, each the screens repo's own foyer.html /
+       foyervertical.html / timetable.html / timetablevertical.html, loaded
+       from the real site — not a redrawn copy of what they look like, which
+       would drift the moment either repo changed. Each one recognises it is
+       embedded (window !== window.top) and, instead of fetching the live
+       file, listens for a draft posted from this origin — see
+       src/shared/frame.js's wirePreview() in the screens repo. */
+    var SCREENS_ORIGIN = "https://taiyabahscreens.ysbdesigns.uk";
+    var PREVIEW_PAGES = {
+      foyerLand: "foyer.html", foyerPort: "foyervertical.html",
+      hallLand: "timetable.html", hallPort: "timetablevertical.html"
+    };
+    var previewReady = {};
+    var pushTimer = null;
 
     function esc(v) {
       return String(v == null ? "" : v)
@@ -374,6 +391,7 @@
       }
       var save = el("sc-save");
       if (save) save.disabled = complaints.length > 0;
+      pushPreview();
       return complaints;
     }
 
@@ -412,16 +430,101 @@
           return r.json();
         })
         .then(function (raw) {
+          rawLive = raw;
           doc = extract(raw);
           saved = JSON.stringify(doc);
           meta = { read_at: new Date().toISOString() };
           draw();
+          pushPreview();
         })
         .catch(function (e) {
           note("sc-error", "Couldn't read what's currently on the foyer TVs: " +
             (e.message || e) + " — nothing has changed on them.");
           if (!doc) { doc = blank(); draw(); }
         });
+    }
+
+    /* The full foyer-content.json shape, as this screen's edits would leave
+       it — everything this form does not show (the long heading and
+       tagline, the bank details, _instructions) stays exactly as rawLive
+       had it, same as the Edge Function's own merge at save time. Built
+       fresh on every call rather than cached: the preview has to answer
+       "what would saving right now produce", and the only safe way to know
+       that is to redo the merge from the last fetched copy each time. */
+    function buildPreviewContent() {
+      if (!rawLive) return null;
+      var b = body();
+      var merged = JSON.parse(JSON.stringify(rawLive));
+      var nb = merged.newBuild = merged.newBuild || {};
+      nb.eyebrow = b.eyebrow; nb.phaseTag = b.phaseTag; nb.phaseTitle = b.phaseTitle; nb.needs = b.needs;
+      nb.give = nb.give || {}; nb.give.otherAmountUrl = b.donateUrl;
+      nb.progress = b.progress;
+      var tl = Array.isArray(nb.timeline) ? nb.timeline : [];
+      if (b.activeIndex >= 0 && b.activeIndex < tl.length) {
+        tl.forEach(function (t, i) {
+          t.status = i < b.activeIndex ? "done" : i === b.activeIndex ? "active" : "upcoming";
+        });
+      }
+      nb.timeline = tl;
+      merged.app = merged.app || {};
+      merged.app.label = b.appLabel;
+      merged.occasions = merged.occasions || {};
+      OCC_KEYS.forEach(function (k) {
+        var o = merged.occasions[k] = merged.occasions[k] || {};
+        var bo = b.occasions[k];
+        o.enabled = bo.enabled; o.title = bo.title; o.arabic = bo.arabic; o.message = bo.message;
+        if (k !== "ramadan") o.durationDays = bo.durationDays;
+      });
+      return merged;
+    }
+
+    function frameFor(key) { return el("pv-" + key); }
+
+    function wirePreviewFrames() {
+      Object.keys(PREVIEW_PAGES).forEach(function (key) {
+        var frame = frameFor(key);
+        if (frame) frame.src = SCREENS_ORIGIN + "/" + PREVIEW_PAGES[key];
+      });
+      addEventListener("message", function (e) {
+        if (e.origin !== SCREENS_ORIGIN) return;
+        var msg = e.data;
+        if (!msg || msg.type !== "taiyabah-preview-ready") return;
+        var key = Object.keys(PREVIEW_PAGES).filter(function (k) {
+          var frame = frameFor(k);
+          return frame && frame.contentWindow === e.source;
+        })[0];
+        if (!key) return;
+        previewReady[key] = true;
+        drawLivePill();
+        pushPreview();
+      });
+    }
+
+    function drawLivePill() {
+      var pill = el("sc-live-pill");
+      if (!pill) return;
+      var ready = Object.keys(PREVIEW_PAGES).filter(function (k) { return previewReady[k]; }).length;
+      var all = Object.keys(PREVIEW_PAGES).length;
+      pill.classList.toggle("is-waiting", ready < all);
+      pill.textContent = ready < all ? "Connecting…" : "Live as you type";
+    }
+
+    /* Debounced: a keystroke posts a draft, not every keystroke its own
+       postMessage — four iframes redrawing is real work for a TV's own
+       layout code, and nobody is reading the preview mid-keystroke anyway. */
+    function pushPreview() {
+      clearTimeout(pushTimer);
+      pushTimer = setTimeout(function () {
+        var content = buildPreviewContent();
+        if (!content) return;
+        Object.keys(PREVIEW_PAGES).forEach(function (key) {
+          if (!previewReady[key]) return;
+          var frame = frameFor(key);
+          if (frame && frame.contentWindow) {
+            frame.contentWindow.postMessage({ type: "taiyabah-preview-content", content: content }, SCREENS_ORIGIN);
+          }
+        });
+      }, 150);
     }
 
     function save() {
@@ -467,6 +570,9 @@
       if (wired) return true;
       wired = true;
       if (!doc) doc = blank();
+
+      wirePreviewFrames();
+      drawLivePill();
 
       ["sc-eyebrow", "sc-phasetag", "sc-phasetitle", "sc-needs", "sc-donate",
        "sc-prog-done", "sc-prog-now", "sc-prog-next", "sc-applabel"].forEach(function (id) {
