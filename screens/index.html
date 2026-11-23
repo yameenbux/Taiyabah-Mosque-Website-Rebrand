@@ -170,6 +170,33 @@
   .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
 
   .card.is-wide{width:min(620px,94%);}
+  /* the signed-in view alone breaks out to a two-column workspace — form
+     fields beside a live preview of the TVs, not another narrow card */
+  #view-app.card.is-wide{width:min(1480px,96%);}
+
+  .sc-layout{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start;margin-top:4px;}
+  @media (max-width:1040px){ .sc-layout{grid-template-columns:1fr;} }
+  .sc-formcol{min-width:0;}
+  .sc-previewcol{min-width:0;position:sticky;top:20px;}
+  @media (max-width:1040px){ .sc-previewcol{position:static;} }
+
+  .sc-preview-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;}
+  .sc-preview-head h3{font-size:1.05rem;margin:0;}
+  .sc-live-pill{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--success-ink);background:rgba(63,122,70,.12);border:1px solid rgba(63,122,70,.38);border-radius:999px;padding:3px 10px;}
+  .sc-live-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--success);}
+  .sc-live-pill.is-waiting{color:var(--muted);background:var(--paper);border-color:var(--line);}
+  .sc-live-pill.is-waiting::before{background:var(--muted);}
+
+  .sc-tvgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:640px){ .sc-tvgrid{grid-template-columns:1fr;} }
+  .sc-tvcard h4{font-size:.86rem;margin:0 0 2px;}
+  .sc-tvcard .sc-tvsub{font-size:.78rem;color:var(--muted);margin-bottom:8px;}
+  .sc-tvframe{position:relative;width:100%;border-radius:8px;overflow:hidden;background:var(--brand-900);
+    box-shadow:inset 0 0 0 5px #0b0609, 0 10px 22px -14px rgba(0,0,0,.5);}
+  .sc-tvframe.land{aspect-ratio:16/9;}
+  .sc-tvframe.port{aspect-ratio:9/16;max-width:200px;margin-inline:auto;}
+  .sc-tvframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
   /* ---- loading ---- */
@@ -357,16 +384,21 @@
       <div class="err" id="app-error" hidden></div>
 
       <h2>In-mosque displays</h2>
-      <p class="lede">This changes what the <strong>foyer TVs</strong> show.
-         <strong>There is no draft here.</strong> Saving commits the change to
-         the screens themselves, and each TV picks it up within about twenty
-         minutes — it does not need switching off and on. The prayer-hall and
-         downstairs TVs are untouched by anything on this screen.</p>
+      <p class="lede">The appeal, the donate link and the progress bar are the
+         <strong>foyer TVs</strong>' own. The Ramadan and Eid greeting is
+         shared — switch it on here and it shows on <strong>every TV in the
+         mosque</strong>, foyer, prayer hall and downstairs alike. The
+         preview on the right is live — it redraws as you type, from the
+         actual screens' own code, before anything is saved. There is no
+         draft once you press Save: that commits the change to the screens
+         themselves, and each TV picks it up within about twenty minutes —
+         it does not need switching off and on.</p>
 
       <div class="err" id="sc-error" hidden></div>
       <div class="ok"  id="sc-ok" hidden></div>
 
-      <div id="sc-form">
+      <div class="sc-layout">
+      <div id="sc-form" class="sc-formcol">
 
         <div class="sc-section">
           <h3>The appeal</h3>
@@ -515,6 +547,41 @@
           <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
         </div>
         <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
+      </div>
+
+      <div class="sc-previewcol">
+        <div class="sc-preview-head">
+          <h3>What the TVs would show</h3>
+          <span class="sc-live-pill is-waiting" id="sc-live-pill">Connecting&hellip;</span>
+        </div>
+        <div class="sc-tvgrid">
+
+          <div class="sc-tvcard">
+            <h4>Foyer — landscape</h4>
+            <div class="sc-tvsub">2 TVs in the foyer.</div>
+            <div class="sc-tvframe land"><iframe id="pv-foyerLand" title="Foyer TV preview, landscape" loading="lazy"></iframe></div>
+          </div>
+
+          <div class="sc-tvcard">
+            <h4>Foyer — portrait</h4>
+            <div class="sc-tvsub">Same TV pair, portrait mount.</div>
+            <div class="sc-tvframe port"><iframe id="pv-foyerPort" title="Foyer TV preview, portrait" loading="lazy"></iframe></div>
+          </div>
+
+          <div class="sc-tvcard">
+            <h4>Prayer hall — landscape</h4>
+            <div class="sc-tvsub">Also shown downstairs — same page, same TVs.</div>
+            <div class="sc-tvframe land"><iframe id="pv-hallLand" title="Prayer hall TV preview, landscape" loading="lazy"></iframe></div>
+          </div>
+
+          <div class="sc-tvcard">
+            <h4>Prayer hall — portrait</h4>
+            <div class="sc-tvsub">Also shown downstairs — same page, same TVs.</div>
+            <div class="sc-tvframe port"><iframe id="pv-hallPort" title="Prayer hall TV preview, portrait" loading="lazy"></iframe></div>
+          </div>
+
+        </div>
+      </div>
       </div>
 
       <div class="card-foot">
