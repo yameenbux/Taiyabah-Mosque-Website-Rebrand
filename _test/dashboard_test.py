@@ -277,10 +277,15 @@ with sync_playwright() as p:
     #  register — the office's screen for who is a member, which years they
     #  owe and what has been paid. It sits in the Money group beside
     #  Donations and Hall hire.
+    #  `../screens/` joined 23 November 2026 — the in-mosque displays, the
+    #  foyer TVs' own content editor. Proof this test is still live, not a
+    #  copy of the list: it was EXTRA here the moment admin/shell.js gained
+    #  the row, before this line was touched, because the dashboard draws
+    #  from AdminShell.visible() and this `want` list does not.
     want = ["../venue/", "../collections/", "../courses/", "../volunteers/",
             "../giftaid/", "../take-payment/", "../portal/", "../app/", "../notices/", "../rates/",
             "../times/", "../newbuild/", "../access/", "../health/",
-            "../ramadan-date/", "../members/"]
+            "../ramadan-date/", "../members/", "../screens/"]
     check(sorted(hrefs) == sorted(want),
           "the wrong areas are on the dashboard.\n     missing: %r\n     extra:   %r"
           % (sorted(set(want) - set(hrefs)), sorted(set(hrefs) - set(want))))
@@ -289,7 +294,7 @@ with sync_playwright() as p:
                  "Take a payment",
                  "Food Bank", "Madrasah", "Notifications & notices", "Notices",
                  "Hall hire charges", "Prayer timetable", "The new build page",
-                 "User access", "System health", "Ramadan date"]:
+                 "User access", "System health", "Ramadan date", "In-mosque displays"]:
         check(name in joined, "%r is missing from the areas" % name)
 
     # ---------------------------------------------------------------------
