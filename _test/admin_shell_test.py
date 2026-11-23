@@ -88,7 +88,7 @@ SCREENS = {
     "volunteers": "volunteers", "collections": "collections",
     "access": "access", "newbuild": "newbuild", "portal": "madrasah",
     "times": "times", "notices": "notices", "rates": "rates",
-    "health": "health",
+    "health": "health", "screens": "screens",
     "app": "appsend",
     "advice": "advice",
 }
@@ -108,7 +108,8 @@ EXPECTED = {
               "Membership",
               "Madrasah portal", "Notifications & notices",
               "Notices", "Hall hire charges", "Prayer timetable",
-              "The new build page", "Ramadan date", "User access", "System health"],
+              "The new build page", "Ramadan date", "In-mosque displays",
+              "User access", "System health"],
     #  FOOD BANK VOLUNTEERS BELONGS HERE. volunteers/app.js admits admin OR
     #  hall_office and always has; the Admin Centre home drew it for the
     #  office; this rail said admin-only. The office could open the screen
@@ -224,6 +225,13 @@ ADMITS = {
     #  anything is sent — so the rail is a convenience here and the refusal
     #  happens in Postgres. Admin only, like the other three.
     "appsend":     ["admin"],                  # db
+    #  screens/app.js has no role test of its own either — the GitHub token
+    #  that can actually write foyer-content.json lives only inside the
+    #  update-foyer-content Edge Function, which checks the caller is an
+    #  admin (the same staff_list RPC check invite-user uses) before it ever
+    #  reads that token. The rail here is a convenience, same as the other
+    #  "db" rows above.
+    "screens":     ["admin"],                  # db
     #  THE ONLY ENTRY HERE WITHOUT "admin", and it is not a typo. advice/app.js
     #  canSee() tests for `imam` alone because verified_imam() in db/132 does,
     #  and that exclusion is what the masjid asked for when it said the

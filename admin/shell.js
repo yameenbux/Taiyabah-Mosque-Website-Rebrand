@@ -93,7 +93,10 @@
     chat:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12.6c0 3.9-3.8 7-8.5 7-1.1 0-2.2-.2-3.2-.5L3.5 21l1.6-4a6.6 6.6 0 01-1.6-4.4c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/></svg>',
     inbox:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5h4l1.6 2.6h5.8l1.6-2.6h4"/><path d="M5.6 4.6h12.8l2.1 8.9v4a2 2 0 01-2 2H5.5a2 2 0 01-2-2v-4z"/></svg>',
     pulse:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12.5h4l2-6 4 12 3-14 2 8h4"/></svg>',
-    moon:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.7 6.7 0 0 0 9.5 9.5Z"/></svg>'
+    moon:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.7 6.7 0 0 0 9.5 9.5Z"/></svg>',
+    /*  THE TV ON THE FOYER WALL, not a generic monitor — a short stand under
+        a wide screen, same 1.8 stroke and round joins as the rest. */
+    tv:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M9 20.5h6M12 17v3.5"/></svg>'
   };
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
@@ -235,7 +238,17 @@
         what: "Change the appeal figure, what it pays for, and the timeline of phases" },
       { key: "ramadan",     href: "ramadan-date/", icon: "moon",  name: "Ramadan date",
         needs: ["admin"],
-        what: "Set the date Ramadan is expected to begin, and the moon-sighting note under it" }
+        what: "Set the date Ramadan is expected to begin, and the moon-sighting note under it" },
+      /*  THE TVs AROUND THE MOSQUE, not this website. The foyer screens read
+          their words from a JSON file in the interactive-screens repo, not
+          from here — this row edits that file through a GitHub token held
+          only by the Edge Function behind it, which is why `needs` is admin
+          only and there is no client-side role test to pair it against
+          (same as notices/rates/times above: "db" in the sense that the
+          function, not this rail, is what actually refuses anybody else). */
+      { key: "screens",     href: "screens/",      icon: "tv",    name: "In-mosque displays",
+        needs: ["admin"],
+        what: "Change what the foyer TVs show — the new build appeal, the donate link, and the Ramadan and Eid greetings" }
     ]},
     { label: "Settings", areas: [
       { key: "access",      href: "access/",      icon: "lock",   name: "User access",

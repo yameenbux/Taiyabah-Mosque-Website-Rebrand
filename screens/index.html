@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<title>In-mosque displays — Taiyabah Masjid</title>
+<link rel="preload" href="../fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/hanken-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../admin/fonts.css">
+<link rel="stylesheet" href="../admin/shell.css">
+<script src="../admin/shell.js" defer></script>
+<style>
+  :root{
+    --brand-900:#3C0B2A; --brand-800:#4B1136; --brand-700:#5E1844;
+    --gold:#C6A24C; --gold-bright:#DCBB63;
+    --gold-ink:#7A5D14; --success-ink:#2F5E36; --danger-ink:#A0451F;
+    --paper:#F5F1E8; --card:#FCFAF3; --ink:#261B22;
+    --muted:#6E616A; --line:#E4DECF; --danger:#B4532F; --success:#3F7A46;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{min-height:100%;}
+  body{
+    font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-family:"Fraunces", Georgia, serif; color:var(--ink); line-height:1.15; font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:grid;grid-template-columns:1fr;min-height:100vh;}
+  @media (min-width:940px){ .shell{grid-template-columns:1.03fr 1fr;} }
+
+  /* ---- brand panel ---- */
+  .brand{
+    position:relative;overflow:hidden;justify-content:flex-start;
+    background:linear-gradient(160deg,var(--brand-900),var(--brand-700));
+    padding:46px 0 44px;display:flex;flex-direction:column;
+  }
+  @media (min-width:940px){
+    .brand{
+      padding:64px 0;
+      position:sticky;top:0;align-self:start;
+      height:100vh;height:100dvh;overflow-y:auto;
+    }
+  }
+  .brand::after{
+    content:"";position:absolute;right:-90px;bottom:-90px;width:320px;height:320px;
+    border-radius:50%;background:radial-gradient(circle,rgba(198,162,76,.16),transparent 68%);
+  }
+  .brand-inner{position:relative;z-index:2;width:min(470px,86%);margin:0 auto;}
+  @media (min-width:940px){ .brand-inner{margin:0 auto auto max(6vw,32px);} }
+  .brand img.logo{height:40px;width:auto;display:block;margin-bottom:26px;}
+  .eyebrow{
+    display:flex;align-items:center;gap:10px;font-size:.88rem;font-weight:700;
+    letter-spacing:.16em;text-transform:uppercase;color:var(--gold-bright);margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:20px;height:1px;background:currentColor;opacity:.6;}
+  .brand h1{color:#F3EFE3;font-size:clamp(1.7rem,3.4vw,2.3rem);margin-bottom:12px;}
+  .brand p{color:rgba(243,239,227,.82);font-size:1.035rem;line-height:1.65;max-width:44ch;}
+  .brand .back{
+    display:inline-flex;align-items:center;gap:6px;margin-top:26px;
+    color:rgba(243,239,227,.66);font-size:.943rem;font-weight:600;text-decoration:none;
+  }
+  .brand .back:hover{color:#F3EFE3;}
+  .pcredit{
+    position:relative;z-index:2;margin:auto auto 0;padding-top:28px;
+    width:min(470px,86%);font-size:.88rem;color:rgba(243,239,227,.45);
+  }
+  @media (min-width:940px){ .pcredit{margin:auto auto 0 max(6vw,32px);} }
+  .pcredit a{color:rgba(220,187,99,.8);font-weight:600;text-decoration:none;}
+  .pcredit a:hover{color:var(--gold-bright);}
+
+  /* ---- form side ---- */
+  .panel{display:flex;align-items:center;justify-content:center;padding:46px 0 64px;}
+  @media (min-width:940px){ .panel{padding:64px 0;} }
+  .card{
+    width:min(420px,86%);background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 30px;box-shadow:var(--shadow);
+  }
+  .card h2{font-size:1.408rem;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:.977rem;line-height:1.55;margin-bottom:22px;}
+
+  form{display:flex;flex-direction:column;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  input[type=email],input[type=password],input[type=text],input[type=date],input[type=number],input[type=url],textarea{
+    font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
+  }
+  textarea{resize:vertical;min-height:72px;font-family:inherit;}
+  input::placeholder,textarea::placeholder{color:#A99CA4;}
+  input:focus,textarea:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  .pw{position:relative;display:flex;}
+  .pw input{padding-right:62px;}
+  .pw button{
+    position:absolute;right:6px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-family:inherit;font-size:.88rem;
+    font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-700);
+    padding:6px 8px;border-radius:6px;
+  }
+  .pw button:hover{background:var(--paper);}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px 28px;border-radius:999px;font-family:inherit;font-weight:700;font-size:1.003rem;
+    cursor:pointer;border:1px solid transparent;transition:.25s ease;width:100%;
+  }
+  .btn-gold{background:linear-gradient(180deg,var(--gold-bright),var(--gold));color:var(--brand-900);}
+  .btn-gold:hover:not(:disabled){filter:brightness(1.05);}
+  .btn-ghost{background:none;border-color:var(--line);color:var(--brand-800);}
+  .btn-ghost:hover{border-color:var(--brand-800);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .err{
+    background:rgba(180,83,47,.09);border:1px solid rgba(180,83,47,.4);color:#8C3A1C;
+    border-radius:9px;padding:11px 13px;font-size:.949rem;line-height:1.5;
+  }
+  .note{
+    margin-top:20px;padding-top:18px;border-top:1px solid var(--line);
+    font-size:.931rem;line-height:1.6;color:var(--muted);text-align:center;
+  }
+  .ok{background:rgba(47,94,54,.12);border:1px solid rgba(47,94,54,.4);
+    color:var(--success-ink);border-radius:11px;padding:11px 14px;margin:10px 0;
+    font-size:.97rem;}
+
+  /* ---- MFA ---- */
+  .code-input{
+    font-size:1.5rem !important;letter-spacing:.42em;text-align:center;
+    font-variant-numeric:tabular-nums;font-weight:700;padding:14px 13px !important;
+  }
+  .qr{
+    display:flex;flex-direction:column;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:4px;
+  }
+  .qr img{width:172px;height:172px;display:block;}
+  .secret{
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.907rem;
+    letter-spacing:.06em;color:var(--muted);word-break:break-all;text-align:center;
+    background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:7px 9px;
+  }
+  .steps{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:4px;}
+  .steps li{font-size:.954rem;line-height:1.5;color:var(--muted);padding-left:20px;position:relative;}
+  .steps li::before{
+    content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-radius:50%;background:var(--gold);
+  }
+
+  /* ---- signed in ---- */
+  .who{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+  .avatar{
+    width:46px;height:46px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(160deg,var(--brand-800),var(--brand-600,#772157));
+    color:var(--gold-bright);display:flex;align-items:center;justify-content:center;
+    font-family:"Fraunces",serif;font-weight:700;font-size:1.115rem;
+  }
+  .who-t{min-width:0;}
+  .who-t strong{display:block;font-size:1.08rem;color:var(--ink);}
+  .who-t span{display:block;font-size:.943rem;color:var(--muted);word-break:break-all;}
+  .roles{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px;}
+  .role-chip{
+    font-size:.84rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(198,162,76,.16);border:1px solid rgba(198,162,76,.5);color:#7A5E14;
+  }
+  .role-admin{background:var(--brand-900);border-color:var(--brand-900);color:var(--gold-bright);}
+
+  .card.is-wide{width:min(620px,94%);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  /* ---- loading ---- */
+  .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
+  .spinner{
+    width:26px;height:26px;border-radius:50%;
+    border:2.5px solid var(--line);border-top-color:var(--gold);
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  @media (prefers-reduced-motion: reduce){ .spinner{animation:none;} }
+  .loading p{font-size:.96rem;color:var(--muted);}
+
+  .card-foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);}
+  .lede{font-size:.99rem;line-height:1.62;color:var(--muted);margin:6px 0 14px;}
+  .lede strong{color:var(--ink);}
+
+  .av{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:34px;height:34px;border-radius:50%;flex-shrink:0;
+    background:var(--brand-700);color:#F3EFE3;font-size:.95rem;
+  }
+
+  /* ---------- the In-mosque displays screen itself ----------
+     Only what is genuinely new is here. The card, the buttons, .err, .ok
+     and the signed-in block above are the portal's own, left exactly as
+     every other screen has them. */
+  .sc-section{margin-top:26px;padding-top:20px;border-top:1px solid var(--line);}
+  .sc-section:first-of-type{margin-top:4px;padding-top:0;border-top:none;}
+  .sc-section h3{font-size:1.07rem;margin-bottom:5px;}
+  .sc-section .sub{margin-bottom:16px;}
+
+  .sc-row{display:flex;gap:12px;}
+  .sc-row > .field{flex:1;}
+
+  /*  THE NEEDS LIST. One per line rather than a tag editor — the list is
+      short (six items today) and nobody adding "Carpets" to it needs a
+      widget, they need a text box. */
+  textarea.sc-lines{font-family:inherit;min-height:96px;}
+
+  .sc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .sc-chip{
+    font-size:.84rem;font-weight:700;padding:4px 11px;border-radius:999px;
+    background:rgba(198,162,76,.14);border:1px solid rgba(198,162,76,.45);color:#7A5E14;
+  }
+
+  /*  THE PROGRESS PREVIEW. Drawn to look like the dot and bar on the foyer
+      TVs, because which stage is "current" is the one thing on this screen
+      that is not obvious from the form alone — a radio button says a word,
+      the dot says where that word puts you. */
+  .sc-bar{background:var(--brand-900);border-radius:14px;padding:18px 18px 16px;margin-top:4px;}
+  .sc-bar-track{position:relative;height:6px;border-radius:999px;background:rgba(243,239,227,.22);margin:4px 0 12px;}
+  .sc-bar-fill{position:absolute;top:0;left:0;height:100%;border-radius:999px;background:var(--gold-bright);transition:width .2s ease;}
+  .sc-bar-dot{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:var(--gold-bright);
+    transform:translate(-50%,-50%);box-shadow:0 0 0 3px var(--brand-900);transition:left .2s ease;}
+  .sc-bar-words{display:flex;justify-content:space-between;gap:8px;font-size:.84rem;color:rgba(243,239,227,.82);}
+  .sc-bar-words span{flex:1;text-align:center;}
+  .sc-bar-words span:first-child{text-align:left;}
+  .sc-bar-words span:last-child{text-align:right;}
+
+  .sc-radio-list{display:flex;flex-direction:column;gap:9px;}
+  .sc-radio{display:flex;align-items:flex-start;gap:10px;font-size:.954rem;cursor:pointer;}
+  .sc-radio input{margin-top:4px;flex-shrink:0;width:16px;height:16px;}
+  .sc-radio .t{display:block;color:var(--ink);font-weight:600;}
+  .sc-radio .d{display:block;color:var(--muted);font-size:.86rem;}
+
+  .sc-occ{border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;margin-top:12px;}
+  .sc-occ-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .sc-occ-head h4{font-size:1rem;margin:0;}
+  .sc-switch{display:inline-flex;align-items:center;gap:8px;font-size:.86rem;font-weight:700;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--muted);cursor:pointer;}
+  .sc-switch input{width:16px;height:16px;}
+  .sc-occ-body{display:flex;flex-direction:column;gap:12px;}
+  .sc-occ[data-enabled="false"] .sc-occ-body{opacity:.5;}
+  input[dir=rtl]{text-align:right;}
+
+  .sc-meta{
+    font-size:.9rem;line-height:1.55;color:var(--muted);
+    margin-top:2px;font-variant-numeric:tabular-nums;
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="brand">
+    <div class="brand-inner">
+      <img class="logo" src="../img/masjid-logo.png" alt="Taiyabah Masjid">
+      <div class="eyebrow">Taiyabah Masjid</div>
+      <h1>In-mosque displays</h1>
+      <p>What the TVs in the foyer show &mdash; the new build appeal, the donate link, and the Ramadan and Eid greetings. The prayer-hall and downstairs timetables are not edited here; they come from the yearly prayer-time file, not from this screen.</p>
+      <a class="back" href="../portals/">&larr; Back to the admin centre</a>
+    </div>
+
+    <p class="pcredit">Powered by <a href="https://masjidone.co.uk" target="_blank" rel="noopener">MasjidOne</a></p>
+  </div>
+
+  <div class="panel">
+
+    <!-- loading -->
+    <div class="card" id="view-loading">
+      <div class="loading">
+        <div class="spinner" role="status" aria-label="Checking your session"></div>
+        <p>Checking your session&hellip;</p>
+      </div>
+    </div>
+
+    <!-- sign in -->
+    <div class="card" id="view-signin" hidden>
+      <h2>Sign in</h2>
+      <p class="sub">Use the email address the masjid office holds for you.</p>
+      <div class="err" id="signin-error" hidden></div>
+      <form id="signin-form" novalidate>
+        <div class="field">
+          <label for="signin-email">Email address</label>
+          <input type="email" id="signin-email" autocomplete="username" required placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="signin-password">Password</label>
+          <div class="pw">
+            <input type="password" id="signin-password" autocomplete="current-password" required placeholder="••••••••">
+            <button type="button" id="pw-toggle" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gold" id="signin-submit">Sign in</button>
+      </form>
+      <p class="note">Accounts are issued by the masjid office. If you can't get in, ring 01204 535 997.</p>
+    </div>
+
+    <!-- MFA: verify -->
+    <div class="card" id="view-mfa" hidden>
+      <h2>Two-step verification</h2>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
+      <div class="err" id="mfa-error" hidden></div>
+      <form id="mfa-form" novalidate>
+        <div class="field">
+          <label for="mfa-code">Verification code</label>
+          <input type="text" id="mfa-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="mfa-submit">Verify</button>
+      </form>
+      <p class="note">Codes refresh every 30 seconds. If yours keeps failing, check your phone's clock is set automatically.</p>
+    </div>
+
+    <!-- MFA: enrol -->
+    <div class="card" id="view-enrol" hidden>
+      <h2>Set up two-step verification</h2>
+      <p class="sub">Your account can change what the foyer TVs show, on screens the whole community reads, so it needs a second factor before you can continue.</p>
+      <div class="err" id="enrol-error" hidden></div>
+
+      <ul class="steps">
+        <li>Install an authenticator app — Google Authenticator, Microsoft Authenticator or Authy.</li>
+        <li>Scan the square below with it.</li>
+        <li>Enter the 6-digit code it shows you.</li>
+      </ul>
+
+      <div class="qr">
+        <img id="enrol-qr" alt="QR code for setting up two-step verification">
+        <div class="secret" id="enrol-secret"></div>
+      </div>
+      <p class="sub" style="margin:0 0 4px;font-size:.931rem;">Can't scan it? Type the code above into your app by hand.</p>
+
+      <form id="enrol-form" novalidate>
+        <div class="field">
+          <label for="enrol-code">Code from your app</label>
+          <input type="text" id="enrol-code" class="code-input" inputmode="numeric"
+                 autocomplete="one-time-code" placeholder="000000" required>
+        </div>
+        <button type="submit" class="btn btn-gold" id="enrol-submit">Confirm and finish setup</button>
+      </form>
+      <p class="note">Keep the app installed — you'll need it every time you sign in.</p>
+    </div>
+
+    <!-- signed in -->
+    <div class="card is-wide" id="view-app" hidden>
+      <div class="who">
+        <span class="av" id="app-av">✓</span>
+        <span class="who-t">
+          <strong id="app-name">—</strong>
+          <span id="app-email">—</span>
+        </span>
+      </div>
+      <div class="roles" id="app-roles"></div>
+      <div class="err" id="app-error" hidden></div>
+
+      <h2>In-mosque displays</h2>
+      <p class="lede">This changes what the <strong>foyer TVs</strong> show.
+         <strong>There is no draft here.</strong> Saving commits the change to
+         the screens themselves, and each TV picks it up within about twenty
+         minutes — it does not need switching off and on. The prayer-hall and
+         downstairs TVs are untouched by anything on this screen.</p>
+
+      <div class="err" id="sc-error" hidden></div>
+      <div class="ok"  id="sc-ok" hidden></div>
+
+      <div id="sc-form">
+
+        <div class="sc-section">
+          <h3>The appeal</h3>
+          <p class="sub">The small line above the headline, the current phase, and what it still needs.</p>
+
+          <div class="field">
+            <label for="sc-eyebrow">Eyebrow</label>
+            <input type="text" id="sc-eyebrow" maxlength="60" placeholder="The New Build">
+          </div>
+          <div class="sc-row">
+            <div class="field">
+              <label for="sc-phasetag">Phase tag</label>
+              <input type="text" id="sc-phasetag" maxlength="60" placeholder="Current appeal · Phase 3.3">
+            </div>
+            <div class="field">
+              <label for="sc-phasetitle">Phase title</label>
+              <input type="text" id="sc-phasetitle" maxlength="80" placeholder="Internal fixtures &amp; fittings">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="sc-needs">What it needs — one per line</label>
+            <textarea id="sc-needs" class="sc-lines" maxlength="300" placeholder="Tiling&#10;Carpets&#10;Heating"></textarea>
+            <div class="sc-chips" id="sc-needs-preview"></div>
+          </div>
+
+          <div class="field">
+            <label for="sc-donate">Donate link (the QR code on the TV)</label>
+            <input type="url" id="sc-donate" placeholder="https://buy.stripe.com/...">
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <h3>The progress bar</h3>
+          <p class="sub">Three short words, and which stage the dot sits on.</p>
+
+          <div class="sc-row">
+            <div class="field">
+              <label for="sc-prog-done">Left label</label>
+              <input type="text" id="sc-prog-done" maxlength="40" placeholder="Phases 1 &amp; 2 complete">
+            </div>
+            <div class="field">
+              <label for="sc-prog-now">Middle label</label>
+              <input type="text" id="sc-prog-now" maxlength="40" placeholder="Now · Phase 3.3">
+            </div>
+            <div class="field">
+              <label for="sc-prog-next">Right label</label>
+              <input type="text" id="sc-prog-next" maxlength="40" placeholder="Full facilities">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Which stage is current</label>
+            <div class="sc-radio-list" id="sc-timeline"></div>
+          </div>
+
+          <div class="sc-bar">
+            <div class="sc-bar-track">
+              <div class="sc-bar-fill" id="sc-bar-fill"></div>
+              <div class="sc-bar-dot" id="sc-bar-dot"></div>
+            </div>
+            <div class="sc-bar-words">
+              <span id="sc-bar-left">—</span>
+              <span id="sc-bar-mid">—</span>
+              <span id="sc-bar-right">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <h3>Ramadan and Eid</h3>
+          <p class="sub">Switch a greeting on or off, and set what it says. Each one appears on its own dates automatically — nothing here needs changing by date.</p>
+
+          <div class="sc-occ" id="occ-ramadan" data-enabled="true">
+            <div class="sc-occ-head">
+              <h4>Ramadan</h4>
+              <label class="sc-switch"><input type="checkbox" id="occ-ramadan-enabled"> Shown</label>
+            </div>
+            <div class="sc-occ-body">
+              <div class="sc-row">
+                <div class="field"><label for="occ-ramadan-title">Title</label>
+                  <input type="text" id="occ-ramadan-title" maxlength="60"></div>
+                <div class="field"><label for="occ-ramadan-arabic">Arabic</label>
+                  <input type="text" id="occ-ramadan-arabic" dir="rtl" maxlength="60"></div>
+              </div>
+              <div class="field"><label for="occ-ramadan-message">Message</label>
+                <textarea id="occ-ramadan-message" maxlength="400"></textarea></div>
+            </div>
+          </div>
+
+          <div class="sc-occ" id="occ-eidFitr" data-enabled="true">
+            <div class="sc-occ-head">
+              <h4>Eid al-Fitr</h4>
+              <label class="sc-switch"><input type="checkbox" id="occ-eidFitr-enabled"> Shown</label>
+            </div>
+            <div class="sc-occ-body">
+              <div class="sc-row">
+                <div class="field"><label for="occ-eidFitr-title">Title</label>
+                  <input type="text" id="occ-eidFitr-title" maxlength="60"></div>
+                <div class="field"><label for="occ-eidFitr-arabic">Arabic</label>
+                  <input type="text" id="occ-eidFitr-arabic" dir="rtl" maxlength="60"></div>
+              </div>
+              <div class="field"><label for="occ-eidFitr-message">Message</label>
+                <textarea id="occ-eidFitr-message" maxlength="400"></textarea></div>
+              <div class="field" style="max-width:220px;">
+                <label for="occ-eidFitr-days">Shown for how many days</label>
+                <input type="number" id="occ-eidFitr-days" min="1" max="30" step="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="sc-occ" id="occ-eidAdha" data-enabled="true">
+            <div class="sc-occ-head">
+              <h4>Eid al-Adha</h4>
+              <label class="sc-switch"><input type="checkbox" id="occ-eidAdha-enabled"> Shown</label>
+            </div>
+            <div class="sc-occ-body">
+              <div class="sc-row">
+                <div class="field"><label for="occ-eidAdha-title">Title</label>
+                  <input type="text" id="occ-eidAdha-title" maxlength="60"></div>
+                <div class="field"><label for="occ-eidAdha-arabic">Arabic</label>
+                  <input type="text" id="occ-eidAdha-arabic" dir="rtl" maxlength="60"></div>
+              </div>
+              <div class="field"><label for="occ-eidAdha-message">Message</label>
+                <textarea id="occ-eidAdha-message" maxlength="400"></textarea></div>
+              <div class="field" style="max-width:220px;">
+                <label for="occ-eidAdha-days">Shown for how many days</label>
+                <input type="number" id="occ-eidAdha-days" min="1" max="30" step="1">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sc-section">
+          <h3>The app card</h3>
+          <div class="field">
+            <label for="sc-applabel">Label on the "download our app" box</label>
+            <input type="text" id="sc-applabel" maxlength="40" placeholder="Download our app">
+          </div>
+        </div>
+
+        <div class="err" id="sc-complaints" hidden></div>
+
+        <div class="field" style="flex-direction:row;gap:10px;margin-top:22px;">
+          <button type="button" class="btn btn-gold" id="sc-save" disabled>Save &mdash; the TVs pick this up within 20 minutes</button>
+          <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
+        </div>
+        <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
+      </div>
+
+      <div class="card-foot">
+        <button type="button" class="btn btn-ghost" id="app-signout">Sign out</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../admin/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+  document.getElementById('pw-toggle').addEventListener('click', function(){
+    var i = document.getElementById('signin-password');
+    var showing = i.type === 'text';
+    i.type = showing ? 'password' : 'text';
+    this.textContent = showing ? 'Show' : 'Hide';
+    this.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  });
+</script>
+<script src="app.js"></script>
+</body>
+</html>
