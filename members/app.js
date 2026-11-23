@@ -30,7 +30,7 @@
   var pence = null;        // and one place a typed string becomes a number
 
   var state = {
-    filter: "owing",
+    filter: "all",
     search: "",
     year: null,
     rows: [],
