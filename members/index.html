@@ -325,6 +325,44 @@
             </form>
           </div>
 
+          <!-- PRINTING A RECEIPT. Every payment already carries what a
+               receipt needs — membership_one() returns the year, the date,
+               how it was paid and the reference, so this reads that back
+               rather than asking the office to type a figure a second time.
+               Today's payments are ticked for you; anything else is here to
+               reprint an old one. The printed sheet is built and moved to
+               document.body only for the print itself — see members.css for
+               why that move is not optional. -->
+          <div class="fx-bk" id="mb-receipt-card">
+            <h3>Print a receipt</h3>
+            <p class="fx-sub">Tick which payments go on it &mdash; today&rsquo;s are
+               ticked for you &mdash; then print. One receipt can cover several
+               years at once.</p>
+            <div class="mb-tw">
+              <table class="fx-t" id="mb-receipt-table">
+                <thead>
+                  <tr>
+                    <th scope="col"><span class="sr-only">Include</span></th>
+                    <th scope="col">Year</th>
+                    <th scope="col">Date received</th>
+                    <th scope="col">How</th>
+                    <th scope="col">Reference</th>
+                    <th scope="col" class="num">Amount</th>
+                  </tr>
+                </thead>
+                <tbody id="mb-receipt-rows"></tbody>
+              </table>
+            </div>
+            <p class="fx-empty" id="mb-receipt-none" hidden>No payment has been recorded against this member yet.</p>
+            <div class="wide mb-receipt-a">
+              <span class="fx-note" id="mb-receipt-total"></span>
+              <button type="button" class="btn btn-gold" id="mb-receipt-go" disabled>Print a receipt</button>
+            </div>
+            <!-- Invisible on screen (members.css). Filled, moved to
+                 document.body, printed, then moved straight back here. -->
+            <div class="mb-receipt-print" id="mb-receipt-print" aria-hidden="true"></div>
+          </div>
+
           <!-- SETTING A YEAR ASIDE. The masjid is a charity and cannot compel
                anybody. This is what makes the sentence on the member's own
                screen true rather than decoration — and it needs a reason,

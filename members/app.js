@@ -240,6 +240,7 @@
 
     drawYears(m);
     fillYearPickers(m);
+    fillReceiptList(m);
     loadLegacy(m.id);
   }
 
@@ -324,6 +325,129 @@
         gets dropped. */
     var amt = el("mb-pay-amount");
     if (owing.length && amt) amt.value = (Number(owing[0].outstanding_p) / 100).toFixed(2);
+  }
+
+  /* ======================================================================
+     PRINTING A RECEIPT
+
+     membership_one() already returns every payment ever recorded against
+     this member — year, amount, method, date, reference — because the
+     member's own screen in the app needed it first. This reads the same
+     list back rather than asking the office to type a figure a second time,
+     which is exactly the kind of second copy that goes out of step with the
+     first.
+     ====================================================================== */
+
+  function todayIso() {
+    var d = new Date();
+    function pad(n) { return n < 10 ? "0" + n : String(n); }
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  /*  Today's payments are ticked for you — that is the ordinary case, just
+      recorded moments ago. Anything older is there to be ticked by hand,
+      for reprinting a receipt that was lost or never printed at the time. */
+  function fillReceiptList(m) {
+    var rows = m.payments || [];
+    var today = todayIso();
+
+    el("mb-receipt-none").hidden = rows.length > 0;
+    el("mb-receipt-table").hidden = rows.length === 0;
+
+    el("mb-receipt-rows").innerHTML = rows.map(function (p, i) {
+      var checked = String(p.received_on).slice(0, 10) === today;
+      return '<tr>'
+        + '<td><input type="checkbox" data-idx="' + i + '"'
+        +   (checked ? ' checked' : '') + ' aria-label="Include this payment"></td>'
+        + '<td class="num">' + esc(p.year) + '</td>'
+        + '<td class="ref">' + esc(when(p.received_on)) + '</td>'
+        + '<td>' + esc(method(p.method)) + '</td>'
+        + '<td class="ref">' + esc(p.reference || "—") + '</td>'
+        + '<td class="num">' + esc(pounds(p.amount_p)) + '</td>'
+        + '</tr>';
+    }).join("");
+
+    updateReceiptTotal();
+  }
+
+  /*  Reads the ticks back out of the table rather than keeping a second copy
+      of which rows are selected — one fewer place for the two to disagree. */
+  function checkedPayments() {
+    var rows = (state.member && state.member.payments) || [];
+    var boxes = el("mb-receipt-rows").querySelectorAll('input[type="checkbox"]:checked');
+    var out = [];
+    Array.prototype.forEach.call(boxes, function (b) {
+      var p = rows[Number(b.getAttribute("data-idx"))];
+      if (p) out.push(p);
+    });
+    return out;
+  }
+
+  function updateReceiptTotal() {
+    var picked = checkedPayments();
+    var total = picked.reduce(function (a, p) { return a + Number(p.amount_p || 0); }, 0);
+    el("mb-receipt-total").textContent = picked.length
+      ? "Total on the receipt: " + pounds(total)
+        + " across " + picked.length + (picked.length === 1 ? " payment" : " payments")
+      : "Tick at least one payment to print a receipt for it.";
+    el("mb-receipt-go").disabled = picked.length === 0;
+  }
+
+  /*  THE PRINTED SHEET MUST MOVE TO document.body BEFORE IT PRINTS, AND ONLY
+      FOR THAT. members.css explains why: admin/shell.css's rail rule beats a
+      plain display rule on anything still inside .shell, and families.css
+      hit the exact bug this avoids — the whole screen printing alongside
+      the one thing that should have. The finally block puts it straight
+      back where the office never sees it, whether printing succeeded,
+      was cancelled, or threw. */
+  function printReceipt() {
+    var picked = checkedPayments();
+    if (!picked.length) { say("fx-error", "Tick at least one payment to put on the receipt."); return; }
+
+    var m = state.member;
+    var total = picked.reduce(function (a, p) { return a + Number(p.amount_p || 0); }, 0);
+    var today = when(todayIso());
+
+    var rowsHtml = picked.map(function (p) {
+      return '<tr>'
+        + '<td>' + esc(p.year) + ' membership</td>'
+        + '<td>' + esc(when(p.received_on)) + '</td>'
+        + '<td>' + esc(method(p.method)) + '</td>'
+        + '<td>' + esc(p.reference || "—") + '</td>'
+        + '<td class="num">' + esc(pounds(p.amount_p)) + '</td>'
+        + '</tr>';
+    }).join("");
+
+    var host = el("mb-receipt-print");
+    host.innerHTML =
+        '<div class="rc">'
+      + '<div class="rc-head"><img class="rc-logo" src="../img/masjid-logo.png" alt="">'
+      + '<div><h1>Taiyabah Masjid</h1><p>Membership</p></div>'
+      + '<div class="rc-from"><p>Bolton Central Islamic Society</p>'
+      + '<p>Registered charity 1041569</p><p>01204 535 997</p></div></div>'
+      + '<p class="rc-title"><strong>Receipt</strong></p>'
+      + '<p class="rc-to">Received from <strong>' + esc(m.name) + '</strong>'
+      + ' &mdash; reference ' + esc(m.reference) + '</p>'
+      + '<p class="rc-date">' + esc(today) + '</p>'
+      + '<table class="rc-table"><thead><tr>'
+      + '<th>For</th><th>Date</th><th>How</th><th>Reference</th><th class="num">Amount</th>'
+      + '</tr></thead><tbody>' + rowsHtml + '</tbody>'
+      + '<tfoot><tr><td colspan="4">Total received</td>'
+      + '<td class="num">' + esc(pounds(total)) + '</td></tr></tfoot></table>'
+      + '<div class="rc-sign"><div>Received by</div><div>Date</div></div>'
+      + '<p class="rc-foot">This receipt confirms money received by Taiyabah Masjid '
+      + 'towards membership. It carries no claim about Gift Aid or any other tax relief.</p>'
+      + '</div>';
+
+    document.body.appendChild(host);
+    document.body.className += " printing-receipt";
+    try {
+      window.print();
+    } finally {
+      document.body.className =
+        document.body.className.replace(/\s*printing-receipt/, "");
+      el("mb-receipt-card").appendChild(host);
+    }
   }
 
   /* ======================================================================
@@ -637,6 +761,15 @@
     el("mb-pay-form").addEventListener("submit", recordPayment);
     el("mb-waive-form").addEventListener("submit", waiveYear);
     el("mb-csv").addEventListener("click", downloadCsv);
+
+    /*  The receipt list — ticking a row updates the total and the button
+        live, so the office sees the figure it is about to print. */
+    el("mb-receipt-rows").addEventListener("change", function (e) {
+      if (e.target && e.target.tagName === "INPUT" && e.target.type === "checkbox") {
+        updateReceiptTotal();
+      }
+    });
+    el("mb-receipt-go").addEventListener("click", printReceipt);
 
     /*  Add / amend / remove / full backup — the four doors the register lost
         when it left the Excel sheet. */
