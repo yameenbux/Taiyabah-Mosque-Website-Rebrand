@@ -174,30 +174,62 @@
      fields beside a live preview of the TVs, not another narrow card */
   #view-app.card.is-wide{width:min(1480px,96%);}
 
-  .sc-layout{display:grid;grid-template-columns:400px 1fr;gap:28px;align-items:start;margin-top:4px;}
-  @media (max-width:1040px){ .sc-layout{grid-template-columns:1fr;} }
-  .sc-formcol{min-width:0;}
-  .sc-previewcol{min-width:0;position:sticky;top:20px;}
-  @media (max-width:1040px){ .sc-previewcol{position:static;} }
-
-  .sc-preview-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:14px;}
-  .sc-preview-head h3{font-size:1.05rem;margin:0;}
   .sc-live-pill{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
-    color:var(--success-ink);background:rgba(63,122,70,.12);border:1px solid rgba(63,122,70,.38);border-radius:999px;padding:3px 10px;}
+    color:var(--success-ink);background:rgba(63,122,70,.12);border:1px solid rgba(63,122,70,.38);border-radius:999px;padding:3px 10px;flex-shrink:0;}
   .sc-live-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--success);}
   .sc-live-pill.is-waiting{color:var(--muted);background:var(--paper);border-color:var(--line);}
   .sc-live-pill.is-waiting::before{background:var(--muted);}
 
-  .sc-tvgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-  @media (max-width:640px){ .sc-tvgrid{grid-template-columns:1fr;} }
-  .sc-tvcard h4{font-size:.86rem;margin:0 0 2px;}
-  .sc-tvcard .sc-tvsub{font-size:.78rem;color:var(--muted);margin-bottom:8px;}
   .sc-tvframe{position:relative;width:100%;border-radius:8px;overflow:hidden;background:var(--brand-900);
     box-shadow:inset 0 0 0 5px #0b0609, 0 10px 22px -14px rgba(0,0,0,.5);}
   .sc-tvframe.land{aspect-ratio:16/9;}
   .sc-tvframe.port{aspect-ratio:9/16;max-width:200px;margin-inline:auto;}
   .sc-tvframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  /* ---------- the picker grid ---------- */
+  .sc-gridhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:16px;}
+  .sc-gridhead h3{font-size:1.05rem;margin:0;}
+  .sc-tiles{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media (max-width:640px){ .sc-tiles{grid-template-columns:1fr;} }
+  .sc-tile{
+    display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;appearance:none;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;
+    transition:border-color .15s ease,transform .1s ease;
+  }
+  .sc-tile:hover{border-color:var(--gold);}
+  .sc-tile:active{transform:scale(.99);}
+  .sc-tile h4{font-size:.9rem;margin:10px 0 2px;}
+  .sc-tile .sc-tvsub{font-size:.8rem;color:var(--muted);margin-bottom:10px;}
+  .sc-tile .sc-goto{font-size:.82rem;font-weight:700;color:var(--gold-ink);}
+
+  /* ---------- the detail editor ---------- */
+  #sc-detail[hidden]{display:none;}
+  .sc-back{
+    display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--brand-800);
+    font-family:inherit;font-weight:700;font-size:.9rem;cursor:pointer;padding:0;margin-bottom:16px;
+  }
+  .sc-detail-grid{display:grid;grid-template-columns:1fr 360px;gap:26px;align-items:start;}
+  @media (max-width:1040px){ .sc-detail-grid{grid-template-columns:1fr;} }
+  .sc-detail-fields{min-width:0;}
+  .sc-detail-preview{min-width:0;position:sticky;top:20px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  @media (max-width:1040px){ .sc-detail-preview{position:static;} }
+  .sc-preview-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .sc-preview-head h4{font-size:.92rem;margin:0;}
+
+  /* ---------- the two-step confirm ---------- */
+  .sc-scrim{position:fixed;inset:0;background:rgba(38,27,34,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;}
+  .sc-scrim[hidden]{display:none;}
+  .sc-modal{background:var(--card);border-radius:14px;max-width:420px;width:100%;padding:26px 24px;box-shadow:0 20px 50px -20px rgba(0,0,0,.4);}
+  .sc-modal[hidden]{display:none;}
+  .sc-modal h3{font-size:1.1rem;margin-bottom:10px;}
+  .sc-modal p{color:var(--muted);font-size:.92rem;line-height:1.55;margin-bottom:6px;}
+  .sc-modal .sc-step2{color:var(--danger-ink);font-weight:600;}
+  .sc-modal .sc-row{display:flex;gap:10px;margin-top:20px;}
+  .sc-modal .sc-row .btn{flex:1;width:auto;}
+  .sc-dots{display:flex;gap:5px;margin-bottom:14px;}
+  .sc-dots span{width:22px;height:4px;border-radius:999px;background:var(--line);}
+  .sc-dots span.on{background:var(--gold);}
 
   /* ---- loading ---- */
   .loading{display:flex;flex-direction:column;align-items:center;gap:14px;padding:40px 0;}
@@ -384,204 +416,252 @@
       <div class="err" id="app-error" hidden></div>
 
       <h2>In-mosque displays</h2>
-      <p class="lede">The appeal, the donate link and the progress bar are the
-         <strong>foyer TVs</strong>' own. The Ramadan and Eid greeting is
-         shared — switch it on here and it shows on <strong>every TV in the
-         mosque</strong>, foyer, prayer hall and downstairs alike. The
-         preview on the right is live — it redraws as you type, from the
-         actual screens' own code, before anything is saved. There is no
-         draft once you press Save: that commits the change to the screens
-         themselves, and each TV picks it up within about twenty minutes —
-         it does not need switching off and on.</p>
+      <p class="lede">Pick a screen below to see what's on it now and change
+         it. The appeal, the donate link and the progress bar are the
+         <strong>foyer TVs</strong>' own; the Ramadan and Eid greeting is
+         shared — switch it on from any screen and it shows on <strong>every
+         TV in the mosque</strong>. There is no draft: submitting a change
+         commits it to the screens themselves, and each TV picks it up
+         within about twenty minutes — it does not need switching off and on.</p>
 
       <div class="err" id="sc-error" hidden></div>
       <div class="ok"  id="sc-ok" hidden></div>
 
-      <div class="sc-layout">
-      <div id="sc-form" class="sc-formcol">
-
-        <div class="sc-section">
-          <h3>The appeal</h3>
-          <p class="sub">The small line above the headline, the current phase, and what it still needs.</p>
-
-          <div class="field">
-            <label for="sc-eyebrow">Eyebrow</label>
-            <input type="text" id="sc-eyebrow" maxlength="60" placeholder="The New Build">
-          </div>
-          <div class="sc-row">
-            <div class="field">
-              <label for="sc-phasetag">Phase tag</label>
-              <input type="text" id="sc-phasetag" maxlength="60" placeholder="Current appeal · Phase 3.3">
-            </div>
-            <div class="field">
-              <label for="sc-phasetitle">Phase title</label>
-              <input type="text" id="sc-phasetitle" maxlength="80" placeholder="Internal fixtures &amp; fittings">
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="sc-needs">What it needs — one per line</label>
-            <textarea id="sc-needs" class="sc-lines" maxlength="300" placeholder="Tiling&#10;Carpets&#10;Heating"></textarea>
-            <div class="sc-chips" id="sc-needs-preview"></div>
-          </div>
-
-          <div class="field">
-            <label for="sc-donate">Donate link (the QR code on the TV)</label>
-            <input type="url" id="sc-donate" placeholder="https://buy.stripe.com/...">
-          </div>
+      <!-- the picker -->
+      <div id="sc-grid">
+        <div class="sc-gridhead">
+          <h3>Which screen do you want to change?</h3>
+          <span class="sc-live-pill is-waiting" id="sc-live-pill-grid">Connecting&hellip;</span>
         </div>
+        <div class="sc-tiles">
 
-        <div class="sc-section">
-          <h3>The progress bar</h3>
-          <p class="sub">Three short words, and which stage the dot sits on.</p>
-
-          <div class="sc-row">
-            <div class="field">
-              <label for="sc-prog-done">Left label</label>
-              <input type="text" id="sc-prog-done" maxlength="40" placeholder="Phases 1 &amp; 2 complete">
-            </div>
-            <div class="field">
-              <label for="sc-prog-now">Middle label</label>
-              <input type="text" id="sc-prog-now" maxlength="40" placeholder="Now · Phase 3.3">
-            </div>
-            <div class="field">
-              <label for="sc-prog-next">Right label</label>
-              <input type="text" id="sc-prog-next" maxlength="40" placeholder="Full facilities">
-            </div>
-          </div>
-
-          <div class="field">
-            <label>Which stage is current</label>
-            <div class="sc-radio-list" id="sc-timeline"></div>
-          </div>
-
-          <div class="sc-bar">
-            <div class="sc-bar-track">
-              <div class="sc-bar-fill" id="sc-bar-fill"></div>
-              <div class="sc-bar-dot" id="sc-bar-dot"></div>
-            </div>
-            <div class="sc-bar-words">
-              <span id="sc-bar-left">—</span>
-              <span id="sc-bar-mid">—</span>
-              <span id="sc-bar-right">—</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="sc-section">
-          <h3>Ramadan and Eid</h3>
-          <p class="sub">Switch a greeting on or off, and set what it says. Each one appears on its own dates automatically — nothing here needs changing by date.</p>
-
-          <div class="sc-occ" id="occ-ramadan" data-enabled="true">
-            <div class="sc-occ-head">
-              <h4>Ramadan</h4>
-              <label class="sc-switch"><input type="checkbox" id="occ-ramadan-enabled"> Shown</label>
-            </div>
-            <div class="sc-occ-body">
-              <div class="sc-row">
-                <div class="field"><label for="occ-ramadan-title">Title</label>
-                  <input type="text" id="occ-ramadan-title" maxlength="60"></div>
-                <div class="field"><label for="occ-ramadan-arabic">Arabic</label>
-                  <input type="text" id="occ-ramadan-arabic" dir="rtl" maxlength="60"></div>
-              </div>
-              <div class="field"><label for="occ-ramadan-message">Message</label>
-                <textarea id="occ-ramadan-message" maxlength="400"></textarea></div>
-            </div>
-          </div>
-
-          <div class="sc-occ" id="occ-eidFitr" data-enabled="true">
-            <div class="sc-occ-head">
-              <h4>Eid al-Fitr</h4>
-              <label class="sc-switch"><input type="checkbox" id="occ-eidFitr-enabled"> Shown</label>
-            </div>
-            <div class="sc-occ-body">
-              <div class="sc-row">
-                <div class="field"><label for="occ-eidFitr-title">Title</label>
-                  <input type="text" id="occ-eidFitr-title" maxlength="60"></div>
-                <div class="field"><label for="occ-eidFitr-arabic">Arabic</label>
-                  <input type="text" id="occ-eidFitr-arabic" dir="rtl" maxlength="60"></div>
-              </div>
-              <div class="field"><label for="occ-eidFitr-message">Message</label>
-                <textarea id="occ-eidFitr-message" maxlength="400"></textarea></div>
-              <div class="field" style="max-width:220px;">
-                <label for="occ-eidFitr-days">Shown for how many days</label>
-                <input type="number" id="occ-eidFitr-days" min="1" max="30" step="1">
-              </div>
-            </div>
-          </div>
-
-          <div class="sc-occ" id="occ-eidAdha" data-enabled="true">
-            <div class="sc-occ-head">
-              <h4>Eid al-Adha</h4>
-              <label class="sc-switch"><input type="checkbox" id="occ-eidAdha-enabled"> Shown</label>
-            </div>
-            <div class="sc-occ-body">
-              <div class="sc-row">
-                <div class="field"><label for="occ-eidAdha-title">Title</label>
-                  <input type="text" id="occ-eidAdha-title" maxlength="60"></div>
-                <div class="field"><label for="occ-eidAdha-arabic">Arabic</label>
-                  <input type="text" id="occ-eidAdha-arabic" dir="rtl" maxlength="60"></div>
-              </div>
-              <div class="field"><label for="occ-eidAdha-message">Message</label>
-                <textarea id="occ-eidAdha-message" maxlength="400"></textarea></div>
-              <div class="field" style="max-width:220px;">
-                <label for="occ-eidAdha-days">Shown for how many days</label>
-                <input type="number" id="occ-eidAdha-days" min="1" max="30" step="1">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="sc-section">
-          <h3>The app card</h3>
-          <div class="field">
-            <label for="sc-applabel">Label on the "download our app" box</label>
-            <input type="text" id="sc-applabel" maxlength="40" placeholder="Download our app">
-          </div>
-        </div>
-
-        <div class="err" id="sc-complaints" hidden></div>
-
-        <div class="field" style="flex-direction:row;gap:10px;margin-top:22px;">
-          <button type="button" class="btn btn-gold" id="sc-save" disabled>Save &mdash; the TVs pick this up within 20 minutes</button>
-          <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
-        </div>
-        <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
-      </div>
-
-      <div class="sc-previewcol">
-        <div class="sc-preview-head">
-          <h3>What the TVs would show</h3>
-          <span class="sc-live-pill is-waiting" id="sc-live-pill">Connecting&hellip;</span>
-        </div>
-        <div class="sc-tvgrid">
-
-          <div class="sc-tvcard">
+          <!--  DIVs, not BUTTONs. A button's content model forbids interactive
+                descendants, and an iframe counts as one — a browser that
+                meets one inside a <button> recovers by closing the button
+                early, silently splitting it from the rest of its own
+                content. role="button" + tabindex + the keydown handler in
+                app.js keep this a real button for anyone not using a mouse. -->
+          <div class="sc-tile" id="sc-tile-foyerLand" role="button" tabindex="0">
+            <div class="sc-tvframe land" id="pv-slot-foyerLand"><iframe id="pv-foyerLand" title="Foyer TV preview, landscape" loading="lazy"></iframe></div>
             <h4>Foyer — landscape</h4>
             <div class="sc-tvsub">2 TVs in the foyer.</div>
-            <div class="sc-tvframe land"><iframe id="pv-foyerLand" title="Foyer TV preview, landscape" loading="lazy"></iframe></div>
+            <div class="sc-goto">Edit this screen &rarr;</div>
           </div>
 
-          <div class="sc-tvcard">
+          <div class="sc-tile" id="sc-tile-foyerPort" role="button" tabindex="0">
+            <div class="sc-tvframe port" id="pv-slot-foyerPort"><iframe id="pv-foyerPort" title="Foyer TV preview, portrait" loading="lazy"></iframe></div>
             <h4>Foyer — portrait</h4>
             <div class="sc-tvsub">Same TV pair, portrait mount.</div>
-            <div class="sc-tvframe port"><iframe id="pv-foyerPort" title="Foyer TV preview, portrait" loading="lazy"></iframe></div>
+            <div class="sc-goto">Edit this screen &rarr;</div>
           </div>
 
-          <div class="sc-tvcard">
+          <div class="sc-tile" id="sc-tile-hallLand" role="button" tabindex="0">
+            <div class="sc-tvframe land" id="pv-slot-hallLand"><iframe id="pv-hallLand" title="Prayer hall TV preview, landscape" loading="lazy"></iframe></div>
             <h4>Prayer hall — landscape</h4>
             <div class="sc-tvsub">Also shown downstairs — same page, same TVs.</div>
-            <div class="sc-tvframe land"><iframe id="pv-hallLand" title="Prayer hall TV preview, landscape" loading="lazy"></iframe></div>
+            <div class="sc-goto">Edit this screen &rarr;</div>
           </div>
 
-          <div class="sc-tvcard">
+          <div class="sc-tile" id="sc-tile-hallPort" role="button" tabindex="0">
+            <div class="sc-tvframe port" id="pv-slot-hallPort"><iframe id="pv-hallPort" title="Prayer hall TV preview, portrait" loading="lazy"></iframe></div>
             <h4>Prayer hall — portrait</h4>
             <div class="sc-tvsub">Also shown downstairs — same page, same TVs.</div>
-            <div class="sc-tvframe port"><iframe id="pv-hallPort" title="Prayer hall TV preview, portrait" loading="lazy"></iframe></div>
+            <div class="sc-goto">Edit this screen &rarr;</div>
           </div>
 
         </div>
       </div>
+
+      <!-- the editor for whichever screen was picked -->
+      <div id="sc-detail" hidden>
+        <button type="button" class="sc-back" id="sc-back">&larr; All screens</button>
+
+        <div class="sc-detail-grid">
+          <div class="sc-detail-fields" id="sc-form">
+            <h3 id="sc-detail-title">Foyer — landscape</h3>
+            <p class="sub" id="sc-detail-sub">The appeal, the donate link and the progress bar.</p>
+
+            <div id="sc-foyer-fields">
+              <div class="sc-section">
+                <h3>The appeal</h3>
+                <p class="sub">The small line above the headline, the current phase, and what it still needs.</p>
+
+                <div class="field">
+                  <label for="sc-eyebrow">Eyebrow</label>
+                  <input type="text" id="sc-eyebrow" maxlength="60" placeholder="The New Build">
+                </div>
+                <div class="sc-row">
+                  <div class="field">
+                    <label for="sc-phasetag">Phase tag</label>
+                    <input type="text" id="sc-phasetag" maxlength="60" placeholder="Current appeal · Phase 3.3">
+                  </div>
+                  <div class="field">
+                    <label for="sc-phasetitle">Phase title</label>
+                    <input type="text" id="sc-phasetitle" maxlength="80" placeholder="Internal fixtures &amp; fittings">
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label for="sc-needs">What it needs — one per line</label>
+                  <textarea id="sc-needs" class="sc-lines" maxlength="300" placeholder="Tiling&#10;Carpets&#10;Heating"></textarea>
+                  <div class="sc-chips" id="sc-needs-preview"></div>
+                </div>
+
+                <div class="field">
+                  <label for="sc-donate">Donate link (the QR code on the TV)</label>
+                  <input type="url" id="sc-donate" placeholder="https://buy.stripe.com/...">
+                </div>
+              </div>
+
+              <div class="sc-section">
+                <h3>The progress bar</h3>
+                <p class="sub">Three short words, and which stage the dot sits on.</p>
+
+                <div class="sc-row">
+                  <div class="field">
+                    <label for="sc-prog-done">Left label</label>
+                    <input type="text" id="sc-prog-done" maxlength="40" placeholder="Phases 1 &amp; 2 complete">
+                  </div>
+                  <div class="field">
+                    <label for="sc-prog-now">Middle label</label>
+                    <input type="text" id="sc-prog-now" maxlength="40" placeholder="Now · Phase 3.3">
+                  </div>
+                  <div class="field">
+                    <label for="sc-prog-next">Right label</label>
+                    <input type="text" id="sc-prog-next" maxlength="40" placeholder="Full facilities">
+                  </div>
+                </div>
+
+                <div class="field">
+                  <label>Which stage is current</label>
+                  <div class="sc-radio-list" id="sc-timeline"></div>
+                </div>
+
+                <div class="sc-bar">
+                  <div class="sc-bar-track">
+                    <div class="sc-bar-fill" id="sc-bar-fill"></div>
+                    <div class="sc-bar-dot" id="sc-bar-dot"></div>
+                  </div>
+                  <div class="sc-bar-words">
+                    <span id="sc-bar-left">—</span>
+                    <span id="sc-bar-mid">—</span>
+                    <span id="sc-bar-right">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sc-section">
+              <h3>Ramadan and Eid</h3>
+              <p class="sub">Switch a greeting on or off, and set what it says. Each one appears on its own dates automatically — nothing here needs changing by date. Shared across all four screens.</p>
+
+              <div class="sc-occ" id="occ-ramadan" data-enabled="true">
+                <div class="sc-occ-head">
+                  <h4>Ramadan</h4>
+                  <label class="sc-switch"><input type="checkbox" id="occ-ramadan-enabled"> Shown</label>
+                </div>
+                <div class="sc-occ-body">
+                  <div class="sc-row">
+                    <div class="field"><label for="occ-ramadan-title">Title</label>
+                      <input type="text" id="occ-ramadan-title" maxlength="60"></div>
+                    <div class="field"><label for="occ-ramadan-arabic">Arabic</label>
+                      <input type="text" id="occ-ramadan-arabic" dir="rtl" maxlength="60"></div>
+                  </div>
+                  <div class="field"><label for="occ-ramadan-message">Message</label>
+                    <textarea id="occ-ramadan-message" maxlength="400"></textarea></div>
+                </div>
+              </div>
+
+              <div class="sc-occ" id="occ-eidFitr" data-enabled="true">
+                <div class="sc-occ-head">
+                  <h4>Eid al-Fitr</h4>
+                  <label class="sc-switch"><input type="checkbox" id="occ-eidFitr-enabled"> Shown</label>
+                </div>
+                <div class="sc-occ-body">
+                  <div class="sc-row">
+                    <div class="field"><label for="occ-eidFitr-title">Title</label>
+                      <input type="text" id="occ-eidFitr-title" maxlength="60"></div>
+                    <div class="field"><label for="occ-eidFitr-arabic">Arabic</label>
+                      <input type="text" id="occ-eidFitr-arabic" dir="rtl" maxlength="60"></div>
+                  </div>
+                  <div class="field"><label for="occ-eidFitr-message">Message</label>
+                    <textarea id="occ-eidFitr-message" maxlength="400"></textarea></div>
+                  <div class="field" style="max-width:220px;">
+                    <label for="occ-eidFitr-days">Shown for how many days</label>
+                    <input type="number" id="occ-eidFitr-days" min="1" max="30" step="1">
+                  </div>
+                </div>
+              </div>
+
+              <div class="sc-occ" id="occ-eidAdha" data-enabled="true">
+                <div class="sc-occ-head">
+                  <h4>Eid al-Adha</h4>
+                  <label class="sc-switch"><input type="checkbox" id="occ-eidAdha-enabled"> Shown</label>
+                </div>
+                <div class="sc-occ-body">
+                  <div class="sc-row">
+                    <div class="field"><label for="occ-eidAdha-title">Title</label>
+                      <input type="text" id="occ-eidAdha-title" maxlength="60"></div>
+                    <div class="field"><label for="occ-eidAdha-arabic">Arabic</label>
+                      <input type="text" id="occ-eidAdha-arabic" dir="rtl" maxlength="60"></div>
+                  </div>
+                  <div class="field"><label for="occ-eidAdha-message">Message</label>
+                    <textarea id="occ-eidAdha-message" maxlength="400"></textarea></div>
+                  <div class="field" style="max-width:220px;">
+                    <label for="occ-eidAdha-days">Shown for how many days</label>
+                    <input type="number" id="occ-eidAdha-days" min="1" max="30" step="1">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="sc-section" id="sc-foyer-fields-2">
+              <h3>The app card</h3>
+              <div class="field">
+                <label for="sc-applabel">Label on the "download our app" box</label>
+                <input type="text" id="sc-applabel" maxlength="40" placeholder="Download our app">
+              </div>
+            </div>
+
+            <div class="err" id="sc-complaints" hidden></div>
+
+            <div class="field" style="flex-direction:row;gap:10px;margin-top:22px;">
+              <button type="button" class="btn btn-gold" id="sc-save" disabled>Submit changes</button>
+              <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
+            </div>
+            <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
+          </div>
+
+          <div class="sc-detail-preview">
+            <div class="sc-preview-head">
+              <h4>Live preview</h4>
+              <span class="sc-live-pill is-waiting" id="sc-live-pill-detail">Connecting&hellip;</span>
+            </div>
+            <div id="sc-detail-frame-slot"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- the two-step confirm, since this goes live immediately -->
+      <div class="sc-scrim" id="sc-scrim" hidden>
+        <div class="sc-modal" id="sc-modal-step1">
+          <div class="sc-dots"><span class="on"></span><span></span></div>
+          <h3>Submit this change?</h3>
+          <p>This updates <strong id="sc-modal-screen-name">this screen</strong> on the actual TV. There is no draft — once confirmed, it is live.</p>
+          <div class="sc-row">
+            <button type="button" class="btn btn-ghost" id="sc-modal-cancel">Cancel</button>
+            <button type="button" class="btn btn-gold" id="sc-modal-continue">Continue</button>
+          </div>
+        </div>
+        <div class="sc-modal" id="sc-modal-step2" hidden>
+          <div class="sc-dots"><span class="on"></span><span class="on"></span></div>
+          <h3>Are you sure?</h3>
+          <p class="sc-step2">Last check — this goes out immediately and the TV picks it up within about twenty minutes. There's nothing to undo from here once it's sent.</p>
+          <div class="sc-row">
+            <button type="button" class="btn btn-ghost" id="sc-modal-back">Go back</button>
+            <button type="button" class="btn btn-gold" id="sc-modal-confirm">Yes, send it live</button>
+          </div>
+        </div>
       </div>
 
       <div class="card-foot">
