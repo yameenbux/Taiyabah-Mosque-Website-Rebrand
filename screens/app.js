@@ -122,7 +122,7 @@
     var STRIPE_RE = /^https:\/\/(buy|donate)\.stripe\.com\/[A-Za-z0-9]+$/;   // build.py's DONATE_LINK, copied
 
     var OCC_KEYS = ["ramadan", "eidFitr", "eidAdha"];
-    var SAVE_LABEL = "Save — the TVs pick this up within 20 minutes";
+    var SAVE_LABEL = "Submit changes";
 
     var doc     = null;   // what is being edited — see blank() for the shape
     var saved   = null;   // what came back from the live file, for Undo
@@ -143,8 +143,19 @@
       foyerLand: "foyer.html", foyerPort: "foyervertical.html",
       hallLand: "timetable.html", hallPort: "timetablevertical.html"
     };
+    /* kind decides which fields the detail view shows — a hall screen has
+       no appeal, no progress bar, no app card to edit, only the greeting
+       every screen shares. name/sub are the tile's and the detail view's
+       own words, written once here instead of twice in the HTML. */
+    var SCREEN_DEF = {
+      foyerLand: { kind: "foyer", name: "Foyer — landscape", sub: "2 TVs in the foyer." },
+      foyerPort: { kind: "foyer", name: "Foyer — portrait", sub: "Same TV pair, portrait mount." },
+      hallLand:  { kind: "hall",  name: "Prayer hall — landscape", sub: "Also shown downstairs — same page, same TVs." },
+      hallPort:  { kind: "hall",  name: "Prayer hall — portrait", sub: "Also shown downstairs — same page, same TVs." }
+    };
     var previewReady = {};
     var pushTimer = null;
+    var currentScreen = null;   // null = picker grid; a SCREEN_DEF key = that screen's editor
 
     function esc(v) {
       return String(v == null ? "" : v)
@@ -501,12 +512,51 @@
     }
 
     function drawLivePill() {
-      var pill = el("sc-live-pill");
-      if (!pill) return;
       var ready = Object.keys(PREVIEW_PAGES).filter(function (k) { return previewReady[k]; }).length;
       var all = Object.keys(PREVIEW_PAGES).length;
-      pill.classList.toggle("is-waiting", ready < all);
-      pill.textContent = ready < all ? "Connecting…" : "Live as you type";
+      ["sc-live-pill-grid", "sc-live-pill-detail"].forEach(function (id) {
+        var pill = el(id);
+        if (!pill) return;
+        pill.classList.toggle("is-waiting", ready < all);
+        pill.textContent = ready < all ? "Connecting…" : "Live as you type";
+      });
+    }
+
+    /* -------------------------------------------------------------- the
+       TWO VIEWS. One set of four iframes exists for the whole life of the
+       page — showDetail() moves the one the admin picked into the big
+       frame; showGrid() moves it back to its tile. Moving an iframe that is
+       already in the document (appendChild, not cloneNode) does not reload
+       it in any browser this needs to support, so the frame the admin was
+       just looking at in the grid is exactly the frame they see enlarged —
+       same postMessage channel, same "ready" state, nothing refetched. */
+    function showGrid() {
+      currentScreen = null;
+      Object.keys(PREVIEW_PAGES).forEach(function (key) {
+        var slot = el("pv-slot-" + key), frame = frameFor(key);
+        if (slot && frame && frame.parentElement !== slot) slot.appendChild(frame);
+      });
+      el("sc-grid").hidden = false;
+      el("sc-detail").hidden = true;
+    }
+
+    function showDetail(key) {
+      currentScreen = key;
+      var def = SCREEN_DEF[key];
+      var frame = frameFor(key);
+      var dest = el("sc-detail-frame-slot");
+      if (frame && dest) {
+        dest.className = "sc-tvframe " + (key.indexOf("Port") !== -1 ? "port" : "land");
+        dest.appendChild(frame);
+      }
+      el("sc-detail-title").textContent = def.name;
+      el("sc-detail-sub").textContent = def.kind === "foyer"
+        ? "The appeal, the donate link and the progress bar."
+        : "Only the Ramadan/Eid greeting, shared with every other screen, affects this one.";
+      el("sc-foyer-fields").hidden = def.kind !== "foyer";
+      el("sc-foyer-fields-2").hidden = def.kind !== "foyer";
+      el("sc-grid").hidden = true;
+      el("sc-detail").hidden = false;
     }
 
     /* Debounced: a keystroke posts a draft, not every keystroke its own
@@ -565,6 +615,40 @@
       });
     }
 
+    /* -------------------------------------------------------------- THE
+       TWO-STEP CONFIRM. Asked for by name: this goes out to a TV the moment
+       it's confirmed, with no second look first, so one "are you sure"
+       is not enough friction for that. Step 2 is a second, separately
+       worded question — not the same dialog shown twice — so a reflexive
+       double-click can't click through both. */
+    function openConfirm() {
+      var def = SCREEN_DEF[currentScreen] || { name: "this screen" };
+      el("sc-modal-screen-name").textContent = def.name;
+      el("sc-modal-step1").hidden = false;
+      el("sc-modal-step2").hidden = true;
+      el("sc-scrim").hidden = false;
+    }
+    function closeConfirm() { el("sc-scrim").hidden = true; }
+
+    function wireConfirm() {
+      el("sc-modal-cancel").addEventListener("click", closeConfirm);
+      el("sc-modal-continue").addEventListener("click", function () {
+        el("sc-modal-step1").hidden = true;
+        el("sc-modal-step2").hidden = false;
+      });
+      el("sc-modal-back").addEventListener("click", function () {
+        el("sc-modal-step2").hidden = true;
+        el("sc-modal-step1").hidden = false;
+      });
+      el("sc-modal-confirm").addEventListener("click", function () {
+        closeConfirm();
+        save();
+      });
+      el("sc-scrim").addEventListener("click", function (e) {
+        if (e.target === el("sc-scrim")) closeConfirm();
+      });
+    }
+
     // --- wiring --------------------------------------------------------------
     function wire() {
       if (wired) return true;
@@ -573,6 +657,21 @@
 
       wirePreviewFrames();
       drawLivePill();
+      wireConfirm();
+
+      Object.keys(SCREEN_DEF).forEach(function (key) {
+        var tile = el("sc-tile-" + key);
+        if (!tile) return;
+        tile.addEventListener("click", function () { showDetail(key); });
+        // role="button" on a div earns nothing for free — Enter and Space
+        // activate a real <button> on their own; here that has to be wired.
+        tile.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showDetail(key); }
+        });
+      });
+      var back = el("sc-back");
+      if (back) back.addEventListener("click", showGrid);
+      showGrid();
 
       ["sc-eyebrow", "sc-phasetag", "sc-phasetitle", "sc-needs", "sc-donate",
        "sc-prog-done", "sc-prog-now", "sc-prog-next", "sc-applabel"].forEach(function (id) {
@@ -596,7 +695,10 @@
       });
 
       var saveBtn = el("sc-save");
-      if (saveBtn) saveBtn.addEventListener("click", save);
+      if (saveBtn) saveBtn.addEventListener("click", function () {
+        if (revalidate().length) return;
+        openConfirm();
+      });
 
       var revert = el("sc-revert");
       if (revert) revert.addEventListener("click", function () {
