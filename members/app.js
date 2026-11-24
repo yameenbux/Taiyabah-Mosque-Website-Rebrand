@@ -441,12 +441,21 @@
 
     document.body.appendChild(host);
     document.body.className += " printing-receipt";
+    var printError = null;
     try {
       window.print();
+    } catch (e) {
+      //  Some embedded browsers refuse rather than no-op. Caught here so it
+      //  becomes a sentence instead of a button that looks broken.
+      printError = e;
     } finally {
       document.body.className =
         document.body.className.replace(/\s*printing-receipt/, "");
       el("mb-receipt-card").appendChild(host);
+    }
+    if (printError) {
+      say("fx-error", "Printing did not start — "
+        + (printError.message || "this browser refused it") + ".");
     }
   }
 
@@ -770,6 +779,18 @@
       }
     });
     el("mb-receipt-go").addEventListener("click", printReceipt);
+
+    /*  iOS Safari refuses window.print() from a page opened through its
+        home-screen icon (site.webmanifest sets "display": "standalone" for
+        the whole site) — no dialog, no error, nothing the office could tell
+        apart from the button being broken. navigator.standalone is set only
+        by iOS Safari in that one case, so this says so up front rather than
+        leaving "I pressed it and nothing happened" to be reported and
+        guessed at, which is exactly what happened the first time this ran
+        on a phone. */
+    if (window.navigator && window.navigator.standalone) {
+      el("mb-receipt-standalone-note").hidden = false;
+    }
 
     /*  Add / amend / remove / full backup — the four doors the register lost
         when it left the Excel sheet. */

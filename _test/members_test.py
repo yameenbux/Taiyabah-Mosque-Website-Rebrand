@@ -87,10 +87,14 @@ MEMBER_ONE = {
 }
 
 
-def stub(roles):
+def stub(roles, standalone=False, print_throws=False):
     return """
 (function(){
   var ROLES = %s, OVERVIEW = %s, OWING_LIST = %s, MEMBER_ONE = %s;
+  var PRINT_THROWS = %s;
+  if (%s) {
+    Object.defineProperty(window.navigator, 'standalone', {value: true, configurable: true});
+  }
   window.__printCalls = [];
   window.print = function(){
     var host = document.getElementById('mb-receipt-print');
@@ -101,6 +105,7 @@ def stub(roles):
       shellDisplay: getComputedStyle(document.querySelector('.shell')).display,
       hostDisplay: getComputedStyle(host).display
     });
+    if (PRINT_THROWS) throw new Error('printing is not available here');
   };
   var client = {
     auth: {
@@ -139,13 +144,15 @@ def stub(roles):
     {value:{createClient:function(){return client;}},
      writable:false, configurable:false});
 })();
-""" % (json.dumps(list(roles)), json.dumps(OVERVIEW), json.dumps(OWING_LIST), json.dumps(MEMBER_ONE))
+""" % (json.dumps(list(roles)), json.dumps(OVERVIEW), json.dumps(OWING_LIST), json.dumps(MEMBER_ONE),
+       json.dumps(bool(print_throws)), json.dumps(bool(standalone)))
 
 
-def open_page(browser, roles=("admin",), width=1400, height=1100):
+def open_page(browser, roles=("admin",), width=1400, height=1100,
+              standalone=False, print_throws=False):
     pg = browser.new_page(viewport={"width": width, "height": height})
     pg.set_default_timeout(7000)
-    pg.add_init_script(stub(roles))
+    pg.add_init_script(stub(roles, standalone=standalone, print_throws=print_throws))
     pg.goto(BASE + "/members/", wait_until="load")
     pg.wait_for_timeout(900)
     return pg
@@ -234,6 +241,50 @@ def run():
         check("the receipt sheet is invisible on screen again",
               pg.is_hidden("#mb-receipt-print"))
         pg.close()
+
+        # -------------------------------- the iOS home-screen limitation ----
+        #  Reported from a real phone: "nothing happens when I click it."
+        #  iOS Safari refuses window.print() from a page opened through its
+        #  home-screen icon — no dialog, no error — because site.webmanifest
+        #  sets "display": "standalone" for the whole site. This checks the
+        #  warning is shown before anyone presses the button, not found out
+        #  the same way the office found it.
+        pg3 = open_page(b, standalone=True)
+        pg3.click(".mb-open")
+        pg3.wait_for_timeout(300)
+        check("the standalone warning is shown on an iOS home-screen session",
+              pg3.is_visible("#mb-receipt-standalone-note"))
+        check("the warning names the actual fix",
+              "Safari" in pg3.inner_text("#mb-receipt-standalone-note"))
+        pg3.close()
+
+        pg3b = open_page(b)
+        pg3b.click(".mb-open")
+        pg3b.wait_for_timeout(300)
+        check("the standalone warning is hidden in an ordinary browser session",
+              pg3b.is_hidden("#mb-receipt-standalone-note"))
+        pg3b.close()
+
+        # ----------------------------- a browser that refuses to print ----
+        #  Not every failure is the iOS case above. If window.print() itself
+        #  throws, that must become a sentence on screen, not a button that
+        #  silently does nothing a second way.
+        pg4 = open_page(b, print_throws=True)
+        pg4.click(".mb-open")
+        pg4.wait_for_timeout(300)
+        pg4.click("#mb-receipt-go")
+        pg4.wait_for_timeout(150)
+        check("a thrown print failure is shown, not swallowed",
+              pg4.is_visible("#fx-error"))
+        check("the message says printing did not start",
+              "did not start" in pg4.inner_text("#fx-error"),
+              pg4.inner_text("#fx-error"))
+        check("the receipt sheet is still cleaned up after a thrown failure",
+              "printing-receipt" not in pg4.evaluate("document.body.className")
+              and pg4.evaluate(
+                "document.getElementById('mb-receipt-print').parentNode.id") ==
+                "mb-receipt-card")
+        pg4.close()
 
         # ------------------------------------------- nothing is leaked ----
         pg2 = open_page(b, roles=("madrasah",))
