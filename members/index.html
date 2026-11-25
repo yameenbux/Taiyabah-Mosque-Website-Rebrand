@@ -354,6 +354,19 @@
               </table>
             </div>
             <p class="fx-empty" id="mb-receipt-none" hidden>No payment has been recorded against this member yet.</p>
+            <!-- site.webmanifest sets "display": "standalone" for the whole
+                 site, and iOS Safari silently refuses window.print() — no
+                 dialog, no error — from a page opened through its home-screen
+                 icon rather than Safari itself. Told here rather than left to
+                 be found as "nothing happens when I press it", which is
+                 exactly what the office reported the first time this ran on
+                 a phone. navigator.standalone is iOS-only on purpose: this is
+                 the one platform with this limitation. -->
+            <p class="fx-note" id="mb-receipt-standalone-note" hidden>
+              Printing doesn&rsquo;t work from the masjid site&rsquo;s home-screen icon
+              on an iPhone &mdash; open this page in Safari itself (not the icon),
+              sign in again, and press Print there.
+            </p>
             <div class="wide mb-receipt-a">
               <span class="fx-note" id="mb-receipt-total"></span>
               <button type="button" class="btn btn-gold" id="mb-receipt-go" disabled>Print a receipt</button>
