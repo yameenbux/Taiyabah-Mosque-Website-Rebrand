@@ -143,10 +143,13 @@
       foyerLand: "foyer.html", foyerPort: "foyervertical.html",
       hallLand: "timetable.html", hallPort: "timetablevertical.html"
     };
-    /* kind decides which fields the detail view shows — a hall screen has
-       no appeal, no progress bar, no app card to edit, only the greeting
-       every screen shares. name/sub are the tile's and the detail view's
-       own words, written once here instead of twice in the HTML. */
+    /* kind decides which fields the detail view shows. A hall screen runs
+       the timetable program — prayer times, Jumuʿah, sunrise/sunset — none
+       of which comes from this editor, and the Ramadan/Eid greeting is
+       foyer-only, so a hall screen has nothing here to edit at all; its
+       detail view is the live preview and a plain note saying so. name/sub
+       are the tile's and the detail view's own words, written once here
+       instead of twice in the HTML. */
     var SCREEN_DEF = {
       foyerLand: { kind: "foyer", name: "Foyer — landscape", sub: "2 TVs in the foyer." },
       foyerPort: { kind: "foyer", name: "Foyer — portrait", sub: "Same TV pair, portrait mount." },
@@ -551,10 +554,13 @@
       }
       el("sc-detail-title").textContent = def.name;
       el("sc-detail-sub").textContent = def.kind === "foyer"
-        ? "The appeal, the donate link and the progress bar."
-        : "Only the Ramadan/Eid greeting, shared with every other screen, affects this one.";
+        ? "The appeal, the donate link, the progress bar, and the Ramadan/Eid greeting."
+        : "The prayer-times screen — nothing here is editable yet.";
+      el("sc-hall-note").hidden = def.kind !== "hall";
       el("sc-foyer-fields").hidden = def.kind !== "foyer";
       el("sc-foyer-fields-2").hidden = def.kind !== "foyer";
+      el("sc-occ-fields").hidden = def.kind !== "foyer";
+      el("sc-actions").hidden = def.kind !== "foyer";
       el("sc-grid").hidden = true;
       el("sc-detail").hidden = false;
     }
