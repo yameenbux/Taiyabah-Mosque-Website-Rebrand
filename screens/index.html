@@ -481,6 +481,12 @@
             <h3 id="sc-detail-title">Foyer — landscape</h3>
             <p class="sub" id="sc-detail-sub">The appeal, the donate link and the progress bar.</p>
 
+            <div class="sc-section" id="sc-hall-note" hidden>
+              <p class="sub">There is nothing on this screen to edit. It shows the prayer times and the
+                 Jumuʿah/sunrise times from the prayer-times system, not from here — the preview on the
+                 right is exactly what is on the TV right now.</p>
+            </div>
+
             <div id="sc-foyer-fields">
               <div class="sc-section">
                 <h3>The appeal</h3>
@@ -551,9 +557,9 @@
               </div>
             </div>
 
-            <div class="sc-section">
+            <div class="sc-section" id="sc-occ-fields">
               <h3>Ramadan and Eid</h3>
-              <p class="sub">Switch a greeting on or off, and set what it says. Each one appears on its own dates automatically — nothing here needs changing by date. Shared across all four screens.</p>
+              <p class="sub">Switch a greeting on or off, and set what it says. Each one appears on its own dates automatically — nothing here needs changing by date. Shows on the foyer screens only.</p>
 
               <div class="sc-occ" id="occ-ramadan" data-enabled="true">
                 <div class="sc-occ-head">
@@ -623,13 +629,15 @@
               </div>
             </div>
 
-            <div class="err" id="sc-complaints" hidden></div>
+            <div id="sc-actions">
+              <div class="err" id="sc-complaints" hidden></div>
 
-            <div class="field" style="flex-direction:row;gap:10px;margin-top:22px;">
-              <button type="button" class="btn btn-gold" id="sc-save" disabled>Submit changes</button>
-              <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
+              <div class="field" style="flex-direction:row;gap:10px;margin-top:22px;">
+                <button type="button" class="btn btn-gold" id="sc-save" disabled>Submit changes</button>
+                <button type="button" class="btn btn-ghost" id="sc-revert">Undo</button>
+              </div>
+              <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
             </div>
-            <p class="sc-meta" id="sc-meta">Looking&hellip;</p>
           </div>
 
           <div class="sc-detail-preview">
