@@ -2078,6 +2078,28 @@ window.TAIYABAH_PUBLIC = {
   .edu-tile.is-soon{opacity:.72;}
   .edu-tile.is-soon .et-media{background:var(--paper);border-bottom:1px solid var(--line);}
   .edu-tile.is-soon .et-media .et-ic{color:var(--muted);opacity:.45;}
+  /* ---- Vacancies: roles being planned, none of them live yet ------------
+     Deliberately its OWN class, not .edu-grid/.edu-tile reused: the
+     Education hub's course script does `document.querySelector('.edu-grid')`
+     with no page scoping, so a reused class here would have let it plant a
+     fetched course tile into this grid instead of that one, or vice versa,
+     depending only on which page happened to sit first in the DOM. */
+  .vac-grid{display:grid;gap:16px;grid-template-columns:1fr;}
+  @media(min-width:640px){ .vac-grid{grid-template-columns:1fr 1fr;} }
+  @media(min-width:960px){ .vac-grid{grid-template-columns:1fr 1fr 1fr;} }
+  .vac-tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);opacity:.72;}
+  .vac-tile .vt-media{display:block;aspect-ratio:16/9;background:var(--paper);
+    border-bottom:1px solid var(--line);position:relative;}
+  .vac-tile .vt-media .vt-ic{position:absolute;inset:0;display:flex;align-items:center;
+    justify-content:center;color:var(--muted);opacity:.45;}
+  .vac-tile .vt-media .vt-ic svg{width:48px;height:48px;}
+  .vac-tile .vt-body{display:flex;flex-direction:column;gap:5px;padding:17px 19px 20px;}
+  .vac-tile .vt-tag{font-size:.833rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);font-weight:700;}
+  .vac-tile .vt-h{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.166rem;
+    color:var(--ink);line-height:1.25;margin:2px 0 1px;}
+  .vac-tile .vt-p{font-size:.977rem;line-height:1.6;color:var(--muted);}
   /* ---- Education / Arabic class registration ---------------------------- */
   .cf-two{display:grid;gap:0 14px;grid-template-columns:1fr;}
   @media(min-width:560px){ .cf-two{grid-template-columns:1fr 1fr;} }
@@ -4120,6 +4142,11 @@ window.TAIYABAH_PUBLIC = {
           <span class="sv-label">Education</span>
           <span class="sv-sub">Arabic classes &middot; adults</span>
         </a>
+        <a class="svc-qtile" href="#" data-nav="svc-vacancies">
+          <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M3 13h18"/></svg></span>
+          <span class="sv-label">Vacancies</span>
+          <span class="sv-sub">Roles we're planning</span>
+        </a>
         <div class="svc-qtile is-soon">
           <span class="sv-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10.5L12 4l8 6.5V21"/><path d="M9 21v-6h6v6"/><circle cx="12" cy="8.2" r="1.1" fill="currentColor" stroke="none"/></svg></span>
           <span class="sv-label">Tours &amp; Visits</span>
@@ -4314,6 +4341,75 @@ window.TAIYABAH_PUBLIC = {
     </div>
   </section>
 </div>
+<!-- ================= SERVICES: VACANCIES =================
+     No vacancy here is live — every role is marked "Coming soon" because
+     that is what it is: a plan, not a job anybody can apply for today. The
+     tiles are plain, unlinked blocks, for the same reason the "More
+     courses" placeholder on the Education hub isn't a link either — there
+     is nowhere for them to go yet. -->
+<div class="page" data-page="svc-vacancies">
+  <section class="page-masthead">
+    <div class="container">
+      <a class="back-link" href="#" data-nav="services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Services</a>
+      <div class="section-head on-dark">
+        <div class="eyebrow">Services</div>
+        <h1 style="font-size:clamp(1.9rem,4vw,2.6rem);">Vacancies</h1>
+        <p>As the masjid grows, so does the team behind it &mdash; here's a look at what's ahead.</p>
+      </div>
+    </div>
+  </section>
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-detail-facts svc-hub">
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">None of the roles below are open positions yet &mdash; they are the areas the committee expects to need help with as the masjid modernises. If one sounds like you, let the office know now and you'll be among the first told when it is actually advertised.</p>
+        <div class="vac-grid" style="margin-top:22px;">
+
+          <div class="vac-tile is-soon">
+            <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5a1 1 0 011-1h4a1 1 0 011 1V4"/><path d="M9 11h6M9 15h4"/></svg></span></span>
+            <span class="vt-body">
+              <span class="vt-tag">Coming soon</span>
+              <span class="vt-h">Administration</span>
+              <span class="vt-p">Office and admin support &mdash; correspondence, records and helping the day-to-day run smoothly.</span>
+            </span>
+          </div>
+
+          <div class="vac-tile is-soon">
+            <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span></span>
+            <span class="vt-body">
+              <span class="vt-tag">Coming soon</span>
+              <span class="vt-h">Education</span>
+              <span class="vt-p">Supporting classes and workshops, from the Arabic course to one-off sessions like the Ghusl workshop.</span>
+            </span>
+          </div>
+
+          <div class="vac-tile is-soon">
+            <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span></span>
+            <span class="vt-body">
+              <span class="vt-tag">Coming soon</span>
+              <span class="vt-h">Community Outreach</span>
+              <span class="vt-p">Social media, communications and connecting the masjid with the wider community &mdash; further than a WhatsApp group reaches.</span>
+            </span>
+          </div>
+
+          <div class="vac-tile is-soon">
+            <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M4 21h16"/><path d="M10 21v-6h4v6"/></svg></span></span>
+            <span class="vt-body">
+              <span class="vt-tag">Coming soon</span>
+              <span class="vt-h">Event Management</span>
+              <span class="vt-p">Organising hall hire and community events end to end &mdash; the booking, the setup, and the people on the day.</span>
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="cs-cta" style="margin-top:30px;">
+        <a class="btn btn-gold" data-nav="contact">Register your interest</a>
+        <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+      </div>
+    </div>
+  </section>
+</div>
+
 <!-- ================= CHARITY COLLECTION (CHANDA) =================
      Replaces the paper CHARITY DATA FORM and the poster of mobile numbers.
      The form is a REQUEST: nothing here books a date. See db/030.
