@@ -96,7 +96,11 @@
     moon:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.7 6.7 0 0 0 9.5 9.5Z"/></svg>',
     /*  THE TV ON THE FOYER WALL, not a generic monitor — a short stand under
         a wide screen, same 1.8 stroke and round joins as the rest. */
-    tv:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M9 20.5h6M12 17v3.5"/></svg>'
+    tv:     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M9 20.5h6M12 17v3.5"/></svg>',
+    /*  A BRIEFCASE, byte-for-byte the icon on the Vacancies tile in
+        index_template.html, so the row means the same thing on the public
+        page and in this rail. */
+    briefcase: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M3 13h18"/></svg>'
   };
 
   /*  EVERY DESTINATION, IN ONE PLACE, IN THE ORDER PEOPLE READ THEM.
@@ -162,6 +166,15 @@
       { key: "volunteers",  href: "volunteers/",  icon: "basket", name: "Food Bank volunteers",
         needs: ["admin", "hall_office"],
         what: "Mark rung, helping or withdrawn; download the list" },
+      /*  ADMIN ONLY, NOT hall_office — unlike volunteers just above. db/176
+          is explicit that recruitment is the committee's own decision, not
+          a rota the hall office already runs day to day. vacancy-applications
+          /app.js's canSee() admits the same single role, and admin_shell_test.py
+          fails if the two ever stop agreeing. */
+      { key: "vacancies",   href: "vacancy-applications/", icon: "briefcase",
+        name: "Vacancy applications",
+        needs: ["admin"],
+        what: "Read what somebody wrote about themselves and mark them contacted, shortlisted or declined" },
       /*  THE ONLY ROW IN THIS WHOLE RAIL THAT `admin` DOES NOT REACH, and the
           only one whose `needs` is a single role (db/132).
 
