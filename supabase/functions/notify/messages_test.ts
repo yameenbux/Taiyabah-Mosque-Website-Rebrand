@@ -718,6 +718,26 @@ Deno.test("it says the link is single use and expires", () => {
   assertStringIncludes(m.html.toLowerCase(), "once");
 });
 
+Deno.test("it tells somebody to check junk/spam if the email has not arrived", () => {
+  // Asked for after the office kept hearing "I never got the email" when it
+  // had actually landed in junk — the invite link is the only thing standing
+  // between a new administrator and the portal, so the one line that could
+  // save a phone call to the office is worth the email being one line longer.
+  const m = staffInviteMessage(INV);
+  assertStringIncludes(m.html.toLowerCase(), "junk");
+  assertStringIncludes(m.html.toLowerCase(), "spam");
+  assertStringIncludes(m.text.toLowerCase(), "junk");
+  assertStringIncludes(m.text.toLowerCase(), "spam");
+});
+
+Deno.test("CONTROL — the junk/spam line really is checked for", () => {
+  const m = staffInviteMessage(INV);
+  const withoutJunkNote = m.html.replace(/junk or spam folder/i, "mailbox");
+  assert(withoutJunkNote !== m.html, "the control did not change the HTML");
+  assert(!withoutJunkNote.toLowerCase().includes("junk"),
+    "the word 'junk' appears elsewhere too, so the test above would pass without this sentence");
+});
+
 Deno.test("an existing account is told to set a NEW password, not that one was created", () => {
   const fresh = staffInviteMessage(INV);
   const again = staffInviteMessage({ ...INV, existing: true });
