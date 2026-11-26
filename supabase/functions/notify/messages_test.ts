@@ -1012,8 +1012,51 @@ Deno.test("a volunteer's age and gender never reach an email", () => {
   }
 });
 
+const VACANCY: Event = {
+  kind: "vacancy_applied",
+  reference: "VA-26-0003",
+  name: "An Applicant",
+  phone: "07000 111222",
+  email: "applicant@example.test",
+  category: "community_outreach",
+  portal: "https://example.test/vacancy-applications/",
+};
+
+Deno.test("the office is told which area somebody applied for", () => {
+  const m = officeMessage(VACANCY)!;
+  assertStringIncludes(m.html, "Community Outreach");
+  assertStringIncludes(m.html, "VA-26-0003");
+});
+
+Deno.test("the applicant is told nothing is open yet", () => {
+  // Same failure this whole file exists to prevent, applied to a new form:
+  // somebody who thinks they have been offered something they have not.
+  const m = publicMessage(VACANCY)!;
+  assertStringIncludes(m.html, "Nothing is open yet");
+  assertStringIncludes(m.text, "NOTHING IS OPEN YET");
+  assertStringIncludes(m.html, "Community Outreach");
+});
+
+Deno.test("an unknown category still produces an email rather than vanishing", () => {
+  // categoryLabel() falls back to the raw key for a value db/176's own CHECK
+  // constraint should already have refused — see COHORTS/cohortLabel for the
+  // same reasoning. A silently empty "Area" row would be worse than an ugly one.
+  const odd = { ...VACANCY, category: "something_new" };
+  const m = officeMessage(odd)!;
+  assertStringIncludes(m.html, "something_new");
+});
+
+Deno.test("a vacancy applicant's own message never reaches an email", () => {
+  const leaky = { ...VACANCY } as Event & Record<string, unknown>;
+  leaky.message = "I once ran the Preston food bank for six years";
+  for (const m of [officeMessage(leaky)!, publicMessage(leaky)!]) {
+    assert(!/Preston food bank/i.test(m.html + m.text),
+      "the applicant's free text leaked into a vacancy email");
+  }
+});
+
 Deno.test("all three new subjects are ASCII and say what they are", () => {
-  for (const e of [ADMISSION, COURSE, WAITING, VOLUNTEER]) {
+  for (const e of [ADMISSION, COURSE, WAITING, VOLUNTEER, VACANCY]) {
     for (const m of [officeMessage(e), publicMessage(e)]) {
       if (!m) continue;
       assertEquals(m.subject, ascii(m.subject), `non-ASCII subject for ${e.kind}`);
@@ -1027,7 +1070,7 @@ Deno.test("every new kind produces an office email — none is silently dropped"
   // The bug this whole section exists for. A kind that falls through every
   // branch returns null, and null means nobody is told.
   for (const kind of ["admission_requested", "course_registered",
-                      "volunteer_registered"] as const) {
+                      "volunteer_registered", "vacancy_applied"] as const) {
     const e = { ...ADMISSION, kind } as Event;
     assert(officeMessage(e) !== null, `${kind} tells nobody`);
   }

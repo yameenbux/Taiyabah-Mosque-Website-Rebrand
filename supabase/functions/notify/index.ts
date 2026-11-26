@@ -8,7 +8,8 @@
        recorded — including when the money has to go back
      - a Supabase database webhook on INSERT into nikah_requests
      - a Supabase database webhook on INSERT into charity_collections,
-       admission_applications, course_registrations and foodbank_volunteers
+       admission_applications, course_registrations, foodbank_volunteers and
+       vacancy_applications
      - invite-user, when an administrator invites somebody to a staff account
        or sends them a password reset
 
@@ -255,6 +256,20 @@ export function toEvent(body: Record<string, unknown>): Event | null {
       frequency: (r.frequency as string) ?? null,
       sunday_mornings: r.sunday_mornings === true,
       // Age, gender and `skills` are deliberately not carried.
+    };
+  }
+
+  if (body.type === "INSERT" && body.table === "vacancy_applications") {
+    const r = (body.record ?? {}) as Record<string, unknown>;
+    return {
+      kind: "vacancy_applied",
+      reference: r.reference as string,
+      name: r.full_name as string,
+      phone: r.phone as string,
+      email: r.email as string,
+      category: r.category as string,
+      // `message` — whatever the applicant wrote about themselves — is
+      // deliberately not carried. See messages.ts's comment on the field.
     };
   }
 

@@ -29,6 +29,7 @@ export type Kind =
   | "admission_requested"
   | "course_registered"
   | "volunteer_registered"
+  | "vacancy_applied"
   | "madrasah_fee_reminder"
   //  THE IMAMS' ADVICE INBOX (db/132). Three kinds, and NONE of them carries
   //  a word of the question somebody asked:
@@ -65,6 +66,15 @@ export interface Event {
   year?: number | null;           // the membership year this payment is for
   paid_in_full?: boolean | null;  // is the year now settled in full
   outstanding_p?: number | null;  // what is left on the year after this payment
+
+  // db/176 — somebody applying through the Vacancies page. No role is live;
+  // this is a list for the office to work from once one actually is.
+  //
+  // `message` IS NOT HERE, ON PURPOSE — the same rule as a course
+  // registration's `experience`/`notes`. It is the applicant's own free
+  // text, nobody has read it yet, and an email is a bell, not a record: the
+  // office reads it on the vacancy_applications screen.
+  category?: string | null;       // which of the four Vacancies tiles
 
   // A charity collection (chanda). The trustee's name and number are NOT
   // here, and there is deliberately no field for them: the office rings the
@@ -334,6 +344,19 @@ const FREQUENCY: Record<string, string> = {
 export function frequencyLabel(f?: string | null): string {
   if (!f) return "";
   return FREQUENCY[f] ?? f;
+}
+
+//  THE FOUR VACANCIES TILES, db/176's own CHECK constraint spelled out as
+//  words a person reads. Falls back to the raw key rather than an empty
+//  string, same reasoning as COHORTS above: a value this table's CHECK
+//  constraint should have refused should look wrong in the email, not vanish.
+const CATEGORIES: Record<string, string> = {
+  administration: "Administration", education: "Education",
+  community_outreach: "Community Outreach", event_management: "Event Management",
+};
+export function categoryLabel(c?: string | null): string {
+  if (!c) return "";
+  return CATEGORIES[c] ?? c;
 }
 
 /* --------------------------------------------------------------------------
@@ -847,6 +870,42 @@ export function officeMessage(e: Event): Message | null {
     };
   }
 
+  if (e.kind === "vacancy_applied") {
+    const rows: [string, string][] = [
+      ["Name", `<strong>${esc(e.name ?? "")}</strong>`],
+      ["Phone", phoneCell],
+      ["Area", esc(categoryLabel(e.category))],
+      ["Reference", esc(ref)],
+    ];
+    return {
+      // Informational, same reasoning as admission_requested and
+      // course_registered: nothing here needs acting on today, and reserving
+      // ATTENTION REQUIRED for the two subjects that genuinely need it is
+      // what keeps those words meaning something.
+      subject: ascii(`Vacancy application - ${categoryLabel(e.category)} - ${ref}`),
+      html: shell(
+        "Somebody has applied for a role",
+        "No role is open yet &mdash; this is somebody registering interest " +
+        `in <strong>${esc(categoryLabel(e.category))}</strong> for when one is. ` +
+        "<strong>What they wrote about themselves is not in this email</strong> " +
+        "and is in the portal instead.",
+        rows,
+        "Nothing needs doing until this area is actually advertised. " +
+        "Open the portal to read what they wrote and mark them contacted, " +
+        "shortlisted or declined.",
+        e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+      text: plain(
+        "Somebody has applied for a role",
+        "No role is open yet - this is somebody registering interest for " +
+        "when one is. WHAT THEY WROTE ABOUT THEMSELVES IS NOT IN THIS EMAIL " +
+        "and is in the portal instead.",
+        rows,
+        "Nothing needs doing until this area is actually advertised. Open " +
+        "the portal to read what they wrote.",
+        e.portal ?? undefined),
+    };
+  }
+
   return null;
 }
 
@@ -1327,6 +1386,34 @@ export function publicMessage(e: Event): Message | null {
         contactLabel(e.preferred_contact) + ", which is what you asked for. " +
         "YOU ARE NOT ON THE ROTA YET — please do not come along until somebody " +
         "has spoken to you.",
+        rows,
+        "Keep this email — the office will ask for the reference. If you change " +
+        "your mind, ring 01204 535 997. There is no obligation at all."),
+    };
+  }
+
+  if (e.kind === "vacancy_applied") {
+    const area = esc(categoryLabel(e.category));
+    const rows: [string, string][] = [
+      ["Area", `<strong>${area}</strong>`],
+      ["Reference", `<strong>${esc(ref)}</strong>`],
+    ];
+    return {
+      subject: ascii(`Thank you for registering your interest - ${ref}`),
+      html: shell(
+        "Thank you for your interest",
+        `The masjid has your details for <strong>${area}</strong>. ` +
+        "<strong>Nothing is open yet</strong> &mdash; the masjid will contact " +
+        "you if and when this area is actually advertised.",
+        rows,
+        "Keep this email &mdash; the office will ask for the reference above. " +
+        "If you change your mind, ring 01204&nbsp;535&nbsp;997 and we will take " +
+        "you off the list; there is no obligation at all."),
+      text: plain(
+        "Thank you for your interest",
+        `The masjid has your details for ${categoryLabel(e.category)}. NOTHING ` +
+        "IS OPEN YET — the masjid will contact you if and when this area is " +
+        "actually advertised.",
         rows,
         "Keep this email — the office will ask for the reference. If you change " +
         "your mind, ring 01204 535 997. There is no obligation at all."),
