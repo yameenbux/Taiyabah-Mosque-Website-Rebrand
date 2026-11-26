@@ -288,6 +288,38 @@
             </div>
           </div>
 
+          <!-- CHARGING ONE MEMBER, NOT THE REGISTER. "Raise the year's
+               charge" is the Ramadan ritual: one press charges everyone not
+               already charged. A member who walks in outside Ramadan wanting
+               to pay a year nobody has raised needed that same whole-register
+               press run just for them — there is nowhere to record a payment
+               against a year with no charge on it. This charges one person
+               alone, at the same rate the register uses for that year (or
+               sets it here, if this is the first charge anyone has had for
+               it) — nobody else on the register is touched. -->
+          <div class="fx-bk">
+            <h3>Charge this member for a year</h3>
+            <p class="fx-sub">For a year nobody has raised yet &mdash; a new member,
+               someone paying outside Ramadan, or a year being added late. Once
+               it is on their record below, record their payment against it.</p>
+            <form class="fx-form" id="mb-charge-form" novalidate>
+              <label class="fx-fld">
+                <span>Year</span>
+                <input type="number" id="mb-charge-year" inputmode="numeric" step="1">
+              </label>
+              <label class="fx-fld">
+                <span>Fee for that year</span>
+                <input type="text" id="mb-charge-fee" inputmode="decimal" placeholder="100.00">
+              </label>
+              <div class="wide">
+                <button type="submit" class="btn btn-ghost" id="mb-charge-go">Add the charge</button>
+              </div>
+            </form>
+            <p class="fx-note">This sets the official fee for that year &mdash; the same
+               figure &ldquo;Raise the year&rsquo;s charge&rdquo; would use for everyone
+               else charged for it from here on.</p>
+          </div>
+
           <!-- RECORDING A PAYMENT IS TWO TAPS, because most of the fee still
                arrives as cash across four weeks of Ramadan, and a form that
                takes six fields does not get used — the paper sheet gets used
