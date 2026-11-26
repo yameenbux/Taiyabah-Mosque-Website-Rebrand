@@ -87,15 +87,17 @@ MEMBER_ONE = {
 }
 
 
-def stub(roles, standalone=False, print_throws=False):
+def stub(roles, standalone=False, print_throws=False, raise_made=1):
     return """
 (function(){
   var ROLES = %s, OVERVIEW = %s, OWING_LIST = %s, MEMBER_ONE = %s;
   var PRINT_THROWS = %s;
+  var RAISE_MADE = %s;
   if (%s) {
     Object.defineProperty(window.navigator, 'standalone', {value: true, configurable: true});
   }
   window.__printCalls = [];
+  window.__rpcCalls = [];
   window.print = function(){
     var host = document.getElementById('mb-receipt-print');
     window.__printCalls.push({
@@ -130,11 +132,14 @@ def stub(roles, standalone=False, print_throws=False):
       return q;
     },
     rpc: function(name, args){
+      window.__rpcCalls.push({name: name, args: args});
       var D = {
         membership_overview:    OVERVIEW,
         membership_owing_list:  OWING_LIST,
         membership_one:         MEMBER_ONE,
-        membership_legacy:      {rows: []}
+        membership_legacy:      {rows: []},
+        membership_set_rate:    {ok: true, year: args && args.p_year, fee_p: args && args.p_fee_p},
+        membership_raise_year:  {ok: true, year: args && args.p_year, made: RAISE_MADE}
       };
       if (name in D) return Promise.resolve({data: D[name], error: null});
       return Promise.resolve({data: [], error: null});
@@ -145,14 +150,15 @@ def stub(roles, standalone=False, print_throws=False):
      writable:false, configurable:false});
 })();
 """ % (json.dumps(list(roles)), json.dumps(OVERVIEW), json.dumps(OWING_LIST), json.dumps(MEMBER_ONE),
-       json.dumps(bool(print_throws)), json.dumps(bool(standalone)))
+       json.dumps(bool(print_throws)), json.dumps(raise_made), json.dumps(bool(standalone)))
 
 
 def open_page(browser, roles=("admin",), width=1400, height=1100,
-              standalone=False, print_throws=False):
+              standalone=False, print_throws=False, raise_made=1):
     pg = browser.new_page(viewport={"width": width, "height": height})
     pg.set_default_timeout(7000)
-    pg.add_init_script(stub(roles, standalone=standalone, print_throws=print_throws))
+    pg.add_init_script(stub(roles, standalone=standalone, print_throws=print_throws,
+                             raise_made=raise_made))
     pg.goto(BASE + "/members/", wait_until="load")
     pg.wait_for_timeout(900)
     return pg
@@ -241,6 +247,80 @@ def run():
         check("the receipt sheet is invisible on screen again",
               pg.is_hidden("#mb-receipt-print"))
         pg.close()
+
+        # -------------------------- charging one member, not the register ----
+        #  The actual feature: a member who walks in outside Ramadan can be
+        #  charged for a year nobody has raised yet, without the office
+        #  running "Raise the year's charge" — the whole-register action —
+        #  just for them.
+        pg5 = open_page(b)
+        pg5.click(".mb-open")
+        pg5.wait_for_timeout(300)
+
+        check("the charge-year field defaults to the member's current year",
+              pg5.input_value("#mb-charge-year") == "2026",
+              pg5.input_value("#mb-charge-year"))
+        check("the charge-fee field starts empty",
+              pg5.input_value("#mb-charge-fee") == "")
+
+        # submitting with no fee must refuse before any RPC runs
+        pg5.click("#mb-charge-go")
+        pg5.wait_for_timeout(150)
+        check("an empty fee is refused with a message", pg5.is_visible("#fx-error"))
+        before = pg5.evaluate(
+            "window.__rpcCalls.filter(function(c){return c.name==='membership_raise_year';}).length")
+        check("no charge RPC ran for an empty fee", before == 0, before)
+
+        pg5.fill("#mb-charge-fee", "25.00")
+        pg5.click("#mb-charge-go")
+        pg5.wait_for_timeout(300)
+
+        rate_call = pg5.evaluate(
+            "window.__rpcCalls.find(function(c){return c.name==='membership_set_rate';})")
+        raise_call = pg5.evaluate(
+            "window.__rpcCalls.find(function(c){return c.name==='membership_raise_year' "
+            "&& c.args && c.args.p_member;})")
+        check("the year's fee is set before the charge is raised",
+              bool(rate_call) and rate_call["args"]["p_year"] == 2026
+              and rate_call["args"]["p_fee_p"] == 2500, rate_call)
+        check("the charge is raised for this member only, never the whole register",
+              bool(raise_call) and raise_call["args"]["p_year"] == 2026
+              and raise_call["args"]["p_member"] == "m1", raise_call)
+        check("a success message names the amount and the year",
+              pg5.is_visible("#fx-ok") and "£25.00" in pg5.inner_text("#fx-ok")
+              and "2026" in pg5.inner_text("#fx-ok"),
+              pg5.inner_text("#fx-ok") if pg5.is_visible("#fx-ok") else "hidden")
+        pg5.close()
+
+        # -------------------------------------------- already charged ----
+        pg6 = open_page(b, raise_made=0)
+        pg6.click(".mb-open")
+        pg6.wait_for_timeout(300)
+        pg6.fill("#mb-charge-fee", "25.00")
+        pg6.click("#mb-charge-go")
+        pg6.wait_for_timeout(300)
+        check("made:0 is reported as already charged, not as a second success",
+              pg6.is_visible("#fx-ok") and "already charged" in pg6.inner_text("#fx-ok"),
+              pg6.inner_text("#fx-ok") if pg6.is_visible("#fx-ok") else "hidden")
+        pg6.close()
+
+        # ------------------------------------------- bulk raise is unaffected ----
+        #  membership_raise_year({p_year}) with no p_member — the Ramadan
+        #  action — must still be able to run exactly as it always did.
+        pg7 = open_page(b)
+        pg7.click("#mb-raise-open")
+        pg7.wait_for_timeout(200)
+        pg7.fill("#mr-year", "2027")
+        pg7.fill("#mr-fee", "30.00")
+        pg7.once("dialog", lambda d: d.accept())
+        pg7.click("#mr-go")
+        pg7.wait_for_timeout(300)
+        bulk_call = pg7.evaluate(
+            "window.__rpcCalls.find(function(c){return c.name==='membership_raise_year' "
+            "&& c.args && c.args.p_year===2027;})")
+        check("the bulk raise still calls membership_raise_year with no p_member",
+              bool(bulk_call) and not bulk_call["args"].get("p_member"), bulk_call)
+        pg7.close()
 
         # -------------------------------- the iOS home-screen limitation ----
         #  Reported from a real phone: "nothing happens when I click it."

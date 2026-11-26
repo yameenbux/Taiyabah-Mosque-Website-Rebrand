@@ -242,6 +242,13 @@
     fillYearPickers(m);
     fillReceiptList(m);
     loadLegacy(m.id);
+
+    /*  Defaults to the year the register is actually on, which is the
+        ordinary case — someone paying late in the year it is, not a
+        backdated one. Still a plain number field, so the office can change
+        it to any year that needs catching up. */
+    el("mb-charge-year").value = m.current_year;
+    el("mb-charge-fee").value = "";
   }
 
   /*  THE OLD ACCOUNTS. A read-only history from the masjid's former QuickBooks
@@ -462,6 +469,41 @@
   /* ======================================================================
      WRITING
      ====================================================================== */
+
+  /*  CHARGING ONE MEMBER, NOT THE REGISTER. membership_raise_year() does
+      this too when given a member id — it is the exact same function and
+      the exact same rate "Raise the year's charge" uses, just scoped to one
+      person instead of everyone not yet charged. Nobody else on the
+      register is touched by this. */
+  function chargeMember(e) {
+    e.preventDefault();
+    clearNotes();
+    var year = parseInt(el("mb-charge-year").value, 10);
+    if (!year || year < 2000 || year > 2100) { say("fx-error", "Enter the year to charge, e.g. 2026."); return; }
+    var fee = pence(el("mb-charge-fee").value);
+    if (!fee || fee <= 0) { say("fx-error", "Enter the fee for that year, e.g. 100.00."); return; }
+
+    var btn = el("mb-charge-go");
+    btn.disabled = true;
+    rpc("membership_set_rate", { p_year: year, p_fee_p: fee, p_note: null })
+      .then(function () {
+        return rpc("membership_raise_year", { p_year: year, p_member: state.member.id });
+      })
+      .then(function (res) {
+        var made = (res && res.made) || 0;
+        var name = state.member.name;
+        /*  openMember() starts with its own clearNotes(), which would wipe
+            an "ok" message set before it — so the message is set AFTER it
+            resolves, once drawMember() is done touching the screen, not
+            before. */
+        return openMember(state.member.id).then(function () {
+          say("fx-ok", made === 0
+            ? (name + " was already charged for " + year + " — nothing to add.")
+            : (pounds(fee) + " added for " + year + ". Record their payment below."));
+        });
+      })["catch"](function (err) { say("fx-error", err.message); })
+      .then(function () { btn.disabled = false; });
+  }
 
   function recordPayment(e) {
     e.preventDefault();
@@ -767,6 +809,7 @@
     });
 
     el("mb-back").addEventListener("click", backToList);
+    el("mb-charge-form").addEventListener("submit", chargeMember);
     el("mb-pay-form").addEventListener("submit", recordPayment);
     el("mb-waive-form").addEventListener("submit", waiveYear);
     el("mb-csv").addEventListener("click", downloadCsv);
