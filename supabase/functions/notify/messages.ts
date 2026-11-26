@@ -1436,6 +1436,9 @@ export function staffInviteMessage(i: Invite): Message {
     "This link works <strong>once</strong> and stops working after 24 hours. " +
     "You will be asked to set up an authenticator app the first time you sign " +
     "in &mdash; you get nothing until you do, and that is deliberate.<br><br>" +
+    "Not seeing it in your inbox? Check your junk or spam folder &mdash; the " +
+    "first email from an address is the one most providers are least sure " +
+    "about.<br><br>" +
     "<strong>If you were not expecting this, do not use the link.</strong> " +
     "Ring the masjid on 01204&nbsp;535&nbsp;997 and say you received it.";
 
