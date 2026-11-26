@@ -5,8 +5,12 @@
 --  Asked for 26 November 2026, straight after the Vacancies page itself: a
 --  page that invites somebody to apply is not finished until there is
 --  somewhere for what they typed to go. Same mistake this repo has made
---  before — see db/023's header — so this follows that file's shape on
---  purpose rather than inventing a second one.
+--  before — see db/023's header — so this follows the CURRENT shape of that
+--  table, not its original 12 September one: db/023 predates masjid_id,
+--  masjid_or_sole(), the reference sequence and notify_the_office(), all of
+--  which foodbank_volunteers has gained since. Writing against the migration
+--  file instead of the live schema would have shipped a table already a
+--  generation out of date.
 --
 --  WHAT THIS TABLE HOLDS AND WHY EACH FIELD IS HERE. Under Article 5(1)(c)
 --  every field needs a reason, and "it was on the form" is not one:
@@ -37,8 +41,9 @@
 --  No role is live yet (see index_template.html's svc-vacancies page) — this
 --  exists so the form has somewhere to write the moment one is.
 --
---  Prerequisites: 011 (verified_admin), and admin_audit.
---  Idempotent — safe to run twice.
+--  Prerequisites: 011 (verified_admin, is_aal2/is_admin), 140 (notify_the_office,
+--  current_masjid, masjid_or_sole), 037 (rate_limit_by_contact), 171
+--  (sole_masjid, masjids_to_purge). Idempotent — safe to run twice.
 --
 --  *** STANDING RULE: re-run 011_require_two_step.sql after this. ***
 -- ===========================================================================
@@ -53,6 +58,17 @@ begin
   if to_regclass('public.admin_audit') is null then
     raise exception 'public.admin_audit does not exist. Run the earlier migrations first.';
   end if;
+  if to_regprocedure('public.notify_the_office()') is null then
+    raise exception 'public.notify_the_office() does not exist. Run 140_every_function_has_a_source.sql first.';
+  end if;
+  if to_regprocedure('public.rate_limit_by_contact()') is null then
+    raise exception 'public.rate_limit_by_contact() does not exist. Run 037_rate_limit_every_public_form.sql first.';
+  end if;
+  if to_regprocedure('public.masjid_or_sole(text)') is null
+     or to_regprocedure('public.current_masjid()') is null
+     or to_regprocedure('public.masjids_to_purge()') is null then
+    raise exception 'The multi-masjid helpers do not exist. Run the masjid-platform migrations first.';
+  end if;
 end $$;
 
 
@@ -61,6 +77,7 @@ end $$;
 -- ---------------------------------------------------------------------------
 create table if not exists public.vacancy_applications (
   id                uuid primary key default gen_random_uuid(),
+  masjid_id         uuid        not null references public.masjids(id),
   reference         text        not null unique,
 
   full_name         text        not null,
@@ -116,19 +133,27 @@ end $$;
 create index if not exists va_created_idx  on public.vacancy_applications (created_at desc);
 create index if not exists va_status_idx   on public.vacancy_applications (status);
 create index if not exists va_category_idx on public.vacancy_applications (category);
+create index if not exists va_masjid_idx   on public.vacancy_applications (masjid_id);
 
 comment on table public.vacancy_applications is
   'People who have applied through the Vacancies page, before any role is actually advertised. Deleted twelve months after applying — see purge_old_vacancy_applications().';
+
+--  FV-26-0001 used count(*) + 1 and db/023 has since replaced that with a
+--  sequence, because count(*) + 1 is not safe under two concurrent
+--  applications — both can read the same count before either inserts, and
+--  one reference gets handed to two people. Starting here with the fix
+--  already applied, not with the bug db/023 had to be corrected out of.
+create sequence if not exists public.vacancy_application_reference_seq;
 
 
 -- ---------------------------------------------------------------------------
 --  2. Row level security
 --
---  Nobody reads this table without being signed in, verified at aal2, and
---  holding admin. It is a list of names, phone numbers and email addresses of
---  people applying to work or volunteer for the masjid; there is no version
---  of "public" that is right, and it is not the hall office's to read either
---  (see the header above).
+--  Nobody reads this table without being signed in, verified at aal2, holding
+--  admin, AND acting for the masjid the row belongs to. It is a list of
+--  names, phone numbers and email addresses of people applying to work or
+--  volunteer for the masjid; there is no version of "public" that is right,
+--  and it is not the hall office's to read either (see the header above).
 --
 --  There is no INSERT policy at all. The public writes through the function
 --  in section 3 and nowhere else, so the shape of what can be written is
@@ -141,11 +166,11 @@ drop policy if exists va_read   on public.vacancy_applications;
 drop policy if exists va_update on public.vacancy_applications;
 
 create policy va_read on public.vacancy_applications
-  for select using (public.verified_admin());
+  for select using (public.verified_admin() and masjid_id = public.current_masjid());
 
 create policy va_update on public.vacancy_applications
-  for update using (public.verified_admin())
-          with check (public.verified_admin());
+  for update using (public.verified_admin() and masjid_id = public.current_masjid())
+          with check (public.verified_admin() and masjid_id = public.current_masjid());
 
 --  Supabase grants ALL on a new table in public to both anon and
 --  authenticated by default, so "grant select, update" ADDS to that rather
@@ -175,6 +200,7 @@ security definer
 set search_path = public, pg_temp
 as $$
 declare
+  v_masjid   uuid := public.masjid_or_sole(payload->>'masjid');
   v_name     text := btrim(coalesce(payload->>'full_name', ''));
   v_phone    text := btrim(coalesce(payload->>'phone', ''));
   v_email    text := nullif(btrim(lower(coalesce(payload->>'email', ''))), '');
@@ -212,8 +238,9 @@ begin
   --  Matched on phone first because that is the field everybody fills in.
   select * into v_existing
     from public.vacancy_applications
-   where regexp_replace(phone, '\D', '', 'g') = regexp_replace(v_phone, '\D', '', 'g')
-      or lower(email) = v_email
+   where masjid_id = v_masjid
+     and (regexp_replace(phone, '\D', '', 'g') = regexp_replace(v_phone, '\D', '', 'g')
+       or lower(email) = v_email)
    order by created_at
    limit 1;
 
@@ -222,20 +249,21 @@ begin
        set full_name = v_name,
            email      = v_email,
            category   = v_category,
-           message     = coalesce(v_message, message)
+           message    = coalesce(v_message, message)
      where id = v_existing.id;
 
     return jsonb_build_object('reference', v_existing.reference, 'already', true);
   end if;
 
-  --  VA-26-0001. The year is the masjid's own reference, not a key.
+  --  VA-26-0001, from a sequence rather than count(*) + 1 — see the comment
+  --  on vacancy_application_reference_seq above for why that matters.
   v_ref := 'VA-' || to_char(now(), 'YY') || '-' ||
-           lpad((select count(*) + 1 from public.vacancy_applications)::text, 4, '0');
+           lpad(nextval('public.vacancy_application_reference_seq')::text, 4, '0');
 
   insert into public.vacancy_applications
-    (reference, full_name, phone, email, category, message, consent)
+    (masjid_id, reference, full_name, phone, email, category, message, consent)
   values
-    (v_ref, v_name, v_phone, v_email, v_category, v_message, v_consent);
+    (v_masjid, v_ref, v_name, v_phone, v_email, v_category, v_message, v_consent);
 
   return jsonb_build_object('reference', v_ref, 'already', false);
 end $$;
@@ -244,6 +272,26 @@ grant execute on function public.apply_for_vacancy(jsonb) to anon, authenticated
 
 comment on function public.apply_for_vacancy(jsonb) is
   'The only way the public can write to vacancy_applications. Refuses rows without consent or an unknown category.';
+
+--  THE OFFICE IS TOLD. notify_the_office() reads new.masjid_id to find this
+--  masjid's own notify_url/notify_key/notify_secret in app_settings, then
+--  POSTs {type, table, record} at the notify Edge Function — the same
+--  shape index.ts's toEvent() already reads for charity_collections,
+--  admission_applications and course_registrations. messages.ts needs a
+--  `vacancy_applied` branch to actually render it; see notify's own commit.
+--
+--  Rate limited the same way every other public form on this site is: three
+--  from the same phone or email in a day is a glitch or a bot, not three
+--  genuine applicants from one household.
+drop trigger if exists notify_the_office_trg on public.vacancy_applications;
+create trigger notify_the_office_trg
+  after insert on public.vacancy_applications
+  for each row execute function public.notify_the_office();
+
+drop trigger if exists vacancy_applications_rate_limit_trg on public.vacancy_applications;
+create trigger vacancy_applications_rate_limit_trg
+  before insert on public.vacancy_applications
+  for each row execute function public.rate_limit_by_contact('phone', 'email', 'created_at', '3');
 
 
 -- ---------------------------------------------------------------------------
@@ -271,6 +319,7 @@ as $$
            'event_management',    count(*) filter (where category = 'event_management' and status <> 'declined'))
          end
     from public.vacancy_applications
+   where masjid_id = public.current_masjid()
 $$;
 
 revoke all     on function public.vacancy_application_summary() from public, anon;
@@ -283,6 +332,7 @@ language plpgsql
 security definer
 set search_path = public, pg_temp
 as $$
+declare v_masjid uuid := public.current_masjid();
 begin
   if not public.verified_admin() then
     raise exception 'Not allowed' using errcode = '42501';
@@ -296,14 +346,14 @@ begin
          note         = coalesce(nullif(btrim(coalesce(p_note, '')), ''), note),
          contacted_at = case when p_status = 'waiting' then contacted_at else now() end,
          contacted_by = case when p_status = 'waiting' then contacted_by else auth.uid() end
-   where reference = p_reference;
+   where reference = p_reference and masjid_id = v_masjid;
 
   if not found then
     raise exception 'No application with reference %', p_reference using errcode = 'no_data_found';
   end if;
 
-  insert into public.admin_audit (action, detail)
-  values ('vacancy_application_status', jsonb_build_object(
+  insert into public.admin_audit (masjid_id, actor, action, detail)
+  values (v_masjid, auth.uid(), 'vacancy_application_status', jsonb_build_object(
             'reference', p_reference, 'status', p_status, 'by', auth.uid()));
 end $$;
 
@@ -320,11 +370,11 @@ grant  execute on function public.set_vacancy_application_status(text, text, tex
 --  cites for what happens when a promise like that depends on somebody
 --  remembering.
 --
---  No admin check here, deliberately, for the reason db/023 sets out at
---  length: pg_cron holds no JWT, auth.uid() is null, and a purge that checks
---  for an administrator would raise every night and delete nothing. Access is
---  controlled by the revoke below, which is the right tool for a job that
---  nobody signs in to do.
+--  LOOPS OVER masjids_to_purge() rather than one global DELETE, the same
+--  fix purge_old_volunteers() has since gained: with auth.uid() null (the
+--  cron job) it purges every masjid; signed in, it purges only the one
+--  current_masjid() resolves to, and refuses a signed-in non-admin outright
+--  rather than silently deleting nothing.
 -- ---------------------------------------------------------------------------
 create or replace function public.purge_old_vacancy_applications(dry_run boolean default false)
 returns jsonb
@@ -332,25 +382,37 @@ language plpgsql
 security definer
 set search_path = public, pg_temp
 as $$
-declare v_n int;
+declare v_m uuid; v_n int; v_total int := 0;
 begin
+  if auth.uid() is not null and not public.verified_admin() then
+    raise exception 'Only an administrator who has completed two-step may purge vacancy applications.'
+      using errcode = '42501';
+  end if;
+
+  for v_m in select * from public.masjids_to_purge() loop
+    if dry_run then
+      select count(*) into v_n from public.vacancy_applications
+       where masjid_id = v_m and created_at < now() - interval '12 months';
+      v_total := v_total + v_n;
+      continue;
+    end if;
+
+    delete from public.vacancy_applications
+     where masjid_id = v_m and created_at < now() - interval '12 months';
+    get diagnostics v_n = row_count;
+
+    if v_n > 0 then
+      insert into public.admin_audit (masjid_id, action, detail)
+      values (v_m, 'vacancy_applications_purged', jsonb_build_object('deleted', v_n));
+    end if;
+
+    v_total := v_total + v_n;
+  end loop;
+
   if dry_run then
-    select count(*) into v_n
-      from public.vacancy_applications
-     where created_at < now() - interval '12 months';
-    return jsonb_build_object('would_delete', v_n, 'dry_run', true);
+    return jsonb_build_object('would_delete', v_total, 'dry_run', true);
   end if;
-
-  delete from public.vacancy_applications
-   where created_at < now() - interval '12 months';
-  get diagnostics v_n = row_count;
-
-  if v_n > 0 then
-    insert into public.admin_audit (action, detail)
-    values ('vacancy_applications_purged', jsonb_build_object('deleted', v_n));
-  end if;
-
-  return jsonb_build_object('deleted', v_n, 'dry_run', false);
+  return jsonb_build_object('deleted', v_total, 'dry_run', false);
 end $$;
 
 revoke all on function public.purge_old_vacancy_applications(boolean) from public, anon, authenticated;
@@ -379,9 +441,9 @@ select cron.schedule('purge-vacancy-applications', '27 3 * * *',
 --        "category":"administration"}'::jsonb);                  -- no consent
 --
 --    insert into public.vacancy_applications
---      (reference, full_name, phone, email, category, consent)
---    values ('VA-TEST-X','No Consent','07700900001','a@example.com',
---            'administration', false);
+--      (masjid_id, reference, full_name, phone, email, category, consent)
+--    values (public.sole_masjid(), 'VA-TEST-X','No Consent','07700900001',
+--            'a@example.com', 'administration', false);
 --
 --  And this must return nothing at all when signed out:
 --
