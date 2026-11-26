@@ -4403,8 +4403,94 @@ window.TAIYABAH_PUBLIC = {
         </div>
       </div>
       <div class="cs-cta" style="margin-top:30px;">
-        <a class="btn btn-gold" data-nav="contact">Register your interest</a>
+        <a class="btn btn-gold" data-nav="svc-vacancies" data-scroll-to="va-card">Register your interest</a>
         <a class="btn btn-ghost-light" data-nav="services">All Services</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ THE APPLICATION FORM, db/176_vacancy_applications.sql ====
+       EVERY FIELD HERE HAS A REASON, same rule as the volunteer form above
+       it on this site: full_name/phone/email because that is how the office
+       gets back to somebody, category because it is a CHECK constraint in
+       176 matched against these same four tiles, message because the
+       categories are broad plans rather than job specs with questions to
+       answer, consent because applying is voluntary and must stay refusable.
+
+       The checks below are for the person filling the form in, NOT for the
+       database — everything that matters is a constraint in 176 as well,
+       because the anon key is in this page's source and anybody can post
+       straight at the API. ====================================== -->
+  <section class="page-body">
+    <div class="container">
+      <div class="svc-split is-rail">
+        <div class="svc-detail-facts">
+          <div class="subhead"><h3 style="font-size:1.15rem;">Before you apply</h3><span class="rule"></span></div>
+          <div class="soon-list">
+            <div class="soon-row"><span class="t">Right now</span><span style="font-weight:700;">Nothing is open</span></div>
+            <div class="soon-row"><span class="t">When a role opens</span><span style="font-weight:700;">The office contacts you</span></div>
+            <div class="soon-row"><span class="t">Your details are kept</span><span style="font-weight:700;">12 months</span></div>
+          </div>
+          <p style="font-size:.943rem;color:var(--muted);margin-top:12px;line-height:1.7;">
+            The masjid will contact you about the area you choose and nothing else.
+            Your details are deleted twelve months after you apply, automatically.
+            You can ask to be taken off the list at any time &mdash;
+            ring the office on <a href="tel:01204535997" style="color:var(--brand-700);font-weight:600;">01204&nbsp;535&nbsp;997</a>
+            or see the <a href="#" data-nav="privacy" style="color:var(--brand-700);font-weight:600;">privacy notice</a>.
+          </p>
+        </div>
+
+        <div class="svc-aside">
+          <div class="cform" id="va-card">
+            <p class="cform-lead">It takes a minute. Nothing is sent until you press the button.</p>
+
+            <form id="va-form" novalidate autocomplete="on">
+              <div class="hp-trap" aria-hidden="true"><label for="va-web">Leave empty</label>
+                <input type="text" id="va-web" tabindex="-1" autocomplete="off"></div>
+
+              <div class="cf-row" id="vaw_name"><label for="va-name">Name</label>
+                <input type="text" id="va-name" autocomplete="name" maxlength="80">
+                <div class="hf-err">Please give your name.</div></div>
+
+              <div class="cf-row" id="vaw_phone"><label for="va-phone">Contact number</label>
+                <input type="tel" id="va-phone" autocomplete="tel" maxlength="24" inputmode="tel">
+                <div class="hf-err">Please give a number the masjid can reach you on.</div></div>
+
+              <div class="cf-row" id="vaw_email"><label for="va-email">Email</label>
+                <input type="email" id="va-email" autocomplete="email" maxlength="120">
+                <div class="hf-err">Please give an email address the masjid can reply to.</div></div>
+
+              <div class="cf-row" id="vaw_category"><label>Which area?</label>
+                <div class="yn2">
+                  <label><input type="radio" name="va-category" value="administration"> Administration</label>
+                  <label><input type="radio" name="va-category" value="education"> Education</label>
+                  <label><input type="radio" name="va-category" value="community_outreach"> Community Outreach</label>
+                  <label><input type="radio" name="va-category" value="event_management"> Event Management</label>
+                </div>
+                <div class="hf-err">Please choose one of the areas above.</div></div>
+
+              <div class="cf-row"><label for="va-message">A bit about you <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
+                <textarea id="va-message" rows="3" maxlength="800" placeholder="Relevant experience, or why this area interests you&hellip;"></textarea></div>
+
+              <label class="declare2" id="vaw_consent"><input type="checkbox" id="va-consent">
+                <span>I am happy for Taiyabah Masjid to keep my details for up to twelve
+                  months and to contact me about this area. I can ask to be removed
+                  at any time.</span></label>
+
+              <div class="ar-problems" id="va-problems" role="alert" aria-live="polite"></div>
+
+              <button type="submit" class="btn btn-gold cf-submit" id="va-submit">Register your interest</button>
+              <p class="cf-note">Nothing is sent until you press this. Questions? Ring
+                <a href="tel:01204535997">01204 535 997</a>, 5pm&ndash;7pm.</p>
+            </form>
+
+            <div class="ar-done" id="va-done">
+              <h4 id="va-doneH">&nbsp;</h4>
+              <p id="va-doneP">&nbsp;</p>
+              <div class="ar-ref" id="va-doneRef">&mdash;</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -8012,6 +8098,139 @@ window.TAIYABAH_PUBLIC = {
           : null;
         problems([friendly ||
           'We could not register you just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
+      });
+    });
+  })();
+
+  /* ---------------- Applying for a role on the Vacancies page --------------
+     Migration 176. None of these roles are open — this is the same pattern
+     as registering to help at the food bank, just above: a list for the
+     office to work from once something is actually advertised.
+
+     EVERYTHING CHECKED HERE IS ALSO CHECKED IN THE DATABASE. The anon key is
+     in this page's source and anybody can post straight at apply_for_vacancy
+     with whatever they like, so consent, a usable contact number and a known
+     category are CHECK constraints in 176 as well. What is below exists to
+     tell a real person what is missing before they press the button — not to
+     protect the table.
+
+     The honeypot and the two-second trap are the same pair the food bank form
+     above uses, in the same order, for the same reason. -------------------- */
+  (function(){
+    var form = document.getElementById('va-form');
+    if(!form) return;
+
+    var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    var CATEGORIES = ['administration', 'education', 'community_outreach', 'event_management'];
+    var loadedAt = Date.now();
+    var $ = function(id){ return document.getElementById(id); };
+    function val(id){ return (($(id) || {}).value || '').trim(); }
+    function picked(name){
+      var el = form.querySelector('input[name="' + name + '"]:checked');
+      return el ? el.value : '';
+    }
+    function mark(row, bad){ var el = $(row); if(el) el.classList.toggle('bad', !!bad); }
+    function problems(list){
+      var box = $('va-problems');
+      box.innerHTML = list.map(function(m){
+        return '• ' + m.replace(/[<>&]/g, function(c){
+          return ({'<':'&lt;','>':'&gt;','&':'&amp;'})[c]; });
+      }).join('<br>');
+      box.classList.add('on');
+      box.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      $('va-problems').classList.remove('on');
+
+      /* Honeypot first, then the clock — checked BEFORE the real validation,
+         so a bot never learns which field it got wrong. */
+      if(val('va-web') !== '' || (Date.now() - loadedAt) < 2000){
+        form.style.display = 'none';
+        $('va-done').classList.add('on');
+        $('va-doneH').textContent = 'Thank you';
+        $('va-doneP').textContent = '';
+        $('va-doneRef').textContent = '—';
+        return;
+      }
+
+      var bad = [];
+      var name = val('va-name'), phone = val('va-phone'), email = val('va-email');
+      var category = picked('va-category');
+      var message = val('va-message');
+      var consent = $('va-consent').checked;
+
+      mark('vaw_name', name.length < 2);
+      if(name.length < 2) bad.push('Please give your name.');
+
+      var digits = phone.replace(/\D/g, '');
+      mark('vaw_phone', digits.length < 10);
+      if(digits.length < 10) bad.push('Please give a contact number the masjid can reach you on.');
+
+      var badEmail = !EMAIL.test(email);
+      mark('vaw_email', badEmail);
+      if(badEmail) bad.push('Please give an email address the masjid can reply to.');
+
+      mark('vaw_category', !category);
+      if(!category) bad.push('Please choose one of the areas above.');
+
+      mark('vaw_consent', !consent);
+      if(!consent) bad.push('The masjid cannot keep your details without your agreement.');
+
+      if(bad.length){ problems(bad); return; }
+
+      var btn = $('va-submit');
+      btn.disabled = true; btn.textContent = 'Sending…';
+
+      var cfg = window.TAIYABAH_PUBLIC || {};
+      if(!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY ||
+         String(cfg.SUPABASE_URL).indexOf('PASTE_') !== -1){
+        btn.disabled = false; btn.textContent = 'Register your interest';
+        problems(['Registering online is not connected yet. Please ring the office on 01204 535 997 between 5pm and 7pm.']);
+        return;
+      }
+
+      var apiBase = String(cfg.SUPABASE_URL).trim()
+                      .replace(/\/+$/, '').replace(/\/rest\/v1$/, '');
+
+      fetch(apiBase + '/rest/v1/rpc/apply_for_vacancy', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json',
+                  'apikey': cfg.SUPABASE_ANON_KEY,
+                  'Authorization':'Bearer ' + cfg.SUPABASE_ANON_KEY },
+        body: JSON.stringify({ payload:{
+          masjid: cfg.MASJID,
+          full_name: name, phone: phone, email: email,
+          category: category, message: message,
+          /* The CHECKBOX, not a literal true — see the food bank form above
+             for why that distinction is load-bearing, not stylistic. */
+          consent: consent
+        }})
+      })
+      .then(function(r){ return r.text().then(function(t){ return { ok:r.ok, body:t }; }); })
+      .then(function(res){
+        if(!res.ok) throw new Error(res.body);
+        var d = JSON.parse(res.body);
+        form.style.display = 'none';
+        $('va-done').classList.add('on');
+        $('va-doneH').textContent = d.already
+          ? 'You have already registered'
+          : 'Jazakallah — you are on the list';
+        $('va-doneP').textContent = d.already
+          ? 'We already had your details, so nothing has been added twice. What you have just told us has been updated.'
+          : 'There is nothing to do now. The masjid will contact you if this area opens up.';
+        $('va-doneRef').textContent = d.reference || '—';
+        $('va-done').scrollIntoView({ behavior:'smooth', block:'center' });
+      })
+      .catch(function(err){
+        btn.disabled = false; btn.textContent = 'Register your interest';
+        var m = String(err.message || '');
+        var friendly = /your agreement|reach you on|your name|reply to|areas above/.test(m)
+          ? (m.match(/"message":"([^"]+)"/) || [null, null])[1] || null
+          : null;
+        problems([friendly ||
+          'We could not register your interest just now. Please try again, or ring the office on 01204 535 997 between 5pm and 7pm.']);
       });
     });
   })();
