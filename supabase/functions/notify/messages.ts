@@ -76,6 +76,12 @@ export interface Event {
   // office reads it on the vacancy_applications screen.
   category?: string | null;       // which of the four Vacancies tiles
 
+  // db/177 — set only when this came from apply_for_vacancy_role() against
+  // an actual posted, open vacancy; null for the 176 interest form above.
+  // A snapshot of the role's title at the moment of applying, not a live
+  // lookup — see vacancy_applications.role_title's own comment for why.
+  role_title?: string | null;
+
   // A charity collection (chanda). The trustee's name and number are NOT
   // here, and there is deliberately no field for them: the office rings the
   // trustee from the portal, where the outcome gets recorded anyway, and a
@@ -871,6 +877,42 @@ export function officeMessage(e: Event): Message | null {
   }
 
   if (e.kind === "vacancy_applied") {
+    //  db/177 — a real application against a posted, open role reads
+    //  completely differently from the 176 interest form: a role title
+    //  exists, a CV is attached, and the office DOES have something to do
+    //  today. Telling the two apart by e.role_title is the whole change —
+    //  nothing about the interest-form copy below it has moved.
+    if (e.role_title) {
+      const rows: [string, string][] = [
+        ["Name", `<strong>${esc(e.name ?? "")}</strong>`],
+        ["Phone", phoneCell],
+        ["Role", `<strong>${esc(e.role_title)}</strong>`],
+        ["Area", esc(categoryLabel(e.category))],
+        ["Reference", esc(ref)],
+      ];
+      return {
+        subject: ascii(`ATTENTION REQUIRED: application for ${e.role_title} - ${ref}`),
+        html: shell(
+          "A full application has come in",
+          `Somebody has applied for <strong>${esc(e.role_title)}</strong>, ` +
+          "with a CV attached. <strong>What they wrote about themselves is " +
+          "not in this email</strong> and is in the portal instead, along " +
+          "with the CV itself.",
+          rows,
+          "Open the portal to read the application, download the CV, and " +
+          "mark them contacted, shortlisted or declined.",
+          e.portal ? { href: e.portal, label: "Open the portal" } : undefined),
+        text: plain(
+          "A full application has come in",
+          `Somebody has applied for ${e.role_title}, with a CV attached. ` +
+          "WHAT THEY WROTE ABOUT THEMSELVES IS NOT IN THIS EMAIL and is in " +
+          "the portal instead, along with the CV itself.",
+          rows,
+          "Open the portal to read the application and download the CV.",
+          e.portal ?? undefined),
+      };
+    }
+
     const rows: [string, string][] = [
       ["Name", `<strong>${esc(e.name ?? "")}</strong>`],
       ["Phone", phoneCell],
@@ -879,9 +921,10 @@ export function officeMessage(e: Event): Message | null {
     ];
     return {
       // Informational, same reasoning as admission_requested and
-      // course_registered: nothing here needs acting on today, and reserving
-      // ATTENTION REQUIRED for the two subjects that genuinely need it is
-      // what keeps those words meaning something.
+      // course_registered: nothing here needs acting on today — unlike the
+      // role_title branch just above, where a CV has actually arrived
+      // against an open role. Reserving ATTENTION REQUIRED for subjects
+      // that genuinely need it is what keeps those words meaning something.
       subject: ascii(`Vacancy application - ${categoryLabel(e.category)} - ${ref}`),
       html: shell(
         "Somebody has applied for a role",
@@ -1393,6 +1436,36 @@ export function publicMessage(e: Event): Message | null {
   }
 
   if (e.kind === "vacancy_applied") {
+    //  db/177 — the same split as officeMessage(): a real application
+    //  against a posted role gets its own confirmation, because telling
+    //  somebody who attached a CV to a specific role that "nothing is open
+    //  yet" would be wrong, not just unhelpful.
+    if (e.role_title) {
+      const role = esc(e.role_title);
+      const rows: [string, string][] = [
+        ["Role", `<strong>${role}</strong>`],
+        ["Reference", `<strong>${esc(ref)}</strong>`],
+      ];
+      return {
+        subject: ascii(`Your application for ${e.role_title} - ${ref}`),
+        html: shell(
+          "Thank you for your application",
+          `The masjid has received your application for <strong>${role}</strong>, ` +
+          "with your CV. Somebody will be in touch if you are shortlisted.",
+          rows,
+          "Keep this email &mdash; the office will ask for the reference " +
+          "above. If you want to withdraw your application, ring " +
+          "01204&nbsp;535&nbsp;997."),
+        text: plain(
+          "Thank you for your application",
+          `The masjid has received your application for ${e.role_title}, with ` +
+          "your CV. Somebody will be in touch if you are shortlisted.",
+          rows,
+          "Keep this email — the office will ask for the reference. If you " +
+          "want to withdraw your application, ring 01204 535 997."),
+      };
+    }
+
     const area = esc(categoryLabel(e.category));
     const rows: [string, string][] = [
       ["Area", `<strong>${area}</strong>`],
