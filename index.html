@@ -2055,6 +2055,9 @@ window.TAIYABAH_PUBLIC = {
   .vac-tile .vt-h{font-family:"Fraunces","Fraunces fallback",serif;font-weight:600;font-size:1.166rem;
     color:var(--ink);line-height:1.25;margin:2px 0 1px;}
   .vac-tile .vt-p{font-size:.977rem;line-height:1.6;color:var(--muted);}
+  .vac-tile.is-open{opacity:1;cursor:pointer;transition:transform .15s,border-color .15s;}
+  .vac-tile.is-open:hover{transform:translateY(-2px);border-color:var(--gold);}
+  .vac-tile.is-open .vt-tag{color:var(--gold);}
   /* ---- Education / Arabic class registration ---------------------------- */
   .cf-two{display:grid;gap:0 14px;grid-template-columns:1fr;}
   @media(min-width:560px){ .cf-two{grid-template-columns:1fr 1fr;} }
@@ -4210,7 +4213,8 @@ window.TAIYABAH_PUBLIC = {
         <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;max-width:62ch;">None of the roles below are open positions yet &mdash; they are the areas the committee expects to need help with as the masjid modernises. If one sounds like you, let the office know now and you'll be among the first told when it is actually advertised.</p>
         <div class="vac-grid" style="margin-top:22px;">
 
-          <div class="vac-tile is-soon">
+          
+          <div class="vac-tile is-soon" data-vac-cat="administration">
             <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.5a1 1 0 011-1h4a1 1 0 011 1V4"/><path d="M9 11h6M9 15h4"/></svg></span></span>
             <span class="vt-body">
               <span class="vt-tag">Coming soon</span>
@@ -4219,7 +4223,7 @@ window.TAIYABAH_PUBLIC = {
             </span>
           </div>
 
-          <div class="vac-tile is-soon">
+          <div class="vac-tile is-soon" data-vac-cat="education">
             <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/></svg></span></span>
             <span class="vt-body">
               <span class="vt-tag">Coming soon</span>
@@ -4228,7 +4232,7 @@ window.TAIYABAH_PUBLIC = {
             </span>
           </div>
 
-          <div class="vac-tile is-soon">
+          <div class="vac-tile is-soon" data-vac-cat="community_outreach">
             <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span></span>
             <span class="vt-body">
               <span class="vt-tag">Coming soon</span>
@@ -4237,7 +4241,7 @@ window.TAIYABAH_PUBLIC = {
             </span>
           </div>
 
-          <div class="vac-tile is-soon">
+          <div class="vac-tile is-soon" data-vac-cat="event_management">
             <span class="vt-media"><span class="vt-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12"/><path d="M4 21h16"/><path d="M10 21v-6h4v6"/></svg></span></span>
             <span class="vt-body">
               <span class="vt-tag">Coming soon</span>
@@ -4303,6 +4307,14 @@ window.TAIYABAH_PUBLIC = {
                   <label><input type="radio" name="va-category" value="event_management"> Event Management</label>
                 </div>
                 <div class="hf-err">Please choose one of the areas above.</div></div>
+
+              
+              <div class="cf-row" id="vaw_member"><label>Are you, or an immediate family member, a member of the masjid?</label>
+                <div class="yn2">
+                  <label><input type="radio" name="va-member" value="yes"> Yes</label>
+                  <label><input type="radio" name="va-member" value="no"> No</label>
+                </div>
+                <div class="hf-err">Positions can only be offered to a masjid member, or an immediate family member of one.</div></div>
 
               <div class="cf-row"><label for="va-message">A bit about you <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
                 <textarea id="va-message" rows="3" maxlength="800" placeholder="Relevant experience, or why this area interests you&hellip;"></textarea></div>
@@ -8249,6 +8261,7 @@ window.TAIYABAH_PUBLIC = {
       var bad = [];
       var name = val('va-name'), phone = val('va-phone'), email = val('va-email');
       var category = picked('va-category');
+      var member = picked('va-member');
       var message = val('va-message');
       var consent = $('va-consent').checked;
 
@@ -8265,6 +8278,9 @@ window.TAIYABAH_PUBLIC = {
 
       mark('vaw_category', !category);
       if(!category) bad.push('Please choose one of the areas above.');
+
+      mark('vaw_member', member !== 'yes');
+      if(member !== 'yes') bad.push('Positions can only be offered to a masjid member, or an immediate family member of one.');
 
       mark('vaw_consent', !consent);
       if(!consent) bad.push('The masjid cannot keep your details without your agreement.');
@@ -8294,6 +8310,7 @@ window.TAIYABAH_PUBLIC = {
           masjid: cfg.MASJID,
           full_name: name, phone: phone, email: email,
           category: category, message: message,
+          is_member_or_family: member === 'yes',
           /* The CHECKBOX, not a literal true — see the food bank form above
              for why that distinction is load-bearing, not stylistic. */
           consent: consent
@@ -8317,7 +8334,7 @@ window.TAIYABAH_PUBLIC = {
       .catch(function(err){
         btn.disabled = false; btn.textContent = 'Register your interest';
         var m = String(err.message || '');
-        var friendly = /your agreement|reach you on|your name|reply to|areas above/.test(m)
+        var friendly = /your agreement|reach you on|your name|reply to|areas above|immediate family member/.test(m)
           ? (m.match(/"message":"([^"]+)"/) || [null, null])[1] || null
           : null;
         problems([friendly ||
@@ -8325,6 +8342,11 @@ window.TAIYABAH_PUBLIC = {
       });
     });
   })();
+
+  </script>
+  
+  <script src="vacancy-apply.js" defer></script>
+  <script>
 
   /* ---------------- Paying the nikāḥ fee online ----------------------------
      Migration 018. A way to PAY, not a way to BOOK.
