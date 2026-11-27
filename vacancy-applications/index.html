@@ -26,6 +26,13 @@
     --shadow:0 1px 2px rgba(60,11,42,.05), 0 8px 24px -16px rgba(60,11,42,.28);
   }
   *{box-sizing:border-box;margin:0;padding:0;}
+  /* Author CSS always beats the UA stylesheet regardless of specificity, so
+     a plain `form{display:flex}` below silently cancels the `hidden`
+     attribute on #vac-form — found by db/177's own New Vacancy form being
+     the first thing on this page to toggle `hidden` directly on a <form>
+     rather than on an ancestor <div>. !important is what CLAUDE.md asks
+     every stylesheet to open with, and the reason is exactly this. */
+  [hidden]{display:none !important;}
   html,body{min-height:100%;}
   body{
     font-family:"Hanken Grotesk", system-ui, -apple-system, sans-serif;
@@ -91,12 +98,13 @@
   form{display:flex;flex-direction:column;gap:16px;}
   .field{display:flex;flex-direction:column;gap:7px;}
   label{font-size:.88rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
-  input[type=email],input[type=password],input[type=text]{
+  input[type=email],input[type=password],input[type=text],input[type=date],textarea{
     font-family:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);
     border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;transition:.18s ease;
   }
-  input::placeholder{color:#A99CA4;}
-  input:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
+  textarea{resize:vertical;min-height:72px;}
+  input::placeholder,textarea::placeholder{color:#A99CA4;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(198,162,76,.18);}
   .pw{position:relative;display:flex;}
   .pw input{padding-right:62px;}
   .pw button{
@@ -382,6 +390,69 @@
         decision, not the hall office&rsquo;s. If you need access, ask the
         masjid administrator.
       </div>
+
+      <!-- db/177 — posting a real vacancy to the live site. Separate from
+           va-panel below: that list is who has applied, this is what is
+           actually open for them to apply to. -->
+      <section class="bk" id="vac-panel" hidden>
+        <div class="bk-head">
+          <h2>Vacancies on the site</h2>
+          <span class="bk-sub">What is actually posted and open. A new one goes live the moment you post it.</span>
+        </div>
+
+        <div class="err" id="vac-error" hidden></div>
+
+        <div class="ga-acts">
+          <button type="button" class="btn btn-ghost" id="vac-new" style="width:auto;">New Vacancy</button>
+        </div>
+
+        <!-- Hidden until "New Vacancy" or "Edit" is pressed. One form for
+             both — editing pre-fills it, same reasoning as save_vacancy()
+             itself being one function for create-or-update. -->
+        <form id="vac-form" novalidate hidden style="margin-bottom:18px;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--card);">
+          <input type="hidden" id="vac-f-key">
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-title">Role title</label>
+            <input type="text" id="vac-f-title" maxlength="100" placeholder="e.g. Office Administrator">
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-category">Area</label>
+            <select id="vac-f-category" style="font:inherit;font-size:1.02rem;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:12px 13px;width:100%;">
+              <option value="administration">Administration</option>
+              <option value="education">Education</option>
+              <option value="community_outreach">Community Outreach</option>
+              <option value="event_management">Event Management</option>
+            </select>
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-summary">Summary, for the card on the Vacancies page</label>
+            <input type="text" id="vac-f-summary" maxlength="220" placeholder="One or two lines.">
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-resp">Responsibilities &mdash; one per line</label>
+            <textarea id="vac-f-resp" rows="4" placeholder="Answering the office phone&#10;Filing correspondence"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-reqs">What you're looking for &mdash; one per line <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
+            <textarea id="vac-f-reqs" rows="3" placeholder="Comfortable using email and spreadsheets"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:12px;">
+            <label for="vac-f-commit">Time commitment <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
+            <input type="text" id="vac-f-commit" maxlength="120" placeholder="A few hours a week, flexible">
+          </div>
+          <div class="field" style="margin-bottom:14px;">
+            <label for="vac-f-closing">Applications close <span style="text-transform:none;letter-spacing:0;font-weight:500;">(optional)</span></label>
+            <input type="date" id="vac-f-closing">
+          </div>
+          <div class="err" id="vac-f-error" hidden></div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-gold" id="vac-f-submit" style="width:auto;">Post Vacancy</button>
+            <button type="button" class="btn btn-ghost" id="vac-f-cancel" style="width:auto;">Cancel</button>
+          </div>
+        </form>
+
+        <div class="bk-list" id="vac-list"></div>
+      </section>
 
       <section class="bk" id="va-panel" hidden>
         <div class="bk-head">

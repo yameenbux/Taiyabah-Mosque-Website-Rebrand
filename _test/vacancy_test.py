@@ -381,6 +381,10 @@ with sync_playwright() as p:
     pg2.wait_for_timeout(1400)
     check(pg2.is_visible("#view-signin"),
           "the vacancy-applications portal does not show a sign-in screen when signed out")
+    #  db/177's New Vacancy panel is the same risk the interest-application
+    #  list already is — signed out, neither may be reachable.
+    check(not pg2.is_visible("#vac-panel"),
+          "THE NEW VACANCY PANEL IS VISIBLE WITHOUT SIGNING IN")
     check(not pg2.is_visible("#va-panel"),
           "THE APPLICATION LIST IS VISIBLE WITHOUT SIGNING IN")
     check(perrs == [], "the vacancy-applications portal threw on load: %s" % perrs)
