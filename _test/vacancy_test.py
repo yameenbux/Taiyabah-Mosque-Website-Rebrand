@@ -53,12 +53,17 @@ def check(cond, msg):
 
 def fill(pg, name="Zainab Hussain", phone="07700 900 202",
          email="zainab@example.test", category="community_outreach",
-         message="I have run community events before.", consent=True):
+         message="I have run community events before.", consent=True,
+         member="yes"):
     """Put the form into a known state, or record a failure and return False.
 
     THE RETURN VALUE IS LOAD-BEARING — see volunteer_test.py's fill() for why:
     a successful submission hides the form, and a later fill() against an
     invisible field would hang the whole suite instead of failing one check.
+
+    member defaults to "yes" so every test that is not specifically about
+    the membership question gets past it — the same reason consent defaults
+    to True.
     """
     if not pg.is_visible("#va-form"):
         fails.append("the form was not on screen when the test tried to fill "
@@ -71,6 +76,8 @@ def fill(pg, name="Zainab Hussain", phone="07700 900 202",
     pg.fill("#va-message", message)
     if category:
         pg.check('input[name="va-category"][value="%s"]' % category)
+    if member:
+        pg.check('input[name="va-member"][value="%s"]' % member)
     box = pg.query_selector("#va-consent")
     if box and box.is_checked() != consent:
         box.click()
@@ -154,6 +161,7 @@ with sync_playwright() as p:
         set('va-name', 'Quick Bot'); set('va-phone', '07700900888');
         set('va-email', 'bot@example.test'); set('va-message', '');
         document.querySelector('input[name="va-category"][value="education"]').checked = true;
+        document.querySelector('input[name="va-member"][value="yes"]').checked = true;
         document.getElementById('va-consent').checked = true;
         document.getElementById('va-form')
           .dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}));
@@ -240,6 +248,36 @@ with sync_playwright() as p:
     check("reply to" in problems(pg).lower(),
           "an invalid email gives no useful message: %r" % problems(pg))
 
+    #  THE MANDATORY MEMBERSHIP QUESTION. Unanswered must refuse, exactly
+    #  like no area chosen above — RELOADED FIRST, same reason: a radio
+    #  cannot be unchecked by clicking it again, so testing "unanswered"
+    #  after any earlier fill() has ever touched it would prove nothing.
+    pg.reload(wait_until="load")
+    pg.wait_for_timeout(900)
+    pg.evaluate("() => showPage('svc-vacancies')")
+    pg.wait_for_timeout(2300)          # past the trap
+    fill(pg, member=None)
+    submit(pg)
+    pg.wait_for_timeout(250)
+    check(sent == [], "AN APPLICATION WITH NO MEMBERSHIP ANSWER WAS SENT: %r" % sent)
+    check("member" in problems(pg).lower() or "family" in problems(pg).lower(),
+          "no membership answer gives no useful message: %r" % problems(pg))
+
+    #  "No" is a real, considered answer, not a blank — it must refuse the
+    #  same way. A radio CAN be changed to a different value in its own
+    #  group, so no reload is needed for this one, and the form stays
+    #  visible and filled either way: neither submission is a success.
+    fill(pg, member="no")
+    submit(pg)
+    pg.wait_for_timeout(250)
+    check(sent == [], "AN APPLICATION ANSWERED 'NO' TO MEMBERSHIP WAS SENT: %r" % sent)
+    check("member" in problems(pg).lower() or "family" in problems(pg).lower(),
+          "'No' to membership gives no useful message: %r" % problems(pg))
+
+    #  Continues cumulatively, same as before this block — fill()'s own
+    #  member="yes" default puts the radio back for every test from here on,
+    #  the same way its category default already does.
+
     #  Applying without ticking the box has no lawful basis behind it.
     fill(pg, email="zainab@example.test", consent=False)
     submit(pg)
@@ -262,9 +300,11 @@ with sync_playwright() as p:
     #  4. THE REQUEST ITSELF
     #
     #  THE ASSERTION THIS FILE EXISTS FOR. These key names are the contract
-    #  with apply_for_vacancy in 176. A misspelled key does not error
-    #  anywhere: it arrives as null, and the application is refused or
-    #  stored wrong, months before anybody looks.
+    #  with apply_for_vacancy, redefined by 177 to add is_member_or_family —
+    #  176 is read for the original keys since that text has not changed,
+    #  177 for the new one. A misspelled key does not error anywhere: it
+    #  arrives as null, and the application is refused or stored wrong,
+    #  months before anybody looks.
     # =====================================================================
     body = sent[-1] if sent else {}
     payload = body.get("payload", {})
@@ -277,6 +317,18 @@ with sync_playwright() as p:
         check(key in payload, "the form does not send %r: %r" % (key, payload))
         check("payload->>'%s'" % key in sql,
               "THE FORM SENDS %r AND 176 NEVER READS IT" % key)
+
+    sql177 = open("db/177_vacancy_postings.sql", encoding="utf-8").read()
+    check("is_member_or_family" in payload,
+          "the form does not send 'is_member_or_family': %r" % payload)
+    check("payload->>'is_member_or_family'" in sql177,
+          "THE FORM SENDS 'is_member_or_family' AND 177 NEVER READS IT")
+
+    #  Sent FROM THE RADIO, not as a literal. A hard-coded true means "No"
+    #  would still arrive as membership confirmed, and the database's
+    #  va_membership_required constraint — the real backstop — accepts it.
+    check(payload.get("is_member_or_family") is True,
+          "membership did not reach the database as true: %r" % payload.get("is_member_or_family"))
 
     #  Sent FROM THE CHECKBOX, not as a literal. A hard-coded true means an
     #  unticked box still arrives as consent given, and the database's
@@ -329,6 +381,10 @@ with sync_playwright() as p:
     pg2.wait_for_timeout(1400)
     check(pg2.is_visible("#view-signin"),
           "the vacancy-applications portal does not show a sign-in screen when signed out")
+    #  db/177's New Vacancy panel is the same risk the interest-application
+    #  list already is — signed out, neither may be reachable.
+    check(not pg2.is_visible("#vac-panel"),
+          "THE NEW VACANCY PANEL IS VISIBLE WITHOUT SIGNING IN")
     check(not pg2.is_visible("#va-panel"),
           "THE APPLICATION LIST IS VISIBLE WITHOUT SIGNING IN")
     check(perrs == [], "the vacancy-applications portal threw on load: %s" % perrs)

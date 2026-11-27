@@ -268,6 +268,11 @@ export function toEvent(body: Record<string, unknown>): Event | null {
       phone: r.phone as string,
       email: r.email as string,
       category: r.category as string,
+      // db/177 — null for the 176 interest form, the posted role's own
+      // title (snapshotted at the time of applying) when this came from
+      // apply_for_vacancy_role() against an actual open posting. messages.ts
+      // reads its presence to tell the two apart.
+      role_title: (r.role_title as string) ?? null,
       // `message` — whatever the applicant wrote about themselves — is
       // deliberately not carried. See messages.ts's comment on the field.
     };

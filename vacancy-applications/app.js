@@ -93,6 +93,196 @@
   }
 
   /* =========================================================================
+     POSTED VACANCIES (db/177)
+
+     What is actually live on the Vacancies page, not who has applied to it —
+     that is the separate list just below. One form does both create and
+     edit, the same shape as save_vacancy() itself: posting again with the
+     same key updates it, and is_open is never touched by this form at all —
+     only set_vacancy_open() changes that, so editing a closed role can never
+     silently put it back on the site.
+     ======================================================================= */
+  var postings = (function () {
+    var rows = [];
+    var editingKey = null; // null while the form is closed or creating new
+    var mounted = false;
+
+    function canSee(identity) { return identity.roles.indexOf("admin") !== -1; }
+
+    function esc(v) {
+      return String(v === null || v === undefined ? "" : v)
+        .replace(/[&<>"']/g, function (c) {
+          return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;",
+                    '"': "&quot;", "'": "&#39;" })[c];
+        });
+    }
+
+    var CATEGORY = {
+      administration: "Administration", education: "Education",
+      community_outreach: "Community Outreach", event_management: "Event Management"
+    };
+
+    // One responsibility/requirement per line — matches check_vacancy_page()'s
+    // own shape (an array of short strings), without asking the office to
+    // build a list one row at a time.
+    function linesToArray(text) {
+      return (text || "").split("\n").map(function (s) { return s.trim(); })
+                         .filter(function (s) { return s; });
+    }
+    function arrayToLines(arr) { return (arr || []).join("\n"); }
+
+    function render() {
+      var list = el("vac-list");
+      if (!list) return;
+      if (!rows.length) {
+        list.innerHTML = '<div class="vol-empty">Nothing posted yet. ' +
+          'Every area still shows "Coming soon" on the Vacancies page.</div>';
+        return;
+      }
+      list.innerHTML = rows.map(function (v) {
+        var page = v.page || {};
+        return '<div class="vol-row" data-key="' + esc(v.key) + '">' +
+          '<div class="vol-top"><span class="vol-name">' + esc(v.title) + "</span>" +
+            '<span class="vol-ref">' + (v.is_open ? "Open" : "Closed") + "</span></div>" +
+          '<div class="vol-facts">' +
+            "<span>" + esc(CATEGORY[v.category] || v.category) + "</span>" +
+            '<span class="' + (v.applicants ? "hi" : "") + '">' +
+              (v.applicants || 0) + (v.applicants === 1 ? " applicant" : " applicants") +
+            "</span>" +
+          "</div>" +
+          '<div class="vol-skills">' + esc(v.summary) + "</div>" +
+          '<div class="vol-acts">' +
+            '<button type="button" data-act="edit">Edit</button>' +
+            '<button type="button" data-act="toggle">' + (v.is_open ? "Close" : "Reopen") + "</button>" +
+          "</div>" +
+        "</div>";
+      }).join("");
+    }
+
+    function load() {
+      setError("vac-error", "");
+      return sb.rpc("vacancies_admin_list").then(function (res) {
+        if (res.error) throw res.error;
+        rows = res.data || [];
+        render();
+      }).catch(function (err) {
+        setError("vac-error", "Couldn't load the posted vacancies. " + (err.message || ""));
+      });
+    }
+
+    function openForm(v) {
+      editingKey = v ? v.key : null;
+      el("vac-f-key").value = v ? v.key : "";
+      el("vac-f-title").value = v ? v.title : "";
+      el("vac-f-category").value = v ? v.category : "administration";
+      el("vac-f-summary").value = v ? v.summary : "";
+      var page = (v && v.page) || {};
+      el("vac-f-resp").value = arrayToLines(page.responsibilities);
+      el("vac-f-reqs").value = arrayToLines(page.requirements);
+      el("vac-f-commit").value = page.commitment || "";
+      el("vac-f-closing").value = page.closing_date || "";
+      setError("vac-f-error", "");
+      el("vac-f-submit").textContent = v ? "Save changes" : "Post Vacancy";
+      el("vac-form").hidden = false;
+      el("vac-f-title").focus();
+    }
+
+    function closeForm() {
+      editingKey = null;
+      el("vac-form").hidden = true;
+      el("vac-form").reset();
+    }
+
+    function wire() {
+      if (mounted) return;
+      mounted = true;
+
+      el("vac-new").addEventListener("click", function () { openForm(null); });
+      el("vac-f-cancel").addEventListener("click", closeForm);
+
+      el("vac-list").addEventListener("click", function (e) {
+        var btn = e.target.closest ? e.target.closest("button[data-act]") : null;
+        if (!btn) return;
+        var row = btn.closest(".vol-row");
+        var key = row && row.getAttribute("data-key");
+        var v = rows.filter(function (r) { return r.key === key; })[0];
+        if (!v) return;
+
+        if (btn.getAttribute("data-act") === "edit") { openForm(v); return; }
+
+        // Reopening a role is reversible by design (set_vacancy_open(), not
+        // a delete) — but a close takes an active posting off the live site,
+        // so it gets the same "are you sure" every other one-way action on
+        // this site asks for.
+        if (!v.is_open || window.confirm(
+              'Close "' + v.title + '"? It will come off the Vacancies page ' +
+              "immediately. You can reopen it later.")) {
+          Array.prototype.forEach.call(row.querySelectorAll("button"), function (b) {
+            b.disabled = true;
+          });
+          sb.rpc("set_vacancy_open", { p_key: key, p_open: !v.is_open })
+            .then(function (res) {
+              if (res.error) throw res.error;
+              return load();
+            }).catch(function (err) {
+              setError("vac-error", "Couldn't change that. " + (err.message || ""));
+              Array.prototype.forEach.call(row.querySelectorAll("button"), function (b) {
+                b.disabled = false;
+              });
+            });
+        }
+      });
+
+      el("vac-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        setError("vac-f-error", "");
+
+        var resp = linesToArray(el("vac-f-resp").value);
+        if (!resp.length) {
+          setError("vac-f-error", "List at least one responsibility.");
+          return;
+        }
+
+        var payload = {
+          key: editingKey || el("vac-f-title").value.trim().toLowerCase()
+                 .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40),
+          category: el("vac-f-category").value,
+          title: el("vac-f-title").value.trim(),
+          summary: el("vac-f-summary").value.trim(),
+          page: {
+            responsibilities: resp,
+            requirements: linesToArray(el("vac-f-reqs").value),
+            commitment: el("vac-f-commit").value.trim() || null,
+            closing_date: el("vac-f-closing").value || null
+          }
+        };
+
+        var btn = el("vac-f-submit");
+        busy(btn, true);
+        sb.rpc("save_vacancy", { p: payload }).then(function (res) {
+          if (res.error) throw res.error;
+          closeForm();
+          return load();
+        }).catch(function (err) {
+          setError("vac-f-error", err.message || "Couldn't save that.");
+        }).finally(function () {
+          busy(btn, false, editingKey ? "Save changes" : "Post Vacancy");
+        });
+      });
+    }
+
+    return {
+      mount: function (identity) {
+        var panel = el("vac-panel");
+        if (!canSee(identity)) { if (panel) panel.hidden = true; return; }
+        if (panel) panel.hidden = false;
+        wire();
+        load();
+      }
+    };
+  })();
+
+  /* =========================================================================
      THE APPLICATION LIST
 
      THE QUESTION THE COMMITTEE ACTUALLY ASKED is not "who has applied" but
@@ -223,6 +413,12 @@
                       ? ' &middot; <a href="mailto:' + esc(r.email) + '">' + esc(r.email) + "</a>"
                       : "");
 
+        // db/177 — a FULL application against a posted role, not the 176
+        // interest form. role_title is only ever set on that kind of row.
+        var full = !!r.vacancy_id;
+        var address = [r.address_line1, r.address_line2, r.town, r.postcode]
+                        .filter(function (p) { return p; }).map(esc).join(", ");
+
         return '<div class="vol-row" data-ref="' + esc(r.reference) + '">' +
           '<div class="vol-top"><span class="vol-name">' + esc(r.full_name) + "</span>" +
             '<span class="vol-ref">' + esc(r.reference) + "</span></div>" +
@@ -230,8 +426,12 @@
             '<span class="' + (r.status === "waiting" ? "hi" : "") + '">' +
               esc(STATE[r.status] || r.status) + "</span>" +
             "<span>" + esc(CATEGORY[r.category] || r.category) + "</span>" +
+            (full ? '<span class="hi">Applied for ' + esc(r.role_title) + "</span>" : "") +
           "</div>" +
           '<div class="vol-contact">' + reach + "</div>" +
+          (full ? '<div class="vol-skills">' + address +
+              (r.date_of_birth ? " &middot; born " + esc(when(r.date_of_birth)) : "") +
+            "</div>" : "") +
           // Whatever they wrote about themselves — the one thing this screen
           // holds that notify's office email never carries. See this file's
           // header and the comment on Event.category in messages.ts.
@@ -240,6 +440,7 @@
           '<div class="vol-skills" style="margin-top:6px;">Applied ' + esc(when(r.created_at)) +
             " &middot; deleted " + esc(goesOn(r.created_at)) + "</div>" +
           '<div class="vol-acts">' +
+            (full ? '<button type="button" data-act="cv">Download CV</button>' : "") +
             '<button type="button" data-act="contacted">Contacted</button>' +
             '<button type="button" data-act="shortlisted">Shortlist</button>' +
             '<button type="button" data-act="declined">Decline</button>' +
@@ -250,15 +451,22 @@
     }
 
     function csv() {
-      var head = ["Reference", "Name", "Phone", "Email", "Area", "Status",
-                  "What they wrote", "Office note", "Applied", "Deleted on"];
+      //  No cv_path column — a Storage path means nothing outside Supabase
+      //  and is private (RLS, see db/177); the Download CV button fetches a
+      //  fresh signed link instead of handing one out in a batch export.
+      var head = ["Reference", "Name", "Phone", "Email", "Area", "Role applied for",
+                  "Address", "Date of birth", "Status", "What they wrote",
+                  "Office note", "Applied", "Deleted on"];
       function cell(v) {
         var t = v === null || v === undefined ? "" : String(v);
         return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
       }
       var body = rows.filter(matches).map(function (r) {
+        var address = [r.address_line1, r.address_line2, r.town, r.postcode]
+                        .filter(function (p) { return p; }).join(", ");
         return [r.reference, r.full_name, r.phone, r.email || "",
-                CATEGORY[r.category] || r.category, r.status,
+                CATEGORY[r.category] || r.category, r.role_title || "",
+                address, r.date_of_birth ? when(r.date_of_birth) : "", r.status,
                 r.message || "", r.note || "", when(r.created_at), goesOn(r.created_at)]
                .map(cell).join(",");
       });
@@ -270,7 +478,9 @@
       return Promise.all([
         sb.from("vacancy_applications")
           .select("reference, full_name, phone, email, category, message, " +
-                  "status, note, created_at")
+                  "status, note, created_at, vacancy_id, role_title, " +
+                  "address_line1, address_line2, town, postcode, " +
+                  "date_of_birth, cv_path")
           .order("created_at", { ascending: false }),
         sb.rpc("vacancy_application_summary")
       ]).then(function (out) {
@@ -314,6 +524,24 @@
         if (!row) return;
         var ref = row.getAttribute("data-ref");
         var act = btn.getAttribute("data-act");
+
+        // Not a status change — a signed, time-limited link to the one file
+        // in this list, fetched fresh each click rather than once up front:
+        // the same reasoning as collections/app.js's own BMCC certificate
+        // link, and for the same reason the bucket is private at all.
+        if (act === "cv") {
+          var r = rows.filter(function (x) { return x.reference === ref; })[0];
+          if (!r || !r.cv_path) return;
+          btn.disabled = true;
+          sb.storage.from("vacancy-cvs").createSignedUrl(r.cv_path, 300)
+            .then(function (res) {
+              if (res.error) throw res.error;
+              window.open(res.data.signedUrl, "_blank", "noopener");
+            }).catch(function (err) {
+              setError("va-error", "Couldn't open the CV. " + (err.message || ""));
+            }).finally(function () { btn.disabled = false; });
+          return;
+        }
 
         // A note is optional, and cancelling the prompt must not cancel the
         // status change — the office rang them either way.
@@ -413,7 +641,11 @@
 
     show("view-app");
 
-    // A panel that fails to load must never take the sign-in shell with it.
+    // A panel that fails to load must never take the sign-in shell with it,
+    // or take the other panel with it either — two independent try blocks.
+    try { postings.mount(identity); } catch (e) {
+      if (window.console) console.warn("posted vacancies panel unavailable:", e);
+    }
     try { vacancies.mount(identity); } catch (e) {
       if (window.console) console.warn("vacancy applications panel unavailable:", e);
     }

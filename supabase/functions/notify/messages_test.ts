@@ -1055,8 +1055,47 @@ Deno.test("a vacancy applicant's own message never reaches an email", () => {
   }
 });
 
+/* ---------------------------------------------------------------------------
+   db/177 — a FULL application against a posted role is a different email
+   from the 176 interest form above, not a variant of it: it needs the
+   office's attention today, names the role, and must never tell the
+   applicant "nothing is open yet" when they have just attached a CV to one.
+   --------------------------------------------------------------------------- */
+const VACANCY_ROLE: Event = {
+  ...VACANCY,
+  reference: "VA-26-0004",
+  role_title: "Office Administrator",
+};
+
+Deno.test("a full application names the role and asks for attention", () => {
+  const m = officeMessage(VACANCY_ROLE)!;
+  assertStringIncludes(m.subject, "ATTENTION REQUIRED");
+  assertStringIncludes(m.subject, "Office Administrator");
+  assertStringIncludes(m.html, "Office Administrator");
+  assertStringIncludes(m.html, "CV");
+});
+
+Deno.test("a full applicant is never told nothing is open yet", () => {
+  // The exact failure the interest-form test above checks for, in reverse:
+  // somebody who DID apply to something real must not be told they didn't.
+  const m = publicMessage(VACANCY_ROLE)!;
+  assert(!/nothing is open yet/i.test(m.html + m.text),
+    "a real applicant was given the interest-form brush-off");
+  assertStringIncludes(m.html, "Office Administrator");
+  assertStringIncludes(m.text, "Office Administrator");
+});
+
+Deno.test("a full application's own message never reaches an email either", () => {
+  const leaky = { ...VACANCY_ROLE } as Event & Record<string, unknown>;
+  leaky.message = "I once ran the Preston food bank for six years";
+  for (const m of [officeMessage(leaky)!, publicMessage(leaky)!]) {
+    assert(!/Preston food bank/i.test(m.html + m.text),
+      "the applicant's free text leaked into a full vacancy application email");
+  }
+});
+
 Deno.test("all three new subjects are ASCII and say what they are", () => {
-  for (const e of [ADMISSION, COURSE, WAITING, VOLUNTEER, VACANCY]) {
+  for (const e of [ADMISSION, COURSE, WAITING, VOLUNTEER, VACANCY, VACANCY_ROLE]) {
     for (const m of [officeMessage(e), publicMessage(e)]) {
       if (!m) continue;
       assertEquals(m.subject, ascii(m.subject), `non-ASCII subject for ${e.kind}`);
