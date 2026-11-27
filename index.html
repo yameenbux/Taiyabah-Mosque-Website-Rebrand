@@ -2037,7 +2037,11 @@ window.TAIYABAH_PUBLIC = {
      depending only on which page happened to sit first in the DOM. */
   .vac-grid{display:grid;gap:16px;grid-template-columns:1fr;}
   @media(min-width:640px){ .vac-grid{grid-template-columns:1fr 1fr;} }
-  @media(min-width:960px){ .vac-grid{grid-template-columns:1fr 1fr 1fr;} }
+  /*  ALL FOUR IN ONE ROW ON A WIDE SCREEN. There are exactly four of these —
+      unlike .edu-grid, which can run to a dozen course tiles and so stops
+      widening at two columns — so three-then-one left a short last row and
+      the empty gutter above it that was reported as "dead space". */
+  @media(min-width:1040px){ .vac-grid{grid-template-columns:1fr 1fr 1fr 1fr;} }
   .vac-tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);
     border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);opacity:.72;}
   .vac-tile .vt-media{display:block;aspect-ratio:16/9;background:var(--paper);
@@ -4201,8 +4205,9 @@ window.TAIYABAH_PUBLIC = {
   </section>
   <section class="page-body">
     <div class="container">
-      <div class="svc-detail-facts svc-hub">
-        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;">None of the roles below are open positions yet &mdash; they are the areas the committee expects to need help with as the masjid modernises. If one sounds like you, let the office know now and you'll be among the first told when it is actually advertised.</p>
+      
+      <div class="svc-detail-facts svc-hub" style="max-width:1100px;">
+        <p style="color:var(--muted);font-size:1.02rem;line-height:1.75;max-width:720px;">None of the roles below are open positions yet &mdash; they are the areas the committee expects to need help with as the masjid modernises. If one sounds like you, let the office know now and you'll be among the first told when it is actually advertised.</p>
         <div class="vac-grid" style="margin-top:22px;">
 
           <div class="vac-tile is-soon">
