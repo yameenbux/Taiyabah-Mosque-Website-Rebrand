@@ -91,6 +91,7 @@ SCREENS = {
     "health": "health", "screens": "screens",
     "app": "appsend",
     "advice": "advice",
+    "vacancy-applications": "vacancies",
 }
 
 #  What each role should be offered. Deliberately written out rather than
@@ -99,7 +100,8 @@ SCREENS = {
 #  self-consistent.
 EXPECTED = {
     "admin": ["Admin Centre", "Hall Hire & Nikāḥ", "Charity collections",
-              "Adult classes", "Food Bank volunteers", "Donations", "Take a payment",
+              "Adult classes", "Food Bank volunteers", "Vacancy applications",
+              "Donations", "Take a payment",
               #  MEMBERSHIP, added 13 November 2026 with members/. It is in
               #  Money rather than the madrasah because the register is the
               #  masjid's own, and it is admin-only: members/app.js asks
@@ -239,6 +241,10 @@ ADMITS = {
     #  either side would give an administrator a row that loads and then says
     #  no; adding it to both would quietly end the confidentiality.
     "advice":      ["imam"],                   # advice/app.js canSee()
+    #  ADMIN ONLY, NOT hall_office. db/176's own header is explicit that
+    #  recruitment is the committee's decision, not a rota the hall office
+    #  already runs — unlike volunteers/ just above.
+    "vacancies":   ["admin"],                  # vacancy-applications/app.js canSee()
 }
 
 # ---------------------------------------------------------------- 1. wiring
